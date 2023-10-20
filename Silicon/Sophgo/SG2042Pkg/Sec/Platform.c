@@ -66,8 +66,27 @@ PopulateIoResources (
   while (Node != -FDT_ERR_NOTFOUND) {
     Reg = (UINT64 *)fdt_getprop (FdtBase, Node, "reg", &LenP);
     if (Reg) {
-      ASSERT (LenP == (2 * sizeof (UINT64)));
       AddIoMemoryBaseSizeHob (SwapBytes64 (Reg[0]), SwapBytes64 (Reg[1]));
+      DEBUG ((
+        DEBUG_INFO,
+        "%a(): MemoryBase=0x%lx\tMemorySize=0x%lx\n",
+        __func__,
+        SwapBytes64 (Reg[0]),
+        SwapBytes64 (Reg[1])
+        ));
+      //
+      // PCIe node may have two regions for reg ("reg" and "cfg")
+      //
+      if (LenP > (2 * sizeof (UINT64))) {
+        AddIoMemoryBaseSizeHob (SwapBytes64 (Reg[2]), SwapBytes64 (Reg[3]));
+        DEBUG ((
+          DEBUG_INFO,
+          "%a(): MemoryBase=0x%lx\tMemorySize=0x%lx\n",
+          __func__,
+          SwapBytes64 (Reg[2]),
+          SwapBytes64 (Reg[3])
+          ));
+      }
     }
 
     Node = fdt_node_offset_by_compatible (FdtBase, Node, Compatible);
@@ -123,8 +142,20 @@ PlatformPeimInitialization (
 
   BuildFvHob (PcdGet32 (PcdRiscVDxeFvBase), PcdGet32 (PcdRiscVDxeFvSize));
 
+  //
+  // Add PCI resource
+  //
+  PopulateIoResources (Base, "sophgo,cdns-pcie-host");
+
+  //
+  // 3GB - 4GB memory space is reserved for PCIe 32-bit inbound access.
+  //
+  AddIoMemoryBaseSizeHob (0xC0000000, 0x40000000);
+
+  //
+  // Add SDHI resource
+  //
   PopulateIoResources (Base, "bitmain,bm-sd");
-  PopulateIoResources (Base, "snps,dw-apb-uart");
 
   return EFI_SUCCESS;
 }

@@ -1,0 +1,76 @@
+## @file
+#
+#  Copyright (c) 2023, SOPHGO Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010019
+  BASE_NAME                      = PlatformPciLib
+  FILE_GUID                      = 9B03CB7C-D3A4-42EE-9408-D8AC24D348F8
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+
+[Sources]
+  PlatformPciLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2042Pkg/SG2042Pkg.dec
+
+[LibraryClasses]
+  PcdLib
+
+[FixedPcd]
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0CfgBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1CfgBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0CfgBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1CfgBase
+
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Slv0CfgBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Slv1CfgBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Slv0CfgBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Slv1CfgBase
+
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPciCfgLink0ApbBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPciCfgLink1ApbBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPciCfgPhyApbBase
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPciCfgMangoApbBase
+
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0Region1BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0Region1Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0Region2BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0Region2Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0Region3BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0Region3Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0Region4BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0Region4Size
+
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1Region1BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1Region1Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1Region2BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1Region2Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1Region3BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1Region3Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1Region4BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1Region4Size
+
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0Region1BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0Region1Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0Region2BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0Region2Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0Region3BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0Region3Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0Region4BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0Region4Size
+
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region1BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region1Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region2BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region2Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region3BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region3Size
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region4BaseAddress
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region4Size

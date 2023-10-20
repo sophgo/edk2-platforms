@@ -1,0 +1,41 @@
+## @file
+#
+#  PCI Host Bridge Library instance for SOPHGO SG2042
+#
+#  Copyright (c) 2023, SOPHGO Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001000A
+  BASE_NAME                      = PciHostBridgeLib
+  FILE_GUID                      = 3FAEB299-E488-4AC2-A7A5-36308989DC78
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PciHostBridgeLib|DXE_DRIVER
+  CONSTRUCTOR                    = MangoPcieHostBridgeLibConstructor
+
+[Sources]
+  PciHostBridgeLib.c
+  PciHostBridgeLibConstructor.c
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  UefiCpuPkg/UefiCpuPkg.dec
+  Silicon/Sophgo/SG2042Pkg/SG2042Pkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+
+[Pcd]
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask     ## CONSUMES
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042PhyAddrToVirAddr  ## CONSUMES
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode               ## CONSUMES

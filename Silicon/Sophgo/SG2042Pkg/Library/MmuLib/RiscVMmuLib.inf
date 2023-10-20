@@ -1,0 +1,31 @@
+## @file
+#  RISC-V MMU library.
+#
+#  Copyright (c) 2023, Ventana Micro Systems Inc. All Rights Reserved.<BR>
+#  Copyright (c) 2023, SOPHGO Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION         = 0x0001001b
+  BASE_NAME           = SophgoSG2042RiscVMmuLib
+  FILE_GUID           = 3C196088-DFAC-4143-AC23-EFA7D305F1D4
+  MODULE_TYPE         = BASE
+  VERSION_STRING      = 1.0
+  LIBRARY_CLASS       = RiscVMmuLib
+
+[Sources]
+  RiscVMmuLib.c
+  RiscVMmuCore.S
+
+[Packages]
+  MdePkg/MdePkg.dec
+  UefiCpuPkg/UefiCpuPkg.dec
+
+[LibraryClasses]
+  BaseLib
+
+[Pcd]
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode  ## CONSUMES

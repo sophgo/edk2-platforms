@@ -1,0 +1,34 @@
+## @file
+#
+#  PCI Segment Library instance for SOPHGO SG2042.
+#
+#  Copyright (c) 2023, SOPHGO Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = PciSegmentLib
+  FILE_GUID                      = C67C5741-16FA-4A95-B436-B94CB671F040
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PciSegmentLib
+
+[Sources]
+  PciSegmentLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2042Pkg/SG2042Pkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  IoLib
+  UefiLib
+
+[Pcd]
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042PhyAddrToVirAddr

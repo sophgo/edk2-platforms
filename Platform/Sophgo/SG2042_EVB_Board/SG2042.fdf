@@ -103,12 +103,14 @@ INF  MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
 INF  MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
 INF  MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
 INF  MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+INF  MdeModulePkg/Application/UiApp/UiApp.inf
+INF  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
 INF  MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
 INF  FatPkg/EnhancedFatDxe/Fat.inf
 INF  MdeModulePkg/Universal/Disk/UdfDxe/UdfDxe.inf
 
 !ifndef $(SOURCE_DEBUG_ENABLE)
-  INF MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
+  INF  MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
 !endif
 
 #
@@ -160,12 +162,15 @@ INF  MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
-INF  MdeModulePkg/Application/UiApp/UiApp.inf
-
 #
 # Graphic Console Support
 #
-INF MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
+INF  MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
+
+#
+# TianoCore Logo (splash screen)
+#
+INF  MdeModulePkg/Logo/LogoDxe.inf
 
 #
 # Emulator for x64 OpRoms, etc.

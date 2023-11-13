@@ -13,6 +13,7 @@
 #include <Include/SophgoPciRegs.h>
 #include <Include/PlatformPciLib.h>
 #include <IndustryStandard/Pci22.h>
+#include <Library/UefiBootServicesTableLib.h>
 
 #define PLAT_CPU_TO_BUS_ADDR  0xCFFFFFFFFF
 
@@ -232,6 +233,14 @@ MangoPcieHostBridgeLibConstructor (
       if (!((PcieEnableCount >>
             ((PCIE_MAX_PORT * PortIndex) + LinkIndex)) & 0x01)) {
         continue;
+      }
+
+      //
+      // Ensure the devices under the PCIe Switch are ready on the Pisces Server,
+      // after enabling MultiArchUefiPkg
+      //
+      if (PcieEnableCount == 4) {
+        gBS->Stall (10000000);
       }
 
       PcieHostInitRootPort (

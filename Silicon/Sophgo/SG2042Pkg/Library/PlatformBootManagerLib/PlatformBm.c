@@ -336,6 +336,7 @@ AddOutput (
     ReportText
     ));
 }
+
 /**
   Register the boot option.
 
@@ -419,6 +420,63 @@ PlatformRegisterFvBootOption (
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 }
 
+/** Boot a Fv Boot Option.
+
+  This function is useful for booting the UEFI Shell as it is loaded
+  as a non active boot option.
+
+  @param[in] FileGuid      The File GUID.
+  @param[in] Description   String describing the Boot Option.
+
+**/
+STATIC
+VOID
+PlatformBootFvBootOption (
+  IN  CONST EFI_GUID  *FileGuid,
+  IN  CHAR16          *Description
+  )
+{
+  EFI_STATUS                         Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION       NewOption;
+  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  FileNode;
+  EFI_LOADED_IMAGE_PROTOCOL          *LoadedImage;
+  EFI_DEVICE_PATH_PROTOCOL           *DevicePath;
+
+  Status = gBS->HandleProtocol (
+                  gImageHandle,
+                  &gEfiLoadedImageProtocolGuid,
+                  (VOID **)&LoadedImage
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  //
+  // The UEFI Shell was registered in PlatformRegisterFvBootOption ()
+  // previously, thus it must still be available in this FV.
+  //
+  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
+  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
+  ASSERT (DevicePath != NULL);
+  DevicePath = AppendDevicePathNode (
+                 DevicePath,
+                 (EFI_DEVICE_PATH_PROTOCOL *)&FileNode
+                 );
+  ASSERT (DevicePath != NULL);
+
+  Status = EfiBootManagerInitializeLoadOption (
+             &NewOption,
+             LoadOptionNumberUnassigned,
+             LoadOptionTypeBoot,
+             LOAD_OPTION_ACTIVE,
+             Description,
+             DevicePath,
+             NULL,
+             0
+             );
+  ASSERT_EFI_ERROR (Status);
+  FreePool (DevicePath);
+
+  EfiBootManagerBoot (&NewOption);
+}
 
 /**
   Make a platform driver to create predefined boot options and related hot keys.
@@ -764,8 +822,7 @@ PlatformBootManagerAfterConsole (
   EfiBootManagerConnectAll ();
 
   //
-  // Enumerate all possible boot options, then filter and reorder them based on
-  // the QEMU configuration.
+  // Enumerate all possible boot options, then filter and reorder them.
   //
   EfiBootManagerRefreshAllBootOption ();
 
@@ -777,15 +834,6 @@ PlatformBootManagerAfterConsole (
   PlatformRegisterFvBootOption (
     &gUefiShellFileGuid, 
     L"UEFI Shell",
-    LOAD_OPTION_ACTIVE,
-    &Key);
-
-  //
-  // Register Grub
-  //
-  PlatformRegisterFvBootOption (
-    &gGrubFileGuid,
-    L"Grub Bootloader",
     LOAD_OPTION_ACTIVE,
     &Key);
 }
@@ -838,5 +886,68 @@ PlatformBootManagerUnableToBoot (
   VOID
   )
 {
-  return;
+  EFI_STATUS                    Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION  BootManagerMenu;
+  EFI_BOOT_MANAGER_LOAD_OPTION  *BootOptions;
+  UINTN                         OldBootOptionCount;
+  UINTN                         NewBootOptionCount;
+
+  //
+  // Record the total number of boot configured boot options
+  //
+  BootOptions = EfiBootManagerGetLoadOptions (
+                  &OldBootOptionCount,
+                  LoadOptionTypeBoot
+                  );
+  EfiBootManagerFreeLoadOptions (BootOptions, OldBootOptionCount);
+
+  //
+  // Connect all devices, and regenerate all boot options
+  //
+  EfiBootManagerConnectAll ();
+  EfiBootManagerRefreshAllBootOption ();
+
+  //
+  // Boot the 'UEFI Shell' by default.
+  //
+  PlatformBootFvBootOption (
+    &gUefiShellFileGuid,
+    L"UEFI Shell (default)"
+    );
+
+  //
+  // Record the updated number of boot configured boot options
+  //
+  BootOptions = EfiBootManagerGetLoadOptions (
+                  &NewBootOptionCount,
+                  LoadOptionTypeBoot
+                  );
+  EfiBootManagerFreeLoadOptions (BootOptions, NewBootOptionCount);
+
+  //
+  // If the number of configured boot options has changed, reboot
+  // the system so the new boot options will be taken into account
+  // while executing the ordinary BDS bootflow sequence.
+  // *Unless* persistent varstore is being emulated, since we would
+  // then end up in an endless reboot loop.
+  //
+  if (!PcdGetBool (PcdEmuVariableNvModeEnable)) {
+    if (NewBootOptionCount != OldBootOptionCount) {
+      DEBUG ((
+        DEBUG_WARN,
+        "%a: rebooting after refreshing all boot options\n",
+        __func__
+        ));
+      gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
+    }
+  }
+
+  Status = EfiBootManagerGetBootManagerMenu (&BootManagerMenu);
+  if (EFI_ERROR (Status)) {
+    return;
+  }
+
+  for ( ; ;) {
+    EfiBootManagerBoot (&BootManagerMenu);
+  }
 }

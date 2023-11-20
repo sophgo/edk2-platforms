@@ -19,6 +19,7 @@
 #include <Library/UefiLib.h>
 #include <Library/UefiBootManagerLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 #include <Protocol/PciIo.h>
 #include <Protocol/LoadedImage.h>
 #include <Protocol/FirmwareVolume2.h>

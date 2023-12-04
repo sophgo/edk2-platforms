@@ -105,7 +105,6 @@
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
   VariableFlashInfoLib|MdeModulePkg/Library/BaseVariableFlashInfoLib/BaseVariableFlashInfoLib.inf
   VariablePolicyHelperLib|MdeModulePkg/Library/VariablePolicyHelperLib/VariablePolicyHelperLib.inf
-
 !ifdef $(SOURCE_DEBUG_ENABLE)
   PeCoffExtraActionLib|SourceLevelDebugPkg/Library/PeCoffExtraActionLibDebug/PeCoffExtraActionLibDebug.inf
   DebugCommunicationLib|SourceLevelDebugPkg/Library/DebugCommunicationLibSerialPort/DebugCommunicationLibSerialPort.inf
@@ -115,7 +114,7 @@
 !endif
 
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
-
+  ImagePropertiesRecordLib|MdeModulePkg/Library/ImagePropertiesRecordLib/ImagePropertiesRecordLib.inf
 !if $(SECURE_BOOT_ENABLE) == TRUE
   IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
   OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
@@ -313,6 +312,20 @@
   #
   gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode|8
 
+  #
+  # Terminal Type
+  # 0 - PC-ANSI Serial Console.
+  # 1 - VT-100 Serial Console.
+  # 2 - VT-100+ Serial Console.
+  # 3 - VT-UTF8 Serial Console.
+  # 4 - Tty Terminal Serial Console.
+  # 5 - Linux Terminal Serial Console.
+  # 6 - Xterm R6 Serial Console.
+  # 7 - VT-400 Serial Console.
+  # 8 - SCO Terminal Serial Console.
+  #
+  gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType|4
+
 [PcdsFixedAtBuild.common]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0CfgBase|0x7060000000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1CfgBase|0x7060800000
@@ -384,7 +397,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0208
   gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
 
-  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|0
+  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|10
 
   #
   # Set video resolution for boot options and for text setup.
@@ -460,17 +473,15 @@
 !endif
 
   UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
-  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf {
-    <LibraryClasses>
-      PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
-  }
   MdeModulePkg/Universal/Metronome/Metronome.inf
-  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf {
     <LibraryClasses>
       ResetSystemLib|MdeModulePkg/Library/BaseResetSystemLibNull/BaseResetSystemLibNull.inf
   }
-  EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf
+  EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf {
+    <LibraryClasses>
+      RealTimeClockLib|EmbeddedPkg/Library/VirtualRealTimeClockLib/VirtualRealTimeClockLib.inf
+  }
 
   #
   # RISC-V Platform module
@@ -485,7 +496,6 @@
   UefiCpuPkg/CpuTimerDxeRiscV64/CpuTimerDxeRiscV64.inf
   Silicon/Sophgo/SG2042Pkg/Override/UefiCpuPkg/CpuDxeRiscV64/CpuDxeRiscV64.inf
   MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
-
   MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
   MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf {
     <LibraryClasses>
@@ -495,8 +505,19 @@
   MdeModulePkg/Universal/WatchdogTimerDxe/WatchdogTimer.inf
   MdeModulePkg/Universal/MonotonicCounterRuntimeDxe/MonotonicCounterRuntimeDxe.inf
   MdeModulePkg/Universal/CapsuleRuntimeDxe/CapsuleRuntimeDxe.inf
+  MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
+
+  #
+  # Multiple Console IO support
+  #
   MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
   MdeModulePkg/Universal/Console/ConSplitterDxe/ConSplitterDxe.inf
+  MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
+  MdeModulePkg/Universal/PrintDxe/PrintDxe.inf
+  MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
+
+  # Simple TextIn/TextOut for UEFI Terminal
+  EmbeddedPkg/SimpleTextInOutSerial/SimpleTextInOutSerial.inf
 
   #
   # Graphic Console Support
@@ -505,24 +526,11 @@
     <LibraryClasses>
        PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
   }
-  MdeModulePkg/Universal/Console/TerminalDxe/TerminalDxe.inf
-  MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf {
-    <LibraryClasses>
-      DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
-      PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
-  }
-  MdeModulePkg/Universal/PrintDxe/PrintDxe.inf
-  MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
-  MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
-  MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
-  MdeModulePkg/Bus/Scsi/ScsiBusDxe/ScsiBusDxe.inf
-  MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
-  MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
-  MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
-  MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
-  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
+
+  #
+  # Memory test
+  #
   MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
-  MdeModulePkg/Universal/SerialDxe/SerialDxe.inf
 
   #
   # SMBIOS Support
@@ -533,7 +541,10 @@
   #
   # PCIe Support
   #
-  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
+  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf {
+    <LibraryClasses>
+      PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
+  }
   Silicon/Sophgo/SG2042Pkg/Override/MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf {
     <LibraryClasses>
       NULL|Silicon/Sophgo/SG2042Pkg/Library/PlatformPciLib/PlatformPciLib.inf
@@ -550,6 +561,8 @@
   MdeModulePkg/Bus/Ata/AtaAtapiPassThru/AtaAtapiPassThru.inf
   MdeModulePkg/Bus/Ata/AtaBusDxe/AtaBusDxe.inf
   MdeModulePkg/Bus/Pci/SataControllerDxe/SataControllerDxe.inf
+  MdeModulePkg/Bus/Scsi/ScsiBusDxe/ScsiBusDxe.inf
+  MdeModulePkg/Bus/Scsi/ScsiDiskDxe/ScsiDiskDxe.inf
 
   #
   # Network Support
@@ -562,6 +575,7 @@
   MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
   MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
   MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
+  MdeModulePkg/Bus/Pci/NonDiscoverablePciDeviceDxe/NonDiscoverablePciDeviceDxe.inf
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
@@ -578,15 +592,10 @@
   # FAT filesystem + GPT/MBR partitioning + UDF filesystem
   #
   FatPkg/EnhancedFatDxe/Fat.inf
+  MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
+  MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
+  MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
   MdeModulePkg/Universal/Disk/UdfDxe/UdfDxe.inf
-
-  OvmfPkg/LinuxInitrdDynamicShellCommand/LinuxInitrdDynamicShellCommand.inf {
-    <PcdsFixedAtBuild>
-      gEfiShellPkgTokenSpaceGuid.PcdShellLibAutoInitialize|FALSE
-    <LibraryClasses>
-      ShellLib|ShellPkg/Library/UefiShellLib/UefiShellLib.inf
-      SortLib|MdeModulePkg/Library/UefiSortLib/UefiSortLib.inf
-  }
 
   #
   # UEFI Application (Shell Embedded Boot Loader)
@@ -602,7 +611,6 @@
       NULL|ShellPkg/Library/UefiShellInstall1CommandsLib/UefiShellInstall1CommandsLib.inf
       NULL|ShellPkg/Library/UefiShellNetwork1CommandsLib/UefiShellNetwork1CommandsLib.inf
       HandleParsingLib|ShellPkg/Library/UefiHandleParsingLib/UefiHandleParsingLib.inf
-      FileHandleLib|MdePkg/Library/UefiFileHandleLib/UefiFileHandleLib.inf
       SortLib|MdeModulePkg/Library/UefiSortLib/UefiSortLib.inf
       PrintLib|MdePkg/Library/BasePrintLib/BasePrintLib.inf
       BcfgCommandLib|ShellPkg/Library/UefiShellBcfgCommandLib/UefiShellBcfgCommandLib.inf
@@ -616,10 +624,30 @@
       gEfiMdePkgTokenSpaceGuid.PcdUefiLibMaxPrintBufferSize|8000
   }
 
+  OvmfPkg/LinuxInitrdDynamicShellCommand/LinuxInitrdDynamicShellCommand.inf {
+    <PcdsFixedAtBuild>
+      gEfiShellPkgTokenSpaceGuid.PcdShellLibAutoInitialize|FALSE
+    <LibraryClasses>
+      ShellLib|ShellPkg/Library/UefiShellLib/UefiShellLib.inf
+      SortLib|MdeModulePkg/Library/UefiSortLib/UefiSortLib.inf
+  }
+
 !if $(SECURE_BOOT_ENABLE) == TRUE
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
 !endif
 
+  #
+  # Bds
+  #
+  MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf {
+    <LibraryClasses>
+      DevicePathLib|MdePkg/Library/UefiDevicePathLib/UefiDevicePathLib.inf
+      PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+  }
+  MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
+  MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
+  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
+  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   MdeModulePkg/Logo/LogoDxe.inf
   MdeModulePkg/Application/UiApp/UiApp.inf {
     <LibraryClasses>

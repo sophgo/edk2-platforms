@@ -240,7 +240,6 @@ IsUsbHost (
   return FALSE;
 }
 
-
 /**
   This CALLBACK_FUNCTION attempts to connect a handle non-recursively, asking
   the matching driver to produce all first-level child handles.
@@ -698,6 +697,12 @@ PlatformBootManagerBeforeConsole (
   FilterAndProcess (&gEfiPciRootBridgeIoProtocolGuid, NULL, Connect);
 
   //
+  // Ensure that USB is initialized by connecting the PCI root bridge so
+  // that the xHCI PCI controller gets enumerated.
+  //
+  FilterAndProcess (&gEfiUsb2HcProtocolGuid, NULL, Connect);
+
+  //
   // Find all display class PCI devices (using the handles from the previous
   // step), and connect them non-recursively. This should produce a number of
   // child handles with GOPs on them.
@@ -731,6 +736,7 @@ PlatformBootManagerBeforeConsole (
   //
   // Add the hardcoded serial console device path to ConIn, ConOut, ErrOut.
   //
+  // ASSERT (FixedPcdGet8 (PcdDefaultTerminalType) == 4);
   CopyGuid (&mSerialConsole.TermType.Guid, &gEfiTtyTermGuid);
 
   EfiBootManagerUpdateConsoleVariable (
@@ -773,10 +779,7 @@ PlatformBootManagerAfterConsole (
   )
 {
   EFI_STATUS                    Status;
-  EFI_GRAPHICS_OUTPUT_PROTOCOL  *GraphicsOutput;
   UINTN                         FirmwareVerLength;
-  UINTN                         PosX;
-  UINTN                         PosY;
   EFI_INPUT_KEY                 Key;
 
   FirmwareVerLength = StrLen (PcdGetPtr (PcdFirmwareVersionString));
@@ -784,37 +787,6 @@ PlatformBootManagerAfterConsole (
   // Show the splash screen.
   //
   Status = BootLogoEnableLogo ();
-  if (EFI_ERROR (Status)) {
-    if (FirmwareVerLength > 0) {
-      Print (
-        VERSION_STRING_PREFIX L"%s\n",
-        PcdGetPtr (PcdFirmwareVersionString)
-        );
-    }
-
-    Print (L"Press ESCAPE for boot options ");
-  } else if (FirmwareVerLength > 0) {
-    Status = gBS->HandleProtocol (
-                    gST->ConsoleOutHandle,
-                    &gEfiGraphicsOutputProtocolGuid,
-                    (VOID **)&GraphicsOutput
-                    );
-    if (!EFI_ERROR (Status)) {
-      PosX = (GraphicsOutput->Mode->Info->HorizontalResolution -
-              (StrLen (VERSION_STRING_PREFIX) + FirmwareVerLength) *
-              EFI_GLYPH_WIDTH) / 2;
-      PosY = 0;
-
-      PrintXY (
-        PosX,
-        PosY,
-        NULL,
-        NULL,
-        VERSION_STRING_PREFIX L"%s",
-        PcdGetPtr (PcdFirmwareVersionString)
-        );
-    }
-  }
 
   //
   // Connect the rest of the devices.

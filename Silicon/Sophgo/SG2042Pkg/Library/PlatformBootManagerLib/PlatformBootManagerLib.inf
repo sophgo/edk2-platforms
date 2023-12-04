@@ -41,6 +41,7 @@
 
 [FixedPcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString
+  gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType
 
 [Pcd]
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut
@@ -66,3 +67,4 @@
   gPlatformBootManagerProtocolGuid
   gEdkiiNonDiscoverableDeviceProtocolGuid
   gEfiSimpleFileSystemProtocolGuid
+  gEfiUsb2HcProtocolGuid

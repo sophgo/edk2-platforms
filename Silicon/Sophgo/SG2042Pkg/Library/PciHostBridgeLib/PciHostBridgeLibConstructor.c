@@ -240,7 +240,7 @@ MangoPcieHostBridgeLibConstructor (
       // after enabling MultiArchUefiPkg
       //
       if (PcieEnableCount == 4) {
-        gBS->Stall (10000000);
+        gBS->Stall (3500000);
       }
 
       PcieHostInitRootPort (

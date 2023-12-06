@@ -7,9 +7,11 @@
 **/
 
 #include <Library/IoLib.h>
+#include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Uefi/UefiSpec.h>
 #include <Uefi/UefiBaseType.h>
+#include <Protocol/FdtClient.h>
 #include <Include/SophgoPciRegs.h>
 #include <Include/PlatformPciLib.h>
 #include <IndustryStandard/Pci22.h>
@@ -192,6 +194,113 @@ PcieHostSetOutboundRegion (
   MmioWrite32 ((UINTN)(CfgBase + PCIE_AT_OB_REGION_CPU_ADDR1(RegionNumber)), Addr1);
 }
 
+STATIC
+EFI_STATUS
+GetPcieEnableCount (
+  VOID
+)
+{
+  FDT_CLIENT_PROTOCOL  *FdtClient;
+  EFI_STATUS           Status;
+  EFI_STATUS           FindNodeStatus;
+  INT32                Node;
+  CONST VOID           *Prop;
+  UINT32               PropSize;
+  UINT32               Num;
+  UINT16               PortIndex;
+  UINT16               LinkIndex;
+  UINT8                PcieEnableCount;
+
+  Num = 0;
+  PcieEnableCount = PcdGet8 (PcdMangoPcieEnableMask);
+
+  Status = gBS->LocateProtocol (
+      &gFdtClientProtocolGuid,
+      NULL,
+      (VOID **) &FdtClient
+      );
+  ASSERT_EFI_ERROR (Status);
+
+  for (FindNodeStatus = FdtClient->FindCompatibleNode (
+                                     FdtClient,
+                                     "sophgo,cdns-pcie-host",
+                                     &Node
+                                     );
+
+    !EFI_ERROR (FindNodeStatus) && Num < PCIE_MAX_PORT * PCIE_MAX_LINK;
+
+    FindNodeStatus = FdtClient->FindNextCompatibleNode (
+                                     FdtClient,
+                                     "sophgo,cdns-pcie-host",
+                                     Node,
+                                     &Node
+                                     ))
+  {
+    Status = FdtClient->GetNodeProperty (
+                                FdtClient,
+                                Node,
+                                "reg",
+                                &Prop,
+                                &PropSize
+                                );
+
+    if (SwapBytes64 (((CONST UINT64 *) Prop)[0]) >= (1UL << 39)) {
+      break;
+    }
+
+    Status = FdtClient->GetNodeProperty (
+                                FdtClient,
+                                Node,
+                                "pcie-id",
+                                &Prop,
+                                &PropSize
+                                );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+        "%a: Get pcie-id failed (Status = %r)\n",
+        __func__,
+        Status
+        ));
+      return Status;
+    }
+
+    PortIndex = SwapBytes16 (((CONST UINT16 *) Prop)[0]);
+
+    Status = FdtClient->GetNodeProperty (
+                                FdtClient,
+                                Node,
+                                "link-id",
+                                &Prop,
+                                &PropSize
+                                );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+        "%a: Get link-id failed (Status = %r)\n",
+        __func__,
+        Status
+        ));
+      return Status;
+    }
+
+    LinkIndex = SwapBytes16 (((CONST UINT16 *) Prop)[0]);
+
+    PcieEnableCount |= 1 << (PortIndex * 2 + LinkIndex);
+  }
+
+  PcdSet8S (PcdMangoPcieEnableMask, PcieEnableCount);
+
+  DEBUG ((
+    DEBUG_INFO,
+    "%a(): PcdMangoPcieEnableMask = 0x%x\n",
+    __func__,
+    PcieEnableCount
+    ));
+
+  return EFI_SUCCESS;
+}
+
 EFI_STATUS
 EFIAPI
 MangoPcieHostBridgeLibConstructor (
@@ -215,6 +324,11 @@ MangoPcieHostBridgeLibConstructor (
   // inbound (PCIe -> AXI) address translations
   //
   NoBarNbits = 0x30;
+
+  //
+  // Get the PCIe RC count
+  //
+  GetPcieEnableCount ();
 
   PcieEnableCount = PcdGet8 (PcdMangoPcieEnableMask);
   PhyAddrToVirAddr = PcdGet64 (PcdSG2042PhyAddrToVirAddr);

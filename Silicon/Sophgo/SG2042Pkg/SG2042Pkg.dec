@@ -78,8 +78,7 @@
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region4Size|0x0|UINT64|0x00001039
 
 [PcdsPatchableInModule, PcdsDynamic]
-  # Enable both RC#0, RC#1 and RC#2 by default
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask|0x7|UINT8|0x0000103A
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask|0x0|UINT8|0x0000103A
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042PhyAddrToVirAddr|0x0|UINT64|0x00001002
 
 [UserExtensions.TianoCore."ExtraFiles"]

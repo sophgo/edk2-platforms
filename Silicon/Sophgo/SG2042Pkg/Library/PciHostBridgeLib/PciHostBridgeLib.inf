@@ -24,6 +24,7 @@
 [Packages]
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
   Silicon/Sophgo/SG2042Pkg/SG2042Pkg.dec
 
@@ -34,6 +35,12 @@
   DevicePathLib
   MemoryAllocationLib
   UefiBootServicesTableLib
+
+[Protocols]
+  gFdtClientProtocolGuid                                            ## CONSUMES
+
+[Depex]
+  gFdtClientProtocolGuid
 
 [Pcd]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask     ## CONSUMES

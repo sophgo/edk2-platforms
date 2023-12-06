@@ -410,11 +410,14 @@
   #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow|0
   #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|0
 
+  #
   # RC#0(P0L0,BIT0); RC#1(P0L1,BIT1); RC#2(P1L0,BIT2); RC#3(P1L1,BIT3)
   # 2U Server: 0x4
   # X8\X4 EVB: 0x7
   # PioneerBox: 0xF
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask|0x7
+  # Set the value at the PCIe RC initialization phase
+  #
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask|0x0
 
 [PcdsDynamicHii]
   gUefiOvmfPkgTokenSpaceGuid.PcdForceNoAcpi|L"ForceNoAcpi"|gOvmfVariableGuid|0x0|TRUE|NV,BS
@@ -548,6 +551,7 @@
   Silicon/Sophgo/SG2042Pkg/Override/MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf {
     <LibraryClasses>
       NULL|Silicon/Sophgo/SG2042Pkg/Library/PlatformPciLib/PlatformPciLib.inf
+      PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
   }
 
   #

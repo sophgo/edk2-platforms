@@ -593,6 +593,11 @@
   !endif
 
   #
+  # ASPEED AST2600 GOP driver
+  #
+  Drivers/ASpeed/ASpeedGopBinPkg/ASpeedAst2600GopDxe.inf
+
+  #
   # FAT filesystem + GPT/MBR partitioning + UDF filesystem
   #
   FatPkg/EnhancedFatDxe/Fat.inf

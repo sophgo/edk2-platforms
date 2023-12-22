@@ -177,6 +177,11 @@ INF  MdeModulePkg/Logo/LogoDxe.inf
 !endif
 
 #
+# ASPEED AST2600 GOP driver
+#
+INF  Drivers/ASpeed/ASpeedGopBinPkg/ASpeedAst2600GopDxe.inf
+
+#
 # FAT filesystem + GPT/MBR partitioning + UDF filesystem
 #
 INF  FatPkg/EnhancedFatDxe/Fat.inf

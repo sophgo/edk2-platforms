@@ -6,11 +6,10 @@
 
 **/
 
+#include <Uefi.h>
 #include <Library/IoLib.h>
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
-#include <Uefi/UefiSpec.h>
-#include <Uefi/UefiBaseType.h>
 #include <Protocol/FdtClient.h>
 #include <Include/SophgoPciRegs.h>
 #include <Include/PlatformPciLib.h>
@@ -198,7 +197,7 @@ STATIC
 EFI_STATUS
 GetPcieEnableCount (
   VOID
-)
+  )
 {
   FDT_CLIENT_PROTOCOL  *FdtClient;
   EFI_STATUS           Status;
@@ -347,14 +346,6 @@ MangoPcieHostBridgeLibConstructor (
       if (!((PcieEnableCount >>
             ((PCIE_MAX_PORT * PortIndex) + LinkIndex)) & 0x01)) {
         continue;
-      }
-
-      //
-      // Ensure the devices under the PCIe Switch are ready on the Pisces Server,
-      // after enabling MultiArchUefiPkg
-      //
-      if (PcieEnableCount == 4) {
-        gBS->Stall (3500000);
       }
 
       PcieHostInitRootPort (

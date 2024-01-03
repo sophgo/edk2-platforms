@@ -686,6 +686,12 @@ RiscVMmuSetSatpMode (
         );
       ASSERT_EFI_ERROR (Status);
     } else if (MemoryMap[Index].GcdMemoryType == EfiGcdMemoryTypeSystemMemory) {
+      //
+      // For Sv39, do not create the high memory map (512GB or more).
+      //
+      if (SatpMode == SATP_MODE_SV39 && MemoryMap[Index].BaseAddress >= SIZE_512GB) {
+        continue;
+      }
       // Default Read/Write/Execute attribute for system memory
       Status = UpdateRegionMapping (
         MemoryMap[Index].BaseAddress,

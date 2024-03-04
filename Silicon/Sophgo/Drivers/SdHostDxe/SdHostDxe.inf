@@ -28,7 +28,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
-  Silicon/Sophgo/SG2042Pkg/SG2042Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
 
 [LibraryClasses]
   BaseLib
@@ -44,5 +44,5 @@
   gSophgoMmcHostProtocolGuid        ## PRODUCES
 
 [FixedPcd]
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042SDIOBase        ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdSDIOBase                    ## CONSUMES
   gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode             ## CONSUMES

@@ -328,6 +328,7 @@
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType|4
 
 [PcdsFixedAtBuild.common]
+  gSophgoTokenSpaceGuid.PcdSDIOBase|0x704002B000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0CfgBase|0x7060000000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1CfgBase|0x7060800000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0CfgBase|0x7062000000
@@ -491,8 +492,8 @@
   # RISC-V Platform module
   #
   Platform/SiFive/U5SeriesPkg/Universal/Dxe/RamFvbServicesRuntimeDxe/FvbServicesRuntimeDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/MmcDxe/MmcDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/SdHostDxe/SdHostDxe.inf
+  Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
+  Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 
   #
   # RISC-V Core module

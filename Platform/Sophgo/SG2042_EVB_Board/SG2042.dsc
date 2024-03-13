@@ -166,6 +166,8 @@
   PciSegmentLib|Silicon/Sophgo/SG2042Pkg/Library/PciSegmentLib/PciSegmentLib.inf
   PciHostBridgeLib|Silicon/Sophgo/SG2042Pkg/Library/PciHostBridgeLib/PciHostBridgeLib.inf
 
+  # Nor Flash Library
+  NorFlashInfoLib|EmbeddedPkg/Library/NorFlashInfoLib/NorFlashInfoLib.inf
 [LibraryClasses.common.SEC]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
   ExtractGuidedSectionLib|MdePkg/Library/BaseExtractGuidedSectionLib/BaseExtractGuidedSectionLib.inf
@@ -329,6 +331,8 @@
 
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSDIOBase|0x704002B000
+  gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x7000180000
+  gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7002180000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0CfgBase|0x7060000000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1CfgBase|0x7060800000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0CfgBase|0x7062000000
@@ -492,6 +496,8 @@
   # RISC-V Platform module
   #
   Platform/SiFive/U5SeriesPkg/Universal/Dxe/RamFvbServicesRuntimeDxe/FvbServicesRuntimeDxe.inf
+  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 

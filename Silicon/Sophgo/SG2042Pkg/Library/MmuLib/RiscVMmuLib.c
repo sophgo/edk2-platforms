@@ -705,6 +705,21 @@ RiscVMmuSetSatpMode (
     }
   }
 
+  //
+  // Variables of Firmware Volume
+  //
+  Status = UpdateRegionMapping (
+    PcdGet64 (PcdFlashVariableOffset),
+    PcdGet32 (PcdFlashNvStorageFtwSpareSize) +
+    PcdGet32 (PcdFlashNvStorageFtwWorkingSize) +
+    PcdGet32 (PcdFlashNvStorageVariableSize),
+    RISCV_PG_R | RISCV_PG_W | THEAD_C920_PTE_SH | THEAD_C920_PTE_SO,
+    PTE_ATTRIBUTES_MASK,
+    TranslationTable,
+    FALSE
+    );
+  ASSERT_EFI_ERROR (Status);
+
   FreePool ((VOID *)MemoryMap);
 
   if (GetInterruptState ()) {

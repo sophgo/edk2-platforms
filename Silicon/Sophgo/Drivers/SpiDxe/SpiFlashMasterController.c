@@ -194,6 +194,15 @@ SpifmcRead (
   MmioWrite32 ((UINTN)(SpiBase + SPIFMC_FIFO_PT), 0);
   MmioWrite8 ((UINTN)(SpiBase + SPIFMC_FIFO_PORT), Nor->ReadOpcode);
 
+  //
+  // This is a workaround.
+  // For Length<=SPIFMC_MAX_FIFO_DEPTH, we have to modify the Length manually.
+  // Although we set the TRAN_CSR_FIFO_TRG_LVL_1_BYTE, not
+  // TRAN_CSR_FIFO_TRG_LVL_8_BYTE, we cannot wait for the INT_RD_FIFO to be set
+  // when the Length equals one byte.
+  //
+  Length = MAX (SPIFMC_MAX_FIFO_DEPTH, Length);
+
   for (Index = Nor->AddrNbytes - 1; Index >= 0; Index --) {
     MmioWrite8 ((UINTN)(SpiBase + SPIFMC_FIFO_PORT), (From >> Index * 8) & 0xff);
   }

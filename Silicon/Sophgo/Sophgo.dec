@@ -28,3 +28,4 @@
   gSophgoTokenSpaceGuid.PcdSDIOBase|0x0|UINT64|0x00001001
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x0|UINT64|0x00001002
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x0|UINT64|0x00001003
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001004

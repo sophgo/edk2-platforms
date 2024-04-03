@@ -66,6 +66,10 @@ PopulateIoResources (
   Node = fdt_node_offset_by_compatible (FdtBase, -1, Compatible);
   while (Node != -FDT_ERR_NOTFOUND) {
     Reg = (UINT64 *)fdt_getprop (FdtBase, Node, "reg", &LenP);
+    if (SwapBytes64 (Reg[0]) >= (1UL << 39)) {
+      break;
+    }
+
     if (Reg) {
       AddIoMemoryBaseSizeHob (SwapBytes64 (Reg[0]), SwapBytes64 (Reg[1]));
       DEBUG ((

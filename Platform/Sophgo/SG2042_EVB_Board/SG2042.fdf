@@ -112,6 +112,16 @@ INF  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
 INF  Silicon/Sophgo/SG2042Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 
 #
+# ACPI Support
+#
+!if $(ACPI_ENABLE) == TRUE
+  INF MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+  INF Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
+  INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
+  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2042Pkg/AcpiTables/SGX4EvbAcpiTables.inf
+!endif
+
+#
 # Network modules
 #
 !if $(E1000_ENABLE)

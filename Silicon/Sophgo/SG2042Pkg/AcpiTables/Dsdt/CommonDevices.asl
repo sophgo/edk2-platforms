@@ -119,6 +119,7 @@ Scope(_SB)
     }
   }
 
+  // system controller
   Device (SCTL) {
     Name(_HID, "SGPH0020")
     Name(_CRS, ResourceTemplate() {

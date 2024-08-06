@@ -73,7 +73,7 @@ Scope(_SB)
         0x0000000004                 // Length
       )
 
-      Interrupt (ResourceConsumer, Edge, ActiveHigh, Exclusive,,,) {
+      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) {
         64, 65, 66, 67, 68, 69, 70, 71, 72, 73, 74, 75,
         76, 77, 78, 79, 80, 81, 82, 83, 84, 85, 86, 87,
         88, 89, 90, 91, 92, 93, 94, 95,

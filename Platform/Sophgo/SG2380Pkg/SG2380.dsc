@@ -326,20 +326,9 @@
   #
   gEfiMdePkgTokenSpaceGuid.PcdDefaultTerminalType|4
 
-  #
-  # Variable store - default values
-  # 64KB + 64KB + 64KB
-  # Flash Offset: 32MB
-  #
-  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x02800000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize|0x00010000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize|0x00010000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize|0x00010000
 
 [PcdsFixedAtBuild.common]
-  gSophgoTokenSpaceGuid.PcdSDIOBase|0x704002B000
-  gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x7000180000
-  gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7002180000
+  gSophgoTokenSpaceGuid.PcdSDIOBase|0x5090000000
 
 ################################################################################
 #
@@ -349,9 +338,9 @@
 
 [PcdsDynamicDefault]
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0x02800000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|0x02810000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x02820000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase|0
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|FALSE
 
   #gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0208
@@ -440,9 +429,7 @@
   #
   # RISC-V Platform module
   #
-  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
-  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
-  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+  Platform/SiFive/U5SeriesPkg/Universal/Dxe/RamFvbServicesRuntimeDxe/FvbServicesRuntimeDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 

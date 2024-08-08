@@ -210,6 +210,7 @@ AddReservedMemoryMap (
           Addr,
           Size
           ));
+        DEBUG (( DEBUG_INFO, "AddReservedMemoryMap\n"));
 
         // OpenSBI 1.3/1.3.1 should be used which fixed its no-map issue.
         if (fdt_getprop (FdtPointer, SubNode, "no-map", &Len)) {
@@ -242,54 +243,102 @@ MemoryPeimInitialization (
   IN  VOID  *DeviceTreeAddress
   )
 {
-  CONST UINT64                *RegProp;
-  CONST CHAR8                 *Type;
-  UINT64                      UefiMemoryBase;
-  UINT64                      CurBase;
-  UINT64                      CurSize;
-  INT32                       Node;
-  INT32                       Prev;
-  INT32                       Len;
+  // CONST UINT64                *RegProp;
+  // CONST CHAR8                 *Type;
+  // UINT64                      UefiMemoryBase;
+  // UINT64                      CurBase;
+  // UINT64                      CurSize;
+  UINT64                      FwMemBase;
+  UINT64                      FwMemSize;
+  // UINT64                      LowestMemBase;
+  // UINT64                      LowestMemSize;
+  // INT32                       Node;
+  // INT32                       Prev;
+  // INT32                       Len;
 
-  UefiMemoryBase = (UINT64)FixedPcdGet32 (PcdTemporaryRamBase) + FixedPcdGet32 (PcdTemporaryRamSize) - SIZE_32MB;
+  // UefiMemoryBase = (UINT64)FixedPcdGet32 (PcdTemporaryRamBase) + FixedPcdGet32 (PcdTemporaryRamSize) - SIZE_32MB;
+  FwMemBase      = PcdGet32 (PcdRiscVDxeFvBase);
+  FwMemSize      = PcdGet32 (PcdRiscVDxeFvSize);
+  // LowestMemBase  = 0;
+  // LowestMemSize  = 0;
 
-  // Look for the lowest memory node
-  for (Prev = 0; ; Prev = Node) {
-    Node = fdt_next_node (DeviceTreeAddress, Prev, NULL);
-    if (Node < 0) {
-      break;
-    }
+  // // Look for the lowest memory node
+  // for (Prev = 0; ; Prev = Node) {
+  //   Node = fdt_next_node (DeviceTreeAddress, Prev, NULL);
+  //   if (Node < 0) {
+  //     break;
+  //   }
 
-    // Check for memory node
-    Type = fdt_getprop (DeviceTreeAddress, Node, "device_type", &Len);
-    if (Type && (AsciiStrnCmp (Type, "memory", Len) == 0)) {
-      // Get the 'reg' property of this node. For now, we will assume
-      // two 8 byte quantities for base and size, respectively.
-      RegProp = fdt_getprop (DeviceTreeAddress, Node, "reg", &Len);
-      if ((RegProp != 0) && (Len == (2 * sizeof (UINT64)))) {
-        CurBase = fdt64_to_cpu (ReadUnaligned64 (RegProp));
-        CurSize = fdt64_to_cpu (ReadUnaligned64 (RegProp + 1));
+  //   // Check for memory node
+  //   Type = fdt_getprop (DeviceTreeAddress, Node, "device_type", &Len);
+  //   if (Type && (AsciiStrnCmp (Type, "memory", Len) == 0)) {
+  //     // Get the 'reg' property of this node. For now, we will assume
+  //     // two 8 byte quantities for base and size, respectively.
+  //     RegProp = fdt_getprop (DeviceTreeAddress, Node, "reg", &Len);
+  //     if ((RegProp != 0) && (Len == (2 * sizeof (UINT64)))) {
+  //       CurBase = fdt64_to_cpu (ReadUnaligned64 (RegProp));
+  //       CurSize = fdt64_to_cpu (ReadUnaligned64 (RegProp + 1));
 
-        if (CurBase != 0) {
-          DEBUG ((
-            DEBUG_INFO,
-            "%a: Initialize System RAM @ 0x%lx - 0x%lx\n",
-            __func__,
-            CurBase,
-            CurBase + CurSize - 1
-          ));
+  //       if ((LowestMemBase == 0) || (CurBase <= LowestMemBase)) {
+  //         LowestMemBase = CurBase;
+  //         LowestMemSize = CurSize;
+  //         if (CurBase != 0) {
+  //           DEBUG ((
+  //             DEBUG_INFO,
+  //             "%a: 1111111 Initialize System RAM @ 0x%lx - 0x%lx\n",
+  //             __func__,
+  //             CurBase,
+  //             CurBase + CurSize - 1
+  //           ));
 
-          InitializeRamRegions (CurBase, CurSize);
-        }
-      } else {
-        DEBUG ((
-          DEBUG_ERROR,
-          "%a: Failed to parse FDT memory node\n",
-          __func__
-          ));
-      }
-    }
-  }
+  //           InitializeRamRegions (CurBase, CurSize);
+  //         }
+  //       }
+
+  //     } else {
+  //       DEBUG ((
+  //         DEBUG_ERROR,
+  //         "%a: Failed to parse FDT memory node\n",
+  //         __func__
+  //         ));
+  //     }
+  //   }
+  // }
+
+  // if (UefiMemoryBase > LowestMemBase) {
+  //   LowestMemBase = UefiMemoryBase;
+  //   LowestMemSize -= UefiMemoryBase;
+  // }
+
+  // DEBUG ((
+  //   DEBUG_INFO,
+  //   "%a: 2222222 Initialize System RAM @ 0x%lx - 0x%lx\n",
+  //   __func__,
+  //   LowestMemBase,
+  //   LowestMemBase + LowestMemSize - 1
+  //   ));
+
+  // InitializeRamRegions (LowestMemBase, LowestMemSize);
+
+    DEBUG ((
+    DEBUG_INFO,
+    "%a: Initialize System RAM @ 0x%x - 0x%lx\n",
+    __func__,
+    0x80A00000,
+    0x17FFFFFFF
+    ));
+
+  InitializeRamRegions (0x80A00000, 0x17FFFFFFF);
+
+  DEBUG ((
+    DEBUG_INFO,
+    "%a: Initialize System RAM @ 0x%lx - 0x%lx\n",
+    __func__,
+    FwMemBase,
+    FwMemBase + FwMemSize - 1
+    ));
+
+  InitializeRamRegions (FwMemBase, FwMemSize);
 
   AddReservedMemoryMap (DeviceTreeAddress);
 

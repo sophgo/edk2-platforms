@@ -345,6 +345,8 @@ Scope(_SB)
         Package () { "pcie-id", 0x1 },
         Package () { "link-id", 0x0 },
         Package () { "top-intc-used", 1 },
+        Package () { "top-intc-id", 0 },
+        Package () { "msix-supported", 0 },
       }
     })
 

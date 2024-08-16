@@ -1276,7 +1276,11 @@ FlashFvbEntryPoint (
 		  RuntimeMmioRegionSize,
                   EFI_MEMORY_UC | EFI_MEMORY_RUNTIME);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: Failed to add memory space\n", __FUNCTION__));
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Failed to add memory space\n",
+      __func__
+      ));
     goto ErrorAddSpace;
   }
 
@@ -1284,7 +1288,11 @@ FlashFvbEntryPoint (
                   RuntimeMmioRegionSize,
                   EFI_MEMORY_UC | EFI_MEMORY_RUNTIME);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: Failed to set memory attributes\n", __FUNCTION__));
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Failed to set memory attributes\n",
+      __func__
+      ));
     goto ErrorSetMemAttr;
   }
 

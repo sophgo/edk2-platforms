@@ -91,6 +91,8 @@
 #define SPIFMC_INT_RX_FRAME_EN                BIT4
 #define SPIFMC_INT_TX_FRAME_EN                BIT5
 
+#define SPIFMC_OPT                        0x30
+
 #define SPIFMC_MAX_FIFO_DEPTH             8
 
 #define SPI_MASTER_SIGNATURE                      SIGNATURE_32 ('M', 'S', 'P', 'I')

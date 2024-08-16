@@ -79,6 +79,10 @@ SpifmcReadRegister (
   Register |= SPIFMC_TRAN_CSR_WITH_CMD;
   Register |= SPIFMC_TRAN_CSR_TRAN_MODE_RX | SPIFMC_TRAN_CSR_TRAN_MODE_TX;
 
+  //
+  // OPT bit[1]: Disable no address cmd fifo flush
+  //
+  MmioWrite32 ((UINTN)(SpiBase + SPIFMC_OPT), 2);
   MmioWrite32 ((UINTN)(SpiBase + SPIFMC_FIFO_PT), 0);
   MmioWrite8 ((UINTN)(SpiBase + SPIFMC_FIFO_PORT), Opcode);
 

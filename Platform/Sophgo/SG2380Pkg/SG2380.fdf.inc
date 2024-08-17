@@ -10,16 +10,16 @@
 [Defines]
 DEFINE BLOCK_SIZE        = 0x1000
 DEFINE FW_BASE_ADDRESS   = 0x80200000
-DEFINE FW_SIZE           = 0x00800000
-DEFINE FW_BLOCKS         = 0x800
+DEFINE FW_SIZE           = 0x00900000
+DEFINE FW_BLOCKS         = 0x900
 
 #
-# 0x000000-0x77FFFF code
-# 0x780000-0x82FFFF variables
+# 0x000000-0x7FFFFF code
+# 0x800000-0x82FFFF variables
 #
 DEFINE CODE_BASE_ADDRESS = $(FW_BASE_ADDRESS)
-DEFINE CODE_SIZE         = 0x00780000
-DEFINE CODE_BLOCKS       = 0x780
+DEFINE CODE_SIZE         = 0x00800000
+DEFINE CODE_BLOCKS       = 0x800
 DEFINE VARS_BLOCKS       = 0x20
 
 #
@@ -30,14 +30,14 @@ DEFINE VARS_BLOCKS       = 0x20
 # FW memory region
 #
 DEFINE FVMAIN_OFFSET                 = 0x00000000
-DEFINE FVMAIN_SIZE                   = 0x00780000
+DEFINE FVMAIN_SIZE                   = 0x00800000
 
 #
 # EFI Variable memory region.
 # The total size of EFI Variable FD must include
 # all of sub regions of EFI Variable
 #
-DEFINE VARS_OFFSET                   = 0x00780000
+DEFINE VARS_OFFSET                   = 0x00800000
 DEFINE VARS_SIZE                     = 0x00010000
 DEFINE VARS_FTW_WORKING_OFFSET       = $(VARS_OFFSET) + $(VARS_SIZE)
 DEFINE VARS_FTW_WORKING_SIZE         = 0x00010000

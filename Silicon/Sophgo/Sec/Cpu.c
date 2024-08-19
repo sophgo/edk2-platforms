@@ -23,11 +23,8 @@ CpuPeimInitialization (
 {
   //
   // Publish the CPU Memory and IO spaces sizes.
-  // SiFive’s Sv48 implementation provides a 48-bit virtual address space
-  // using 47-bits of physical address space.
-  // The max physical address is 0xFFFFFFFFFF in the SoC System map.
   //
-  BuildCpuHob (47, 40);
+  BuildCpuHob (PcdGet8 (PcdPrePiCpuMemorySize), PcdGet8 (PcdPrePiCpuIoSize));
 
   return EFI_SUCCESS;
 }

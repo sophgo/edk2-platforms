@@ -1,5 +1,5 @@
 /** @file
-  Memory Detection for SG2380 Platform.
+  Memory Detection for SOPHGO Platform.
 
   Copyright (c) 2021, Hewlett Packard Enterprise Development LP. All rights reserved.<BR>
   Copyright (c) 2006 - 2014, Intel Corporation. All rights reserved.<BR>
@@ -20,7 +20,6 @@ Module Name:
 #include <Library/HobLib.h>
 #include <Library/IoLib.h>
 #include <Library/PcdLib.h>
-#include <Library/PeimEntryPoint.h>
 #include <Library/ResourcePublicationLib.h>
 #include <Register/RiscV64/RiscVEncoding.h>
 #include <Library/PrePiLib.h>

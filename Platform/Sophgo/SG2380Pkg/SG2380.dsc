@@ -304,6 +304,14 @@
   gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiLoaderData|0
 
   #
+  # SiFive’s Sv48 implementation provides a 48-bit virtual address space
+  # using 47-bits of physical address space.
+  # The max physical address is 0xFFFFFFFFFF in the SoC System map.
+  #
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize|47
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|40
+
+  #
   # Control the maximum SATP mode that MMU allowed to use.
   # 0 - Bare mode.
   # 8 - 39bit mode.
@@ -392,7 +400,7 @@
   #
   # SEC Phase modules
   #
-  Silicon/Sophgo/SG2380Pkg/Sec/SecMain.inf  {
+  Silicon/Sophgo/Sec/SecMain.inf  {
     <LibraryClasses>
       ExtractGuidedSectionLib|EmbeddedPkg/Library/PrePiExtractGuidedSectionLib/PrePiExtractGuidedSectionLib.inf
       LzmaDecompressLib|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf

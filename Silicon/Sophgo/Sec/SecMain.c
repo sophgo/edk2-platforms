@@ -1,5 +1,5 @@
 /** @file
-  RISC-V SEC phase module for SG2380 Platform.
+  RISC-V SEC phase module for SOPHGO Platform.
 
   Copyright (c) 2008 - 2023, Intel Corporation. All rights reserved.<BR>
   Copyright (c) 2022, Ventana Micro Systems Inc. All rights reserved.<BR>

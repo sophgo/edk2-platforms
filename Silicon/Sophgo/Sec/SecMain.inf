@@ -10,7 +10,7 @@
 ##
 
 [Defines]
-  INF_VERSION                    = 0x0001001B
+  INF_VERSION                    = 1.30
   BASE_NAME                      = SecMainRiscV64
   FILE_GUID                      = 71DE2F3C-1586-4558-97F2-7F0631C6908A
   MODULE_TYPE                    = SEC
@@ -37,6 +37,7 @@
   MdePkg/MdePkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
   Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
+  Silicon/Sophgo/Sophgo.dec
 
 [LibraryClasses]
   BaseLib
@@ -59,6 +60,8 @@
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFirmwareRegionSize             ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                       ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                       ## CONSUMES
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize                                 ## CONSUMES
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize                                     ## CONSUMES
 
 [Guids]
   gFdtHobGuid      ## PRODUCES

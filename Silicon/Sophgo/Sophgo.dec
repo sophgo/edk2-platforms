@@ -29,3 +29,8 @@
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x0|UINT64|0x00001002
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x0|UINT64|0x00001003
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001004
+
+## In the PcdsFixedAtBuild.RISCV64.
+[PcdsFixedAtBuild.RISCV64]
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize|0x0|UINT8|0x00010000
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|0x0|UINT8|0x00010001

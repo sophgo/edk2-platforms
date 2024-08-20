@@ -21,6 +21,7 @@ Scope(_SB)
         Package () { "clock-frequency", 500000000 },
         Package () { "reg-shift", 2 },
         Package () { "reg-io-width", 4 },
+        Package () { "clock-names", Package () { "baudclk", "apb_pclk" } },
       }
     })
     Name (_CRS, ResourceTemplate () {   // _CRS: Current Resource Settings
@@ -35,6 +36,9 @@ Scope(_SB)
             0x00001000                 // Length
           )
       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 112 }
+
+      ClockInput (500000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_UART_500M)
+      ClockInput (250000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_APB_UART)
     })
     Method (_STA) {
       Return (0xF)
@@ -52,6 +56,7 @@ Scope(_SB)
         Package () { "clock-frequency", 500000000 },
         Package () { "reg-shift", 2 },
         Package () { "reg-io-width", 4 },
+        Package () { "clock-names", Package () { "baudclk", "apb_pclk" } },
       }
     })
     Name (_CRS, ResourceTemplate () {   // _CRS: Current Resource Settings
@@ -66,6 +71,9 @@ Scope(_SB)
             0x00001000                 // Length
           )
       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 113 }
+
+      ClockInput (500000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_UART_500M)
+      ClockInput (250000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_APB_UART)
     })
     Method (_STA) {
       Return (0xF)
@@ -83,6 +91,7 @@ Scope(_SB)
         Package () { "clock-frequency", 500000000 },
         Package () { "reg-shift", 2 },
         Package () { "reg-io-width", 4 },
+        Package () { "clock-names", Package () { "baudclk", "apb_pclk" } },
       }
     })
     Name (_CRS, ResourceTemplate () {   // _CRS: Current Resource Settings
@@ -97,6 +106,9 @@ Scope(_SB)
             0x00001000                 // Length
           )
       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 114 }
+
+      ClockInput (500000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_UART_500M)
+      ClockInput (250000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_APB_UART)
     })
     Method (_STA) {
       Return (0xF)
@@ -114,6 +126,7 @@ Scope(_SB)
         Package () { "clock-frequency", 500000000 },
         Package () { "reg-shift", 2 },
         Package () { "reg-io-width", 4 },
+        Package () { "clock-names", Package () { "baudclk", "apb_pclk" } },
       }
     })
     Name (_CRS, ResourceTemplate () {   // _CRS: Current Resource Settings
@@ -128,6 +141,9 @@ Scope(_SB)
             0x00001000                 // Length
           )
       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 115 }
+
+      ClockInput (500000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_UART_500M)
+      ClockInput (250000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_APB_UART)
     })
     Method (_STA) {
       Return (0xF)

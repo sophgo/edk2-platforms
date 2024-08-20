@@ -12,7 +12,7 @@ Scope(_SB)
   Device (ETH0) {
     Name (_HID, "SGPH0007")
     Name (_UID, Zero)
-    Name (_CCA, 1)
+    Name (_CCA, 0)
     Method (_STA)                                       // _STA: Device status
     {
       Return (0xF)
@@ -35,6 +35,12 @@ Scope(_SB)
         Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 132 }
 
         GpioIo (Exclusive, PullUp, 0, 0, IoRestrictionOutputOnly, "\\_SB.GPI0", 0, ResourceConsumer) {27}
+
+        ClockInput (125000000, 1, Hz, Variable, "\\_SB.DIV0", DIV_CLK_FPLL_TX_ETH0)
+        ClockInput (125000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_TX_ETH0)
+        ClockInput (250000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_AXI_ETH0)
+        ClockInput (50000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_PTP_REF_I_ETH0)
+        ClockInput (25000000, 1, Hz, Variable, "\\_SB.DIV0", GATE_CLK_REF_ETH0)
       })
       Return(RBUF)
     }
@@ -59,7 +65,22 @@ Scope(_SB)
         Package (2) { "phy-mode", "rgmii-txid" },
         Package (2) { "phy-reset-gpios", Package () { ^ETH0, 0, 0, 0 } },
         Package (2) { "phy-handle", Package () { \_SB.ETH0.MDIO.PHY0 } },
+
+        Package (2) { "clock-names", Package () { "clk_tx", "gate_clk_tx", "stmmaceth", "ptp_ref", "gate_clk_ref" } },
       }
+    })
+
+    Name (_DMA, ResourceTemplate() {
+      QWordMemory (
+        ResourceProducer, ,
+        MinFixed, MaxFixed,
+        Prefetchable, ReadWrite,
+        0x0,
+        0x0,               // MIN
+        0x1effffffff,      // MAX
+        0x0000000000,      // TRA
+        0x1f00000000,      // LEN
+        , ,)
     })
 
     // AXI configuration

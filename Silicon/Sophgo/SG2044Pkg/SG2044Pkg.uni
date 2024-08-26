@@ -1,0 +1,14 @@
+// /** @file
+//
+// SOPHGO SG2044 Package Localized Strings and Content.
+//
+// Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+//
+// SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+// **/
+
+
+#string STR_PACKAGE_ABSTRACT            #language en-US "Provides SOPHGO RISC-V SG2044 platform modules and libraries"
+
+#string STR_PACKAGE_DESCRIPTION         #language en-US "This Package SOPHGO RISC-V SG2044 platform modules and libraries."

@@ -1,0 +1,20 @@
+## @file  SG2044.dec
+#
+#  This Package provides SOPHGO SG2044 modules and libraries.
+#
+#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  DEC_SPECIFICATION              = 0x0001001b
+  PACKAGE_NAME                   = SG2044
+  PACKAGE_GUID                   = 627E088D-D3FC-469B-9910-39B94D2D31B6
+  PACKAGE_VERSION                = 1.0
+
+[LibraryClasses]
+
+[Guids]
+  gUefiRiscVPlatformSG2044PkgTokenSpaceGuid = { 0xE72DAFEB, 0xDE84, 0x41D2, { 0x98, 0x02, 0xB8, 0xCD, 0xBA, 0x74, 0x5A, 0x97 } }

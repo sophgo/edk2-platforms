@@ -1,0 +1,32 @@
+## @file
+#
+# Copyright (c) 2024, SOPHGO INC. All rights reserved.<BR>
+#
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001000A
+  BASE_NAME                      = PciPlatformLib
+  FILE_GUID                      = DD61469F-9A51-4946-BE54-EFD3F9D71C26
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PciPlatformLib
+
+[Sources]
+  PciPlatformLib.c
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  IoLib
+
+[Protocols]
+  gFdtClientProtocolGuid		## CONSUMES

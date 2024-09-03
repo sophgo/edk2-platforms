@@ -162,6 +162,11 @@
   # Flattened Device Tree (FDT) access library
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
 
+  # PCIe dependencies
+  PciHostBridgeLib|Silicon/Sophgo/SG2044Pkg/Library/PciHostBridgeLib/PciHostBridgeLib.inf
+  PciSegmentLib|Silicon/Sophgo/SG2044Pkg/Library/PciSegmentLib/PciSegmentLib.inf
+  PciPlatformLib|Silicon/Sophgo/SG2044Pkg/Library/PciPlatformLib/PciPlatformLib.inf
+
   # Nor Flash Library
   NorFlashInfoLib|EmbeddedPkg/Library/NorFlashInfoLib/NorFlashInfoLib.inf
 
@@ -503,14 +508,11 @@
   #
   # PCIe Support
   #
-  #MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf {
-  #  <LibraryClasses>
-  #    PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
-  #}
-  #MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf {
-  #  <LibraryClasses>
-  #    PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
-  #}
+  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
+  MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf {
+    <LibraryClasses>
+      NULL|Silicon/Sophgo/SG2044Pkg/Library/PciPlatformLib/PciPlatformLib.inf
+  }
 
   #
   # NVMe Support
@@ -534,10 +536,10 @@
   #
   # USB Support
   #
-  #MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
-  #MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
-  #MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
-  #MdeModulePkg/Bus/Pci/NonDiscoverablePciDeviceDxe/NonDiscoverablePciDeviceDxe.inf
+  MdeModulePkg/Bus/Pci/UhciDxe/UhciDxe.inf
+  MdeModulePkg/Bus/Pci/EhciDxe/EhciDxe.inf
+  MdeModulePkg/Bus/Pci/XhciDxe/XhciDxe.inf
+  MdeModulePkg/Bus/Pci/NonDiscoverablePciDeviceDxe/NonDiscoverablePciDeviceDxe.inf
   MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf

@@ -48,6 +48,17 @@
   GCC:*_*_RISCV64_GENFW_FLAGS    = --keepexceptiontable
 !endif
 
+#
+# Force PE/COFF sections to be aligned at 4KB boundaries to support page level protection
+#
+[BuildOptions.common.EDKII.DXE_CORE,BuildOptions.common.EDKII.DXE_DRIVER,BuildOptions.common.EDKII.UEFI_DRIVER,BuildOptions.common.EDKII.UEFI_APPLICATION]
+  GCC:*_*_*_DLINK_FLAGS = -z common-page-size=0x1000
+  MSFT: *_*_*_DLINK_FLAGS = /ALIGN:4096
+
+[BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER]
+  GCC:  *_*_*_DLINK_FLAGS = -z common-page-size=0x1000
+  MSFT: *_*_*_DLINK_FLAGS = /ALIGN:4096
+
 ################################################################################
 #
 # SKU Identification section - list of all SKU IDs supported by this Platform.

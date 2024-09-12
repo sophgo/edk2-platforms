@@ -357,6 +357,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize|0x00010000
 !endif
 
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
+
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSDIOBase|0x5090000000
 !if $(FPGA_ENABLE) == FALSE

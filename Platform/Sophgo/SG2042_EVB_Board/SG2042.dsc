@@ -357,6 +357,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize|0x00010000
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize|0x00010000
 
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
+
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSDIOBase|0x704002B000
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x7000180000

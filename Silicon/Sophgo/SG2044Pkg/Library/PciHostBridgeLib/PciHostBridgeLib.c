@@ -79,9 +79,11 @@ PciHostBridgeResourceConflict (
   EFI_ACPI_ADDRESS_SPACE_DESCRIPTOR *Descriptor;
   UINTN                             RootBridgeIndex;
 
+#ifndef MDEPKG_NDEBUG
   CONST CHAR16  *PciHostBridgeLibAcpiAddressSpaceTypeStr[] = {
     L"Mem", L"I/O", L"Bus"
   };
+#endif
 
   DEBUG ((DEBUG_ERROR, "PciHostBridge: Resource conflict happens!\n"));
 

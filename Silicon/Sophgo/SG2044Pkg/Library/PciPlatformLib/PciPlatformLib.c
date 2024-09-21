@@ -19,6 +19,7 @@
 #include <Include/PciPlatformLib.h>
 #include <Protocol/PciHostBridgeResourceAllocation.h>
 #include <Protocol/FdtClient.h>
+#include <Protocol/Cpu.h>
 #include <IndustryStandard/Pci22.h>
 
 /* designware controller specific variables */
@@ -699,6 +700,68 @@ SetupPciRoot (
   DwPcieEnableMaster (PciRoot, DwPcie);
 }
 
+STATIC
+EFI_STATUS
+SetPciMemoryAttribute (
+    IN  PCI_ROOT_BRIDGE   *PciRoot,
+    IN  DW_PCIE           *DwPcie
+    )
+{
+  EFI_CPU_ARCH_PROTOCOL *Cpu;
+  EFI_STATUS            Status;
+
+  Status = gBS->LocateProtocol (
+      &gEfiCpuArchProtocolGuid,
+      NULL,
+      (VOID **)&Cpu
+      );
+
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_ERROR, "Cannot locate CPU arch service\n"));
+  }
+
+  Status = Cpu->SetMemoryAttributes (
+      Cpu,
+      DwPcie->DbiBase,
+      DwPcie->DbiSize,
+      EFI_MEMORY_UC
+      );
+
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_ERROR, "Cannot add designware PCIe DBI space %016lx - %016lx\n",
+          DwPcie->DbiBase, DwPcie->DbiBase + DwPcie->DbiSize));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status = Cpu->SetMemoryAttributes (
+      Cpu,
+      DwPcie->AtuBase,
+      DwPcie->AtuSize,
+      EFI_MEMORY_UC
+      );
+
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_ERROR, "Cannot add designware PCIe ATU space %016lx - %016lx\n",
+          DwPcie->AtuBase, DwPcie->AtuBase + DwPcie->AtuSize));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status = Cpu->SetMemoryAttributes (
+      Cpu,
+      DwPcie->CfgBase,
+      DwPcie->CfgSize,
+      EFI_MEMORY_UC
+      );
+
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_ERROR, "Cannot add designware PCIe CFG space %016lx - %016lx\n",
+          DwPcie->CfgBase, DwPcie->CfgBase + DwPcie->CfgSize));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  return EFI_SUCCESS;
+}
+
 RETURN_STATUS
 EFIAPI
 PciPlatformInit (
@@ -754,6 +817,8 @@ PciPlatformInit (
   DEBUG ((DEBUG_VERBOSE, "System Memory: [%016lx - %016lx]\n", SystemMemoryStart, SystemMemoryEnd));
 
   for (PciRootIter = 0; PciRootIter < PciRootCount; ++PciRootIter) {
+
+    SetPciMemoryAttribute (&mSG2044PciRoot.PciRoot[PciRootIter], &mSG2044PciRoot.DwPcie[PciRootIter]);
 
     SetupPciRoot (&mSG2044PciRoot.PciRoot[PciRootIter], &mSG2044PciRoot.DwPcie[PciRootIter],
         SystemMemoryStart, SystemMemorySize);
@@ -832,6 +897,9 @@ PciSegmentRead (
   }
 
   if (Device != 0)
+    return 0xffffffff;
+
+  if (Function != 0)
     return 0xffffffff;
 
   /* Find PCIe controller */

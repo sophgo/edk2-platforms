@@ -424,8 +424,6 @@ SpiMasterSetupSlave (
   IN SPI_NOR                    *Nor
   )
 {
-  UINT32 Index;
-
   if (!Nor) {
     Nor = AllocateZeroPool (sizeof(SPI_NOR));
     if (!Nor) {
@@ -445,15 +443,6 @@ SpiMasterSetupSlave (
   }
 
   Nor->SpiBase = SPIFMC_BASE;
-  if (PcdGet32 (PcdCpuRiscVMmuMaxSatpMode) > 0UL) {
-     for (Index = 39; Index < 64; Index++) {
-       if (Nor->SpiBase & (1ULL << 38)) {
-         Nor->SpiBase |= (1ULL << Index);
-       } else {
-         Nor->SpiBase &= ~(1ULL << Index);
-       }
-     }
-  }
 
   SpifmcInit (Nor);
 

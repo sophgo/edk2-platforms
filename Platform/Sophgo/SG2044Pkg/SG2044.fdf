@@ -51,9 +51,9 @@ APRIORI DXE {
   INF  MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
   INF  MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
   INF  UefiCpuPkg/CpuDxeRiscV64/CpuDxeRiscV64.inf
-  INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
-  INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
-  INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+  # INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+  # INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
+  # INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 }
 
 #
@@ -74,9 +74,9 @@ INF  MdeModulePkg/Universal/Metronome/Metronome.inf
 INF  EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf
 
 # RISC-V Platform Drivers
-INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
-INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
-INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+# INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+# INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
+# INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 INF  Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
 INF  Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 
@@ -152,6 +152,14 @@ INF  MdeModulePkg/Bus/Usb/UsbBusDxe/UsbBusDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+
+
+#
+# Emulator for x64 OpRoms, etc.
+#
+!if $(X64EMU_ENABLE) == TRUE
+  INF  MultiArchUefiPkg/Drivers/Emulator/Emulator.inf
+!endif
 
 #
 # Multiple Console IO support

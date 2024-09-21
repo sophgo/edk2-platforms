@@ -42,6 +42,81 @@
   DEFINE NETWORK_HTTP_BOOT_ENABLE = FALSE
   DEFINE NETWORK_ISCSI_ENABLE     = FALSE
 
+  #
+  # x64 Emulator
+  #
+  !if $(X64EMU_ENABLE) == TRUE
+    #
+    # Use a dedicated native stack for handling emulation.
+    #
+
+    MAU_ON_PRIVATE_STACK           = NO
+
+    #
+    # Attempt some operation on UEFI implementations without
+    # an enabled MMU, by relying on the illegal instruction
+    # handler. It won't work well and is only supported on RISC-V.
+    # Implies MAU_WRAPPED_ENTRY_POINTS=YES.
+    #
+    # On by default in RISC-V builds (via INF file).
+    #
+
+    MAU_TRY_WITHOUT_MMU            = NO
+
+    #
+    # Use an emulated entry point, instead of relying on
+    # exception-driven thunking of native to emulated code.
+    #
+    # On by default in RISC-V builds (via INF file).
+    #
+
+    MAU_WRAPPED_ENTRY_POINTS       = NO
+
+    #
+    # Handle unexpected/non-linear control flow by native code,
+    # that can result in a resource leak inside the emulator.
+    # On by default in DEBUG builds (via INF file).
+    #
+    MAU_CHECK_ORPHAN_CONTEXTS      = NO
+
+    #
+    # For maximum performance, don't periodically bail out
+    # of emulation. This is only useful for situations where
+    # you know the executed code won't do tight loops polling
+    # on some memory location updated by an event.
+    #
+    MAU_EMU_TIMEOUT_NONE           = NO
+
+    #
+    # If you want to support x64 UEFI boot service drivers
+    # and applications, say YES. Saying NO doesn't make sense
+    # for the AARCH64 build.
+    #
+    MAU_SUPPORTS_X64_BINS          = YES
+
+    #
+    # If you want to support AArch64 UEFI boot service drivers
+    # and applications, say YES. Not available for the AARCH64
+    # build.
+    #
+    MAU_SUPPORTS_AARCH64_BINS      = NO
+
+    #
+    # Say YES if you want to ignore all port I/O writes (reads
+    # returning zero), instead of forwarding to EFI_CPU_IO2_PROTOCOL.
+    #
+    # Useful for testing on UEFI DEBUG builds that use the
+    # BaseIoLibIntrinsic (IoLibNoIo.c) implementation.
+    #
+    MAU_EMU_X64_RAZ_WI_PIO         = NO
+
+    #
+    # Seems to work well even when building on small machines.
+    #
+    UC_LTO_JOBS                    = auto
+
+  !endif
+
 [BuildOptions]
   GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG
 !ifdef $(SOURCE_DEBUG_ENABLE)
@@ -259,7 +334,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseSerial|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeMemorySize|1
   gEfiMdeModulePkgTokenSpaceGuid.PcdResetOnMemoryTypeInformationChange|FALSE
-  gEfiMdePkgTokenSpaceGuid.PcdRiscVFeatureOverride|0xFFFFFFFFFFFFFFFF
+  gEfiMdePkgTokenSpaceGuid.PcdRiscVFeatureOverride|0x04
   gEfiMdePkgTokenSpaceGuid.PcdMaximumGuidedExtractHandler|0x10
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxVariableSize|0x2000
   gEfiMdeModulePkgTokenSpaceGuid.PcdMaxHardwareErrorVariableSize|0x8000
@@ -334,7 +409,7 @@
   # 9 - 48bit mode.
   # 10 - 57bit mode.
   #
-  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode|0
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode|9
 
   #
   # Terminal Type
@@ -355,10 +430,10 @@
   # 64KB + 64KB + 64KB
   # Flash Offset: 32MB
   #
-  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x02800000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize|0x00010000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize|0x00010000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize|0x00010000
+  # gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x02800000
+  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize|0x00010000
+  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize|0x00010000
+  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize|0x00010000
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
 
@@ -373,11 +448,13 @@
 ################################################################################
 
 [PcdsDynamicDefault]
-  gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0x80A00000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|0x80A10000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x80A20000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|FALSE
+  # gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
+  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0x80A00000
+  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|0x80A10000
+  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x80A20000
+  # gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|FALSE
+
+  gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvModeEnable|TRUE
 
   #gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0208
   #gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
@@ -465,9 +542,9 @@
   #
   # RISC-V Platform module
   #
-  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
-  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
-  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+  # Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+  # Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
+  # Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 
@@ -557,6 +634,13 @@
   MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
   MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
+
+  #
+  # Emulator for x64 OpRoms, etc.
+  #
+  !if $(X64EMU_ENABLE) == TRUE
+    !include MultiArchUefiPkg/MultiArchUefiPkg.dsc.inc
+  !endif
 
   #
   # FAT filesystem + GPT/MBR partitioning + UDF filesystem

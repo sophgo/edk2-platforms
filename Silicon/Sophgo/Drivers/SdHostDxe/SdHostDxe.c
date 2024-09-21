@@ -421,16 +421,6 @@ SdHostInitialize (
   Handle            = NULL;
   Base              = SDIO_BASE;
 
-  if(PcdGet32 (PcdCpuRiscVMmuMaxSatpMode) > 0UL){
-    for (INT32 I = 39; I < 64; I++) {
-      if (Base & (1ULL << 38)) {
-        Base |= (1ULL << I);
-      } else {
-        Base &= ~(1ULL << I);
-      }
-    }
-  }
-
   BmParams.RegBase  = Base;
   BmParams.ClkRate  = 50 * 1000 * 1000;
   BmParams.BusWidth = MMC_BUS_WIDTH_4;

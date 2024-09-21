@@ -30,3 +30,4 @@
 
 [Protocols]
   gFdtClientProtocolGuid		## CONSUMES
+  gEfiCpuArchProtocolGuid		## CONSUMES

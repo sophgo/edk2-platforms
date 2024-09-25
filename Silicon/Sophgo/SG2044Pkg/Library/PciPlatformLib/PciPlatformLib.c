@@ -884,6 +884,7 @@ PciSegmentRead (
   DW_PCIE   *DwPcie;
   UINT64    PciAddr;
   UINT32    Type;
+  UINTN     CfgBase;
 
   Segment = GET_SEGMENT (Address);
   Bus = GET_BUS (Address);
@@ -896,36 +897,49 @@ PciSegmentRead (
     return 0xffffffff;
   }
 
-  if (Device != 0)
-    return 0xffffffff;
-
   if (Function != 0)
     return 0xffffffff;
 
   /* Find PCIe controller */
   DwPcie = &mSG2044PciRoot.DwPcie[Segment];
 
-  if (!DwPcieLinkUp (DwPcie))
-    return 0xffffffff;
+  if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base) {
+    /* host root complex */
+    if (Device != 0)
+      return 0xffffffff;
 
-  PciAddr = DwPcieAtuPciAddr (Bus, Device, Function);
+    CfgBase = DwPcie->DbiBase;
+  } else {
+    /* devices other than root complex, including pcie switches */
+    if (!DwPcieLinkUp (DwPcie))
+      return 0xffffffff;
 
-  if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base)
-    Type = DW_PCIE_ATU_TYPE_CFG0;
-  else
-    Type = DW_PCIE_ATU_TYPE_CFG1;
+    PciAddr = DwPcieAtuPciAddr (Bus, Device, Function);
 
-  DwPcieSetAtuOutbound (DwPcie, 0, Type, DwPcie->CfgBase, PciAddr, DwPcie->CfgSize);
+    /* devices direct linked with root complex */
+    if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base + 1) {
+      if (Device != 0)
+        return 0xffffffff;
 
+      Type = DW_PCIE_ATU_TYPE_CFG0;
+    } else {
+      Type = DW_PCIE_ATU_TYPE_CFG1;
+    }
+
+    DwPcieSetAtuOutbound (DwPcie, 0, Type, DwPcie->CfgBase, PciAddr, DwPcie->CfgSize);
+
+    CfgBase = DwPcie->CfgBase;
+  }
+  
   switch (Width) {
     case 8:
-      Value = MmioRead8 (DwPcie->CfgBase + Offset);
+      Value = MmioRead8 (CfgBase + Offset);
       break;
     case 16:
-      Value = MmioRead16 (DwPcie->CfgBase + Offset);
+      Value = MmioRead16 (CfgBase + Offset);
       break;
     case 32:
-      Value = MmioRead32 (DwPcie->CfgBase + Offset);
+      Value = MmioRead32 (CfgBase + Offset);
       break;
     default:
       DEBUG ((DEBUG_ERROR, "Not supported width for reading\n"));
@@ -956,6 +970,7 @@ PciSegmentWrite (
   DW_PCIE   *DwPcie;
   UINT64    PciAddr;
   UINT32    Type;
+  UINTN     CfgBase;
 
   Segment = GET_SEGMENT (Address);
   Bus = GET_BUS (Address);
@@ -968,40 +983,45 @@ PciSegmentWrite (
     return Value;
   }
 
-  if (Device != 0)
-    return Value;
-
   /* Find PCIe controller */
   DwPcie = &mSG2044PciRoot.DwPcie[Segment];
 
-  if (!DwPcieLinkUp (DwPcie))
-    return Value;
+  if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base) {
+    /* host root complex */
+    CfgBase = DwPcie->DbiBase;
+  } else {
+    /* devices other than root complex, including pcie switches */
+    if (!DwPcieLinkUp (DwPcie))
+      return Value;
 
-  PciAddr = DwPcieAtuPciAddr (Bus, Device, Function);
+    PciAddr = DwPcieAtuPciAddr (Bus, Device, Function);
 
-  if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base)
-    Type = DW_PCIE_ATU_TYPE_CFG0;
-  else
-    Type = DW_PCIE_ATU_TYPE_CFG1;
+    if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base + 1)
+      Type = DW_PCIE_ATU_TYPE_CFG0;
+    else
+      Type = DW_PCIE_ATU_TYPE_CFG1;
 
-  DwPcieSetAtuOutbound (DwPcie, 0, DW_PCIE_ATU_TYPE_CFG0, DwPcie->CfgBase, PciAddr, DwPcie->CfgSize);
+    DwPcieSetAtuOutbound (DwPcie, 0, DW_PCIE_ATU_TYPE_CFG0, DwPcie->CfgBase, PciAddr, DwPcie->CfgSize);
+
+    CfgBase = DwPcie->CfgBase;
+  }
 
   switch (Width) {
     case 8:
-      MmioWrite8 (DwPcie->CfgBase + Offset, Value);
+      MmioWrite8 (CfgBase + Offset, Value);
       break;
     case 16:
-      MmioWrite16 (DwPcie->CfgBase + Offset, Value);
+      MmioWrite16 (CfgBase + Offset, Value);
       break;
     case 32:
-      MmioWrite32 (DwPcie->CfgBase + Offset, Value);
+      MmioWrite32 (CfgBase + Offset, Value);
       break;
     default:
       DEBUG ((DEBUG_ERROR, "Not supported width for writing\n"));
       break;
   }
 
-  DEBUG ((DEBUG_VERBOSE, "W%d: %04x:%02x:%02x.%1x - %04x %08x\n",
+  DEBUG ((DEBUG_VERBOSE, "W%d: %04x:%02x:%02x.%1x - %04x 0x%08x\n",
       Width, Segment, Bus, Device, Function, Offset, Value));
 
   return Value;

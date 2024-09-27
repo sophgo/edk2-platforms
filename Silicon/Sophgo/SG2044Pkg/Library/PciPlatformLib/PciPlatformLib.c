@@ -226,9 +226,9 @@ DwPcieAtuPciAddr (
     IN  UINT32 Func
     )
 {
-  return  ((Bus & (PCI_MAX_BUS - 1)) << 24) |
-    ((Dev & (PCI_MAX_DEVICE - 1)) << 19) |
-    ((Func & (PCI_MAX_FUNC - 1)) << 16);
+  return  ((Bus & (PCI_MAX_BUS)) << 24) |
+    ((Dev & (PCI_MAX_DEVICE)) << 19) |
+    ((Func & (PCI_MAX_FUNC)) << 16);
 }
 
 RETURN_STATUS
@@ -896,9 +896,6 @@ PciSegmentRead (
     DEBUG ((DEBUG_ERROR, "Invalid PCIe segment %d\n", Segment));
     return 0xffffffff;
   }
-
-  if (Function != 0)
-    return 0xffffffff;
 
   /* Find PCIe controller */
   DwPcie = &mSG2044PciRoot.DwPcie[Segment];

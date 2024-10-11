@@ -20,9 +20,6 @@
 
 #include "SdHci.h"
 
-#define SDCARD_INIT_FREQ  (200 * 1000)
-#define SDCARD_TRAN_FREQ  (6 * 1000 * 1000)
-
 /**
   Return the clock rate of SD card.
 
@@ -34,7 +31,7 @@ BmGetSdClk (
   VOID
   )
 {
-  return 100*1000*1000;
+  return FixedPcdGet32(PcdSDIOSourceClockFrequency);
 }
 
 /**
@@ -343,12 +340,12 @@ SdSetClk (
   if (BmParams.ClkRate <= Clk) {
     Div = 0;
   } else {
-    for (Div = 0x1; Div < 0xFF; Div++) {
+    for (Div = 0x1; Div < 0x3FF; Div++) {
       if (BmParams.ClkRate / (2 * Div) <= Clk)
         break;
     }
   }
-  ASSERT (Div <= 0xFF);
+  ASSERT (Div <= 0x3FF);
 
   Base = BmParams.RegBase;
   if (MmioRead16 (Base + SDHCI_HOST_CONTROL2) & (1 << 15)) {
@@ -358,7 +355,7 @@ SdSetClk (
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
             MmioRead16 (Base + SDHCI_CLK_CTRL) & ~0x9); // disable INTERNAL_CLK_EN and PLL_ENABLE
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
-            (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0xDF) | Div << 8); // set Clk Div
+            (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0x3F) | ((Div & 0xFF) << 8) | (((Div >> 8) & 0x3) << 6)); // set 10bits clk div
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
             MmioRead16 (Base + SDHCI_CLK_CTRL) | 0x1); // set INTERNAL_CLK_EN
 
@@ -405,12 +402,12 @@ SdChangeClk (
   if (BmParams.ClkRate <= Clk) {
     Div = 0;
   } else {
-    for (Div = 0x1; Div < 0xFF; Div++) {
+    for (Div = 0x1; Div < 0x3FF; Div++) {
       if (BmParams.ClkRate / (2 * Div) <= Clk)
         break;
     }
   }
-  ASSERT (Div <= 0xFF);
+  ASSERT (Div <= 0x3FF);
 
   Base = BmParams.RegBase;
 
@@ -425,7 +422,8 @@ SdChangeClk (
             MmioRead16 (Base + SDHCI_HOST_CONTROL2) & ~0x7); // clr UHS_MODE_SEL
   } else {
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
-            (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0xDF) | Div << 8); // set Clk Div
+            (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0x3F) | ((Div & 0xFF) << 8) | (((Div >> 8) & 0x3) << 6)); // set 10bits clk div
+
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
             MmioRead16 (Base + SDHCI_CLK_CTRL) & ~(0x1 << 5)); // CLK_GEN_SELECT
   }
@@ -917,7 +915,7 @@ SdInit (
 {
   BmParams.ClkRate = BmGetSdClk ();
 
-  DEBUG ((DEBUG_INFO, "SD initializing %dHz\n", BmParams.ClkRate));
+  DEBUG ((DEBUG_INFO, "SD source %dHz, initializing %dHz\n", BmParams.ClkRate, SDCARD_INIT_FREQ));
 
   BmParams.Flags = Flags;
 

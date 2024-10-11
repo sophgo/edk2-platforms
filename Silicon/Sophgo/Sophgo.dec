@@ -25,10 +25,11 @@
   gSophgoTokenSpaceGuid  = { 0xDA6ECA1D, 0x220A, 0x45D6, { 0xA7, 0x4D, 0x83, 0x64, 0x50, 0x90, 0x82, 0x1C } }
 
 [PcdsFixedAtBuild]
-  gSophgoTokenSpaceGuid.PcdSDIOBase|0x0|UINT64|0x00001001
-  gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x0|UINT64|0x00001002
-  gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x0|UINT64|0x00001003
-  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001004
+  gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x0|UINT64|0x00001001
+  gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x0|UINT64|0x00001002
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003
+  gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|0x0|UINT32|0x00001004
+  gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|0x0|UINT32|0x00001005
 
 ## In the PcdsFixedAtBuild.RISCV64.
 [PcdsFixedAtBuild.RISCV64]

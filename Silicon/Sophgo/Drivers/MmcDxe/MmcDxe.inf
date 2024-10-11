@@ -42,5 +42,8 @@
   gEfiDriverDiagnostics2ProtocolGuid            ## SOMETIMES_PRODUCES
   gSophgoMmcHostProtocolGuid                    ## CONSUMES
 
+[FixedPcd]
+  gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency     ## CONSUMES
+
 [Depex]
   TRUE

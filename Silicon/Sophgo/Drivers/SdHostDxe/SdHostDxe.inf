@@ -42,7 +42,8 @@
 
 [Protocols]
   gSophgoMmcHostProtocolGuid        ## PRODUCES
+  gFdtClientProtocolGuid            ## CONSUMES
 
 [FixedPcd]
-  gSophgoTokenSpaceGuid.PcdSDIOBase                    ## CONSUMES
-  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode             ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency            ## CONSUMES
+  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode          ## CONSUMES

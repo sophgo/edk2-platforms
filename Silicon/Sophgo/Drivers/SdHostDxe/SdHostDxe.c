@@ -25,6 +25,7 @@
 #include <Protocol/EmbeddedExternalDevice.h>
 #include <Protocol/BlockIo.h>
 #include <Protocol/DevicePath.h>
+#include <Protocol/FdtClient.h>
 #include <Include/MmcHost.h>
 
 #include "SdHci.h"
@@ -412,14 +413,89 @@ SdHostInitialize (
   IN EFI_SYSTEM_TABLE    *SystemTable
   )
 {
-  EFI_STATUS  Status;
-  EFI_HANDLE  Handle;
-  UINTN       Base;
+  EFI_STATUS             Status;
+  EFI_STATUS             FindNodeStatus;
+  EFI_HANDLE             Handle;
+  UINTN                  Base;
+  FDT_CLIENT_PROTOCOL    *FdtClient;
+  INT32                  Node;
+  CONST INT32            *RegProp;
+  UINT32                 RegSize;
+  CONST INT32            *TempProp;
+  UINT32                 TempSize;
+  UINTN                  AddressCells, SizeCells;
+  EFI_PHYSICAL_ADDRESS   Addr;
+  UINT64                 AddrSize;
+
 
   DEBUG ((DEBUG_MMCHOST_SD, "SdHost: Initialize\n"));
 
   Handle            = NULL;
-  Base              = SDIO_BASE;
+
+  Status = gBS->LocateProtocol(&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to locate FDT client protocol: %r\n", Status));
+    return Status;
+  }
+
+  for (FindNodeStatus = FdtClient->FindCompatibleNode (
+                                     FdtClient,
+                                     "sophgo,sg2044-dwcmshc",
+                                     &Node
+                                     );
+       !EFI_ERROR (FindNodeStatus);
+       FindNodeStatus = FdtClient->FindNextCompatibleNode (
+                                     FdtClient,
+                                     "sophgo,sg2044-dwcmshc",
+                                     Node,
+                                     &Node
+                                     ))
+  {
+    Status = FdtClient->GetNodeProperty (
+                      FdtClient,
+                      Node,
+                      "no-mmc",
+                      (CONST VOID **)&TempProp,
+                      &TempSize
+                      );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+        "%a: GetNodeProperty () failed (Status == %r)\n",
+        __func__,
+        Status
+        ));
+      continue;
+    } else {
+      break;
+    }
+  }
+
+  Status = FdtClient->GetNodeProperty (
+                      FdtClient,
+                      Node,
+                      "reg",
+                      (CONST VOID **)&RegProp,
+                      &RegSize
+                      );
+  AddressCells = 2;
+  SizeCells = 2;
+
+  UINT32 *RegData = (UINT32 *)RegProp;
+  Addr = SwapBytes32 (RegData[0]);
+  Addr = (Addr << 32) | SwapBytes32 (RegData[1]);
+
+  RegData += AddressCells;
+  AddrSize = SwapBytes32 (RegData[0]);
+  AddrSize = (AddrSize << 32)| SwapBytes32 (RegData[1]);
+
+  DEBUG ((
+    DEBUG_INFO,
+    "SDHCI Addr = 0x%lx, Size = 0x%lx\n",
+    Addr,
+    AddrSize
+    ));
+  Base = Addr;
 
   BmParams.RegBase  = Base;
   BmParams.ClkRate  = 50 * 1000 * 1000;

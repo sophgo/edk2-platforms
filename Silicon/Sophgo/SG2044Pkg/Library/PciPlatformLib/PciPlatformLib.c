@@ -972,7 +972,7 @@ PciSegmentWrite (
   Segment = GET_SEGMENT (Address);
   Bus = GET_BUS (Address);
   Device = GET_DEVICE (Address);
-  Function = GET_DEVICE (Address);
+  Function = GET_FUNCTION (Address);
   Offset = GET_OFFSET (Address);
 
   if (Segment > mSG2044PciRoot.Count) {

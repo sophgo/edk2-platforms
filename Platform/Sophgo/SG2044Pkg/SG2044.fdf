@@ -206,6 +206,16 @@ INF  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
 INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 INF  MdeModulePkg/Application/UiApp/UiApp.inf
 
+#
+# ACPI Support
+#
+!if $(ACPI_ENABLE) == TRUE
+  INF MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+  INF Silicon/Sophgo/SG2044Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
+  INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
+  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SG2044EvbAcpiTables.inf
+!endif
+
 ################################################################################
 
 [FV.FVMAIN_COMPACT]

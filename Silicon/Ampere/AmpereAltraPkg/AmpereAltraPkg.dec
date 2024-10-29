@@ -52,6 +52,9 @@
   ##  @libraryclass  Defines a set of methods to start Hot plug feature
   PcieHotPlugLib|Silicon/Ampere/AmpereAltraPkg/Include/Library/PcieHotPlugLib.h
 
+  ## @libraryclass  Defines a set of methods to get/set GPIO via I2C
+  IOExpanderLib|Silicon/Ampere/AmpereAltraPkg/Include/Library/IOExpanderLib.h
+
 [Guids]
   ## NVParam MM GUID
   gNVParamMmGuid               = { 0xE4AC5024, 0x29BE, 0x4ADC, { 0x93, 0x36, 0x87, 0xB5, 0xA0, 0x76, 0x23, 0x2D } }
@@ -76,3 +79,11 @@
 
   ## PCIe Hot Plug GUID
   gPcieHotPlugGuid = { 0x5598273c, 0x11ea, 0xa496, { 0x42, 0x02, 0x37, 0xbb, 0x02, 0x00, 0x13, 0xac } }
+
+  ## FWupdate MM GUID
+  gFwUpdateMmGuid              = { 0x452240CD, 0xB3B3, 0x4695, { 0x9A, 0x63, 0xDF, 0xEC, 0x50, 0x82, 0xE7, 0x7A } }
+
+  #
+  # Ampere FW upgrade EFI variables GUID
+  #
+  gAmpereFWUpgradeGuid         = { 0x38B9ED29, 0xD7C6, 0x4BF4, { 0x96, 0x78, 0x9D, 0xA0, 0x58, 0xBD, 0x2E, 0x99 } }

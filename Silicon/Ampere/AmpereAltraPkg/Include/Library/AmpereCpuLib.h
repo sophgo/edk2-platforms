@@ -1,6 +1,6 @@
 /** @file
 
-  Copyright (c) 2020 - 2023, Ampere Computing LLC. All rights reserved.<BR>
+  Copyright (c) 2020 - 2024, Ampere Computing LLC. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -11,17 +11,19 @@
 #ifndef AMPERE_CPU_LIB_H_
 #define AMPERE_CPU_LIB_H_
 
-#define SUBNUMA_MODE_MONOLITHIC        0
-#define SUBNUMA_MODE_HEMISPHERE        1
-#define SUBNUMA_MODE_QUADRANT          2
+#define SUBNUMA_MODE_MONOLITHIC  0
+#define SUBNUMA_MODE_HEMISPHERE  1
+#define SUBNUMA_MODE_QUADRANT    2
 
-#define MONOLITIC_NUM_OF_REGION        1
-#define HEMISPHERE_NUM_OF_REGION       2
-#define QUADRANT_NUM_OF_REGION         4
+#define MONOLITIC_NUM_OF_REGION   1
+#define HEMISPHERE_NUM_OF_REGION  2
+#define QUADRANT_NUM_OF_REGION    4
 
-#define SOCKET_ID(CpuId)               ((CpuId) / (PLATFORM_CPU_MAX_CPM * PLATFORM_CPU_NUM_CORES_PER_CPM))
-#define CLUSTER_ID(CpuId)              (((CpuId) / PLATFORM_CPU_NUM_CORES_PER_CPM) % PLATFORM_CPU_MAX_CPM)
+#define SOCKET_ID(CpuId)   ((CpuId) / (PLATFORM_CPU_MAX_CPM * PLATFORM_CPU_NUM_CORES_PER_CPM))
+#define CLUSTER_ID(CpuId)  (((CpuId) / PLATFORM_CPU_NUM_CORES_PER_CPM) % PLATFORM_CPU_MAX_CPM)
 
+#define MASTER_SOCKET  0
+#define SLAVE_SOCKET   1
 
 /**
   Get current CPU frequency.
@@ -33,7 +35,7 @@
 UINTN
 EFIAPI
 CpuGetCurrentFreq (
-  UINT8 Socket
+  UINT8  Socket
   );
 
 /**
@@ -46,7 +48,7 @@ CpuGetCurrentFreq (
 UINTN
 EFIAPI
 CpuGetMaxFreq (
-  UINT8 Socket
+  UINT8  Socket
   );
 
 /**
@@ -59,7 +61,47 @@ CpuGetMaxFreq (
 UINT8
 EFIAPI
 CpuGetVoltage (
-  UINT8 Socket
+  UINT8  Socket
+  );
+
+/**
+  Get CPU Ecid.
+
+  @param        SocketId   Socket index.
+  @param[out]   Ecid       Pointer to contain Ecid value.
+
+**/
+VOID
+EFIAPI
+CpuGetEcid (
+  UINT8   SocketId,
+  UINT32  **Ecid
+  );
+
+/**
+  Get max cores of socket.
+
+  @param    SocketId   Socket index.
+  @return   UINT8      Max cores of socket.
+
+**/
+UINT8
+EFIAPI
+GetSkuMaxCore (
+  UINT8  SocketId
+  );
+
+/**
+  Get max turbo of socket.
+
+  @param    SocketId   Socket index.
+  @return   UINT8      Max turbo of socket.
+
+**/
+UINT8
+EFIAPI
+GetSkuMaxTurbo (
+  UINT8  SocketId
   );
 
 /**
@@ -108,8 +150,8 @@ CpuGetNumberOfSubNumaRegion (
 UINT8
 EFIAPI
 CpuGetSubNumNode (
-  UINT8  Socket,
-  UINT16 Cpm
+  UINT8   Socket,
+  UINT16  Cpm
   );
 
 /**
@@ -146,7 +188,7 @@ GetNumberOfActiveSockets (
 UINT16
 EFIAPI
 GetNumberOfActiveCPMsPerSocket (
-  UINT8 SocketId
+  UINT8  SocketId
   );
 
 /**
@@ -159,7 +201,7 @@ GetNumberOfActiveCPMsPerSocket (
 UINT16
 EFIAPI
 GetNumberOfConfiguredCPMs (
-  UINT8 SocketId
+  UINT8  SocketId
   );
 
 /**
@@ -170,7 +212,7 @@ GetNumberOfConfiguredCPMs (
 VOID
 EFIAPI
 GetScpVersion (
-  UINT8 **ScpVer
+  UINT8  **ScpVer
   );
 
 /**
@@ -181,7 +223,7 @@ GetScpVersion (
 VOID
 EFIAPI
 GetScpBuild (
-  UINT8 **ScpBuild
+  UINT8  **ScpBuild
   );
 
 /**
@@ -192,7 +234,7 @@ GetScpBuild (
 VOID
 EFIAPI
 GetDimmList (
-  PLATFORM_DIMM_LIST **DimmList
+  PLATFORM_DIMM_LIST  **DimmList
   );
 
 /**
@@ -203,7 +245,7 @@ GetDimmList (
 VOID
 EFIAPI
 GetDramInfo (
-  PLATFORM_DRAM_INFO **DramInfo
+  PLATFORM_DRAM_INFO  **DramInfo
   );
 
 /**
@@ -218,8 +260,8 @@ GetDramInfo (
 EFI_STATUS
 EFIAPI
 SetNumberOfConfiguredCPMs (
-  UINT8  SocketId,
-  UINT16 NumberOfCPMs
+  UINT8   SocketId,
+  UINT16  NumberOfCPMs
   );
 
 /**
@@ -244,7 +286,7 @@ GetMaximumNumberOfCores (
 UINT16
 EFIAPI
 GetNumberOfActiveCoresPerSocket (
-  UINT8 SocketId
+  UINT8  SocketId
   );
 
 /**
@@ -270,9 +312,8 @@ GetNumberOfActiveCores (
 BOOLEAN
 EFIAPI
 IsCpuEnabled (
-  UINT16 CpuId
+  UINT16  CpuId
   );
-
 
 /**
   Check if the slave socket is present

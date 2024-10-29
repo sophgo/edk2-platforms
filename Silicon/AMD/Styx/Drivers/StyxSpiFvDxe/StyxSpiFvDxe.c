@@ -472,9 +472,9 @@ StyxSpiFvDxeInitialize (
   mNvStorageLbaOffset = (FixedPcdGet64 (PcdFlashNvStorageOriginalBase) -
                          SPI_BASE) / BLOCK_SIZE;
 
-  DEBUG ((EFI_D_INFO,
+  DEBUG ((DEBUG_INFO,
     "%a: Using NV store FV in-memory copy at 0x%lx, LBA offset == 0x%lx\n",
-    __FUNCTION__, mNvStorageBase, mNvStorageLbaOffset));
+    __func__, mNvStorageBase, mNvStorageLbaOffset));
 
   Status = gBS->LocateProtocol (&gAmdIscpDxeProtocolGuid, NULL,
                   (VOID **)&mIscpDxeProtocol);

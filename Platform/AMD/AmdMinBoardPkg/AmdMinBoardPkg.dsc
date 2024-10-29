@@ -13,8 +13,8 @@
   PLATFORM_NAME               = AmdMinBoardPkg
   PLATFORM_VERSION            = 0.1
   OUTPUT_DIRECTORY            = Build/$(PLATFORM_NAME)
-  BUILD_TARGETS               = DEBUG | RELEASE | NOOPT
-  SUPPORTED_ARCHITECTURES     = IA32 | X64
+  BUILD_TARGETS               = DEBUG|RELEASE|NOOPT
+  SUPPORTED_ARCHITECTURES     = IA32|X64
 
 [Packages]
   AmdMinBoardPkg/AmdMinBoardPkg.dec
@@ -41,6 +41,9 @@
 
 [LibraryClasses.common.SEC]
   PlatformSecLib|AmdMinBoardPkg/Library/PlatformSecLib/PlatformSecLib.inf
+  
+  # This has SEC modules with standard entry points, so we can generically link StackCheckLib
+  NULL|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
 
 [LibraryClasses.common.PEIM]
   BoardInitLib|AmdMinBoardPkg/Library/PeiBoardInitPreMemLib/PeiBoardInitPreMemLib.inf

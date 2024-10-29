@@ -112,17 +112,21 @@ SMBIOS_TABLE_TYPE17  mMemDevInfoType17 = {
       0  // Reserved                        :10;
     }
   },
-  0,                        // FirwareVersion
-  0,                        // ModuleManufacturerID (unknown)
-  0,                        // ModuleProductID (unknown)
-  0,                        // MemorySubsystemControllerManufacturerID (unknown)
-  0,                        // MemorySubsystemControllerProductID (unknown)
-  0,                        // NonVolatileSize
-  0,                        // VolatileSize; initialized at runtime, refer to MemDevInfoUpdateSmbiosType17
-  0,                        // CacheSize
-  0,                        // LogicalSize (since MemoryType is not MemoryTypeLogicalNonVolatileDevice)
-  0,                        // ExtendedSpeed
-  0                         // ExtendedConfiguredMemorySpeed
+  0, // FirwareVersion
+  0, // ModuleManufacturerID (unknown)
+  0, // ModuleProductID (unknown)
+  0, // MemorySubsystemControllerManufacturerID (unknown)
+  0, // MemorySubsystemControllerProductID (unknown)
+  0, // NonVolatileSize
+  0, // VolatileSize; initialized at runtime, refer to MemDevInfoUpdateSmbiosType17
+  0, // CacheSize
+  0, // LogicalSize (since MemoryType is not MemoryTypeLogicalNonVolatileDevice)
+  0, // ExtendedSpeed
+  0, // ExtendedConfiguredMemorySpeed
+  0, // Pmic0ManufacturerID
+  0, // Pmic0RevisionNumber
+  0, // RcdManufacturerID
+  0, // RcdRevisionNumber
 };
 CHAR8                *mMemDevInfoType17Strings[] = {
   NULL
@@ -292,7 +296,7 @@ MemDevInfoUpdateSmbiosType17 (
   // PhyMemArrayInfoUpdateSmbiosType16 must be called before MemDevInfoUpdateSmbiosType17
   //
   if (mPhyMemArrayInfoType16Handle == SMBIOS_HANDLE_PI_RESERVED) {
-    DEBUG ((DEBUG_ERROR, "%a: mPhyMemArrayInfoType16Handle is not initialized\n", __FUNCTION__));
+    DEBUG ((DEBUG_ERROR, "%a: mPhyMemArrayInfoType16Handle is not initialized\n", __func__));
     return;
   }
 
@@ -345,7 +349,7 @@ MemArrMapInfoUpdateSmbiosType19 (
   // PhyMemArrayInfoUpdateSmbiosType16 must be called before MemDevInfoUpdateSmbiosType17
   //
   if (mPhyMemArrayInfoType16Handle == SMBIOS_HANDLE_PI_RESERVED) {
-    DEBUG ((DEBUG_ERROR, "%a: mPhyMemArrayInfoType16Handle is not initialized\n", __FUNCTION__));
+    DEBUG ((DEBUG_ERROR, "%a: mPhyMemArrayInfoType16Handle is not initialized\n", __func__));
     return;
   }
 

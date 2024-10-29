@@ -1,7 +1,7 @@
 /** @file
 *  OemMiscLib.c
 *
-*  Copyright (c) 2021 - 2023, Ampere Computing LLC. All rights reserved.
+*  Copyright (c) 2021 - 2024, Ampere Computing LLC. All rights reserved.
 *  Copyright (c) 2021, NUVIA Inc. All rights reserved.
 *  Copyright (c) 2018, Hisilicon Limited. All rights reserved.
 *  Copyright (c) 2018, Linaro Limited. All rights reserved.
@@ -19,37 +19,38 @@
 #include <Library/DebugLib.h>
 #include <Library/HiiLib.h>
 #include <Library/HobLib.h>
+#include <Library/IpmiCommandLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/OemMiscLib.h>
 #include <Library/PrintLib.h>
 #include <Guid/PlatformInfoHob.h>
 
-#define PROCESSOR_VERSION_ALTRA       L"Ampere(R) Altra(R) Processor"
-#define PROCESSOR_VERSION_ALTRA_MAX   L"Ampere(R) Altra(R) Max Processor"
+#include "IpmiFruInfo.h"
 
-#define MHZ_SCALE_FACTOR    1000000
+#define PROCESSOR_VERSION_ALTRA      L"Ampere(R) Altra(R) Processor"
+#define PROCESSOR_VERSION_ALTRA_MAX  L"Ampere(R) Altra(R) Max Processor"
 
-#define SCP_VERSION_STRING_MAX_LENGTH 32
+#define SCP_VERSION_STRING_MAX_LENGTH  32
 
-#define OEM_DEFAULT_INFORMATION L"To Be Filled By O.E.M."
+UINTN  mProcessorIndex = 0xFF;
 
 UINT32
 GetCacheConfig (
-  IN UINT32  CacheLevel,
-  IN BOOLEAN DataCache,
-  IN BOOLEAN UnifiedCache
+  IN UINT32   CacheLevel,
+  IN BOOLEAN  DataCache,
+  IN BOOLEAN  UnifiedCache
   )
 {
-  CSSELR_DATA Csselr;
-  UINT64      Ccsidr;
-  BOOLEAN     SupportWB;
-  BOOLEAN     SupportWT;
+  CSSELR_DATA  Csselr;
+  UINT64       Ccsidr;
+  BOOLEAN      SupportWB;
+  BOOLEAN      SupportWT;
 
-  Csselr.Data = 0;
+  Csselr.Data       = 0;
   Csselr.Bits.Level = CacheLevel - 1;
-  Csselr.Bits.InD = (!DataCache && !UnifiedCache);
+  Csselr.Bits.InD   = (!DataCache && !UnifiedCache);
 
-  Ccsidr = ReadCCSIDR (Csselr.Data);
+  Ccsidr    = ReadCCSIDR (Csselr.Data);
   SupportWT = (Ccsidr & (1 << 31)) ? TRUE : FALSE;
   SupportWB = (Ccsidr & (1 << 30)) ? TRUE : FALSE;
 
@@ -65,7 +66,7 @@ GetCacheConfig (
     return 1; // Write Back
   }
 
-  return 3; // Unknown
+  return 1; // Write Back
 }
 
 /** Gets the CPU frequency of the specified processor.
@@ -77,7 +78,7 @@ GetCacheConfig (
 UINTN
 EFIAPI
 OemGetCpuFreq (
-  IN UINT8 ProcessorIndex
+  IN UINT8  ProcessorIndex
   )
 {
   return CpuGetCurrentFreq (ProcessorIndex);
@@ -96,13 +97,13 @@ OemGetCpuFreq (
 BOOLEAN
 EFIAPI
 OemGetProcessorInformation (
-  IN UINTN ProcessorIndex,
-  IN OUT PROCESSOR_STATUS_DATA *ProcessorStatus,
-  IN OUT PROCESSOR_CHARACTERISTIC_FLAGS *ProcessorCharacteristics,
-  IN OUT OEM_MISC_PROCESSOR_DATA *MiscProcessorData
+  IN UINTN                               ProcessorIndex,
+  IN OUT PROCESSOR_STATUS_DATA           *ProcessorStatus,
+  IN OUT PROCESSOR_CHARACTERISTIC_FLAGS  *ProcessorCharacteristics,
+  IN OUT OEM_MISC_PROCESSOR_DATA         *MiscProcessorData
   )
 {
-  UINT16 ProcessorCount;
+  UINT16  ProcessorCount;
 
   ProcessorCount = GetNumberOfActiveSockets ();
 
@@ -118,20 +119,20 @@ OemGetProcessorInformation (
     ProcessorStatus->Bits.Reserved2       = 0;
   }
 
-  ProcessorCharacteristics->ProcessorReserved1      = 0;
-  ProcessorCharacteristics->ProcessorUnknown        = 0;
-  ProcessorCharacteristics->Processor64BitCapable   = 1;
-  ProcessorCharacteristics->ProcessorMultiCore      = 1;
-  ProcessorCharacteristics->ProcessorHardwareThread = 0;
+  ProcessorCharacteristics->ProcessorReserved1              = 0;
+  ProcessorCharacteristics->ProcessorUnknown                = 0;
+  ProcessorCharacteristics->Processor64BitCapable           = 1;
+  ProcessorCharacteristics->ProcessorMultiCore              = 1;
+  ProcessorCharacteristics->ProcessorHardwareThread         = 0;
   ProcessorCharacteristics->ProcessorExecuteProtection      = 1;
   ProcessorCharacteristics->ProcessorEnhancedVirtualization = 1;
   ProcessorCharacteristics->ProcessorPowerPerformanceCtrl   = 1;
-  ProcessorCharacteristics->Processor128BitCapable = 0;
-  ProcessorCharacteristics->ProcessorReserved2  = 0;
+  ProcessorCharacteristics->Processor128BitCapable          = 0;
+  ProcessorCharacteristics->ProcessorReserved2              = 0;
 
   MiscProcessorData->Voltage      = CpuGetVoltage (ProcessorIndex);
-  MiscProcessorData->CurrentSpeed = (UINT16)(CpuGetCurrentFreq (ProcessorIndex) / MHZ_SCALE_FACTOR);
-  MiscProcessorData->MaxSpeed     = (UINT16)(CpuGetMaxFreq (ProcessorIndex) / MHZ_SCALE_FACTOR);
+  MiscProcessorData->CurrentSpeed = CpuGetCurrentFreq (ProcessorIndex);
+  MiscProcessorData->MaxSpeed     = CpuGetMaxFreq (ProcessorIndex);
   MiscProcessorData->CoreCount    = GetMaximumNumberOfCores ();
   MiscProcessorData->ThreadCount  = GetMaximumNumberOfCores ();
   MiscProcessorData->CoresEnabled = GetNumberOfActiveCoresPerSocket (ProcessorIndex);
@@ -152,27 +153,65 @@ OemGetProcessorInformation (
 BOOLEAN
 EFIAPI
 OemGetCacheInformation (
-  IN UINT8   ProcessorIndex,
-  IN UINT8   CacheLevel,
-  IN BOOLEAN DataCache,
-  IN BOOLEAN UnifiedCache,
-  IN OUT SMBIOS_TABLE_TYPE7 *SmbiosCacheTable
+  IN UINT8                   ProcessorIndex,
+  IN UINT8                   CacheLevel,
+  IN BOOLEAN                 DataCache,
+  IN BOOLEAN                 UnifiedCache,
+  IN OUT SMBIOS_TABLE_TYPE7  *SmbiosCacheTable
   )
 {
-  SmbiosCacheTable->CacheConfiguration = CacheLevel - 1;
+  UINT16  CacheSize16;
+  UINT32  CacheSize32;
+  UINT64  CacheSize64;
+  UINT8   Granularity32;
+
+  SmbiosCacheTable->CacheConfiguration  = CacheLevel - 1;
   SmbiosCacheTable->CacheConfiguration |= (1 << 7); // Enable
   SmbiosCacheTable->CacheConfiguration |= (GetCacheConfig (CacheLevel, DataCache, UnifiedCache) << 8);
 
-  SmbiosCacheTable->SupportedSRAMType.Unknown = 0;
+  SmbiosCacheTable->SupportedSRAMType.Unknown     = 0;
   SmbiosCacheTable->SupportedSRAMType.Synchronous = 1;
-  SmbiosCacheTable->CurrentSRAMType.Unknown = 0;
-  SmbiosCacheTable->CurrentSRAMType.Synchronous = 1;
+  SmbiosCacheTable->CurrentSRAMType.Unknown       = 0;
+  SmbiosCacheTable->CurrentSRAMType.Synchronous   = 1;
 
-  if (CacheLevel == 1 && !DataCache && !UnifiedCache) {
+  if (CacheLevel == CpuCacheL1) {
     SmbiosCacheTable->ErrorCorrectionType = CacheErrorParity;
   } else {
     SmbiosCacheTable->ErrorCorrectionType = CacheErrorSingleBit;
   }
+
+  // Cache Size
+  CacheSize16 = SmbiosCacheTable->MaximumCacheSize;
+  CacheSize32 = SmbiosCacheTable->MaximumCacheSize2;
+
+  Granularity32 = CacheSize32 >> 31;
+  if (Granularity32 == 0) {
+    CacheSize64 = CacheSize32;
+  } else {
+    CacheSize64 = (CacheSize32 & (~BIT31)) * 64;
+  }
+
+  CacheSize64 *= GetNumberOfActiveCoresPerSocket (ProcessorIndex);
+  if (CacheSize64 < MAX_INT16) {
+    CacheSize16 = CacheSize64;
+    CacheSize32 = CacheSize16;
+  } else if ((CacheSize64 / 64) < MAX_INT16) {
+    CacheSize16 = (UINT16)(BIT15 | (CacheSize64 / 64));
+    CacheSize32 = (UINT32)(BIT31 | (CacheSize64 / 64));
+  } else {
+    if ((CacheSize64 / 1024) <= 2047) {
+      CacheSize32 = CacheSize64;
+    } else {
+      CacheSize32 = (UINT32)(BIT31 | (CacheSize64 / 64));
+    }
+
+    CacheSize16 = 0xFFFF;
+  }
+
+  SmbiosCacheTable->MaximumCacheSize  = CacheSize16;
+  SmbiosCacheTable->InstalledSize     = CacheSize16;
+  SmbiosCacheTable->MaximumCacheSize2 = CacheSize32;
+  SmbiosCacheTable->InstalledSize2    = CacheSize32;
 
   return TRUE;
 }
@@ -212,9 +251,16 @@ OemGetChassisType (
 BOOLEAN
 EFIAPI
 OemIsProcessorPresent (
-  IN UINTN ProcessorIndex
+  IN UINTN  ProcessorIndex
   )
 {
+  //
+  // The framework always checks the presence of the processor before retrieving
+  // the processor information such as part number, serial number. This caches
+  // the processor index for subsequent use in the OemUpdateSmbiosInfo().
+  //
+  mProcessorIndex = ProcessorIndex;
+
   //
   // Platform only supports 2 sockets: Master and Slave.
   // The master socket is always online.
@@ -305,37 +351,73 @@ UpdateFirmwareVersionString (
 VOID
 EFIAPI
 OemUpdateSmbiosInfo (
-  IN EFI_HII_HANDLE HiiHandle,
-  IN EFI_STRING_ID TokenToUpdate,
-  IN OEM_MISC_SMBIOS_HII_STRING_FIELD Field
+  IN EFI_HII_HANDLE                    HiiHandle,
+  IN EFI_STRING_ID                     TokenToUpdate,
+  IN OEM_MISC_SMBIOS_HII_STRING_FIELD  Field
   )
 {
-  EFI_STRING UnicodeString;
-  UINT8      StringLength;
+  EFI_STRING  UnicodeString;
+  UINT8       StringLength;
+  CHAR8       *AsciiString;
+  UINT32      *Ecid;
 
-  StringLength = SMBIOS_STRING_MAX_LENGTH * sizeof (CHAR16);
+  StringLength  = SMBIOS_STRING_MAX_LENGTH * sizeof (CHAR16);
   UnicodeString = AllocatePool (StringLength);
   if (UnicodeString == NULL) {
     DEBUG ((
       DEBUG_ERROR,
       "%a:%d: There is not enough memory remaining to satisfy the request\n",
       __func__,
-      __LINE__));
+      __LINE__
+      ));
 
     goto Exit;
   }
 
   switch (Field) {
     case ProductNameType01:
+      AsciiString = IpmiFruInfoGet (FruProductName);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case SystemManufacturerType01:
+      AsciiString = IpmiFruInfoGet (FruProductManufacturerName);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case VersionType01:
+      AsciiString = IpmiFruInfoGet (FruProductVersion);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case SerialNumType01:
+      AsciiString = IpmiFruInfoGet (FruProductSerialNumber);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case SkuNumberType01:
-      UnicodeSPrint (
-        UnicodeString,
-        StringLength,
-        OEM_DEFAULT_INFORMATION
-        );
+      AsciiString = IpmiFruInfoGet (FruProductExtra);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
       break;
 
     case FamilyType01:
@@ -344,18 +426,52 @@ OemUpdateSmbiosInfo (
         StringLength,
         IsAc01Processor () ? L"Altra\0" : L"Altra Max\0"
         );
+
       break;
 
     case ProductNameType02:
+      AsciiString = IpmiFruInfoGet (FruBoardProductName);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case AssetTagType02:
-    case VersionType02:
-    case SerialNumberType02:
-    case BoardManufacturerType02:
       UnicodeSPrint (
         UnicodeString,
         StringLength,
-        OEM_DEFAULT_INFORMATION
+        L"Not Set"
         );
+
+      break;
+
+    case VersionType02:
+      AsciiString = IpmiFruInfoGet (FruBoardPartNumber);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
+    case SerialNumberType02:
+      AsciiString = IpmiFruInfoGet (FruBoardSerialNumber);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
+    case BoardManufacturerType02:
+      AsciiString = IpmiFruInfoGet (FruBoardManufacturerName);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
       break;
 
     case ChassisLocationType02:
@@ -364,18 +480,104 @@ OemUpdateSmbiosInfo (
         StringLength,
         L"Base of Chassis"
         );
+
       break;
 
     case SerialNumberType03:
+      AsciiString = IpmiFruInfoGet (FruChassisSerialNumber);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case VersionType03:
+      AsciiString = IpmiFruInfoGet (FruChassisPartNumber);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case ManufacturerType03:
+      AsciiString = IpmiFruInfoGet (FruBoardManufacturerName);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case AssetTagType03:
+      AsciiString = IpmiFruInfoGet (FruProductAssetTag);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
     case SkuNumberType03:
+      AsciiString = IpmiFruInfoGet (FruChassisExtra);
+      if (AsciiString != NULL) {
+        StringLength = AsciiStrLen (AsciiString) + 1;
+        AsciiStrToUnicodeStrS (AsciiString, UnicodeString, StringLength);
+      }
+
+      break;
+
+    case ProcessorVersionType04:
+      if (IsAc01Processor ()) {
+        UnicodeSPrint (
+          UnicodeString,
+          StringLength,
+          PROCESSOR_VERSION_ALTRA
+          );
+      } else {
+        UnicodeSPrint (
+          UnicodeString,
+          StringLength,
+          PROCESSOR_VERSION_ALTRA_MAX
+          );
+      }
+
+      break;
+
+    case ProcessorSerialNumType04:
+      CpuGetEcid (mProcessorIndex, &Ecid);
       UnicodeSPrint (
         UnicodeString,
         StringLength,
-        OEM_DEFAULT_INFORMATION
+        L"%08X%08X%08X%08X",
+        Ecid[0],
+        Ecid[1],
+        Ecid[2],
+        Ecid[3]
         );
+
+      break;
+
+    case ProcessorPartNumType04:
+      if (IsAc01Processor ()) {
+        UnicodeSPrint (
+          UnicodeString,
+          StringLength,
+          L"Q%02d-%02X",
+          GetSkuMaxCore (mProcessorIndex),
+          GetSkuMaxTurbo (mProcessorIndex)
+          );
+      } else {
+        UnicodeSPrint (
+          UnicodeString,
+          StringLength,
+          L"M%02d-%02X",
+          GetSkuMaxCore (mProcessorIndex),
+          GetSkuMaxTurbo (mProcessorIndex)
+          );
+      }
+
       break;
 
     case BiosVersionType00:
@@ -498,7 +700,7 @@ OemGetBiosRelease (
   VOID
   )
 {
-  UINT16 BiosRelease;
+  UINT16  BiosRelease;
 
   BiosRelease = (UINT16)(((PcdGet8 (PcdSmbiosTables0MajorVersion)) << 8)
                          | PcdGet8 (PcdSmbiosTables0MinorVersion));
@@ -517,10 +719,10 @@ OemGetEmbeddedControllerFirmwareRelease (
   VOID
   )
 {
-  CHAR8  AsciiScpVer[SCP_VERSION_STRING_MAX_LENGTH];
-  UINT8  *ScpVer = NULL;
-  UINT8  Index;
-  UINT16 FirmwareRelease;
+  CHAR8   AsciiScpVer[SCP_VERSION_STRING_MAX_LENGTH];
+  UINT8   *ScpVer = NULL;
+  UINT8   Index;
+  UINT16  FirmwareRelease;
 
   GetScpVersion (&ScpVer);
   if (ScpVer == NULL) {
@@ -528,9 +730,10 @@ OemGetEmbeddedControllerFirmwareRelease (
       DEBUG_ERROR,
       "%a:%d: Fail to get SMpro/PMpro information\n",
       __func__,
-      __LINE__));
+      __LINE__
+      ));
 
-      return 0xFFFF;
+    return 0xFFFF;
   }
 
   CopyMem ((VOID *)AsciiScpVer, (VOID *)ScpVer, AsciiStrLen ((CHAR8 *)ScpVer));
@@ -548,6 +751,40 @@ OemGetEmbeddedControllerFirmwareRelease (
   return FirmwareRelease;
 }
 
+VOID
+ConvertIpmiGuidToSmbiosGuid (
+  IN OUT UINT8  *SmbiosGuid,
+  IN     UINT8  *IpmiGuid
+  )
+{
+  UINT8  Index;
+
+  //
+  // Node and clock seq field within the GUID
+  // are stored most-significant byte first in
+  // SMBIOS spec but LSB first in IPMI spec
+  // ->change its offset and byte-order
+  //
+  for (Index = 0; Index < 8; Index++) {
+    *(SmbiosGuid + 15 - Index) = *(IpmiGuid + Index);
+  }
+
+  //
+  // Time high, time mid and time low field
+  // are stored LSB first in both IPMI spec
+  // and SMBIOS spec
+  // ->only need change offset
+  //
+  *(SmbiosGuid + 6) = *(IpmiGuid + 8);
+  *(SmbiosGuid + 7) = *(IpmiGuid + 9);
+  *(SmbiosGuid + 4) = *(IpmiGuid + 10);
+  *(SmbiosGuid + 5) = *(IpmiGuid + 11);
+  *SmbiosGuid       = *(IpmiGuid + 12);
+  *(SmbiosGuid + 1) = *(IpmiGuid + 13);
+  *(SmbiosGuid + 2) = *(IpmiGuid + 14);
+  *(SmbiosGuid + 3) = *(IpmiGuid + 15);
+}
+
 /**
   Fetches the system UUID.
 
@@ -559,9 +796,17 @@ OemGetSystemUuid (
   OUT GUID  *SystemUuid
   )
 {
+  EFI_STATUS  Status;
+  EFI_GUID    Uuid;
+
   if (SystemUuid == NULL) {
     return;
   }
 
-  CopyGuid (SystemUuid, &gZeroGuid);
+  Status = IpmiGetSystemUuid (&Uuid);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a %d Can not get System UUID!\n", __func__, __LINE__));
+  }
+
+  ConvertIpmiGuidToSmbiosGuid ((UINT8 *)SystemUuid, (UINT8 *)&Uuid);
 }

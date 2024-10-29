@@ -45,7 +45,7 @@ InitMmu (
   //       of DRAM as it is the first permanent memory allocation)
   Status = ArmConfigureMmu (MemoryTable, &TranslationTableBase, &TranslationTableSize);
   if (EFI_ERROR (Status)) {
-    DEBUG ((EFI_D_ERROR, "Error: Failed to enable MMU\n"));
+    DEBUG ((DEBUG_ERROR, "Error: Failed to enable MMU\n"));
   }
 }
 
@@ -75,8 +75,8 @@ MoveNvStoreImage (
 
   CopyMem (NewBase, OldBase, Size);
 
-  DEBUG ((EFI_D_INFO, "%a: Relocating NV store FV from %p to %p\n",
-    __FUNCTION__, OldBase, NewBase));
+  DEBUG ((DEBUG_INFO, "%a: Relocating NV store FV from %p to %p\n",
+    __func__, OldBase, NewBase));
 
   Status = PcdSet64S (PcdFlashNvStorageVariableBase64, (UINT64)NewBase);
   ASSERT_EFI_ERROR (Status);

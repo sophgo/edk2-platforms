@@ -3,7 +3,7 @@
 
   Based on files under Nt32Pkg/MiscSubClassPlatformDxe/
 
-  Copyright (c) 2023, Ampere Computing LLC. All rights reserved.<BR>
+  Copyright (c) 2023 - 2024, Ampere Computing LLC. All rights reserved.<BR>
   Copyright (c) 2021, NUVIA Inc. All rights reserved.<BR>
   Copyright (c) 2006 - 2011, Intel Corporation. All rights reserved.<BR>
   Copyright (c) 2015, Hisilicon Limited. All rights reserved.<BR>
@@ -14,6 +14,10 @@
 
 #include "SmbiosPlatformDxe.h"
 
+SMBIOS_PLATFORM_DXE_TABLE_EXTERNS (
+  SMBIOS_TABLE_TYPE7,
+  PlatformCache
+  )
 SMBIOS_PLATFORM_DXE_TABLE_EXTERNS (
   SMBIOS_TABLE_TYPE8,
   PlatformPortConnector
@@ -52,45 +56,49 @@ SMBIOS_PLATFORM_DXE_TABLE_EXTERNS (
   )
 
 SMBIOS_PLATFORM_DXE_DATA_TABLE mSmbiosPlatformDxeDataTable[] = {
+  // Type7
+  SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
+    PlatformCache
+    ),
   // Type8
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformPortConnector
-  ),
+    ),
   // Type9
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformSystemSlot
-  ),
+    ),
   // Type11
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformOemString
-  ),
-  //Type16
+    ),
+  // Type16
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformPhysicalMemoryArray
-  ),
-  //Type17
+    ),
+  // Type17
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformMemoryDevice
-  ),
-  //Type19
+    ),
+  // Type19
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformMemoryArrayMappedAddress
-  ),
+    ),
   // Type24
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformHardwareSecurity
-  ),
+    ),
   // Type38
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformIpmiDevice
-  ),
+    ),
   // Type41
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformOnboardDevicesExtended
-  )
+    )
 };
 
 //
 // Number of Data Table entries.
 //
-UINTN mSmbiosPlatformDxeDataTableEntries = ARRAY_SIZE (mSmbiosPlatformDxeDataTable);
+UINTN  mSmbiosPlatformDxeDataTableEntries = ARRAY_SIZE (mSmbiosPlatformDxeDataTable);

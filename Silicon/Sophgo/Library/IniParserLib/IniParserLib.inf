@@ -1,0 +1,42 @@
+## @file
+#  Implementation for IniParserLib library class interfaces.
+#
+#  Copyright (c) 2024. SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 1.29
+  BASE_NAME                      = IniParserLib
+  FILE_GUID                      = 0620512C-3882-4D0A-81B0-0BE3AE955ADB
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = IniParserLib
+
+[Sources]
+  IniParserUtil.c
+  IniParserUtil.h
+  IniParserLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib
+  PcdLib
+  UefiLib
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdIniFileRamAddress
+  gSophgoTokenSpaceGuid.PcdIniFileMaxSize
+
+[Depex]
+  TRUE

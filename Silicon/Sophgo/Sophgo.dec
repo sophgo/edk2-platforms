@@ -30,6 +30,8 @@
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|0x0|UINT32|0x00001004
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|0x0|UINT32|0x00001005
+  gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x0|UINT64|0x00001006
+  gSophgoTokenSpaceGuid.PcdIniFileMaxSize|0x0|UINT32|0x00001007
 
 ## In the PcdsFixedAtBuild.RISCV64.
 [PcdsFixedAtBuild.RISCV64]

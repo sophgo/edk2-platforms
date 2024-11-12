@@ -18,7 +18,7 @@ Scope(_SB)
     Name (_CCA, 0x01)           // _CCA: Cache Coherency Attribute
     Method (_STA)
     {
-      Return(0xf)
+      Return(0x0)
     }
 
     Name (_CRS, ResourceTemplate () {   // _CRS: Current Resource Settings
@@ -73,10 +73,11 @@ Scope(_SB)
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package () {
             Package () { "bus-width", 4 },
+            Package () { "wp-inverted", 0x1 },
             Package () { "no-mmc", 0x1 },
             Package () { "no-sdio", 0x1  },
-			Package () { "no-1-8-v", 0x1 },
-			//todo: switch-voltage-gpio
+            Package () { "no-1-8-v", 0x1 },
+            Package () { "core-clk", 400000000}
       }
     })
   }

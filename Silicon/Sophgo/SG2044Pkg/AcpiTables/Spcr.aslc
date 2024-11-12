@@ -41,7 +41,7 @@ STATIC EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE Spcr = {
   // UINT8                                   Irq;
   0,
   // UINT32                                  GlobalSystemInterrupt;
-  41,
+  42,
   // UINT8                                   BaudRate;
   EFI_ACPI_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_BAUD_RATE_115200,
   // UINT8                                   Parity;

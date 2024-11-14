@@ -23,6 +23,7 @@ extern "C" {
 
 //#include <stdio.h>
 
+extern CHAR8 MemoryData[];
 /* Nonzero if INI_HANDLER callback should accept lineno parameter. */
 #ifndef INI_HANDLER_LINENO
 #define INI_HANDLER_LINENO 0

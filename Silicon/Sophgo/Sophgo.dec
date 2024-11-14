@@ -32,6 +32,7 @@
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|0x0|UINT32|0x00001005
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x0|UINT64|0x00001006
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|0x0|UINT32|0x00001007
+  gSophgoTokenSpaceGuid.PcdMisa|0x0|UINT32|0x00001008
 
 ## In the PcdsFixedAtBuild.RISCV64.
 [PcdsFixedAtBuild.RISCV64]

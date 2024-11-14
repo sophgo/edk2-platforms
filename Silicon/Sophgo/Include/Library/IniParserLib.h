@@ -10,6 +10,8 @@
 #ifndef INI_PARSER_LIB_H_
 #define INI_PARSER_LIB_H_
 
+extern CHAR8 MemoryData[];
+
 BOOLEAN
 EFIAPI
 IsIniFileExist (

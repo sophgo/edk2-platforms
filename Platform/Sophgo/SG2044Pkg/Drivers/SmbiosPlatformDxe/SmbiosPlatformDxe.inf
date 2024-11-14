@@ -1,0 +1,75 @@
+## @file
+#
+# Copyright (c) 2020 - 2024, Ampere Computing LLC. All rights reserved.<BR>
+# Copyright (c) 2024. SOPHGO Inc. All rights reserved.<BR>
+#
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = SmbiosPlatformDxe
+  FILE_GUID                      = D9397B44-8019-4086-A92C-2FE214CDFEFB
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = SmbiosPlatformDxeEntry
+
+[Sources]
+  SmbiosPlatformDxe.h
+  SmbiosPlatformDxe.c
+  SmbiosPlatformDxeDataTable.c
+  SmbiosPlatformDxeStrings.uni
+  Type00/PlatformBiosData.c
+  Type00/PlatformBiosFunction.c
+  Type01/PlatformSystemData.c
+  Type01/PlatformSystemFunction.c
+  Type02/PlatformBoardData.c
+  Type02/PlatformBoardFunction.c
+  Type03/PlatformChassisData.c
+  Type03/PlatformChassisFunction.c
+  Type04/PlatformProcessorData.c
+  Type04/PlatformProcessorFunction.c
+  Type07/PlatformCacheData.c
+  Type07/PlatformCacheFunction.c
+  Type13/PlatformLanguageData.c
+  Type13/PlatformLanguageFunction.c
+  Type16/PlatformPhysicalMemoryArrayData.c
+  Type16/PlatformPhysicalMemoryArrayFunction.c
+  Type17/PlatformMemoryDeviceData.c
+  Type17/PlatformMemoryDeviceFunction.c
+  Type19/PlatformMemoryArrayMappedAddressData.c
+  Type19/PlatformMemoryArrayMappedAddressFunction.c
+  Type32/PlatformSystemBootData.c
+  Type32/PlatformSystemBootFunction.c
+  Type38/PlatformIpmiDeviceData.c
+  Type38/PlatformIpmiDeviceFunction.c
+  Type44/PlatformProcessorAdditionalData.c
+  Type44/PlatformProcessorAdditionalFunction.c
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
+  Silicon/RISC-V/ProcessorPkg/RiscVProcessorPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  HiiLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+  IniParserLib
+
+[Protocols]
+  gEfiSmbiosProtocolGuid                            ## CONSUMED
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdMisa
+
+[Depex]
+  TRUE

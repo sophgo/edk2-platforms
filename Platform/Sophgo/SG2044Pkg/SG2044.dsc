@@ -193,6 +193,7 @@
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
   VariableFlashInfoLib|MdeModulePkg/Library/BaseVariableFlashInfoLib/BaseVariableFlashInfoLib.inf
   VariablePolicyHelperLib|MdeModulePkg/Library/VariablePolicyHelperLib/VariablePolicyHelperLib.inf
+  IniParserLib|Silicon/Sophgo/Library/IniParserLib/IniParserLib.inf
 !ifdef $(SOURCE_DEBUG_ENABLE)
   PeCoffExtraActionLib|SourceLevelDebugPkg/Library/PeCoffExtraActionLibDebug/PeCoffExtraActionLibDebug.inf
   DebugCommunicationLib|SourceLevelDebugPkg/Library/DebugCommunicationLibSerialPort/DebugCommunicationLibSerialPort.inf
@@ -446,6 +447,7 @@
   # gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x02800000
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|2048
+  gSophgoTokenSpaceGuid.PcdMisa|0x00B4112F
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
 
@@ -610,7 +612,8 @@
   #
   # SMBIOS Support
   #
-  #MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+  Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 
   #
   # PCIe Support

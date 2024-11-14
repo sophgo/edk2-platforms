@@ -110,7 +110,8 @@ INF  MdeModulePkg/Universal/MemoryTest/NullMemoryTestDxe/NullMemoryTestDxe.inf
 #
 # SMBIOS Support
 #
-#INF  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+INF  MdeModulePkg/Universal/SmbiosDxe/SmbiosDxe.inf
+INF  Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 
 #
 # Network modules

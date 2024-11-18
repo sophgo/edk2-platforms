@@ -260,6 +260,9 @@
   # Nor Flash Library
   NorFlashInfoLib|EmbeddedPkg/Library/NorFlashInfoLib/NorFlashInfoLib.inf
 
+  # Dw I2c Library
+  I2cLib|Silicon/Sophgo/Library/DwI2cLib/DwI2cLib.inf
+
   IniParserLib|Silicon/Sophgo/Library/IniParserLib/IniParserLib.inf
 
 [LibraryClasses.common.SEC]

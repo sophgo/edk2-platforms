@@ -1,0 +1,26 @@
+///** @file
+//  String definitions for BdsPlatform formset.
+//  Copyright (c) 2024, Sophgo. All rights reserved.<BR>
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//**/
+
+#define CONFIG_INI_FORMSET_GUID {0x4a618233, 0x07f9, 0x4d73, { 0x91, 0x53, 0x51, 0x1f, 0x28, 0x93, 0xa0, 0x1e } }
+#define CONFIG_FORM_ID 		       0x1000
+#define LABEL_UPDATE_START 	       0x1000
+#define LABEL_UPDATE_END	       0xffff
+
+formset
+  guid     = CONFIG_INI_FORMSET_GUID,
+  title    = STRING_TOKEN(STR_CONFIG_FORM_TITLE),
+  help     = STRING_TOKEN(STR_NULL_STRING ),
+
+  form formid = CONFIG_FORM_ID,
+     title  = STRING_TOKEN(STR_CONFIG_FORM_TITLE);
+	
+     label LABEL_UPDATE_START;
+
+     label LABEL_UPDATE_END;
+
+  endform;
+
+endformset;

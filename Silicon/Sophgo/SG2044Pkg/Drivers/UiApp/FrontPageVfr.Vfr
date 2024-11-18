@@ -1,0 +1,38 @@
+///** @file
+//  Front page formset.
+//  Copyright (c) 2024, Sophgo. All rights reserved.<BR>
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//**/
+
+#define FORMSET_GUID  {0xadf98142, 0x42c4, 0x429c, { 0x9f, 0xa4, 0x62, 0x3f, 0xf9, 0x94, 0xa1, 0x40 } }
+#define CONFIG_INI_FORMSET_GUID {0x4a618233, 0x07f9, 0x4d73, { 0x91, 0x53, 0x51, 0x1f, 0x28, 0x93, 0xa0, 0x1e } }
+#define FRONT_PAGE_FORM_ID             0x1000
+#define NEW_FORM_ID 		               0x1000
+#define LABEL_FRONTPAGE_INFORMATION    0x1000
+#define LABEL_END                      0xffff
+
+formset
+  guid     = FORMSET_GUID,
+  title    = STRING_TOKEN(STR_FRONT_PAGE_TITLE),
+  help     = STRING_TOKEN(STR_EMPTY_STRING ),
+  classguid = FORMSET_GUID,
+
+  form formid = FRONT_PAGE_FORM_ID,
+       title  = STRING_TOKEN(STR_FRONT_PAGE_TITLE);
+
+    label LABEL_FRONTPAGE_INFORMATION;
+    // This is where we will dynamically add a Action type op-code to show
+    // the platform information.
+    //
+    label LABEL_END;
+
+    goto
+      formsetguid = CONFIG_INI_FORMSET_GUID,
+      formid  = NEW_FORM_ID,                               
+      question = NEW_FORM_ID,
+      prompt  = STRING_TOKEN(STR_GOTO_DYNAMIC), 
+      help    = STRING_TOKEN(STR_GOTO_HELP),     
+      flags   = INTERACTIVE;                  
+  
+  endform;
+endformset;

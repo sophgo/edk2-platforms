@@ -1,0 +1,13 @@
+///** @file
+//  String definitions for BdsPlatform formset.
+//  Copyright (c) 2024, Sophgo. All rights reserved.<BR>
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//**/
+
+/=#
+
+#langdef   en-US "English"
+
+#string STR_CONFIG_FORM_TITLE #language en-US "product information"
+#string STR_EMPTY_STRING #language en-US ""
+#string STR_BOOT_OPTIONS #language en-US "test"

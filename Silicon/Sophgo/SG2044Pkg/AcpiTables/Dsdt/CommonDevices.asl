@@ -293,12 +293,16 @@ Scope(_SB)
   Device (PWM0) {
     Name (_HID, "SGPH0005")
     Name (_UID, 0)
-    Name (_CCA, 0x0)
     Method (_STA)
     {
       Return (0xf)
     }
-
+    Name(_DSD, Package () {
+      ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+      Package () {
+        Package () {"base-clk", 100000000},
+      }
+    })
     Name (_CRS, ResourceTemplate () {   // _CRS: Current Resource Settings
       QWordMemory (
         ResourceConsumer, PosDecode,

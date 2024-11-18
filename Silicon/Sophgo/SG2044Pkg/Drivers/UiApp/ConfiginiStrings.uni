@@ -1,0 +1,5 @@
+#langdef   en-US "English"
+
+#string STR_CONFIG_FORM_TITLE #language en-US "product information"
+#string STR_EMPTY_STRING #language en-US ""
+#string STR_BOOT_OPTIONS #language en-US "test"

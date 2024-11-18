@@ -1,0 +1,35 @@
+///** @file
+//  String definitions for BdsPlatform formset.
+//  Copyright (c) 2024, Sophgo. All rights reserved.<BR>
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//**/
+
+/=#
+
+#langdef   en-US "English"
+#langdef   en    "Standard English"
+
+#string STR_FRONT_PAGE_TITLE           #language en-US  "BISO MENU"
+#string STR_FRONT_PAGE_COMPUTER_MODEL  #language en-US  ""
+#string STR_FRONT_PAGE_CPU_MODEL       #language en-US  ""
+#string STR_FRONT_PAGE_CPU_SPEED       #language en-US  ""
+#string STR_FRONT_PAGE_MEMORY_SIZE     #language en-US  ""
+#string STR_FRONT_PAGE_BIOS_VERSION    #language en-US  ""
+#string STR_CONTINUE_PROMPT            #language en-US  "Continue"
+#string STR_CONTINUE_HELP              #language en-US  "This selection will direct the system to continue to booting process"
+#string STR_LANGUAGE_SELECT            #language en-US  "Select Language"
+#string STR_LANGUAGE_SELECT_HELP       #language en-US  "This is the option one adjusts to change the language for the current system"
+#string STR_MISSING_STRING             #language en-US  "Missing String"
+#string STR_EMPTY_STRING               #language en-US  ""
+#string STR_RESET_STRING               #language en-US  "Reset"
+#string STR_RESET_STRING_HELP          #language en-US  "Reset the current setting."
+#string STR_TEST_KEY_USED                #language en-US  "WARNING: Test key detected."
+#string STR_NULL_STRING                #language en-US  " "
+#string STR_GO_TO_NEW_FORM             #language en-US "Go to New Form"
+#string STR_NEW_FORM_TITLE             #language en-US "New Form"
+#string STR_NEW_FORM_CONTENT           #language en-US "This is the content of the new form."
+#string STR_EMPTY_STRING               #language en-US ""
+#string STR_GOTO_DYNAMIC               #language en-US "information"
+#string STR_GOTO_HELP                  #language en-US "this information of product"
+#string STR_BOOT_OPTIONS               #language en-US "test"
+#string STR_NULL_STRING                #language en-US ""

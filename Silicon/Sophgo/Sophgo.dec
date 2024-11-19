@@ -38,3 +38,6 @@
 [PcdsFixedAtBuild.RISCV64]
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize|0x0|UINT8|0x00010000
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|0x0|UINT8|0x00010001
+
+[LibraryClasses]
+  I2cLib|Silicon/Sophgo/Include/Library/I2c.h

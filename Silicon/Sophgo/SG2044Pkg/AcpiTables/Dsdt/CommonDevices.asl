@@ -317,9 +317,8 @@ Scope(_SB)
     })
 
   }
-}
-// no spi device found, just spifmc, should put it here?
-/*
+
+  // SPI0
   Device (SPI0) {
     Name (_HID, "SGPH0006")
     Name (_CID, "HISI0173")
@@ -335,12 +334,12 @@ Scope(_SB)
         MinFixed, MaxFixed,
         NonCacheable, ReadWrite,
         0x0,                       // Granularity
-        0x7040004000,              // Min Base Address
-        0x7040004FFF,              // Max Base Address
+        0x7030004000,              // Min Base Address
+        0x7030004FFF,              // Max Base Address
         0x0,                       // Translate
         0x0000001000               // Length
       )
-      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 110 }
+      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 39 }
     })
 
     Name (_DSD, Package ()  // _DSD: Device-Specific Data
@@ -368,12 +367,12 @@ Scope(_SB)
         MinFixed, MaxFixed,
         NonCacheable, ReadWrite,
         0x0,                       // Granularity
-        0x7040005000,              // Min Base Address
-        0x7040005FFF,              // Max Base Address
+        0x7030005000,              // Min Base Address
+        0x7030005FFF,              // Max Base Address
         0x0,                       // Translate
         0x0000001000               // Length
       )
-      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 111 }
+      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 40 }
     })
 
     Name (_DSD, Package ()  // _DSD: Device-Specific Data
@@ -386,4 +385,3 @@ Scope(_SB)
     })
   }
 }
-*/

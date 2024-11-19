@@ -312,7 +312,7 @@ BmSdSendCmd (
   }
 
   if ((Status == EFI_SUCCESS) && (Response != NULL)) {
-    for (INT32 I = 0; I < 4; I++) {
+    for (INT32 I = 0; I < MMC_RESPONSE_MAX; I++) {
       *Response = Cmd.Response[I];
       Response++;
     }

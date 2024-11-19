@@ -85,6 +85,8 @@ typedef UINT32  MMC_IDX;
 
 #define MMC_STATUS_APP_CMD    (1 << 5)
 
+#define MMC_RESPONSE_MAX      4
+
 typedef enum _MMC_STATE {
   MmcInvalidState = 0,
   MmcHwInitializationState,

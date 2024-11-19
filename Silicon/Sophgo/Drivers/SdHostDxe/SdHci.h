@@ -11,6 +11,8 @@
 #ifndef _SD_HCI_H_
 #define _SD_HCI_H_
 
+#include <MmcHost.h>
+
 #define SDCARD_INIT_FREQ                (200 * 1000)
 #define SDHCI_DMA_ADDRESS               0x00
 #define SDHCI_BLOCK_SIZE                0x04
@@ -168,7 +170,7 @@ typedef struct {
   UINT32  CmdIdx;
   UINT32  CmdArg;
   UINT32  ResponseType;
-  UINT32  Response[4];
+  UINT32  Response[MMC_RESPONSE_MAX];
 } MMC_CMD;
 
 typedef struct {

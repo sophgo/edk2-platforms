@@ -58,7 +58,7 @@ ValidateWrittenBlockCount (
   OUT UINTN *TransferredBlocks
   )
 {
-  UINT32                 R1;
+  UINT32                 Response[MMC_RESPONSE_MAX];
   UINT8                  Data[4];
   EFI_STATUS             Status;
   UINT32                 BlocksWritten;
@@ -77,20 +77,20 @@ ValidateWrittenBlockCount (
   MmcHost = MmcHostInstance->MmcHost;
 
   Status  = MmcHost->SendCommand (MmcHost, MMC_CMD55,
-                      MmcHostInstance->CardInfo.RCA << 16, MMC_RESPONSE_R1, &R1);
+                      MmcHostInstance->CardInfo.RCA << 16, MMC_RESPONSE_R1, Response);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a(%u): error: %r\n", __func__, __LINE__, Status));
     return Status;
   }
 
-  Status = MmcHost->SendCommand (MmcHost, MMC_ACMD22, 0, MMC_RESPONSE_R1, &R1);
+  Status = MmcHost->SendCommand (MmcHost, MMC_ACMD22, 0, MMC_RESPONSE_R1, Response);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a(%u): error: %r\n",
       __func__, __LINE__, Status));
     return Status;
   }
 
-  Status = R1TranAndReady (&R1);
+  Status = R1TranAndReady (Response);
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -139,7 +139,7 @@ WaitUntilTran (
   )
 {
   INTN                   Timeout;
-  UINT32                 Response[1];
+  UINT32                 Response[MMC_RESPONSE_MAX];
   EFI_STATUS             Status;
   EFI_MMC_HOST_PROTOCOL  *MmcHost;
 
@@ -281,7 +281,7 @@ MmcStopTransmission (
   )
 {
   EFI_STATUS              Status;
-  UINT32                  Response[4];
+  UINT32                  Response[MMC_RESPONSE_MAX];
   // Command 12 - Stop transmission (ends read or write)
   // Normally only needed for streaming transfers or after error.
   Status = MmcHost->SendCommand (MmcHost, MMC_CMD12, 0, MMC_RESPONSE_R1B, Response);

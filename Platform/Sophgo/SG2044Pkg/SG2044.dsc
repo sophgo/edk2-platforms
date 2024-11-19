@@ -118,7 +118,6 @@
   !endif
 
 [BuildOptions]
-  GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG
 !ifdef $(SOURCE_DEBUG_ENABLE)
   GCC:*_*_RISCV64_GENFW_FLAGS    = --keepexceptiontable
 !endif

@@ -342,7 +342,8 @@ FreeFrontPage (
                   NULL
                   );
   ASSERT_EFI_ERROR (Status);
-  HiiRemovePackages (gFrontPagePrivate.HiiHandle);
+  HiiRemovePackages (gFrontPagePrivate.HiiHandle[0]);
+  HiiRemovePackages (gFrontPagePrivate.HiiHandle[1]);
   if (gFrontPagePrivate.LanguageToken != NULL) {
     FreePool (gFrontPagePrivate.LanguageToken);
     gFrontPagePrivate.LanguageToken = NULL;

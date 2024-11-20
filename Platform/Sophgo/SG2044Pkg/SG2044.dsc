@@ -203,18 +203,7 @@
 
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
   ImagePropertiesRecordLib|MdeModulePkg/Library/ImagePropertiesRecordLib/ImagePropertiesRecordLib.inf
-!if $(SECURE_BOOT_ENABLE) == TRUE
-  IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
-  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
-  TpmMeasurementLib|SecurityPkg/Library/DxeTpmMeasurementLib/DxeTpmMeasurementLib.inf
-  AuthVariableLib|SecurityPkg/Library/AuthVariableLib/AuthVariableLib.inf
-  SecureBootVariableLib|SecurityPkg/Library/SecureBootVariableLib/SecureBootVariableLib.inf
-  SecureBootVariableProvisionLib|SecurityPkg/Library/SecureBootVariableProvisionLib/SecureBootVariableProvisionLib.inf
-  PlatformPKProtectionLib|SecurityPkg/Library/PlatformPKProtectionLibVarPolicy/PlatformPKProtectionLibVarPolicy.inf
-!else
-  TpmMeasurementLib|MdeModulePkg/Library/TpmMeasurementLibNull/TpmMeasurementLibNull.inf
-  AuthVariableLib|MdeModulePkg/Library/AuthVariableLibNull/AuthVariableLibNull.inf
-!endif
+
   VarCheckLib|MdeModulePkg/Library/VarCheckLib/VarCheckLib.inf
 
 !if $(HTTP_BOOT_ENABLE) == TRUE
@@ -227,10 +216,24 @@
   OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrderedCollectionRedBlackTreeLib.inf
 
 [LibraryClasses.common]
+  #
+  # Secure Boot dependencies
+  #
 !if $(SECURE_BOOT_ENABLE) == TRUE
+  IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
+  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
+  TpmMeasurementLib|SecurityPkg/Library/DxeTpmMeasurementLib/DxeTpmMeasurementLib.inf
+  AuthVariableLib|SecurityPkg/Library/AuthVariableLib/AuthVariableLib.inf
+  SecureBootVariableLib|SecurityPkg/Library/SecureBootVariableLib/SecureBootVariableLib.inf
+  SecureBootVariableProvisionLib|SecurityPkg/Library/SecureBootVariableProvisionLib/SecureBootVariableProvisionLib.inf
+  PlatformPKProtectionLib|SecurityPkg/Library/PlatformPKProtectionLibVarPolicy/PlatformPKProtectionLibVarPolicy.inf
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
-!endif
+  PlatformSecureLib|OvmfPkg/Library/PlatformSecureLib/PlatformSecureLib.inf
 
+!else
+  TpmMeasurementLib|MdeModulePkg/Library/TpmMeasurementLibNull/TpmMeasurementLibNull.inf
+  AuthVariableLib|MdeModulePkg/Library/AuthVariableLibNull/AuthVariableLibNull.inf
+!endif
 !ifdef $(DEBUG_ON_SERIAL_PORT)
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
 !else
@@ -265,6 +268,12 @@
   RealTimeClockLib|Silicon/Sophgo/Library/Ds1307RealTimeClockLib/Ds1307RealTimeClockLib.inf
 
   IniParserLib|Silicon/Sophgo/Library/IniParserLib/IniParserLib.inf
+
+  #
+  # Random Generator Library
+  #
+  TrngLib|Silicon/Sophgo/Library/TrngLib/TrngLib.inf
+  RngLib|Silicon/Sophgo/Library/RngLib/RngLib.inf
 
 [LibraryClasses.common.SEC]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
@@ -459,6 +468,7 @@
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|400000000
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|25000000
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7001000000
+  gSophgoTokenSpaceGuid.PcdTrngBase|0x7040020000
 
 ################################################################################
 #
@@ -541,15 +551,6 @@
   }
 
   MdeModulePkg/Core/RuntimeDxe/RuntimeDxe.inf
-
-!if $(SECURE_BOOT_ENABLE) == TRUE
-  MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf {
-    <LibraryClasses>
-      NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
-  }
-!else
-  MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf
-!endif
 
   UefiCpuPkg/CpuIo2Dxe/CpuIo2Dxe.inf
   MdeModulePkg/Universal/Metronome/Metronome.inf
@@ -660,6 +661,11 @@
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
   #
+  # Random Number Generator Support
+  #
+  Silicon/Sophgo/Drivers/RngDxe/RngDxe.inf
+
+  #
   # Emulator for x64 OpRoms, etc.
   #
   !if $(X64EMU_ENABLE) == TRUE
@@ -711,8 +717,20 @@
       SortLib|MdeModulePkg/Library/UefiSortLib/UefiSortLib.inf
   }
 
+  MdeModulePkg/Universal/SecurityStubDxe/SecurityStubDxe.inf {
+    <LibraryClasses>
+!if $(SECURE_BOOT_ENABLE) == TRUE
+      NULL|SecurityPkg/Library/DxeImageVerificationLib/DxeImageVerificationLib.inf
+!endif
+!if $(TPM2_ENABLE) == TRUE
+      NULL|SecurityPkg/Library/DxeTpm2MeasureBootLib/DxeTpm2MeasureBootLib.inf
+!endif
+  }
+
 !if $(SECURE_BOOT_ENABLE) == TRUE
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
+  SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
+  SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
 !endif
 
   #

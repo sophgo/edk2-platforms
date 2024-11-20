@@ -156,6 +156,10 @@ INF  MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
+#
+# Random Number Generator Support
+#
+INF Silicon/Sophgo/Drivers/RngDxe/RngDxe.inf
 
 #
 # Emulator for x64 OpRoms, etc.

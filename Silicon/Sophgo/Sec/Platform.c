@@ -149,6 +149,7 @@ PlatformPeimInitialization (
   PopulateIoResources (Base, "bitmain,bm-sd");
   PopulateIoResources (Base, "sophgo,sg2044-dwcmshc");
   PopulateIoResources (Base, "snps,designware-i2c");
+  PopulateIoResources (Base, "snps,designware-clp890");
 
   //
   // Add SPI Flash Master Controller resource

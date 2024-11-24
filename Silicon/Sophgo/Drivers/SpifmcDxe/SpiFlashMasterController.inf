@@ -8,7 +8,7 @@
 
 [Defines]
   INF_VERSION                    = 0x00010006
-  BASE_NAME                      = SpiDxe
+  BASE_NAME                      = SpifmcDxe
   FILE_GUID                      = C46D01DF-1D9D-48E4-B6B3-B3FC004FE04E
   MODULE_TYPE                    = DXE_RUNTIME_DRIVER
   VERSION_STRING                 = 1.0

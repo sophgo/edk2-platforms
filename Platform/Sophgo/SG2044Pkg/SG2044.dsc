@@ -568,7 +568,7 @@
   # RISC-V Platform module
   #
 !if $(FLASH_ENABLE) == TRUE
-  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 !endif

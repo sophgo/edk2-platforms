@@ -54,7 +54,7 @@ APRIORI DXE {
   INF  MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
   INF  UefiCpuPkg/CpuDxeRiscV64/CpuDxeRiscV64.inf
 !if $(FLASH_ENABLE) == TRUE
-  INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+  INF  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 !endif
@@ -79,7 +79,7 @@ INF  EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf
 
 # RISC-V Platform Drivers
 !if $(FLASH_ENABLE) == TRUE
-INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+INF  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
 INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
 INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 !endif

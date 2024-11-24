@@ -11,7 +11,7 @@
 #ifndef __NOR_FLASH_PROTOCOL_H__
 #define __NOR_FLASH_PROTOCOL_H__
 
-#include <Include/Spi.h>
+#include <Include/Spifmc.h>
 
 #define SPI_NOR_MAX_ID_LEN      6
 

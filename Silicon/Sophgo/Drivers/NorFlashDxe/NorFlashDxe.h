@@ -20,7 +20,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 
-#include <Include/Spi.h>
+#include <Include/Spifmc.h>
 #include <Include/SpiNorFlash.h>
 
 #define NOR_FLASH_SIGNATURE             SIGNATURE_32 ('F', 'S', 'P', 'I')

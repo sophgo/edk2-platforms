@@ -258,6 +258,50 @@ SpifmcRead (
 
 EFI_STATUS
 EFIAPI
+SpifmcDmmrRead (
+  IN  SPI_NOR *Nor,
+  IN  UINTN   From,
+  IN  UINTN   Length,
+  OUT UINT8   *Buffer
+  )
+{
+  UINT32     Register;
+  UINTN      SpiBase;
+
+  SpiBase = Nor->SpiBase;
+
+  Register = SpifmcInitReg (SpiBase);
+  Register |= (Nor->AddrNbytes) << SPIFMC_TRAN_CSR_ADDR_BYTES_SHIFT;
+  Register |= SPIFMC_TRAN_CSR_FIFO_TRG_LVL_8_BYTE;
+  Register |= SPIFMC_TRAN_CSR_WITH_CMD;
+  Register |= SPIFMC_TRAN_CSR_TRAN_MODE_RX;
+  if (Nor->AddrNbytes == 4) {
+    Register |= SPIFMC_TRAN_CSR_ADDR4B;
+    Register |= SPIFMC_TRAN_CSR_CMD4B;
+  }
+
+  MmioWrite32 ((UINTN)(SpiBase + SPIFMC_TRAN_CSR), Register);
+
+  //
+  // enable DMMR (Direct Memory Mapping Read)
+  //
+  MmioWrite32 ((UINTN)(SpiBase + SPIFMC_DMMR), 1);
+
+  //
+  // Read the data
+  //
+  CopyMem (Buffer, (UINTN *)(SpiBase + From), Length);
+
+  //
+  // disable DMMR (Direct Memory Mapping Read)
+  //
+  MmioWrite32 ((UINTN)(SpiBase + SPIFMC_DMMR), 0);
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
 SpifmcWrite (
   IN  SPI_NOR     *Nor,
   IN  UINTN       To,
@@ -436,13 +480,13 @@ SpiMasterSetupSlave (
     }
   }
 
+  Nor->SpiBase = SPIFMC_BASE;
+
   Nor->BounceBufSize = SIZE_4KB;
   Nor->BounceBuf = AllocateZeroPool (Nor->BounceBufSize);
   if (!Nor->BounceBuf) {
     return NULL;
   }
-
-  Nor->SpiBase = SPIFMC_BASE;
 
   SpifmcInit (Nor);
 
@@ -488,11 +532,16 @@ SpifmcEntryPoint (
 
   mSpiMasterInstance->SpiMasterProtocol.ReadRegister   = SpifmcReadRegister;
   mSpiMasterInstance->SpiMasterProtocol.WriteRegister  = SpifmcWriteRegister;
-  mSpiMasterInstance->SpiMasterProtocol.Read           = SpifmcRead;
   mSpiMasterInstance->SpiMasterProtocol.Write          = SpifmcWrite;
   mSpiMasterInstance->SpiMasterProtocol.Erase          = SpifmcErase;
   mSpiMasterInstance->SpiMasterProtocol.SetupDevice    = SpiMasterSetupSlave;
   mSpiMasterInstance->SpiMasterProtocol.FreeDevice     = SpiMasterFreeSlave;
+
+  if (FixedPcdGetBool (PcdSpifmcDmmrEnable)) {
+    mSpiMasterInstance->SpiMasterProtocol.Read           = SpifmcDmmrRead;
+  } else {
+    mSpiMasterInstance->SpiMasterProtocol.Read           = SpifmcRead;
+  }
 
   mSpiMasterInstance->Signature = SPI_MASTER_SIGNATURE;
 

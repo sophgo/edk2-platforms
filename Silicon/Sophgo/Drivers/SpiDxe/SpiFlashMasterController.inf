@@ -35,14 +35,13 @@
   UefiLib
   UefiRuntimeLib
 
-[Guids]
-
 [Protocols]
   gSophgoSpiMasterProtocolGuid
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base                            ## CONSUMES
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base                            ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable                       ## CONSUMES
   gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode             ## CONSUMES
 
 [Depex]

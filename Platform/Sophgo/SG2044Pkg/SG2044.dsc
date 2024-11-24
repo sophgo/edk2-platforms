@@ -42,6 +42,8 @@
   DEFINE NETWORK_HTTP_BOOT_ENABLE = FALSE
   DEFINE NETWORK_ISCSI_ENABLE     = FALSE
 
+  DEFINE FLASH_ENABLE             = FALSE
+
   #
   # x64 Emulator
   #
@@ -457,7 +459,11 @@
   # 64KB + 64KB + 64KB
   # Flash Offset: 32MB
   #
-  # gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x02800000
+!if $(FLASH_ENABLE) == TRUE
+  gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7001000000
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x02800000
+  gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|TRUE
+!endif
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|2048
   gSophgoTokenSpaceGuid.PcdMisa|0x00B4112F
@@ -467,7 +473,6 @@
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|400000000
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|25000000
-  gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7001000000
   gSophgoTokenSpaceGuid.PcdTrngBase|0x7040020000
 
 ################################################################################
@@ -477,13 +482,9 @@
 ################################################################################
 
 [PcdsDynamicDefault]
-  # gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
-  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0x80A00000
-  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|0x80A10000
-  # gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x80A20000
-  # gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|FALSE
-
+!if $(FLASH_ENABLE) == FALSE
   gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvModeEnable|TRUE
+!endif
 
   #gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0208
   #gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
@@ -566,9 +567,11 @@
   #
   # RISC-V Platform module
   #
-  # Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
-  # Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
-  # Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+!if $(FLASH_ENABLE) == TRUE
+  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
+  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+!endif
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 

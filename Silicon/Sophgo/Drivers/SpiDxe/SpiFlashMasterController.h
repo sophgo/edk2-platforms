@@ -72,6 +72,8 @@
 #define SPIFMC_TRAN_CSR_FIFO_TRG_LVL_4_BYTE   (0x02 << 12)
 #define SPIFMC_TRAN_CSR_FIFO_TRG_LVL_8_BYTE   (0x03 << 12)
 #define SPIFMC_TRAN_CSR_GO_BUSY               BIT15
+#define SPIFMC_TRAN_CSR_ADDR4B                BIT20
+#define SPIFMC_TRAN_CSR_CMD4B                 BIT21
 
 #define SPIFMC_TRAN_NUM                    0x14
 #define SPIFMC_FIFO_PORT                   0x18

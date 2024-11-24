@@ -53,9 +53,11 @@ APRIORI DXE {
   INF  MdeModulePkg/Universal/ReportStatusCodeRouter/RuntimeDxe/ReportStatusCodeRouterRuntimeDxe.inf
   INF  MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
   INF  UefiCpuPkg/CpuDxeRiscV64/CpuDxeRiscV64.inf
-  # INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
-  # INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
-  # INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+!if $(FLASH_ENABLE) == TRUE
+  INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+  INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
+  INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+!endif
 }
 
 #
@@ -76,9 +78,11 @@ INF  MdeModulePkg/Universal/Metronome/Metronome.inf
 INF  EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf
 
 # RISC-V Platform Drivers
-# INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
-# INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
-# INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+!if $(FLASH_ENABLE) == TRUE
+INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
+INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
+INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+!endif
 INF  Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
 INF  Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 

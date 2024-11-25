@@ -76,7 +76,7 @@ GenerateRandomNumbers (
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
-      "%a: TRGN device node not found!\n",
+      "%a: TRNG device node not found!\n",
       __func__
       ));
     goto ErrorGetBase;
@@ -99,6 +99,39 @@ GenerateRandomNumbers (
 ErrorGetBase:
   if (EFI_ERROR (Status)) {
     TrngDriver->RegBase = FixedPcdGet64 (PcdTrngBase);
+    EFI_CPU_ARCH_PROTOCOL *Cpu;
+
+    Status = gBS->LocateProtocol (
+		    &gEfiCpuArchProtocolGuid,
+		    NULL,
+		    (VOID **)&Cpu
+		    );
+
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+	"%a: Cannot locate CPU arch service\n",
+	__func__
+	));
+      goto Error;
+    }
+
+    Status = Cpu->SetMemoryAttributes (
+		    Cpu,
+		    TrngDriver->RegBase,
+		    SIZE_4KB,
+		    EFI_MEMORY_UC
+		    );
+
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+	"%a: Failed to set memory attributes\n",
+	__func__
+	));
+
+      goto Error;
+    }
   }
 
   //

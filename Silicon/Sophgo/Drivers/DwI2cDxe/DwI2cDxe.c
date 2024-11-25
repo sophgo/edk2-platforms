@@ -7,18 +7,11 @@
 
 **/
 
-#include <Uefi.h>
-#include <Library/IoLib.h>
-#include <Library/UefiBootServicesTableLib.h>
-#include <Library/DebugLib.h>
-#include <Library/UefiLib.h>
-#include <Library/BaseMemoryLib.h>
-#include <Library/MemoryAllocationLib.h>
-#include <Protocol/FdtClient.h>
+#include "DwI2cDxe.h"
 
-#include "DwI2cLib.h"
-
-STATIC I2C_INFO *mI2cInfo;
+STATIC I2C_INFO                    *mI2cInfo;
+STATIC SOPHGO_I2C_MASTER_PROTOCOL  *mI2cMasterProtocol;
+STATIC EFI_EVENT                   mI2cVirtualAddrChangeEvent;
 
 typedef struct {
   UINT32          SsHcnt;
@@ -442,7 +435,7 @@ DesignwareI2cInit (
   IN      UINTN   Speed
   )
 {
-  I2c->Regs = Reg;
+  I2c->Regs      = Reg;
   I2c->I2cClkFrq = Freq;
 
   __DwI2cInit (I2c, Speed, 0);
@@ -486,6 +479,7 @@ I2cXfer (
 /**
   I2c smbus read 1 byte data command.
 
+  @param[in]   This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]   I2c   I2c bus number.
   @param[in]   Addr  I2c slave address.
   @param[in]   Cmd   Smbus command.
@@ -500,10 +494,11 @@ I2cXfer (
 EFI_STATUS
 EFIAPI
 I2cSmbusReadByte (
-  IN  INT32  I2c,
-  IN  UINT8  Addr,
-  IN  UINT8  Cmd,
-  OUT UINT8  *Data
+  IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
+  IN  INT32                       I2c,
+  IN  UINT8                       Addr,
+  IN  UINT8                       Cmd,
+  OUT UINT8                       *Data
   )
 {
   I2C_MSG  Msg[2];
@@ -526,6 +521,7 @@ I2cSmbusReadByte (
 /**
   I2c smbus read specified byte length data command.
 
+  @param[in]   This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]   I2c   I2c bus number.
   @param[in]   Addr  I2c slave address.
   @param[in]   Len   Byte size of the data to be written.
@@ -541,11 +537,12 @@ I2cSmbusReadByte (
 EFI_STATUS
 EFIAPI
 I2cSmbusRead (
-  IN  INT32   I2c,
-  IN  UINT8   Addr,
-  IN  UINT32  Len,
-  IN  UINT8   Cmd,
-  OUT UINT8   *Data
+  IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
+  IN  INT32                       I2c,
+  IN  UINT8                       Addr,
+  IN  UINT8                       Cmd,
+  IN  UINT32                      Len,
+  OUT UINT8                       *Data
   )
 {
   I2C_MSG  Msg[2];
@@ -568,6 +565,7 @@ I2cSmbusRead (
 /**
   I2c smbus write 1 byte data command.
 
+  @param[in]  This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]  I2c   I2c bus number.
   @param[in]  Addr  I2c slave address.
   @param[in]  Cmd   Smbus command.
@@ -582,10 +580,11 @@ I2cSmbusRead (
 EFI_STATUS
 EFIAPI
 I2cSmbusWriteByte (
-  IN  INT32  I2c,
-  IN  UINT8  Addr,
-  IN  UINT8  Cmd,
-  IN  UINT8  Data
+  IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
+  IN  INT32                       I2c,
+  IN  UINT8                       Addr,
+  IN  UINT8                       Cmd,
+  IN  UINT8                       Data
   )
 {
   I2C_MSG  Msg;
@@ -608,6 +607,7 @@ I2cSmbusWriteByte (
   I2c smbus write multiple bytes to the device,
   maximum 16 bytes in a single operation.
 
+  @param[in]  This        The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]  I2c         I2c bus number.
   @param[in]  Addr        I2c slave address.
   @param[in]  EepromAddr  The address to write data in.
@@ -624,17 +624,18 @@ I2cSmbusWriteByte (
 EFI_STATUS
 EFIAPI
 I2cSmbusWriteBlockData (
-  IN        INT32   I2c,
-  IN        UINT8   Addr,
-  IN        UINT32  EepromAddr,
-  IN        UINT32  DataLen,
-  IN CONST  UINT8   *Data)
+  IN        SOPHGO_I2C_MASTER_PROTOCOL  *This,
+  IN        INT32                       I2c,
+  IN        UINT8                       Addr,
+  IN        UINT32                      EepromAddr,
+  IN        UINT32                      DataLen,
+  IN CONST  UINT8                       *Data)
 {
   I2C_MSG  Msg;
   UINT8    Buf[18];
 
   if (DataLen > 16) {
-    DEBUG ((DEBUG_ERROR, "%s: write %d bytes exceeds 16!\n", __func__, DataLen));
+    DEBUG ((DEBUG_ERROR, "%a: write %d bytes exceeds 16!\n", __func__, DataLen));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -654,6 +655,7 @@ I2cSmbusWriteBlockData (
 /**
   I2c smbus write specified byte length data command.
 
+  @param[in]  This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]  I2c   I2c bus number.
   @param[in]  Addr  I2c slave address.
   @param[in]  Cmd   Smbus command.
@@ -670,18 +672,19 @@ I2cSmbusWriteBlockData (
 EFI_STATUS
 EFIAPI
 I2cSmbusWrite (
-  IN        INT32   I2c,
-  IN        UINT8   Addr,
-  IN        UINT8   Cmd,
-  IN        UINT32  Len,
-  IN CONST  UINT8   *Data
+  IN        SOPHGO_I2C_MASTER_PROTOCOL  *This,
+  IN        INT32                       I2c,
+  IN        UINT8                       Addr,
+  IN        UINT8                       Cmd,
+  IN        UINT32                      Len,
+  IN CONST  UINT8                       *Data
   )
 {
   I2C_MSG  Msg;
   UINT8    Buf[18];
 
   if (Len > 17) {
-    DEBUG ((DEBUG_ERROR, "%s: write %d bytes exceeds 17!\n", __func__, Len));
+    DEBUG ((DEBUG_ERROR, "%a: write %d bytes exceeds 17!\n", __func__, Len));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -697,28 +700,40 @@ I2cSmbusWrite (
   return I2cXfer (I2c, &Msg, 1);
 }
 
+/**
+  Get I2c.
+
+  @param[in]   CompatibleString  I2c node compatible string in device tree.
+  @param[in]   Frequency         I2c bus frequency for setting.
+  @param[in]   Speed             I2c bus speed for setting.
+  @param[out]  I2cInformation    I2c information for initialization.
+  @param[out]  Num               I2c bus number.
+
+  @retval  EFI_SUCCESS           The operation completed successfully.
+  @retval  EFI_NOT_FOUND         No FDT client service found or no i2c node found in DTS.
+  @retval  EFI_OUT_OF_RESOURCES  Failed to allocate memory.
+
+**/
 EFI_STATUS
-EFIAPI
-I2cLibConstructor (
-  VOID
-  )
+GetI2cInfoByFdt (
+  IN  CONST CHAR8     *CompatibleString,
+  IN        UINTN     Frequency,
+  IN        UINTN     Speed,
+  OUT       I2C_INFO  **I2cInforP,
+  OUT       UINT32    *Num
+)
 {
-  EFI_STATUS           Status;
-  EFI_STATUS           FindNodeStatus;
   FDT_CLIENT_PROTOCOL  *FdtClient;
+  EFI_STATUS           FindNodeStatus, Status;
   INT32                Node;
+  UINT32               I2cNum;
   CONST VOID           *Prop;
   UINT32               PropSize;
-  UINT32               I2cNum;
-  CONST CHAR8          *CompatibleString;
-  I2C_INFO             *I2cInformation, *I2cInfoPointer;
-
-  CompatibleString = "snps,designware-i2c";
+  I2C_INFO             *I2cInfoPointer, *I2cInformation;
 
   Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
   if (Status) {
     DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
-    DEBUG ((DEBUG_ERROR, "Cannot init PCIe controllers\n"));
     return EFI_NOT_FOUND;
   }
 
@@ -733,12 +748,13 @@ I2cLibConstructor (
       ++I2cNum;
     }
   }
+
   if (I2cNum == 0) {
     DEBUG ((DEBUG_ERROR, "%a: Cannot get I2c node from DTS (Status == %r)\n", __func__, Status));
     return EFI_NOT_FOUND;
   }
 
-  I2cInformation = AllocateZeroPool ((I2cNum * sizeof (I2C_INFO)));
+  I2cInformation = AllocateRuntimeZeroPool ((I2cNum * sizeof (I2C_INFO)));
   if (I2cInformation == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
@@ -751,38 +767,185 @@ I2cLibConstructor (
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty () failed (Status == %r)\n", __func__, Status));
       continue;
+    } else {
+      I2cInfoPointer->Base  = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
+      I2cInfoPointer->Freq  = Frequency;
+      I2cInfoPointer->Speed = Speed;
+      ++I2cInfoPointer;
     }
-    I2cInfoPointer->Base  = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
-    I2cInfoPointer->Freq  = 100 * 1000 * 1000;
-    I2cInfoPointer->Speed = 100 * 1000;
-    ++I2cInfoPointer;
   }
 
-  for (int i = 0; i < I2cNum; i++) {
+  for (UINT32 Index = 0; Index < I2cNum; Index++) {
     DEBUG ((DEBUG_ERROR,
-      "[I2c%d base: 0x%lx, freq: %lu, speed: %lu ]\n",
-      i,
-      I2cInformation[i].Base,
-      I2cInformation[i].Freq,
-      I2cInformation[i].Speed));
+      "  [I2c%d base: 0x%lx, freq: %lu, speed: %lu ]\n",
+      Index,
+      I2cInformation[Index].Base,
+      I2cInformation[Index].Freq,
+      I2cInformation[Index].Speed));
+  }
+  *Num       = I2cNum;
+  *I2cInforP = I2cInformation;
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+SetI2cMemoryRuntime (
+  IN  I2C_INFO  *I2cInformation,
+  IN  UINT32    I2cNum
+)
+{
+  EFI_STATUS             Status;
+  UINT32                 Index;
+  EFI_CPU_ARCH_PROTOCOL  *Cpu;
+
+  Status = gBS->LocateProtocol (
+              &gEfiCpuArchProtocolGuid,
+              NULL,
+              (VOID **)&Cpu
+              );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "[%a:%d] Locate CpuArchProtocol failed: %r\n",
+            __func__, __LINE__, Status));
+    return Status;
+  }
+
+  for (Index = 0; Index < I2cNum; Index++) {
+    Status = Cpu->SetMemoryAttributes (
+                    Cpu,
+                    I2cInformation[Index].Base,
+                    SIZE_4KB,
+                    EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
+                    );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "[%a:%d] Set memory attributes failed: %r\n",
+              __func__, __LINE__, Status));
+      return Status;
+    }
+  }
+
+  return EFI_SUCCESS;
+}
+
+STATIC
+VOID
+EFIAPI
+I2cVirtualNotifyEvent (
+  IN EFI_EVENT        Event,
+  IN VOID             *Context
+  )
+{
+  EfiConvertPointer (0x0, (VOID**)&mI2cMasterProtocol);
+}
+
+EFI_STATUS
+EFIAPI
+DwI2cEntryPoint (
+  IN EFI_HANDLE        ImageHandle,
+  IN EFI_SYSTEM_TABLE  *SystemTable
+)
+{
+  EFI_STATUS           Status;
+  UINT32               I2cNum = 0;
+  I2C_INFO             *I2cInformation = NULL;
+
+  Status = GetI2cInfoByFdt ("snps,designware-i2c",
+                            I2C_BUS_FREQUENCY,
+                            I2C_BUS_SPEED,
+                            &I2cInformation,
+                            &I2cNum);
+  if (EFI_ERROR (Status))
+    return Status;
+
+  //
+  // Declare the controller as EFI_MEMORY_RUNTIME
+  //
+  Status = SetI2cMemoryRuntime (I2cInformation, I2cNum);
+  if (EFI_ERROR (Status)) {
+    goto ErrorI2cInit;
   }
 
   Status = I2cInit (I2cInformation, I2cNum);
   if (EFI_ERROR (Status)) {
-    FreePool (I2cInformation);
+    goto ErrorI2cInit;
   }
+
+  mI2cMasterProtocol = AllocateRuntimeZeroPool (sizeof (SOPHGO_I2C_MASTER_PROTOCOL));
+  if (mI2cMasterProtocol == NULL) {
+    DEBUG ((DEBUG_ERROR, "Failed to allocate memory for mI2cMasterProtocol\n"));
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ErrorI2cInit;
+  }
+
+  mI2cMasterProtocol->ReadByte  = I2cSmbusReadByte;
+  mI2cMasterProtocol->WriteByte = I2cSmbusWriteByte;
+  mI2cMasterProtocol->Read      = I2cSmbusRead;
+  mI2cMasterProtocol->Write     = I2cSmbusWrite;
+
+  Status = gBS->InstallMultipleProtocolInterfaces (
+                  &ImageHandle,
+                  &gSophgoI2cMasterProtocolGuid,
+                  mI2cMasterProtocol,
+                  NULL);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR,"%a: InstallProtocolInterface(): %r\n",
+            __func__, Status));
+    goto ErrorInstallProtocol;
+  }
+
+  //
+  // Register for the virtual address change event
+  //
+  // Only create event once
+  if (mI2cVirtualAddrChangeEvent == NULL) {
+    Status = gBS->CreateEventEx (
+                    EVT_NOTIFY_SIGNAL,
+                    TPL_NOTIFY,
+                    I2cVirtualNotifyEvent,
+                    NULL,
+                    &gEfiEventVirtualAddressChangeGuid,
+                    &mI2cVirtualAddrChangeEvent);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a: Failed to register VA change event: %r\n",
+        __func__, Status));
+      goto ErrorCreateEvent;
+    }
+  }
+
+  return EFI_SUCCESS;
+
+ErrorCreateEvent:
+  gBS->UninstallProtocolInterface (
+         &ImageHandle,
+         &gSophgoI2cMasterProtocolGuid,
+         NULL);
+
+ErrorInstallProtocol:
+  FreePool (mI2cMasterProtocol);
+
+ErrorI2cInit:
+  FreePool (I2cInformation);
+
   return Status;
 }
 
 EFI_STATUS
 EFIAPI
-I2cLibDestructor (
-  VOID
+DwI2cUnload (
+  IN  EFI_HANDLE  ImageHandle
   )
 {
   if (mI2cInfo != NULL) {
     FreePool (mI2cInfo);
   }
+  if (mI2cMasterProtocol != NULL) {
+    FreePool (mI2cMasterProtocol);
+  }
+
+  gBS->UninstallProtocolInterface (
+         &ImageHandle,
+         &gSophgoI2cMasterProtocolGuid,
+         NULL);
 
   return EFI_SUCCESS;
 }

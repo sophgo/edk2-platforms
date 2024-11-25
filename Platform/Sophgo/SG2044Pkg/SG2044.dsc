@@ -263,9 +263,6 @@
   # Nor Flash Library
   NorFlashInfoLib|EmbeddedPkg/Library/NorFlashInfoLib/NorFlashInfoLib.inf
 
-  # Dw I2c Library
-  I2cLib|Silicon/Sophgo/Library/DwI2cLib/DwI2cLib.inf
-
   # Ds1307 RTC Library
   RealTimeClockLib|Silicon/Sophgo/Library/Ds1307RealTimeClockLib/Ds1307RealTimeClockLib.inf
 
@@ -572,6 +569,7 @@
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 !endif
+  Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 

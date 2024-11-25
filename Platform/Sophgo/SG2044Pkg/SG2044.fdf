@@ -83,6 +83,7 @@ INF  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
 INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
 INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 !endif
+INF  Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
 INF  Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
 INF  Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 

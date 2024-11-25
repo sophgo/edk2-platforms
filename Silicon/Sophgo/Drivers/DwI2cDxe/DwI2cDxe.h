@@ -8,15 +8,29 @@
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
-
 #ifndef __DW_I2C_H_
 #define __DW_I2C_H_
+
+#include <Uefi.h>
+#include <Library/IoLib.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Library/DebugLib.h>
+#include <Library/UefiLib.h>
+#include <Library/BaseMemoryLib.h>
+#include <Library/MemoryAllocationLib.h>
+#include <Library/UefiRuntimeLib.h>
+#include <Protocol/FdtClient.h>
+#include <Protocol/Cpu.h>
+#include <Include/DwI2c.h>
 
 #if !defined(IC_CLK)
 #define IC_CLK                  166
 #endif
 #define NANO_TO_MICRO           1000
 #define CMD_BUF_MAX             512
+
+#define I2C_BUS_FREQUENCY       (100 * 1000 * 1000)
+#define I2C_BUS_SPEED           (100 * 1000)
 
 //
 // High and low times in different speed modes (in ns)
@@ -36,7 +50,7 @@
 #define I2C_BYTE_TO_BB          (I2C_BYTE_TO * 16)
 
 //
-// i2c control register definitions
+// I2c control register definitions
 //
 #define IC_CON_SD               0x0040
 #define IC_CON_RE               0x0020
@@ -49,19 +63,19 @@
 #define IC_CON_MM               0x0001
 
 //
-// i2c target, slave address register definitions
+// I2c target, slave address register definitions
 //
 #define TAR_ADDR                0x0050
 #define IC_SLAVE_ADDR           0x0002
 
 //
-// i2c data buffer and command register definitions
+// I2c data buffer and command register definitions
 //
 #define IC_CMD                  0x0100
 #define IC_STOP                 0x0200
 
 //
-// i2c interrupt status register definitions
+// I2c interrupt status register definitions
 //
 #define IC_GEN_CALL             0x0800
 #define IC_START_DET            0x0400
@@ -77,7 +91,7 @@
 #define IC_RX_UNDER             0x0001
 
 //
-// fifo threshold register definitions
+// Fifo threshold register definitions
 //
 #define IC_TL0                  0x00
 #define IC_TL1                  0x01
@@ -91,12 +105,12 @@
 #define IC_TX_TL_VALUE          IC_TL0
 
 //
-// i2c enable register definitions
+// I2c enable register definitions
 //
 #define IC_ENABLE_0B            0x0001
 
 //
-// i2c status register  definitions
+// I2c status register  definitions
 //
 #define IC_STATUS_SA            0x0040
 #define IC_STATUS_MA            0x0020
@@ -118,7 +132,7 @@
 #define I2C_STANDARD_SPEED      100000
 
 //
-// tx abort source
+// TX abort source
 //
 #define IC_ABRT_7B_ADDR_NOACK  (1 << 0)
 
@@ -175,7 +189,7 @@ typedef enum {
 } DM_I2C_MSG_FLAGS;
 
 //
-// designware i2c init data
+// Designware i2c init data
 //
 typedef struct {
   UINTN  Base;

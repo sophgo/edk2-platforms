@@ -16,7 +16,8 @@
 #include <Library/BaseLib.h>
 #include <Library/DebugLib.h>
 #include <Library/RealTimeClockLib.h>
-#include <Library/I2c.h>
+#include <Library/UefiBootServicesTableLib.h>
+#include <Include/DwI2c.h>
 
 #define I2C_BUS_NUM         2
 #define I2C_SLAVE_RTC_ADDR  0X68
@@ -48,6 +49,56 @@
 #define RANGE(x, a, b) (MIN ((b), MAX ((x), (a))))
 #endif
 
+STATIC SOPHGO_I2C_MASTER_PROTOCOL  *mI2cMasterProtocol;
+
+/**
+  Read data from RTC.
+
+  @param  Length       The length of data to be read.
+  @param  Data         The data to be read
+
+**/
+STATIC
+EFI_STATUS
+RtcRead (
+  IN   UINT32  Length,
+  OUT  UINT8   *Data
+  )
+{
+  EFI_STATUS   Status;
+
+  Status = mI2cMasterProtocol->Read (mI2cMasterProtocol,
+                                     I2C_BUS_NUM,
+                                     I2C_SLAVE_RTC_ADDR,
+                                     0, Length, Data);
+
+  return Status;
+}
+
+/**
+  Write data to RTC.
+
+  @param  Length       The length of data to be writen.
+  @param  Data         The data to be written
+
+**/
+STATIC
+EFI_STATUS
+RtcWrite (
+  IN   UINT32  Length,
+  OUT  UINT8   *Data
+  )
+{
+  EFI_STATUS   Status;
+
+  Status = mI2cMasterProtocol->Write (mI2cMasterProtocol,
+                                      I2C_BUS_NUM,
+                                      I2C_SLAVE_RTC_ADDR,
+                                      0, Length, Data);
+
+  return Status;
+}
+
 /**
   Returns the current time and date information, and the time-keeping capabilities
   of the hardware platform.
@@ -71,13 +122,12 @@ LibGetTime (
   EFI_STATUS  Status;
   UINT8       TimeBcd[7] = {0};
 
-  Status = I2cSmbusRead (I2C_BUS_NUM, I2C_SLAVE_RTC_ADDR, 7, 0, TimeBcd);
+  Status = RtcRead (7, TimeBcd);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "### I2c smbus read error, Status: %r.\n", Status));
+    DEBUG ((DEBUG_ERROR, "%a: I2c smbus read error, Status: %r.\n", __func__, Status));
     return EFI_DEVICE_ERROR;
-  }
-  if (TimeBcd[0] & DS1307_SEC_BIT_CH) {
-    DEBUG ((DEBUG_ERROR, "### Warning: RTC oscillator has stopped\n"));
+  } else if (TimeBcd[0] & DS1307_SEC_BIT_CH) {
+    DEBUG ((DEBUG_ERROR, "%a: Warning, RTC oscillator has stopped\n", __func__));
     return EFI_DEVICE_ERROR;
   }
 
@@ -133,18 +183,16 @@ LibSetTime (
   UINT8       Second = 0;
   UINT8       TimeBcd[7] = {0};
 
-  Status = I2cSmbusReadByte (I2C_BUS_NUM, I2C_SLAVE_RTC_ADDR, 0, &Second);
+  Status = RtcRead (1, &Second);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "### I2c smbus read error, Status: %r.\n", Status));
+    DEBUG ((DEBUG_ERROR, "%a: I2c smbus read error, Status: %r.\n", __func__, Status));
     return EFI_DEVICE_ERROR;
-  }
-  if (Second & DS1307_SEC_BIT_CH) {
-    DEBUG ((DEBUG_ERROR, "### Warning: RTC oscillator has stopped\n"));
+  } else if (Second & DS1307_SEC_BIT_CH) {
+    DEBUG ((DEBUG_ERROR, "%a: Warning, RTC oscillator has stopped\n", __func__));
     return EFI_DEVICE_ERROR;
-  }
-  if (Time->Year < START_YEAR || Time->Year >= END_YEAR) {
-    DEBUG ((DEBUG_ERROR, "WARNING: Year should be between %d and %d!\n",
-            START_YEAR, (END_YEAR - 1)));
+  } else if (Time->Year < START_YEAR || Time->Year >= END_YEAR) {
+    DEBUG ((DEBUG_ERROR, "%a: WARNING, Year should be between %d and %d!\n",
+            __func__, START_YEAR, (END_YEAR - 1)));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -156,9 +204,9 @@ LibSetTime (
   TimeBcd[5] = DecimalToBcd8 (RANGE (Time->Month, 1, 12));
   TimeBcd[6] = DecimalToBcd8 (Time->Year % 100);
 
-  Status = I2cSmbusWrite (I2C_BUS_NUM, I2C_SLAVE_RTC_ADDR, 0, 7, TimeBcd);
+  Status = RtcWrite (7, TimeBcd);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "### I2c smbus write error, Status: %r.\n", Status));
+    DEBUG ((DEBUG_ERROR, "%a: I2c smbus write error, Status: %r.\n", __func__, Status));
     return EFI_DEVICE_ERROR;
   }
 
@@ -228,5 +276,18 @@ LibRtcInitialize (
   IN EFI_SYSTEM_TABLE  *SystemTable
   )
 {
+  EFI_STATUS Status;
+
+  Status = gBS->LocateProtocol (
+                  &gSophgoI2cMasterProtocolGuid,
+                  NULL,
+                  (VOID **)&mI2cMasterProtocol
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a: Cannot locate I2c Master protocol\n",
+            __func__));
+    return Status;
+  }
+
   return EFI_SUCCESS;
 }

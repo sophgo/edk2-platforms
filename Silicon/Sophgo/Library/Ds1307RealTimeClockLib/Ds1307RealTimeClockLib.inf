@@ -24,4 +24,10 @@
 
 [LibraryClasses]
   DebugLib
-  I2cLib
+  UefiBootServicesTableLib
+
+[Protocols]
+  gSophgoI2cMasterProtocolGuid     ## CONSUMES
+
+[Depex]
+  gSophgoI2cMasterProtocolGuid

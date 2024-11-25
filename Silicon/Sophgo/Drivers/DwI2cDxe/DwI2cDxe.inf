@@ -1,0 +1,46 @@
+#/** @file
+#
+#    Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#
+#    SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DwI2cDxe
+  FILE_GUID                      = 4E415693-CF2F-46B3-88E3-9B753A2A2227
+  MODULE_TYPE                    = DXE_RUNTIME_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DwI2cEntryPoint
+  UNLOAD_IMAGE                   = DwI2cUnload
+
+[Sources]
+  DwI2cDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+  DebugLib
+  IoLib
+  MemoryAllocationLib
+  BaseLib
+  BaseMemoryLib
+  UefiRuntimeLib
+
+[Guids]
+  gEfiEventVirtualAddressChangeGuid
+
+[Protocols]
+  gFdtClientProtocolGuid          ## CONSUMES
+  gEfiCpuArchProtocolGuid         ## CONSUMES
+  gSophgoI2cMasterProtocolGuid    ## PRODUCES
+
+[Depex]
+  TRUE

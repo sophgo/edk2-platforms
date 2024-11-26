@@ -110,20 +110,27 @@ EFI_STATUS
 
 typedef
 EFI_STATUS
+(EFIAPI *SG_NOR_FLASH_PROTOCOL_GET_FLASH_VARIABLE_OFFSET)(
+  IN SPI_NOR                          *Nor
+  );
+
+typedef
+EFI_STATUS
 (EFIAPI *SG_NOR_FLASH_PROTOCOL_INIT)(
   IN SOPHGO_NOR_FLASH_PROTOCOL       *This,
   IN SPI_NOR                         *Nor
   );
 
 struct _SOPHGO_NOR_FLASH_PROTOCOL {
-  SG_NOR_FLASH_PROTOCOL_GET_FLASH_ID       GetFlashid;
-  SG_NOR_FLASH_PROTOCOL_READ_DATA          ReadData;
-  SG_NOR_FLASH_PROTOCOL_READ_STATUS        ReadStatus;
-  SG_NOR_FLASH_PROTOCOL_WRITE_STATUS       WriteStatus;
-  SG_NOR_FLASH_PROTOCOL_WRITE_DATA         WriteData;
-  SG_NOR_FLASH_PROTOCOL_ERASE              Erase;
-  SG_NOR_FLASH_PROTOCOL_ERASE_CHIP         EraseChip;
-  SG_NOR_FLASH_PROTOCOL_INIT               Init;
+  SG_NOR_FLASH_PROTOCOL_GET_FLASH_ID                GetFlashid;
+  SG_NOR_FLASH_PROTOCOL_READ_DATA                   ReadData;
+  SG_NOR_FLASH_PROTOCOL_READ_STATUS                 ReadStatus;
+  SG_NOR_FLASH_PROTOCOL_WRITE_STATUS                WriteStatus;
+  SG_NOR_FLASH_PROTOCOL_WRITE_DATA                  WriteData;
+  SG_NOR_FLASH_PROTOCOL_ERASE                       Erase;
+  SG_NOR_FLASH_PROTOCOL_ERASE_CHIP                  EraseChip;
+  SG_NOR_FLASH_PROTOCOL_INIT                        Init;
+  SG_NOR_FLASH_PROTOCOL_GET_FLASH_VARIABLE_OFFSET   GetFlashVariableOffset;
 };
 
 typedef struct {

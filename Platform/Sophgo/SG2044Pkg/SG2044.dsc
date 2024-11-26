@@ -458,7 +458,6 @@
   #
 !if $(FLASH_ENABLE) == TRUE
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7001000000
-  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x02800000
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|TRUE
 !endif
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
@@ -498,6 +497,10 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution|480
   #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow|0
   #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|0
+
+!if $(FLASH_ENABLE) == TRUE
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0
+!endif
 
 [PcdsDynamicHii]
 !if $(ACPI_ENABLE) == TRUE

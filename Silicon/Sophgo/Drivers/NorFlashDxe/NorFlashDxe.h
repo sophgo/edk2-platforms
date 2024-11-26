@@ -32,6 +32,23 @@
   { 0xE9A39038, 0x1965, 0x4404,          \
     { 0xA5, 0x2A, 0xB9, 0xA3, 0xA1, 0xAE, 0xC2, 0xE4 } }
 
+#define PARTITION_TABLE_ADDR  0x600000
+
+typedef struct {
+  /* disk partition table magic number */
+  UINT32  Magic;
+  CHAR8   Name[32];
+  UINT32  Offset;
+  UINT32  Size;
+  CHAR8   Reserve[4];
+  /* load memory address*/
+  UINTN   Lma;
+} FLASH_PARTITION_INFO;
+
+enum {
+  DPT_MAGIC = 0x55AA55AA,
+};
+
 EFI_STATUS
 EFIAPI
 SpiNorGetFlashId (
@@ -78,6 +95,12 @@ SpiNorErase (
   IN SPI_NOR     *Nor,
   IN UINTN       FlashOffset,
   IN UINTN       Length
+  );
+
+EFI_STATUS
+EFIAPI
+SpiNorGetFlashVariableOffset (
+  IN SPI_NOR   *Nor
   );
 
 EFI_STATUS

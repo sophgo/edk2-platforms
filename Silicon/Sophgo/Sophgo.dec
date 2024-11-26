@@ -28,7 +28,6 @@
 [PcdsFixedAtBuild]
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x0|UINT64|0x00001001
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x0|UINT64|0x00001002
-  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|0x0|UINT32|0x00001004
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|0x0|UINT32|0x00001005
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x0|UINT64|0x00001006
@@ -36,6 +35,9 @@
   gSophgoTokenSpaceGuid.PcdMisa|0x0|UINT32|0x00001008
   gSophgoTokenSpaceGuid.PcdTrngBase|0x0|UINT64|0x00001009
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|FALSE|BOOLEAN|0x00001010
+
+[PcdsDynamic]
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003
 
 ## In the PcdsFixedAtBuild.RISCV64.
 [PcdsFixedAtBuild.RISCV64]

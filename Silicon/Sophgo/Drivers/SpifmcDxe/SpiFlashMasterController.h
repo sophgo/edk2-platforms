@@ -1,5 +1,5 @@
 /** @file
- * 
+ *
  *  SPI Flash Master Controller (SPIFMC) registers.
  *
  *  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
@@ -135,6 +135,15 @@ SpifmcWriteRegister (
 EFI_STATUS
 EFIAPI
 SpifmcRead (
+  IN  SPI_NOR *Nor,
+  IN  UINTN   From,
+  IN  UINTN   Length,
+  OUT UINT8   *Buffer
+  );
+
+EFI_STATUS
+EFIAPI
+SpifmcDmmrRead (
   IN  SPI_NOR *Nor,
   IN  UINTN   From,
   IN  UINTN   Length,

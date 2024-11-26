@@ -56,8 +56,6 @@
 [FixedPcd]
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvBase                         ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvSize                         ## CONSUMES
-  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFirmwareRegionBaseAddress      ## CONSUMES
-  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFirmwareRegionSize             ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                       ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                       ## CONSUMES
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize                                 ## CONSUMES

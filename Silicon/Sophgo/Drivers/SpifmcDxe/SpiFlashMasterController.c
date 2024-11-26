@@ -7,6 +7,8 @@
  *
  **/
 
+#include <Library/BaseLib.h>
+#include <Protocol/Cpu.h>
 #include "SpiFlashMasterController.h"
 
 SPI_MASTER *mSpiMasterInstance;
@@ -468,6 +470,9 @@ SpiMasterSetupSlave (
   IN SPI_NOR                    *Nor
   )
 {
+  EFI_CPU_ARCH_PROTOCOL *Cpu;
+  EFI_STATUS            Status;
+
   if (!Nor) {
     Nor = AllocateZeroPool (sizeof(SPI_NOR));
     if (!Nor) {
@@ -481,6 +486,37 @@ SpiMasterSetupSlave (
   }
 
   Nor->SpiBase = SPIFMC_BASE;
+  Status = gBS->LocateProtocol (
+		  &gEfiCpuArchProtocolGuid,
+		  NULL,
+		  (VOID **)&Cpu
+		  );
+
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Cannot locate CPU arch service\n",
+      __func__
+      ));
+    return NULL;
+  }
+
+  Status = Cpu->SetMemoryAttributes (
+		  Cpu,
+		  Nor->SpiBase,
+		  SIZE_64MB,
+		  EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
+		  );
+
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Failed to set memory attributes\n",
+      __func__
+      ));
+
+    return NULL;
+  }
 
   Nor->BounceBufSize = SIZE_4KB;
   Nor->BounceBuf = AllocateZeroPool (Nor->BounceBufSize);

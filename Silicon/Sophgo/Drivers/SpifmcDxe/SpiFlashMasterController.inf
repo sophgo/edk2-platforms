@@ -36,7 +36,8 @@
   UefiRuntimeLib
 
 [Protocols]
-  gSophgoSpiMasterProtocolGuid
+  gSophgoSpiMasterProtocolGuid         ## PRODUCES
+  gEfiCpuArchProtocolGuid              ## CONSUMES
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base                            ## CONSUMES

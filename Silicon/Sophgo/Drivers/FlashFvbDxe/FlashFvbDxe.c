@@ -37,7 +37,6 @@ STATIC CONST FVB_DEVICE mFvbFlashInstanceTemplate = {
   FVB_FLASH_SIGNATURE, // Signature
 
   0, // RegionBaseAddress ... NEED TO BE FILLED
-  //SIZE_256KB, // Size?
   SIZE_256KB, // Size?
   0, // FvbOffset ... NEED TO BE FILLED
   0, // FvbSize ... NEED TO BE FILLED
@@ -218,12 +217,10 @@ InitializeFvAndVariableStoreHeaders (
                                       EFI_FVB2_READ_ENABLED_CAP   | // Reads may be enabled
                                       EFI_FVB2_READ_STATUS        | // Reads are currently enabled
                                       EFI_FVB2_STICKY_WRITE       | // A block erase is required to flip bits into EFI_FVB2_ERASE_POLARITY
-				      EFI_FVB2_MEMORY_MAPPED      | // It is memory mapped
                                       EFI_FVB2_ERASE_POLARITY     | // After erasure all bits take this value (i.e. '1')
                                       EFI_FVB2_WRITE_STATUS       | // Writes are currently enabled
                                       EFI_FVB2_WRITE_ENABLED_CAP    // Writes may be enabled
                                                             );
-
   FirmwareVolumeHeader->HeaderLength = sizeof (EFI_FIRMWARE_VOLUME_HEADER) +
                                        sizeof (EFI_FV_BLOCK_MAP_ENTRY);
   FirmwareVolumeHeader->Revision = EFI_FVH_REVISION;
@@ -275,7 +272,7 @@ ValidateFvHeader (
   VARIABLE_STORE_HEADER       *VariableStoreHeader;
   UINTN                       VariableStoreLength;
 
-  FwVolHeader = (EFI_FIRMWARE_VOLUME_HEADER *)Instance->RegionBaseAddress;
+  FwVolHeader = (EFI_FIRMWARE_VOLUME_HEADER *)(Instance->RegionBaseAddress);
 
   //
   // Verify the header revision, header signature, length
@@ -587,7 +584,6 @@ FvbRead (
   IN OUT    UINT8                                *Buffer
   )
 {
-  EFI_STATUS          Status;
   UINTN               BlockSize;
   UINTN               DataOffset;
   FVB_DEVICE          *Instance;
@@ -653,20 +649,10 @@ FvbRead (
                   Instance->StartLba + Lba,
                   Instance->Media.BlockSize);
 
-  Status = Instance->NorFlashProtocol->ReadData (
-              Instance->Nor,
-              DataOffset,
-              *NumBytes,
-              (UINT8 *)Buffer
-          );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-       DEBUG_ERROR,
-       "%a: Read data from Nor Flash device failed!\n",
-       __func__
-       ));
-    return Status;
-  }
+  //
+  // Read the memory-mapped data
+  //
+  CopyMem (Buffer, (UINTN *)DataOffset, *NumBytes);
 
   return EFI_SUCCESS;
 }
@@ -744,6 +730,15 @@ FvbWrite (
 
   Instance = INSTANCE_FROM_FVB_THIS (This);
 
+  DEBUG ((
+    DEBUG_VERBOSE,
+    "FvbWrite(Parameters: Lba=%ld, Offset=0x%x, *NumBytes=0x%x, Buffer @ 0x%08x)\n",
+    Instance->StartLba + Lba,
+    Offset,
+    *NumBytes,
+    Buffer
+    ));
+
   DataOffset = GET_DATA_OFFSET (Instance->FvbOffset + Offset,
                   Instance->StartLba + Lba,
                   Instance->Media.BlockSize);
@@ -762,6 +757,14 @@ FvbWrite (
       ));
     return Status;
   }
+
+  //
+  // Update data in RAM space
+  //
+  DataOffset = GET_DATA_OFFSET (Instance->RegionBaseAddress + Offset,
+		  Instance->StartLba + Lba,
+		  Instance->Media.BlockSize);
+  CopyMem ((UINTN *)DataOffset, Buffer, *NumBytes);
 
   return Status;
 }
@@ -972,6 +975,7 @@ FvbVirtualNotifyEvent (
   // Convert SPI memory mapped region
   //
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->RegionBaseAddress);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbOffset);
 
   //
   // Convert SPI device description
@@ -989,6 +993,18 @@ FvbVirtualNotifyEvent (
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol->GetFlashid);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol->Init);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol);
+
+  //
+  // Convert Fvb
+  //
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.GetAttributes);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.SetAttributes);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.GetPhysicalAddress);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.GetBlockSize);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.Read);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.Write);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.EraseBlocks);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol);
 
   return;
 }
@@ -1104,6 +1120,8 @@ FlashFvbConfigureFlashInstance (
   UINTN      VariableSize;
   UINTN      FtwWorkingSize;
   UINTN      FtwSpareSize;
+  UINTN      MemorySize;
+  UINTN      DataOffset;
   EFI_STATUS Status;
 
   //
@@ -1148,11 +1166,34 @@ FlashFvbConfigureFlashInstance (
                   FlashInstance->Nor
                   );
 
+  if (FlashInstance->Nor == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Nor Flash not found!\n",
+      __func__
+      ));
+    return EFI_NOT_FOUND;
+  }
+
   Status = FlashFvbProbe (FlashInstance);
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
-      "%a: Error while performing Nor flash probe\n",
+      "%a: Error while performing Nor flash probe [Status=%r]\n",
+      __func__,
+      Status
+      ));
+    return Status;
+  }
+
+  //
+  // Get flash variable offset
+  //
+  Status = FlashInstance->NorFlashProtocol->GetFlashVariableOffset (FlashInstance->Nor);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Get flash variable offset from partition table failed!\n",
       __func__
       ));
     return Status;
@@ -1174,7 +1215,46 @@ FlashFvbConfigureFlashInstance (
   FlashInstance->Media.LastBlock = FlashInstance->Size /
                                    FlashInstance->Media.BlockSize - 1;
 
-  FlashInstance->RegionBaseAddress = PcdGet64 (PcdFlashNvStorageVariableBase64);
+  //
+  // Our platform does not support XIP (eXecute In Place) from Flash.
+  // Regardless of whether booting from a microSD card or NOR Flash, we first
+  // read the variables from NOR Flash into a reallocated RAM space based on
+  // PcdFlashVariableOffset.
+  //
+  MemorySize = EFI_SIZE_TO_PAGES (FlashInstance->FvbSize);
+
+  //
+  // FaultTolerantWriteDxe requires memory to be aligned to FtwWorkingSize
+  //
+  FlashInstance->RegionBaseAddress = (UINTN) AllocateAlignedRuntimePages (MemorySize, SIZE_64KB);
+  if (FlashInstance->RegionBaseAddress == (UINTN) NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  Status = PcdSet64S (PcdFlashNvStorageVariableBase64,
+		  (UINT64) FlashInstance->RegionBaseAddress);
+  ASSERT_EFI_ERROR (Status);
+  Status = PcdSet64S (PcdFlashNvStorageFtwWorkingBase64,
+		  (UINT64) FlashInstance->RegionBaseAddress + VariableSize);
+  ASSERT_EFI_ERROR (Status);
+  Status = PcdSet64S (PcdFlashNvStorageFtwSpareBase64,
+		  (UINT64) FlashInstance->RegionBaseAddress + VariableSize + FtwWorkingSize);
+  ASSERT_EFI_ERROR (Status);
+
+  //
+  // Fill the buffer with data from flash
+  //
+  DataOffset = GET_DATA_OFFSET (FlashInstance->FvbOffset,
+                   FlashInstance->StartLba,
+                   FlashInstance->Media.BlockSize);
+  Status = FlashInstance->NorFlashProtocol->ReadData (FlashInstance->Nor,
+                                                DataOffset,
+                                                FlashInstance->FvbSize,
+                                                (UINT8 *)FlashInstance->RegionBaseAddress);
+
+  if (EFI_ERROR (Status)) {
+    goto ErrorFreeAllocatedPages;
+  }
 
   Status = gBS->InstallMultipleProtocolInterfaces (
                       &FlashInstance->Handle,
@@ -1202,6 +1282,11 @@ ErrorPrepareFvbHeader:
                 NULL);
 
   return Status;
+
+ErrorFreeAllocatedPages:
+  FreeAlignedPages ((VOID *)FlashInstance->RegionBaseAddress, MemorySize);
+
+  return Status;
 }
 
 EFI_STATUS
@@ -1211,8 +1296,6 @@ FlashFvbEntryPoint (
   IN EFI_SYSTEM_TABLE *SystemTable
   )
 {
-  UINTN       RuntimeMmioRegionSize;
-  UINTN       RegionBaseAddress;
   EFI_STATUS  Status;
 
   //
@@ -1260,43 +1343,6 @@ FlashFvbEntryPoint (
   }
 
   //
-  // Declare the Non-Volatile storage as EFI_MEMORY_RUNTIME
-  //
-
-  //
-  // Note: all the NOR Flash region needs to be reserved into the UEFI Runtime
-  // memory; even if we only use the small block region at the top of the NOR
-  // Flash. The reason is when the NOR Flash memory is set into program mode,
-  // the command is written as the base of the flash region.
-  //
-  RegionBaseAddress = mFvbDevice->RegionBaseAddress;
-  RuntimeMmioRegionSize = mFvbDevice->FvbSize;
-  Status = gDS->AddMemorySpace (EfiGcdMemoryTypeMemoryMappedIo,
-                  RegionBaseAddress,
-		  RuntimeMmioRegionSize,
-                  EFI_MEMORY_UC | EFI_MEMORY_RUNTIME);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a: Failed to add memory space\n",
-      __func__
-      ));
-    goto ErrorAddSpace;
-  }
-
-  Status = gDS->SetMemorySpaceAttributes (RegionBaseAddress,
-                  RuntimeMmioRegionSize,
-                  EFI_MEMORY_UC | EFI_MEMORY_RUNTIME);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a: Failed to set memory attributes\n",
-      __func__
-      ));
-    goto ErrorSetMemAttr;
-  }
-
-  //
   // Register for the virtual address change event
   //
   Status = gBS->CreateEventEx (
@@ -1312,13 +1358,10 @@ FlashFvbEntryPoint (
       "%a: Failed to register VA change event\n",
       __func__
       ));
-    return Status;
+    goto ErrorAddSpace;
   }
 
-  return Status;
-
-ErrorSetMemAttr:
-  gDS->RemoveMemorySpace (RegionBaseAddress, RuntimeMmioRegionSize);
+  return EFI_SUCCESS;
 
 ErrorAddSpace:
   gBS->UninstallProtocolInterface (gImageHandle,

@@ -38,12 +38,12 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
-  gSophgoTokenSpaceGuid.PcdFlashVariableOffset
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset
 
 [Guids]
   gEfiEventVirtualAddressChangeGuid
@@ -53,12 +53,11 @@
   gEfiVariableGuid
 
 [Protocols]
-  gEfiDevicePathProtocolGuid
-  gEfiFirmwareVolumeBlockProtocolGuid
-  gSophgoSpiMasterProtocolGuid
-  gSophgoNorFlashProtocolGuid
+  gEfiDevicePathProtocolGuid           ## PRODUCES
+  gEfiFirmwareVolumeBlockProtocolGuid  ## PRODUCES
+  gSophgoSpiMasterProtocolGuid         ## CONSUMES
+  gSophgoNorFlashProtocolGuid          ## CONSUMES
 
 [Depex]
-  gEfiCpuArchProtocolGuid AND
   gSophgoSpiMasterProtocolGuid AND
   gSophgoNorFlashProtocolGuid

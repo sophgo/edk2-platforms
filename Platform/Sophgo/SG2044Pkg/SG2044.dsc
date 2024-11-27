@@ -500,6 +500,9 @@
 
 !if $(FLASH_ENABLE) == TRUE
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0x0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|0x0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x0
 !endif
 
 [PcdsDynamicHii]

@@ -29,17 +29,22 @@ UINT32  mSetupTextModeColumn       = 0;
 UINT32  mSetupTextModeRow          = 0;
 UINT32  mSetupHorizontalResolution = 0;
 UINT32  mSetupVerticalResolution   = 0;
-
+CHAR16  VariableName[] = L"DynamicTimeData";
+CHAR16  TimeData[] = L"DynamicTimeData";
 FRONT_PAGE_CALLBACK_DATA  gFrontPagePrivate = {
   FRONT_PAGE_CALLBACK_DATA_SIGNATURE,
   {NULL,NULL},
   {NULL,NULL},
   NULL,
   {
-    FakeExtractConfig,
-    FakeRouteConfig,
+    ExtractConfig,
+    RouteConfig,
     FrontPageCallback
-  }
+  },
+  {L"00:00:00"},
+  NULL,
+  &mFrontPageGuid,
+  VariableName
 };
 
 HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath0 = {
@@ -87,78 +92,6 @@ HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath1 = {
 };
 
 /**
-  This function allows a caller to extract the current configuration for one
-  or more named elements from the target driver.
-
-
-  @param This            Points to the EFI_HII_CONFIG_ACCESS_PROTOCOL.
-  @param Request         A null-terminated Unicode string in <ConfigRequest> format.
-  @param Progress        On return, points to a character in the Request string.
-                         Points to the string's null terminator if request was successful.
-                         Points to the most recent '&' before the first failing name/value
-                         pair (or the beginning of the string if the failure is in the
-                         first name/value pair) if the request was not successful.
-  @param Results         A null-terminated Unicode string in <ConfigAltResp> format which
-                         has all values filled in for the names in the Request string.
-                         String to be allocated by the called function.
-
-  @retval  EFI_SUCCESS            The Results is filled with the requested values.
-  @retval  EFI_OUT_OF_RESOURCES   Not enough memory to store the results.
-  @retval  EFI_INVALID_PARAMETER  Request is illegal syntax, or unknown name.
-  @retval  EFI_NOT_FOUND          Routing data doesn't match any storage in this driver.
-
-**/
-EFI_STATUS
-EFIAPI
-FakeExtractConfig (
-  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
-  IN  CONST EFI_STRING                      Request,
-  OUT EFI_STRING                            *Progress,
-  OUT EFI_STRING                            *Results
-  )
-{
-  if ((Progress == NULL) || (Results == NULL)) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  *Progress = Request;
-  return EFI_NOT_FOUND;
-}
-
-/**
-  This function processes the results of changes in configuration.
-
-
-  @param This            Points to the EFI_HII_CONFIG_ACCESS_PROTOCOL.
-  @param Configuration   A null-terminated Unicode string in <ConfigResp> format.
-  @param Progress        A pointer to a string filled in with the offset of the most
-                         recent '&' before the first failing name/value pair (or the
-                         beginning of the string if the failure is in the first
-                         name/value pair) or the terminating NULL if all was successful.
-
-  @retval  EFI_SUCCESS            The Results is processed successfully.
-  @retval  EFI_INVALID_PARAMETER  Configuration is NULL.
-  @retval  EFI_NOT_FOUND          Routing data doesn't match any storage in this driver.
-
-**/
-EFI_STATUS
-EFIAPI
-FakeRouteConfig (
-  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
-  IN  CONST EFI_STRING                      Configuration,
-  OUT EFI_STRING                            *Progress
-  )
-{
-  if ((Configuration == NULL) || (Progress == NULL)) {
-    return EFI_INVALID_PARAMETER;
-  }
-
-  *Progress = Configuration;
-
-  return EFI_NOT_FOUND;
-}
-
-/**
   This function processes the results of changes in configuration.
 
 
@@ -190,50 +123,14 @@ FrontPageCallback (
 	return UiFrontPageCallbackHandler(gFrontPagePrivate.HiiHandle[0], Action, QuestionId, Type, Value, ActionRequest);
 }
 
-VOID
-UpdateFrontPageForm (
-  VOID
-  )
-{
-  VOID                *StartOpCodeHandle;
-  VOID                *EndOpCodeHandle;
-  EFI_IFR_GUID_LABEL  *StartGuidLabel;
-  EFI_IFR_GUID_LABEL  *EndGuidLabel;
-
-  StartOpCodeHandle = HiiAllocateOpCodeHandle ();
-  ASSERT (StartOpCodeHandle != NULL);
-
-  EndOpCodeHandle = HiiAllocateOpCodeHandle ();
-  ASSERT (EndOpCodeHandle != NULL);
-  StartGuidLabel               = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode (StartOpCodeHandle, &gEfiIfrTianoGuid, NULL, sizeof (EFI_IFR_GUID_LABEL));
-  StartGuidLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
-  StartGuidLabel->Number       = LABEL_FRONTPAGE_INFORMATION;
-  EndGuidLabel               = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode (EndOpCodeHandle, &gEfiIfrTianoGuid, NULL, sizeof (EFI_IFR_GUID_LABEL));
-  EndGuidLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
-  EndGuidLabel->Number       = LABEL_END;
-  UiCustomizeFrontPage (
-    gFrontPagePrivate.HiiHandle[0],
-    StartOpCodeHandle
-    );
-
-  HiiUpdateForm (
-    gFrontPagePrivate.HiiHandle[0],
-    &mFrontPageGuid,
-    FRONT_PAGE_FORM_ID,
-    StartOpCodeHandle,
-    EndOpCodeHandle
-    );
-
-  HiiFreeOpCodeHandle (StartOpCodeHandle);
-  HiiFreeOpCodeHandle (EndOpCodeHandle);
-}
-
 EFI_STATUS
 InitializeFrontPage (
   VOID
   )
 {
   EFI_STATUS  Status;
+  EFI_HII_CONFIG_ROUTING_PROTOCOL        *HiiConfigRouting;
+
   Status = gBS->LocateProtocol (&gEfiFormBrowser2ProtocolGuid, NULL, (VOID **)&gFormBrowser2);
   if (EFI_ERROR (Status)) {
     return Status;
@@ -260,6 +157,14 @@ InitializeFrontPage (
                                           NULL
                                           );
   ASSERT_EFI_ERROR(Status);
+
+  Status = gBS->LocateProtocol (&gEfiHiiConfigRoutingProtocolGuid, NULL, (VOID **)&HiiConfigRouting);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  gFrontPagePrivate.HiiConfigRouting = HiiConfigRouting;
+  
   gFrontPagePrivate.HiiHandle[0] = HiiAddPackages (
                                   &mFrontPageGuid,
                                   gFrontPagePrivate.DriverHandle[0],
@@ -739,6 +644,308 @@ UpdateHiiData (
     HiiFreeOpCodeHandle(EndOpCodeHandle);
 
     return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
+ExtractConfig (
+  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
+  IN  CONST EFI_STRING                      Request,
+  OUT EFI_STRING                            *Progress,
+  OUT EFI_STRING                            *Results
+  )
+{
+  EFI_STATUS                       Status;
+  UINTN                            BufferSize;
+  FRONT_PAGE_CALLBACK_DATA         *PrivateData;
+  EFI_HII_CONFIG_ROUTING_PROTOCOL  *HiiConfigRouting;
+  EFI_STRING                       ConfigRequest;
+  EFI_STRING                       ConfigRequestHdr;
+  UINTN                            Size;
+  BOOLEAN                          AllocatedRequest;
+
+  if ((Progress == NULL) || (Results == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Initialize the local variables.
+  //
+  ConfigRequestHdr = NULL;
+  ConfigRequest    = NULL;
+  Size             = 0;
+  *Progress        = Request;
+  AllocatedRequest = FALSE;
+
+  PrivateData      = EFI_FP_CALLBACK_DATA_FROM_THIS (This);
+  HiiConfigRouting = PrivateData->HiiConfigRouting;
+
+  //
+  // Get Buffer Storage data from EFI variable.
+  // Try to get the current setting from variable.
+  //
+  BufferSize = sizeof (TIME_DATA);
+  Status     = gRT->GetVariable (
+                      VariableName,
+                      &mFrontPageGuid,
+                      NULL,
+                      &BufferSize,
+                      &PrivateData->TimeData
+                      );
+  if (EFI_ERROR(Status)) {
+    UnicodeSPrint(
+        PrivateData->TimeData.Time,
+        sizeof(PrivateData->TimeData.Time),
+        L"00:00:00"
+    );
+    Status = EFI_SUCCESS;
+  }
+  if (Request == NULL) {
+    ConfigRequestHdr = HiiConstructConfigHdr (&mFrontPageGuid, VariableName, PrivateData->DriverHandle[0]);
+    Size             = (StrLen (ConfigRequestHdr) + 32 + 1) * sizeof (CHAR16);
+    ConfigRequest    = AllocateZeroPool (Size);
+    ASSERT (ConfigRequest != NULL);
+    AllocatedRequest = TRUE;
+    UnicodeSPrint (ConfigRequest, Size, L"%s&OFFSET=0&WIDTH=%016LX", ConfigRequestHdr, (UINT64)BufferSize);
+    FreePool (ConfigRequestHdr);
+    ConfigRequestHdr = NULL;
+  } else {
+    if (!HiiIsConfigHdrMatch (Request, &mFrontPageGuid, NULL)) {
+      return EFI_NOT_FOUND;
+    }
+    ConfigRequest = Request;
+  }
+
+  Status = HiiConfigRouting->BlockToConfig (
+                               HiiConfigRouting,
+                               ConfigRequest,
+                               (UINT8 *)&PrivateData->TimeData,
+                               BufferSize,
+                               Results,
+                               Progress
+                               );
+  if (AllocatedRequest) {
+    FreePool (ConfigRequest);
+  }
+
+  if (ConfigRequestHdr != NULL) {
+    FreePool (ConfigRequestHdr);
+  }
+
+  if (Request == NULL) {
+    *Progress = NULL;
+  } else if (StrStr (Request, L"OFFSET") == NULL) {
+    *Progress = Request + StrLen (Request);
+  }
+
+  return Status;
+}
+
+EFI_STATUS
+EFIAPI
+RouteConfig (
+  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
+  IN  CONST EFI_STRING                      Configuration,
+  OUT EFI_STRING                            *Progress
+  )
+{
+  EFI_STATUS                       Status;
+  UINTN                            BufferSize;
+  FRONT_PAGE_CALLBACK_DATA         *PrivateData;
+  EFI_HII_CONFIG_ROUTING_PROTOCOL  *HiiConfigRouting;
+
+  if ((Configuration == NULL) || (Progress == NULL)) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  PrivateData      = EFI_FP_CALLBACK_DATA_FROM_THIS (This);
+  HiiConfigRouting = PrivateData->HiiConfigRouting;
+  *Progress        = Configuration;
+
+  if (!HiiIsConfigHdrMatch (Configuration, &mFrontPageGuid, NULL)) {
+    return EFI_NOT_FOUND;
+  }
+
+  if (HiiIsConfigHdrMatch (Configuration, &mFrontPageGuid, TimeData)) {
+    return EFI_UNSUPPORTED;
+  }
+
+  BufferSize = sizeof (TIME_DATA);
+  Status     = gRT->GetVariable (
+                      VariableName,
+                      &mFrontPageGuid,
+                      NULL,
+                      &BufferSize,
+                      &PrivateData->TimeData
+                      );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  BufferSize = sizeof (TIME_DATA);
+  Status     = HiiConfigRouting->ConfigToBlock (
+                                   HiiConfigRouting,
+                                   Configuration,
+                                   (UINT8 *)&PrivateData->TimeData,
+                                   &BufferSize,
+                                   Progress
+                                   );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
+  Status = gRT->SetVariable (
+                  VariableName,
+                  &mFrontPageGuid,
+                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+                  sizeof (TIME_DATA),
+                  &PrivateData->TimeData
+                  );
+  return Status;
+}
+
+EFI_STATUS 
+UpdateTimeRegion (
+EFI_HII_HANDLE HiiHandle
+) 
+{   
+    EFI_STATUS Status;
+    VOID *StartOpCodeHandle;
+    VOID *EndOpCodeHandle;                  
+   
+    StartOpCodeHandle = HiiAllocateOpCodeHandle();
+    if (StartOpCodeHandle == NULL) {
+        return EFI_OUT_OF_RESOURCES;
+    }
+
+    EndOpCodeHandle = HiiAllocateOpCodeHandle();
+    if (EndOpCodeHandle == NULL) {
+        HiiFreeOpCodeHandle(StartOpCodeHandle);
+        return EFI_OUT_OF_RESOURCES;
+    }
+
+    EFI_IFR_GUID_LABEL *StartGuidLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode(
+        StartOpCodeHandle,
+        &gEfiIfrTianoGuid,
+        NULL,
+        sizeof(EFI_IFR_GUID_LABEL)
+    );
+    StartGuidLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
+    StartGuidLabel->Number = LABEL_TIME_START;
+
+    EFI_IFR_GUID_LABEL *EndGuidLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode(
+        EndOpCodeHandle,
+        &gEfiIfrTianoGuid,
+        NULL,
+        sizeof(EFI_IFR_GUID_LABEL)
+    );
+    EndGuidLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
+    EndGuidLabel->Number = LABEL_END;
+
+    HiiCreateDateOpCode (
+            StartOpCodeHandle,
+            0x8004,
+            0x0,
+            0x0,
+            STRING_TOKEN (STR_DATE_PROMT),
+            STRING_TOKEN (STR_DATE_HELP),
+            0,
+            QF_DATE_STORAGE_TIME,
+            NULL
+    );
+
+    HiiCreateTimeOpCode (
+            StartOpCodeHandle,
+            0x8005,
+            0x0,
+            0x0,
+            STRING_TOKEN (STR_TIME_PROMT),
+            STRING_TOKEN (STR_TIME_HELP),
+            0,
+            QF_TIME_STORAGE_TIME,
+            NULL
+    );
+
+
+    Status = HiiUpdateForm(
+        HiiHandle,
+        &mFrontPageGuid,
+        FRONT_PAGE_FORM_ID,
+        StartOpCodeHandle,
+        EndOpCodeHandle
+    );
+
+    HiiFreeOpCodeHandle(StartOpCodeHandle);
+    HiiFreeOpCodeHandle(EndOpCodeHandle);
+
+    return Status;
+}
+
+EFI_STATUS 
+UpdateBootRegion (
+EFI_HII_HANDLE HiiHandle
+) 
+{
+    EFI_STATUS Status;
+    VOID *StartOpCodeHandle;
+    VOID *EndOpCodeHandle;
+    
+    StartOpCodeHandle = HiiAllocateOpCodeHandle();
+    if (StartOpCodeHandle == NULL) {
+        return EFI_OUT_OF_RESOURCES;
+    }
+
+    EndOpCodeHandle = HiiAllocateOpCodeHandle();
+    if (EndOpCodeHandle == NULL) {
+        HiiFreeOpCodeHandle(StartOpCodeHandle);
+        return EFI_OUT_OF_RESOURCES;
+    }
+
+    EFI_IFR_GUID_LABEL *StartGuidLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode(
+        StartOpCodeHandle,
+        &gEfiIfrTianoGuid,
+        NULL,
+        sizeof(EFI_IFR_GUID_LABEL)
+    );
+    StartGuidLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
+    StartGuidLabel->Number = LABEL_FRONTPAGE_INFORMATION;
+
+    EFI_IFR_GUID_LABEL *EndGuidLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode(
+        EndOpCodeHandle,
+        &gEfiIfrTianoGuid,
+        NULL,
+        sizeof(EFI_IFR_GUID_LABEL)
+    );
+    EndGuidLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
+    EndGuidLabel->Number = LABEL_END;
+
+    UiCustomizeFrontPage(HiiHandle, StartOpCodeHandle);
+
+    Status = HiiUpdateForm(
+        HiiHandle,
+        &mFrontPageGuid,
+        FRONT_PAGE_FORM_ID,
+        StartOpCodeHandle,
+        EndOpCodeHandle
+    );
+    if (EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR, "Failed to update boot region form: %r\n", Status));
+    }
+
+    HiiFreeOpCodeHandle(StartOpCodeHandle);
+    HiiFreeOpCodeHandle(EndOpCodeHandle);
+
+    return Status;
+}
+
+VOID 
+UpdateFrontPageForm (
+VOID
+) {
+    EFI_STATUS Status;
+
+    Status = UpdateBootRegion(gFrontPagePrivate.HiiHandle[0]);
+    Status = UpdateTimeRegion(gFrontPagePrivate.HiiHandle[0]);
 }
 
 /**

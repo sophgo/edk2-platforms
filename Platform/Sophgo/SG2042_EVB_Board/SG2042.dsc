@@ -529,6 +529,7 @@
   #
   # RISC-V Platform module
   #
+  Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
   Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf

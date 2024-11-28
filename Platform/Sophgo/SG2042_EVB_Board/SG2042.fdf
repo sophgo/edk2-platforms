@@ -74,6 +74,7 @@ INF  MdeModulePkg/Universal/Metronome/Metronome.inf
 INF  EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf
 
 # RISC-V Platform Drivers
+INF  Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
 INF  Silicon/Sophgo/Drivers/SpiDxe/SpiFlashMasterController.inf
 INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
 INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf

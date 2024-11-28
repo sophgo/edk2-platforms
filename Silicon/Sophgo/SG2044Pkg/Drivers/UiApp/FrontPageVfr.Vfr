@@ -3,27 +3,23 @@
 //  Copyright (c) 2024, Sophgo. All rights reserved.<BR>
 //  SPDX-License-Identifier: BSD-2-Clause-Patent
 //**/
-
-#define FORMSET_GUID  {0xadf98142, 0x42c4, 0x429c, { 0x9f, 0xa4, 0x62, 0x3f, 0xf9, 0x94, 0xa1, 0x40 } }
-#define CONFIG_INI_FORMSET_GUID {0x4a618233, 0x07f9, 0x4d73, { 0x91, 0x53, 0x51, 0x1f, 0x28, 0x93, 0xa0, 0x1e } }
-#define FRONT_PAGE_FORM_ID             0x1000
-#define NEW_FORM_ID 		               0x1000
-#define LABEL_FRONTPAGE_INFORMATION    0x1000
-#define LABEL_END                      0xffff
-
+#include "FrontPageNVDataStruc.h"
 formset
   guid     = FORMSET_GUID,
   title    = STRING_TOKEN(STR_FRONT_PAGE_TITLE),
   help     = STRING_TOKEN(STR_EMPTY_STRING ),
   classguid = FORMSET_GUID,
+  
+ varstore TIME_DATA,
+    varid = VAR_DYNAMIC_TIME_VARID,
+    name  = DynamicTimeData,
+    guid  = FORMSET_GUID;
 
   form formid = FRONT_PAGE_FORM_ID,
        title  = STRING_TOKEN(STR_FRONT_PAGE_TITLE);
-
+    label LABEL_TIME_START;
+    label LABEL_END;
     label LABEL_FRONTPAGE_INFORMATION;
-    // This is where we will dynamically add a Action type op-code to show
-    // the platform information.
-    //
     label LABEL_END;
 
     goto
@@ -33,6 +29,37 @@ formset
       prompt  = STRING_TOKEN(STR_GOTO_DYNAMIC), 
       help    = STRING_TOKEN(STR_GOTO_HELP),     
       flags   = INTERACTIVE;                  
-  
+    goto 0x1234,
+      prompt  = STRING_TOKEN(STR_SERIALPORT),
+      help    = STRING_TOKEN(STR_SERIALPORT_HELP),
+      flags   = INTERACTIVE,
+      key     = 0x1234; 
+
+  endform;
+  form formid = 0x1234, 
+        title = STRING_TOKEN(STR_SERIALPORT_TITLE);
+        text
+           help = STRING_TOKEN(STR_TREM_TYPE_HELP),
+           text = STRING_TOKEN(STR_TERM_TYPE);     
+
+        text
+           help = STRING_TOKEN(STR_BAUD_RATE_HELP),
+           text = STRING_TOKEN(STR_BAUD_RATE); 
+
+        text
+           help = STRING_TOKEN(STR_DATA_BITS_HELP),
+           text = STRING_TOKEN(STR_DATA_BITS); 
+
+        text
+           help = STRING_TOKEN(STR_PARITY_HELP),
+           text = STRING_TOKEN(STR_PARITY); 
+
+        text
+           help = STRING_TOKEN(STR_STOP_BITS_HELP),
+           text = STRING_TOKEN(STR_STOP_BITS); 
+        
+        text
+           help = STRING_TOKEN(STR_FLOW_CONTROL_HELP),
+           text = STRING_TOKEN(STR_FLOW_CONTROL);  
   endform;
 endformset;

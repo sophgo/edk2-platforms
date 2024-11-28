@@ -30,6 +30,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/PrintLib.h>
 #include <Protocol/HiiConfigAccess.h> 
 #include <stdio.h>    
+#include "FrontPageNVDataStruc.h"
 
 #define CONFIG_SIZE      1000           
 #define MAX_HW_NUMS     500           
@@ -40,12 +41,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define PRINTABLE_LANGUAGE_NAME_STRING_ID  0x0001
 #define FRONT_PAGE_FORM_ID  0x1000
 #define CONFIG_FORM_ID         0x1000
-#define LABEL_FRONTPAGE_INFORMATION  0x1000
-#define LABEL_END                    0xffff
-#define LABEL_CONFIG_START	0x1000
-#define LABEL_CONFIG_END	  0xffff
-#define FRONT_PAGE_FORMSET_GUID {0xadf98142, 0x42c4, 0x429c, { 0x9f, 0xa4, 0x62, 0x3f, 0xf9, 0x94, 0xa1, 0x40 } }
-#define CONFIG_INI_FORMSET_GUID {0x4a618233, 0x07f9, 0x4d73, { 0x91, 0x53, 0x51, 0x1f, 0x28, 0x93, 0xa0, 0x1e } }
 #define FRONT_PAGE_CALLBACK_DATA_SIGNATURE  SIGNATURE_32 ('F', 'P', 'C', 'B')
 #define EFI_FP_CALLBACK_DATA_FROM_THIS(a) \
   CR (a, \
@@ -53,6 +48,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
       ConfigAccess, \
       FRONT_PAGE_CALLBACK_DATA_SIGNATURE \
       )
+#define     QF_DATE_STORAGE_TIME    0x10
 
 extern UINT8  FrontPageVfrBin[];
 extern UINT8  ConfiginiVfrBin[];
@@ -86,6 +82,10 @@ typedef struct {
   EFI_HANDLE                        DriverHandle[2];
   EFI_STRING_ID                     *LanguageToken;
   EFI_HII_CONFIG_ACCESS_PROTOCOL    ConfigAccess;
+  TIME_DATA                         TimeData;
+  EFI_HII_CONFIG_ROUTING_PROTOCOL   *HiiConfigRouting;
+  EFI_GUID                          *FormSetGuid;   
+  CHAR16                            *VariableName;    
 } FRONT_PAGE_CALLBACK_DATA;
 
 /**
@@ -112,12 +112,12 @@ typedef struct {
 **/
 EFI_STATUS
 EFIAPI
-FakeExtractConfig (
+ExtractConfig (
   IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
   IN  CONST EFI_STRING                      Request,
   OUT EFI_STRING                            *Progress,
-  OUT EFI_STRING                            *Results
-  );
+  OUT EFI_STRING                            *Results  
+);
 
 /**
   This function processes the results of changes in configuration.
@@ -137,11 +137,12 @@ FakeExtractConfig (
 **/
 EFI_STATUS
 EFIAPI
-FakeRouteConfig (
+RouteConfig (
   IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
   IN  CONST EFI_STRING                      Configuration,
   OUT EFI_STRING                            *Progress
-  );
+  
+);
 
 /**
   This function processes the results of changes in configuration.
@@ -247,6 +248,27 @@ EFI_STATUS
 EFIAPI
 UpdateHiiData (
     VOID
+);
+
+VOID 
+UpdateFrontPageForm ( 
+VOID
+);
+
+EFI_STATUS 
+UpdateBootRegion (
+EFI_HII_HANDLE HiiHandle
+);
+
+EFI_STATUS
+UpdateTimeRegion (
+EFI_HII_HANDLE HiiHandle
+);
+
+VOID
+AppendAltCfgString (
+  IN OUT EFI_STRING  *RequestResult,
+  IN     EFI_STRING  ConfigRequestHdr
 );
 
 #endif // _FRONT_PAGE_H_

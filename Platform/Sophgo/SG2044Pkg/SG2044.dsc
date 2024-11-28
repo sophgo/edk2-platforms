@@ -459,6 +459,7 @@
 !if $(FLASH_ENABLE) == TRUE
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7001000000
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|TRUE
+  gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x80000
 !endif
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|2048

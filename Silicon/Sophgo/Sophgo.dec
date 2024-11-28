@@ -35,6 +35,7 @@
   gSophgoTokenSpaceGuid.PcdMisa|0x0|UINT32|0x00001008
   gSophgoTokenSpaceGuid.PcdTrngBase|0x0|UINT64|0x00001009
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|FALSE|BOOLEAN|0x00001010
+  gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x0|UINT64|0x00001011
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

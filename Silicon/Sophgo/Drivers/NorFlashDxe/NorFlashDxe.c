@@ -572,7 +572,7 @@ SpiNorGetFlashVariableOffset (
 
   CONST CHAR8 *Suffix = ".fd";
   SuffixLength = AsciiStrLen (Suffix);
-  Address = PARTITION_TABLE_ADDR;
+  Address = PcdGet64 (PcdFlashPartitionTableAddress);
 
   Info = AllocateZeroPool (sizeof(FLASH_PARTITION_INFO));
   if (Info == NULL) {

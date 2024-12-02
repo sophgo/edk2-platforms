@@ -75,8 +75,8 @@ GenerateRandomNumbers (
 		  &Node);
   if (EFI_ERROR (Status)) {
     DEBUG ((
-      DEBUG_ERROR,
-      "%a: TRNG device node not found!\n",
+      DEBUG_VERBOSE,
+      "%a: TRNG device node not found! Use default base address!\n",
       __func__
       ));
     goto ErrorGetBase;

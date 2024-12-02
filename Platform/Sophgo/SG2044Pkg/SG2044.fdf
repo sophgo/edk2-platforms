@@ -121,13 +121,17 @@ INF  Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 #
 # Network modules
 #
-!if $(E1000_ENABLE)
-  FILE DRIVER = 5D695E11-9B3F-4b83-B25F-4A8D5D69BE07 {
-    SECTION PE32 = Intel3.5/EFIX64/E3507X2.EFI
-  }
-!endif
-
 !include NetworkPkg/Network.fdf.inc
+
+#
+# Random Number Generator Support
+#
+INF Silicon/Sophgo/Drivers/RngDxe/RngDxe.inf
+
+#
+# Hash2 Protocol producer
+#
+INF SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
 
 #
 # PCIe Support
@@ -161,10 +165,6 @@ INF  MdeModulePkg/Bus/Usb/UsbKbDxe/UsbKbDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbMouseDxe/UsbMouseDxe.inf
 INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
-#
-# Random Number Generator Support
-#
-INF Silicon/Sophgo/Drivers/RngDxe/RngDxe.inf
 
 #
 # Emulator for x64 OpRoms, etc.
@@ -230,7 +230,7 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf
 
 # For F7 Boot Menu App
 INF  MdeModulePkg/Universal/LoadFileOnFv2/LoadFileOnFv2.inf
-INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf 
+INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 
 ################################################################################
 

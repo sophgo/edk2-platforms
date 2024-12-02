@@ -8,10 +8,11 @@
  **/
 
 #include <Library/BaseLib.h>
-#include <Protocol/Cpu.h>
 #include "SpiFlashMasterController.h"
+#include <Library/TimerLib.h>
 
-SPI_MASTER *mSpiMasterInstance;
+SPI_MASTER                  *mSpiMasterInstance;
+STATIC EFI_EVENT            mNorFlashVirtualAddrChangeEvent;
 
 STATIC
 EFI_STATUS
@@ -350,7 +351,7 @@ SpifmcWrite (
 
     while ((MmioRead32 ((UINTN)(SpiBase + SPIFMC_FIFO_PT)) & 0xf) != 0) {
       WaitTime ++;
-      gBS->Stall (10);
+      MicroSecondDelay (10);
       if (WaitTime > 30000) {
         DEBUG ((
           DEBUG_ERROR,
@@ -470,11 +471,10 @@ SpiMasterSetupSlave (
   IN SPI_NOR                    *Nor
   )
 {
-  EFI_CPU_ARCH_PROTOCOL *Cpu;
   EFI_STATUS            Status;
 
   if (!Nor) {
-    Nor = AllocateZeroPool (sizeof(SPI_NOR));
+    Nor = AllocateRuntimeZeroPool (sizeof(SPI_NOR));
     if (!Nor) {
       DEBUG ((
         DEBUG_ERROR,
@@ -486,28 +486,24 @@ SpiMasterSetupSlave (
   }
 
   Nor->SpiBase = SPIFMC_BASE;
-  Status = gBS->LocateProtocol (
-		  &gEfiCpuArchProtocolGuid,
-		  NULL,
-		  (VOID **)&Cpu
-		  );
-
+  
+  Status = gDS->AddMemorySpace(
+      EfiGcdMemoryTypeMemoryMappedIo,
+		  Nor->SpiBase,
+		  SIZE_64MB,
+      EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
+      );
   if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a: Cannot locate CPU arch service\n",
-      __func__
-      ));
+    DEBUG ((DEBUG_ERROR, "[%a:%d] Add memory space failed: %r\n",
+          __func__, __LINE__, Status));
     return NULL;
   }
 
-  Status = Cpu->SetMemoryAttributes (
-		  Cpu,
+  Status = gDS->SetMemorySpaceAttributes (
 		  Nor->SpiBase,
 		  SIZE_64MB,
-		  EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
-		  );
-
+      EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
+      );
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
@@ -519,7 +515,7 @@ SpiMasterSetupSlave (
   }
 
   Nor->BounceBufSize = SIZE_4KB;
-  Nor->BounceBuf = AllocateZeroPool (Nor->BounceBufSize);
+  Nor->BounceBuf = AllocateRuntimeZeroPool (Nor->BounceBufSize);
   if (!Nor->BounceBuf) {
     return NULL;
   }
@@ -548,6 +544,22 @@ SpiMasterFreeSlave (
   // FreePool (Nor->BounceBuf);
 
   return EFI_SUCCESS;
+}
+
+STATIC
+VOID
+EFIAPI
+SpiNorVirtualNotifyEvent (
+  IN EFI_EVENT        Event,
+  IN VOID             *Context
+  )
+{
+  EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance->SpiMasterProtocol.ReadRegister);
+  EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance->SpiMasterProtocol.WriteRegister);
+  EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance->SpiMasterProtocol.Read);
+  EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance->SpiMasterProtocol.Write);
+  EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance->SpiMasterProtocol.Erase);
+  EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance);
 }
 
 EFI_STATUS
@@ -592,5 +604,30 @@ SpifmcEntryPoint (
     return EFI_DEVICE_ERROR;
   }
 
+  Status = gBS->CreateEventEx (
+                  EVT_NOTIFY_SIGNAL,
+                  TPL_NOTIFY,
+                  SpiNorVirtualNotifyEvent,
+                  NULL,
+                  &gEfiEventVirtualAddressChangeGuid,
+                  &mNorFlashVirtualAddrChangeEvent);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Failed to register VA change event\n",
+      __func__
+      ));
+    goto ErrorCreateEvent;
+  }
   return EFI_SUCCESS;
+
+ErrorCreateEvent:
+  gBS->UninstallMultipleProtocolInterfaces (
+        &mSpiMasterInstance->Handle,
+        &gSophgoSpiMasterProtocolGuid,
+        NULL
+        );
+
+  return Status;
 }
+

@@ -20,7 +20,6 @@
 
 [Packages]
   MdePkg/MdePkg.dec
-  UefiCpuPkg/UefiCpuPkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   Silicon/Sophgo/Sophgo.dec
 
@@ -34,16 +33,18 @@
   UefiDriverEntryPoint
   UefiLib
   UefiRuntimeLib
+  DxeServicesTableLib
+
+[Guids]
+  gEfiEventVirtualAddressChangeGuid
 
 [Protocols]
   gSophgoSpiMasterProtocolGuid         ## PRODUCES
-  gEfiCpuArchProtocolGuid              ## CONSUMES
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base                            ## CONSUMES
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base                            ## CONSUMES
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable                       ## CONSUMES
-  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode             ## CONSUMES
 
 [Depex]
   TRUE

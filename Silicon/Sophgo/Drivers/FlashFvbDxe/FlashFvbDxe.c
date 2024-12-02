@@ -125,7 +125,7 @@ InitializeFvAndVariableStoreHeaders (
   HeadersLength = sizeof (EFI_FIRMWARE_VOLUME_HEADER) +
                   sizeof (EFI_FV_BLOCK_MAP_ENTRY) +
                   sizeof (VARIABLE_STORE_HEADER);
-  Headers = AllocateZeroPool (HeadersLength);
+  Headers = AllocateRuntimeZeroPool (HeadersLength);
 
   BlockSize = Instance->Media.BlockSize;
 
@@ -971,27 +971,24 @@ FvbVirtualNotifyEvent (
   IN VOID       *Context
   )
 {
+
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->SpiMasterProtocol);
+
   //
   // Convert SPI memory mapped region
   //
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->RegionBaseAddress);
-  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbOffset);
 
   //
   // Convert SPI device description
   //
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor->Info->Name);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor->Info);
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor->BounceBuf);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor->SpiBase);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor);
 
-  //
-  // Convert NorFlashProtocol
-  //
-  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol->Erase);
-  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol->WriteData);
-  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol->ReadData);
-  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol->GetFlashid);
-  EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol->Init);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->NorFlashProtocol);
 
   //
@@ -1005,6 +1002,8 @@ FvbVirtualNotifyEvent (
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.Write);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol.EraseBlocks);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->FvbProtocol);
+
+  EfiConvertPointer (0x0, (VOID**)&mFvbDevice);
 
   return;
 }

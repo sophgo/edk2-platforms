@@ -22,9 +22,13 @@
   EmbeddedPkg/EmbeddedPkg.dec
   Silicon/Sophgo/Sophgo.dec
 
+[Guids]
+  gEfiEventVirtualAddressChangeGuid
+
 [LibraryClasses]
   DebugLib
   UefiBootServicesTableLib
+  UefiRuntimeLib
 
 [Protocols]
   gSophgoI2cMasterProtocolGuid     ## CONSUMES

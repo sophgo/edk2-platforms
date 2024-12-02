@@ -46,5 +46,4 @@
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|0x0|UINT8|0x00010001
 
 [LibraryClasses]
-  I2cLib|Silicon/Sophgo/Include/Library/I2c.h
   TrngLib|Silicon/Sophgo/Include/Library/TrngLib.h

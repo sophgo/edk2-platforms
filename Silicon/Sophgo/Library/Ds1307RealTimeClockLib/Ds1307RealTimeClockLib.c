@@ -17,10 +17,11 @@
 #include <Library/DebugLib.h>
 #include <Library/RealTimeClockLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeLib.h>
 #include <Include/DwI2c.h>
 
 #define I2C_BUS_NUM         2
-#define I2C_SLAVE_RTC_ADDR  0X68
+#define I2C_SLAVE_RTC_ADDR  0x68
 
 #define DS1307_SEC_BIT_CH   0x80  /* Clock Halt (in Register 0) */
 
@@ -50,6 +51,7 @@
 #endif
 
 STATIC SOPHGO_I2C_MASTER_PROTOCOL  *mI2cMasterProtocol;
+STATIC EFI_EVENT                   mVirtualAddrChangeEvent;
 
 /**
   Read data from RTC.
@@ -259,6 +261,19 @@ LibSetWakeupTime (
   return EFI_UNSUPPORTED;
 }
 
+STATIC
+VOID
+EFIAPI
+VirtualNotifyEvent (
+  IN EFI_EVENT        Event,
+  IN VOID             *Context
+  )
+{
+  EfiConvertPointer (0x0, (VOID**)&mI2cMasterProtocol->Read);
+  EfiConvertPointer (0x0, (VOID**)&mI2cMasterProtocol->Write);
+  EfiConvertPointer (0x0, (VOID**)&mI2cMasterProtocol);
+}
+
 /**
   This is the declaration of an EFI image entry point. This can be the entry point to an application
   written to this specification, an EFI boot service driver, or an EFI runtime driver.
@@ -287,6 +302,25 @@ LibRtcInitialize (
     DEBUG ((DEBUG_ERROR, "%a: Cannot locate I2c Master protocol\n",
             __func__));
     return Status;
+  }
+
+  //
+  // Register for the virtual address change event
+  //
+  // Only create event once
+  if (mVirtualAddrChangeEvent == NULL) {
+    Status = gBS->CreateEventEx (
+                    EVT_NOTIFY_SIGNAL,
+                    TPL_NOTIFY,
+                    VirtualNotifyEvent,
+                    NULL,
+                    &gEfiEventVirtualAddressChangeGuid,
+                    &mVirtualAddrChangeEvent);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a: Failed to register VA change event: %r\n",
+        __func__, Status));
+      return Status;
+    }
   }
 
   return EFI_SUCCESS;

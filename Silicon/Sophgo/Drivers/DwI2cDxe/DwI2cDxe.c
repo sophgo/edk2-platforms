@@ -9,7 +9,10 @@
 
 #include "DwI2cDxe.h"
 
+#include <Library/TimerLib.h>
+
 STATIC I2C_INFO                    *mI2cInfo;
+STATIC UINT32                      mI2cNum;
 STATIC SOPHGO_I2C_MASTER_PROTOCOL  *mI2cMasterProtocol;
 STATIC EFI_EVENT                   mI2cVirtualAddrChangeEvent;
 
@@ -47,7 +50,7 @@ DwI2cEnable (
     // transfer supported by the driver (for 400KHz this is
     // 25us) as described in the DesignWare I2C databook.
     //
-    gBS->Stall (25);
+    MicroSecondDelay (25);
   } while (TimeOut--);
 
   DEBUG ((DEBUG_ERROR,
@@ -176,31 +179,17 @@ I2cWaitForBusBusy (
   IN I2C_REGS  *I2cBase
   )
 {
-  EFI_STATUS  Status;
-  EFI_EVENT   TimeoutEvt;
+  UINT64      StartTime;
 
-  TimeoutEvt = NULL;
-  Status = gBS->CreateEvent (EVT_TIMER, TPL_NOTIFY,
-                             NULL, NULL, &TimeoutEvt);
-  if (EFI_ERROR (Status))
-    return Status;
-
-  Status = gBS->SetTimer (TimeoutEvt, TimerRelative,
-                          EFI_TIMER_PERIOD_MICROSECONDS (I2C_BYTE_TO_BB));
-  if (EFI_ERROR (Status)) {
-    gBS->CloseEvent (TimeoutEvt);
-    return Status;
-  }
+  StartTime = GetPerformanceCounter ();
 
   while ((MmioRead32 ((UINTN)(&I2cBase->IC_STATUS)) & IC_STATUS_MA) ||
          !(MmioRead32 ((UINTN)(&I2cBase->IC_STATUS)) & IC_STATUS_TFE)) {
 
-    if (gBS->CheckEvent (TimeoutEvt) == EFI_SUCCESS) {
-      gBS->CloseEvent (TimeoutEvt);
+    if (GetTimeInNanoSecond (GetPerformanceCounter () - StartTime) > I2C_BYTE_TO_BB) {
       return EFI_TIMEOUT;
     }
   }
-  gBS->CloseEvent (TimeoutEvt);
 
   return EFI_SUCCESS;
 }
@@ -240,35 +229,23 @@ I2cXferFinish (
   )
 {
   EFI_STATUS  Status;
-  EFI_EVENT   TimeoutEvt;
-
-  TimeoutEvt = NULL;
-  Status = gBS->CreateEvent (EVT_TIMER, TPL_NOTIFY, NULL, NULL,
-                             &TimeoutEvt);
-  if (EFI_ERROR (Status))
-    return Status;
+  UINT64      StartTime;
 
   //
   // send stop bit
   //
   MmioWrite32 ((UINTN)(&I2cBase->IC_CMD_DATA), 1 << 9);
 
-  Status = gBS->SetTimer (TimeoutEvt, TimerRelative,
-                          EFI_TIMER_PERIOD_MICROSECONDS (I2C_STOPDET_TO));
-  if (EFI_ERROR (Status)) {
-    gBS->CloseEvent (TimeoutEvt);
-    return Status;
-  }
+  StartTime = GetPerformanceCounter ();
 
   while (1) {
     if (MmioRead32 ((UINTN)(&I2cBase->IC_RAW_INTR_STAT)) & IC_STOP_DET) {
       MmioRead32 ((UINTN)(&I2cBase->IC_CLR_STOP_DET));
       break;
-    } else if (gBS->CheckEvent (TimeoutEvt) == EFI_SUCCESS) {
+    } else if (GetTimeInNanoSecond (GetPerformanceCounter () - StartTime) > I2C_STOPDET_TO) {
       break;
     }
   }
-  gBS->CloseEvent (TimeoutEvt);
 
   Status = I2cWaitForBusBusy (I2cBase);
   if (EFI_ERROR (Status)) {
@@ -395,7 +372,7 @@ DesignwareI2cXfer (
       ++SubIndex;
     }
     Wait++;
-    gBS->Stall (10);
+    MicroSecondDelay (10);
     if (Wait > 5000) {
       DEBUG ((DEBUG_ERROR, "i2c xfer timeout %d\n", __LINE__));
       return EFI_TIMEOUT;
@@ -797,25 +774,24 @@ SetI2cMemoryRuntime (
 {
   EFI_STATUS             Status;
   UINT32                 Index;
-  EFI_CPU_ARCH_PROTOCOL  *Cpu;
-
-  Status = gBS->LocateProtocol (
-              &gEfiCpuArchProtocolGuid,
-              NULL,
-              (VOID **)&Cpu
-              );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "[%a:%d] Locate CpuArchProtocol failed: %r\n",
-            __func__, __LINE__, Status));
-    return Status;
-  }
 
   for (Index = 0; Index < I2cNum; Index++) {
-    Status = Cpu->SetMemoryAttributes (
-                    Cpu,
+    Status = gDS->AddMemorySpace(
+                    EfiGcdMemoryTypeMemoryMappedIo,
                     I2cInformation[Index].Base,
                     SIZE_4KB,
-                    EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
+                    EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
+                    );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "[%a:%d] Add memory space failed: %r\n",
+            __func__, __LINE__, Status));
+      return Status;
+    }
+
+    Status = gDS->SetMemorySpaceAttributes (
+                    I2cInformation[Index].Base,
+                    SIZE_4KB,
+                    EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
                     );
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "[%a:%d] Set memory attributes failed: %r\n",
@@ -835,7 +811,17 @@ I2cVirtualNotifyEvent (
   IN VOID             *Context
   )
 {
+  UINT32 Loop;
+  DW_I2C *I2c;
+
+  for (Loop = 0; Loop < mI2cNum; ++Loop) {
+    EfiConvertPointer (0x0, (VOID**)&mI2cInfo[Loop].Base);
+    I2c = (DW_I2C *)mI2cInfo[Loop].Dev;
+    EfiConvertPointer (0x0, (VOID**)&I2c->Regs);
+  }
+
   EfiConvertPointer (0x0, (VOID**)&mI2cMasterProtocol);
+  EfiConvertPointer (0x0, (VOID**)&mI2cInfo);
 }
 
 EFI_STATUS
@@ -856,6 +842,8 @@ DwI2cEntryPoint (
                             &I2cNum);
   if (EFI_ERROR (Status))
     return Status;
+
+  mI2cNum = I2cNum;
 
   //
   // Declare the controller as EFI_MEMORY_RUNTIME

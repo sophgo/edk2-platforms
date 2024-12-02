@@ -33,13 +33,14 @@
   BaseLib
   BaseMemoryLib
   UefiRuntimeLib
+  DxeServicesTableLib
+  TimerLib
 
 [Guids]
   gEfiEventVirtualAddressChangeGuid
 
 [Protocols]
   gFdtClientProtocolGuid          ## CONSUMES
-  gEfiCpuArchProtocolGuid         ## CONSUMES
   gSophgoI2cMasterProtocolGuid    ## PRODUCES
 
 [Depex]

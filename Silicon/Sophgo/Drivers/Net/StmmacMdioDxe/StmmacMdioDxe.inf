@@ -1,0 +1,43 @@
+#/** @file
+#
+#    Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#
+#    SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = StmmacMdioDxe
+  FILE_GUID                      = F6510959-9C52-474B-B483-B892FCA2C1D5
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = MdioDxeInitialize
+
+[Sources.common]
+  StmmacMdioDxe.c
+  StmmacMdioDxe.h
+
+[Packages]
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  PcdLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+  DxeServicesTableLib
+
+[Protocols]
+  gSophgoMdioProtocolGuid                                 ## PRODUCES
+  gFdtClientProtocolGuid                                  ## CONSUMES
+
+[Depex]
+  gFdtClientProtocolGuid

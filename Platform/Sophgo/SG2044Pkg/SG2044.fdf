@@ -122,16 +122,17 @@ INF  Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 # Network modules
 #
 !include NetworkPkg/Network.fdf.inc
+INF  Silicon/Sophgo/Drivers/Net/StmmacMdioDxe/StmmacMdioDxe.inf
 
 #
 # Random Number Generator Support
 #
-INF Silicon/Sophgo/Drivers/RngDxe/RngDxe.inf
+INF  Silicon/Sophgo/Drivers/RngDxe/RngDxe.inf
 
 #
 # Hash2 Protocol producer
 #
-INF SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
+INF  SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
 
 #
 # PCIe Support

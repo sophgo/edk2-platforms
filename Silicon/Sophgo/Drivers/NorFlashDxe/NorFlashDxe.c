@@ -8,11 +8,11 @@
 
 #include "NorFlashDxe.h"
 
-NOR_FLASH_INSTANCE         *mNorFlashInstance;
-SOPHGO_SPI_MASTER_PROTOCOL *SpiMasterProtocol;
-SOPHGO_NOR_FLASH_PROTOCOL  *NorFlashProtocol;
-// UINT32                      mNorFlashDeviceCount;
-STATIC EFI_EVENT            mNorFlashVirtualAddrChangeEvent;
+#include <Library/TimerLib.h>
+
+STATIC NOR_FLASH_INSTANCE         *mNorFlashInstance;
+STATIC SOPHGO_SPI_MASTER_PROTOCOL *SpiMasterProtocol;
+STATIC EFI_EVENT                  mNorFlashVirtualAddrChangeEvent;
 
 EFI_STATUS
 EFIAPI
@@ -85,7 +85,7 @@ SpiNorWaitTillReady (
   WaitTime = 0;
 
   while (1) {
-    gBS->Stall (100);
+    MicroSecondDelay (100);
 
     //
     // Query the Status Register to see if the flash is ready for new commands.
@@ -574,7 +574,7 @@ SpiNorGetFlashVariableOffset (
   SuffixLength = AsciiStrLen (Suffix);
   Address = PcdGet64 (PcdFlashPartitionTableAddress);
 
-  Info = AllocateZeroPool (sizeof(FLASH_PARTITION_INFO));
+  Info = AllocateRuntimeZeroPool (sizeof(FLASH_PARTITION_INFO));
   if (Info == NULL) {
     DEBUG((
       DEBUG_ERROR,
@@ -702,11 +702,17 @@ SpiNorVirtualNotifyEvent (
   )
 {
   EfiConvertPointer (0x0, (VOID**)&SpiMasterProtocol);
-  EfiConvertPointer (0x0, (VOID**)&SpiMasterProtocol->ReadRegister);
-  EfiConvertPointer (0x0, (VOID**)&SpiMasterProtocol->ReadRegister);
-  EfiConvertPointer (0x0, (VOID**)&SpiMasterProtocol->Read);
-  EfiConvertPointer (0x0, (VOID**)&SpiMasterProtocol->Write);
-  EfiConvertPointer (0x0, (VOID**)&SpiMasterProtocol->Erase);
+
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.GetFlashid);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.ReadData);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.ReadStatus);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.WriteData);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.WriteStatus);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.Erase);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.EraseChip);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.Init);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.GetFlashVariableOffset);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance);
 }
 
 EFI_STATUS

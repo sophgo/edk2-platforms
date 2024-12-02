@@ -14,13 +14,13 @@
 #include <Uefi.h>
 #include <Library/IoLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/DxeServicesTableLib.h>
 #include <Library/DebugLib.h>
 #include <Library/UefiLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiRuntimeLib.h>
 #include <Protocol/FdtClient.h>
-#include <Protocol/Cpu.h>
 #include <Include/DwI2c.h>
 
 #if !defined(IC_CLK)
@@ -45,7 +45,7 @@
 //
 // Worst case timeout for 1 byte is kept as 2ms
 //
-#define I2C_BYTE_TO             (2 * 1000)
+#define I2C_BYTE_TO             (2 * 1000 * 1000)
 #define I2C_STOPDET_TO          (I2C_BYTE_TO)
 #define I2C_BYTE_TO_BB          (I2C_BYTE_TO * 16)
 

@@ -41,6 +41,23 @@
 #define MII_GMAC4_READ                  (3 << MII_GMAC4_GOC_SHIFT)
 #define MII_GMAC4_C45E                  BIT(1)
 
+//
+// XGMAC defines.
+//
+#define XGMAC_MDIO_ADDR                 0x00000200
+#define XGMAC_MDIO_DATA                 0x00000204
+#define XGMAC_MDIO_C22P                 0x00000220
+
+#define MII_XGMAC_SADDR                 BIT(18)
+#define MII_XGMAC_CMD_SHIFT             16
+#define MII_XGMAC_WRITE                 (1 << MII_XGMAC_CMD_SHIFT)
+#define MII_XGMAC_READ                  (3 << MII_XGMAC_CMD_SHIFT)
+#define MII_XGMAC_BUSY                  BIT(22)
+#define MII_XGMAC_MAX_C22ADDR           3
+#define MII_XGMAC_C22P_MASK             GENMASK(MII_XGMAC_MAX_C22ADDR, 0)
+#define MII_XGMAC_PA_SHIFT              16
+#define MII_XGMAC_DA_SHIFT              21
+
 #define STMMAC_MDIO_TIMEOUT             10000   // 10000us
 #define PHY_REG_MASK                    0xFFFF
 #define PHY_ADDR_MASK                   0x1F

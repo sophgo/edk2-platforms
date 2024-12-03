@@ -465,6 +465,7 @@
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|2048
   gSophgoTokenSpaceGuid.PcdMisa|0x00B4112F
+  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum|2
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
 

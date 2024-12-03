@@ -30,8 +30,11 @@
   UefiBootServicesTableLib
   UefiRuntimeLib
 
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum   ## CONSUMES
+
 [Protocols]
-  gSophgoI2cMasterProtocolGuid     ## CONSUMES
+  gSophgoI2cMasterProtocolGuid            ## CONSUMES
 
 [Depex]
   gSophgoI2cMasterProtocolGuid

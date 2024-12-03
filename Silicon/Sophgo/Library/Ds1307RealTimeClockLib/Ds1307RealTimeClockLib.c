@@ -18,9 +18,9 @@
 #include <Library/RealTimeClockLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiRuntimeLib.h>
+#include <Library/PcdLib.h>
 #include <Include/DwI2c.h>
 
-#define I2C_BUS_NUM         2
 #define I2C_SLAVE_RTC_ADDR  0x68
 
 #define DS1307_SEC_BIT_CH   0x80  /* Clock Halt (in Register 0) */
@@ -52,6 +52,7 @@
 
 STATIC SOPHGO_I2C_MASTER_PROTOCOL  *mI2cMasterProtocol;
 STATIC EFI_EVENT                   mVirtualAddrChangeEvent;
+STATIC UINT32                      mI2cBusNum;
 
 /**
   Read data from RTC.
@@ -70,7 +71,7 @@ RtcRead (
   EFI_STATUS   Status;
 
   Status = mI2cMasterProtocol->Read (mI2cMasterProtocol,
-                                     I2C_BUS_NUM,
+                                     mI2cBusNum,
                                      I2C_SLAVE_RTC_ADDR,
                                      0, Length, Data);
 
@@ -94,7 +95,7 @@ RtcWrite (
   EFI_STATUS   Status;
 
   Status = mI2cMasterProtocol->Write (mI2cMasterProtocol,
-                                      I2C_BUS_NUM,
+                                      mI2cBusNum,
                                       I2C_SLAVE_RTC_ADDR,
                                       0, Length, Data);
 
@@ -322,6 +323,7 @@ LibRtcInitialize (
       return Status;
     }
   }
+  mI2cBusNum = FixedPcdGet32 (PcdRtcI2cBusNum);
 
   return EFI_SUCCESS;
 }

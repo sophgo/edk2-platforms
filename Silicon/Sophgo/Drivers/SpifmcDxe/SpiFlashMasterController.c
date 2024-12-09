@@ -486,19 +486,24 @@ SpiMasterSetupSlave (
   }
 
   Nor->SpiBase = SPIFMC_BASE;
-  
-  Status = gDS->AddMemorySpace(
+
+  Status = gDS->AddMemorySpace (
       EfiGcdMemoryTypeMemoryMappedIo,
 		  Nor->SpiBase,
 		  SIZE_64MB,
       EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
       );
+  if (Status == EFI_ACCESS_DENIED) {
+    goto init;
+  }
+
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "[%a:%d] Add memory space failed: %r\n",
           __func__, __LINE__, Status));
     return NULL;
   }
 
+init:
   Status = gDS->SetMemorySpaceAttributes (
 		  Nor->SpiBase,
 		  SIZE_64MB,

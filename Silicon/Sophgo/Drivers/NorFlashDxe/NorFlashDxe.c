@@ -44,8 +44,6 @@ SpiNorGetFlashId (
     return Status;
   }
 
-  NorFlashPrintInfo (Nor->Info);
-
   return EFI_SUCCESS;
 }
 

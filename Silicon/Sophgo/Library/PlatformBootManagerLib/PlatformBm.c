@@ -8,6 +8,9 @@
 **/
 
 #include "PlatformBm.h"
+EFI_GUID  mUiApp = {
+  0x462CAA21, 0x7614, 0x4503, { 0x83, 0x6E, 0x8A, 0xB6, 0xF4, 0x66, 0x23, 0x31 }
+};
 
 EFI_GUID  mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
@@ -488,6 +491,7 @@ PlatformBootFvBootOption (
 
   @retval  VOID
 **/
+
 STATIC
 VOID
 GetPlatformOptions (
@@ -574,32 +578,7 @@ GetPlatformOptions (
 
       BootOptionNumber = BootOptions[Index].OptionNumber;
     }
-
-    //
-    // Register a hotkey with the boot option, if requested.
-    //
-    if (BootKeys[Index].UnicodeChar == L'\0') {
-      continue;
-    }
-
-    Status = EfiBootManagerAddKeyOptionVariable (
-               NULL,
-               BootOptionNumber,
-               0,
-               &BootKeys[Index],
-               NULL
-               );
-    if (EFI_ERROR (Status)) {
-      DEBUG ((
-        DEBUG_ERROR,
-        "%a: failed to register hotkey for \"%s\": %r\n",
-        __func__,
-        BootOptions[Index].Description,
-        Status
-        ));
-    }
   }
-
   EfiBootManagerFreeLoadOptions (CurrentBootOptions, CurrentBootOptionCount);
   EfiBootManagerFreeLoadOptions (BootOptions, BootCount);
   FreePool (BootKeys);
@@ -676,73 +655,205 @@ RegisterBootManagerMenuAppBootOption (
 }
 
 /**
- *   Check if it's a Device Path pointing to BootManagerMenuApp.
- *
- *   @param  DevicePath     Input device path.
- *
- *   @retval TRUE   The device path is BootManagerMenuApp File Device Path.
- *   @retval FALSE  The device path is NOT BootManagerMenuApp File Device Path.
+  Extracts the GUID from a device path string. This function converts the given 
+  device path to a string format and then extracts the GUID part from the FvFile 
+  node in the device path, if present. This function is specifically tailored 
+  for FvFile type device paths.
+
+  @param  DevicePath   The device path from which the GUID will be extracted.
+
+  @retval EFI_GUID*    Pointer to the extracted GUID if successful.
+  @retval NULL         If the device path does not contain an FvFile node or 
+                       if any error occurs during processing.
+
+  Note:
+  - The function uses ConvertDevicePathToText to convert the device path to a 
+    string format.
+  - It assumes the GUID follows the "FvFile(" node in the string representation.
+  - Only applicable for device paths containing FvFile nodes.
 **/
-BOOLEAN
-IsBootManagerMenuAppFilePath (
-  EFI_DEVICE_PATH_PROTOCOL  *DevicePath
+EFI_GUID *
+ExtractGuidFromDevicePathString (
+  IN EFI_DEVICE_PATH_PROTOCOL  *DevicePath
   )
 {
-  EFI_HANDLE  FvHandle;
-  VOID        *NameGuid;
-  EFI_STATUS  Status;
-
-  Status = gBS->LocateDevicePath (&gEfiFirmwareVolume2ProtocolGuid, &DevicePath, &FvHandle);
-  if (!EFI_ERROR (Status)) {
-    NameGuid = EfiGetNameGuidFromFwVolDevicePathNode ((CONST MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)DevicePath);
-    if (NameGuid != NULL) {
-      return CompareGuid (NameGuid, &mBootMenuFile);
-    }
+  CHAR16        *DevicePathStr;
+  CHAR16        *GuidStart;
+  STATIC EFI_GUID ExtractedGuid;
+  RETURN_STATUS  Status;
+  
+  DevicePathStr = ConvertDevicePathToText(DevicePath, TRUE, TRUE);
+  if (DevicePathStr == NULL) {
+    DEBUG((DEBUG_ERROR, "Failed to convert device path to text\n"));
+    return NULL;
   }
 
-  return FALSE;
+  GuidStart = StrStr(DevicePathStr, L"FvFile(");
+  if (GuidStart == NULL) {
+    FreePool(DevicePathStr);
+    return NULL;
+  }
+
+  GuidStart += StrLen(L"FvFile(");
+  Status = StrToGuid(GuidStart, &ExtractedGuid);
+  if (RETURN_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to parse GUID from string: %r\n", Status));
+    FreePool(DevicePathStr);
+    return NULL;
+  }
+
+  FreePool(DevicePathStr);
+  return &ExtractedGuid;
 }
 
 /**
- *   Return the boot option number to the BootManagerMenuApp.
+  Removes duplicate boot options from the BootOrder variable and associated 
+  Boot#### variables. The function identifies duplicates based on matching GUIDs 
+  extracted from the FvFile nodes in the device paths. If no GUID is found, 
+  it falls back to comparing the Description and FilePath.
+
+  The function performs the following steps:
+  - Retrieves the current BootOrder and Boot#### variables.
+  - Iterates through the boot options, identifying duplicates by:
+    - Matching GUIDs from the device paths.
+    - Comparing the Description and FilePath if GUIDs are not present or do not match.
+  - Deletes duplicate boot options and updates the BootOrder variable.
+
+  @retval EFI_SUCCESS           Successfully removed duplicate boot options.
+  @retval EFI_NOT_FOUND         No boot options found to process.
+  @retval EFI_ERROR             If an error occurs during variable updates 
+                                or boot option deletion.
+
+  Note:
+  - The function uses ExtractGuidFromDevicePathString to extract GUIDs from the 
+    device paths for comparison.
+  - Duplicate entries are removed from both Boot#### variables and the BootOrder variable.
+  - Updates to BootOrder ensure a consistent boot order after removing duplicates.
+**/
+EFI_STATUS
+EFIAPI
+RemoveDuplicateBootOptions (
+  VOID
+)
+{
+    EFI_STATUS                     Status;
+    EFI_BOOT_MANAGER_LOAD_OPTION   *BootOptions;
+    UINTN                          BootOptionCount;
+    UINTN                          i, j;
+    UINT16                         *BootOrder;
+    UINTN                          BootOrderSize;
+    EFI_GUID                       *GuidI;
+    EFI_GUID                       *GuidJ;
+    BOOLEAN                        IsDuplicate;
+
+    IsDuplicate = FALSE;
+    BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
+    if (BootOptions == NULL) {
+        return EFI_NOT_FOUND;
+    }
+
+    Status = GetEfiGlobalVariable2(L"BootOrder", (VOID **)&BootOrder, &BootOrderSize);
+    if (EFI_ERROR(Status)) {
+        EfiBootManagerFreeLoadOptions(BootOptions, BootOptionCount);
+        return Status;
+    }
+    for (i = 0; i < BootOptionCount; i++) {
+        GuidI = ExtractGuidFromDevicePathString(BootOptions[i].FilePath);
+        for (j = i + 1; j < BootOptionCount; j++) {
+            GuidJ = ExtractGuidFromDevicePathString(BootOptions[j].FilePath);
+            if(GuidI ==NULL || GuidJ == NULL) {
+	        continue;
+	    }
+            if (CompareGuid(GuidI, GuidJ)) {
+                IsDuplicate = TRUE;
+            } else if (StrCmp(BootOptions[i].Description, BootOptions[j].Description) == 0 &&
+                CompareMem(BootOptions[i].FilePath, BootOptions[j].FilePath, sizeof(EFI_DEVICE_PATH_PROTOCOL)) == 0) {
+                IsDuplicate = TRUE;
+            }
+
+            if (IsDuplicate) {
+                Status = EfiBootManagerDeleteLoadOptionVariable(BootOptions[j].OptionNumber, LoadOptionTypeBoot);
+                if (EFI_ERROR(Status)) {
+                    DEBUG((DEBUG_ERROR, "Failed to delete duplicate BootOption %d: %r\n", BootOptions[j].OptionNumber, Status));
+                    continue;
+                }
+
+                for (UINTN k = 0; k < BootOrderSize / sizeof(UINT16); k++) {
+                    if (BootOrder[k] == BootOptions[j].OptionNumber) {
+                        for (UINTN m = k; m < (BootOrderSize / sizeof(UINT16)) - 1; m++) {
+                            BootOrder[m] = BootOrder[m + 1];
+                        }
+                        BootOrderSize -= sizeof(UINT16);
+                        break;
+                    }
+                }
+
+                for (UINTN k = j; k < BootOptionCount - 1; k++) {
+                    BootOptions[k] = BootOptions[k + 1];
+                }
+                BootOptionCount--;  
+                j--;
+            }
+        }
+    }
+
+    Status = gRT->SetVariable(
+        L"BootOrder",
+        &gEfiGlobalVariableGuid,
+        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+        BootOrderSize,
+        BootOrder
+    );
+   if (EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR, "Failed to update BootOrder variable: %r\n", Status));
+    }
+
+    FreePool(BootOrder);
+    EfiBootManagerFreeLoadOptions(BootOptions, BootOptionCount);
+
+    return EFI_SUCCESS;
+}
+/**
+ *   Return the boot option number.
  *
  *   If not found it in the current boot option, create a new one.
  *
- *   @retval OptionNumber   Return the boot option number to the BootManagerMenuApp.
+ *   @retval OptionNumber   Return the boot option number.
  *
 **/
 UINTN
-GetBootManagerMenuAppOption (
-  VOID
+GetOption (
+  IN CHAR16 *Description,
+  EFI_GUID  guid
   )
 {
   UINTN                         BootOptionCount;
   EFI_BOOT_MANAGER_LOAD_OPTION  *BootOptions;
   UINTN                         Index;
   UINTN                         OptionNumber;
-
-  OptionNumber = 0;
-
+  EFI_GUID  			*GuidFind;
+  EFI_GUID                      *Guidin;
+  
+  OptionNumber = -1;
+  Guidin = &guid;
   BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
 
   for (Index = 0; Index < BootOptionCount; Index++) {
-    if (IsBootManagerMenuAppFilePath (BootOptions[Index].FilePath)) {
-      OptionNumber = BootOptions[Index].OptionNumber;
-      break;
-    }
+      GuidFind = ExtractGuidFromDevicePathString(BootOptions[Index].FilePath);
+      if(GuidFind == NULL || Guidin == NULL) {
+	      continue;
+      } 
+      if(CompareGuid(Guidin, GuidFind)) {
+         OptionNumber = BootOptions[Index].OptionNumber;
+	 break;
+      }
   }
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
-
-  if (Index >= BootOptionCount) {
-    //
-    // If not found the BootManagerMenuApp, create it.
-    // 
-    OptionNumber = (UINT16)RegisterBootManagerMenuAppBootOption (&mBootMenuFile, L"UEFI BootManagerMenuApp", (UINTN)-1, FALSE);
+  if(OptionNumber == -1) {
+     OptionNumber = (UINT16)RegisterBootManagerMenuAppBootOption (Guidin, Description, (UINTN)-1, FALSE);
   }
-
   return OptionNumber;
 }
-
 
 /**
   Register the boot option And Keys.
@@ -759,15 +870,13 @@ PlatformRegisterOptionsAndKeys (
   EFI_STATUS                   Status;
   EFI_INPUT_KEY                Enter;
   EFI_INPUT_KEY                F2;
-  EFI_INPUT_KEY                Esc;
   EFI_INPUT_KEY                F7;
-  EFI_BOOT_MANAGER_LOAD_OPTION BootOption;
   UINTN               OptionNumber;
   //
   // Load platform boot options
   //
   GetPlatformOptions ();
-
+  RemoveDuplicateBootOptions();
   //
   // Register ENTER as CONTINUE key
   //
@@ -775,38 +884,18 @@ PlatformRegisterOptionsAndKeys (
   Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
   Status = EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
   ASSERT_EFI_ERROR (Status);
-
+  // F7: open boot device list menu
+  F7.ScanCode    = SCAN_F7;
+  F7.UnicodeChar = CHAR_NULL;
+  OptionNumber   = GetOption (L"UEFI BootManagerMenuApp",mBootMenuFile);
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F7, NULL);
   //
   // Map F2 and ESC to Boot Manager Menu
   //
   F2.ScanCode     = SCAN_F2;
   F2.UnicodeChar  = CHAR_NULL;
-  Esc.ScanCode    = SCAN_ESC;
-  Esc.UnicodeChar = CHAR_NULL;
-  Status = EfiBootManagerGetBootManagerMenu (&BootOption);
-  ASSERT_EFI_ERROR (Status);
-  Status = EfiBootManagerAddKeyOptionVariable (
-             NULL,
-             (UINT16) BootOption.OptionNumber,
-             0,
-             &F2,
-             NULL
-             );
-  ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
-  Status = EfiBootManagerAddKeyOptionVariable (
-             NULL,
-             (UINT16) BootOption.OptionNumber,
-             0,
-             &Esc,
-             NULL
-             );
-  ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
-
-  // F7: open boot device list menu
-  F7.ScanCode    = SCAN_F7;
-  F7.UnicodeChar = CHAR_NULL;
-  OptionNumber   = GetBootManagerMenuAppOption ();
-  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F7, NULL);
+  OptionNumber   = GetOption (L"UEFI UiApp",mUiApp);
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F2, NULL);
 }
 
 //
@@ -829,6 +918,8 @@ PlatformBootManagerBeforeConsole (
   VOID
   )
 {
+  RemoveDuplicateBootOptions();
+  PlatformRegisterOptionsAndKeys ();
   //
   // Signal EndOfDxe PI Event
   //
@@ -904,11 +995,6 @@ PlatformBootManagerBeforeConsole (
     (EFI_DEVICE_PATH_PROTOCOL *)&mSerialConsole,
     NULL
     );
-
-  //
-  // Register platform-specific boot options and keyboard shortcuts.
-  //
-  PlatformRegisterOptionsAndKeys ();
 }
 
 /**
@@ -1055,11 +1141,12 @@ PlatformBootManagerUnableToBoot (
   //
   if (!PcdGetBool (PcdEmuVariableNvModeEnable)) {
     if (NewBootOptionCount != OldBootOptionCount) {
-      DEBUG ((
+       DEBUG ((
         DEBUG_WARN,
         "%a: rebooting after refreshing all boot options\n",
         __func__
-        ));
+       ));
+
       gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
     }
   }

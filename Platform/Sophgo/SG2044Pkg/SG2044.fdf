@@ -218,6 +218,7 @@ INF  MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
 INF  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
 INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf
+INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 
 #
 # ACPI Support
@@ -228,10 +229,6 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf
   INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
   INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SG2044EvbAcpiTables.inf
 !endif
-
-# For F7 Boot Menu App
-INF  MdeModulePkg/Universal/LoadFileOnFv2/LoadFileOnFv2.inf
-INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 
 ################################################################################
 

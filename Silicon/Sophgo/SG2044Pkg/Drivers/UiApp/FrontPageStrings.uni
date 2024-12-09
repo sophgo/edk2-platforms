@@ -9,7 +9,7 @@
 #langdef   en-US "English"
 #langdef   en    "Standard English"
 
-#string STR_FRONT_PAGE_TITLE           #language en-US  "BISO MENU"
+#string STR_FRONT_PAGE_TITLE           #language en-US  "BIOS MENU"
 #string STR_FRONT_PAGE_COMPUTER_MODEL  #language en-US  ""
 #string STR_FRONT_PAGE_CPU_MODEL       #language en-US  ""
 #string STR_FRONT_PAGE_CPU_SPEED       #language en-US  ""

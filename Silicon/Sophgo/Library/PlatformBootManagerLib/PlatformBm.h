@@ -28,6 +28,7 @@
 #include <IndustryStandard/Pci22.h>
 #include <Guid/SerialPortLibVendor.h>
 #include <Guid/NonDiscoverableDevice.h>
+#include <Uefi/UefiBaseType.h>
 
 #define DP_NODE_LEN(Type) { (UINT8)sizeof (Type), (UINT8)(sizeof (Type) >> 8) }
 

@@ -57,6 +57,7 @@
   gEdkiiNonDiscoverableEhciDeviceGuid
   gEdkiiNonDiscoverableUhciDeviceGuid
   gEdkiiNonDiscoverableXhciDeviceGuid
+  gEfiGlobalVariableGuid
 
 [Protocols]
   gEfiDevicePathProtocolGuid

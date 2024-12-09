@@ -69,7 +69,7 @@ typedef struct {
 #pragma pack ()
 
 #define GET_SEGMENT(Address)    (((Address) >> 32) & 0xFFFF)
-#define GET_BUS(Address)        (((Address) >> 20) & 0x7F)
+#define GET_BUS(Address)        (((Address) >> 20) & 0xFF)
 #define GET_DEVICE(Address)     (((Address) >> 15) & 0x1F)
 #define GET_FUNCTION(Address)   (((Address) >> 12) & 0x07)
 #define GET_OFFSET(Address)     ((Address) & 0xFFF)
@@ -174,16 +174,6 @@ DwPcieDbiRead32 (
     )
 {
   return MmioRead32 (Pcie->DbiBase + Offset);
-}
-
-STATIC
-UINT16
-DwPcieDbiRead16 (
-    IN  DW_PCIE *Pcie,
-    IN  UINT32 Offset
-    )
-{
-  return MmioRead16 (Pcie->DbiBase + Offset);
 }
 
 STATIC
@@ -360,26 +350,25 @@ DwPcieEnableMaster (
   Value |= DW_PCIE_DBI_RO_WR_EN;
   DwPcieDbiWrite32(Pcie, DW_PCIE_MISC_CONTROL_1, Value);
 
-  /* program bus numbers */
+  /* init bus numbers, edk2 enumerate should set these parameters to reasonable value */
   DwPcieDbiWrite8(Pcie, PCI_BRIDGE_PRIMARY_BUS_REGISTER_OFFSET, 0);
-  DwPcieDbiWrite8(Pcie, PCI_BRIDGE_SECONDARY_BUS_REGISTER_OFFSET, 1);
-  DwPcieDbiWrite8(Pcie, PCI_BRIDGE_SUBORDINATE_BUS_REGISTER_OFFSET, PCI_MAX_BUS);
+  DwPcieDbiWrite8(Pcie, PCI_BRIDGE_SECONDARY_BUS_REGISTER_OFFSET, 0);
+  DwPcieDbiWrite8(Pcie, PCI_BRIDGE_SUBORDINATE_BUS_REGISTER_OFFSET, 0);
+  DwPcieDbiWrite8(Pcie, PCI_BRIDGE_SECONDARY_LATENCY_TIMER_OFFSET, 0);
+
+  /* reversion */
+  DwPcieDbiWrite8(Pcie, PCI_REVISION_ID_OFFSET, 0);
 
   /* class code */
   /* program interface, bridge program interface always 0 */
   DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET, 0);
   /* sub class code */
-  DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET + 1, PCI_CLASS_BRIDGE_P2P);
+  DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET + 1, PCI_CLASS_BRIDGE_HOST);
   /* base class code */
   DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET + 2, PCI_CLASS_BRIDGE);
 
-  Value = DwPcieDbiRead16 (Pcie, PCI_COMMAND_OFFSET);
-  Value |=
-    EFI_PCI_COMMAND_IO_SPACE |
-    EFI_PCI_COMMAND_MEMORY_SPACE |
-    EFI_PCI_COMMAND_BUS_MASTER |
-    EFI_PCI_COMMAND_SERR;
-  DwPcieDbiWrite16 (Pcie, PCI_COMMAND_OFFSET, Value);
+  /* edk2 enumerate will enable corresponding bits */
+  DwPcieDbiWrite16 (Pcie, PCI_COMMAND_OFFSET, 0);
 
   /* disable write permission for read-only registers */
   Value = DwPcieDbiRead32(Pcie, DW_PCIE_MISC_CONTROL_1);
@@ -998,7 +987,7 @@ PciSegmentWrite (
     else
       Type = DW_PCIE_ATU_TYPE_CFG1;
 
-    DwPcieSetAtuOutbound (DwPcie, 0, DW_PCIE_ATU_TYPE_CFG0, DwPcie->CfgBase, PciAddr, DwPcie->CfgSize);
+    DwPcieSetAtuOutbound (DwPcie, 0, Type, DwPcie->CfgBase, PciAddr, DwPcie->CfgSize);
 
     CfgBase = DwPcie->CfgBase;
   }

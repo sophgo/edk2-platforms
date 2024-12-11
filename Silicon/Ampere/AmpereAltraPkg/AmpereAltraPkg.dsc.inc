@@ -12,15 +12,8 @@
 [BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER]
   GCC:*_*_AARCH64_DLINK_FLAGS = -z common-page-size=0x10000
 
-[BuildOptions]
-  GCC:RELEASE_*_*_CC_FLAGS  = -DMDEPKG_NDEBUG
-
 [LibraryClasses.common]
-!if $(TARGET) == RELEASE
-  DebugLib|MdePkg/Library/BaseDebugLibNull/BaseDebugLibNull.inf
-!else
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
-!endif
   DebugPrintErrorLevelLib|MdePkg/Library/BaseDebugPrintErrorLevelLib/BaseDebugPrintErrorLevelLib.inf
 
   BaseLib|MdePkg/Library/BaseLib/BaseLib.inf
@@ -205,9 +198,6 @@
   PerformanceLib|MdeModulePkg/Library/PeiPerformanceLib/PeiPerformanceLib.inf
   ArmGicArchLib|ArmPkg/Library/ArmGicArchSecLib/ArmGicArchSecLib.inf
 
-  # ARM platforms have SEC modules with standard entry points, so we can generically link StackCheckLib
-  NULL|MdePkg/Library/StackCheckLibNull/StackCheckLibNull.inf
-
 [LibraryClasses.common.PEI_CORE]
   HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
   PeiServicesLib|MdePkg/Library/PeiServicesLib/PeiServicesLib.inf
@@ -351,7 +341,7 @@
   # ASSERT_BREAKPOINT_ENABLED  0x10
   # ASSERT_DEADLOOP_ENABLED    0x20
 !if $(TARGET) == RELEASE
-  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x21
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x23
 !else
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2F
 !endif
@@ -604,7 +594,6 @@
       NULL|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf
   }
   MdeModulePkg/Universal/ReportStatusCodeRouter/Pei/ReportStatusCodeRouterPei.inf
-  MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
   Silicon/Ampere/AmpereAltraPkg/Drivers/BootProgress/BootProgressPeim/BootProgressPeim.inf
 
   #
@@ -636,7 +625,6 @@
       NULL|MdeModulePkg/Library/DxeCrc32GuidedSectionExtractLib/DxeCrc32GuidedSectionExtractLib.inf
   }
   MdeModulePkg/Universal/ReportStatusCodeRouter/RuntimeDxe/ReportStatusCodeRouterRuntimeDxe.inf
-  MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
   Silicon/Ampere/AmpereAltraPkg/Drivers/BootProgress/BootProgressDxe/BootProgressDxe.inf
 
   #
@@ -839,7 +827,7 @@
       HandleParsingLib|ShellPkg/Library/UefiHandleParsingLib/UefiHandleParsingLib.inf
       BcfgCommandLib|ShellPkg/Library/UefiShellBcfgCommandLib/UefiShellBcfgCommandLib.inf
     <PcdsFixedAtBuild>
-      gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0xFF
+      gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x3F
       gEfiShellPkgTokenSpaceGuid.PcdShellLibAutoInitialize|FALSE
       gEfiMdePkgTokenSpaceGuid.PcdUefiLibMaxPrintBufferSize|8000
   }

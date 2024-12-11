@@ -47,7 +47,11 @@
   #  DEBUG_VERBOSE   0x00400000  // Detailed debug messages that may
   #                              // significantly impact boot performance
   #  DEBUG_ERROR     0x80000000  // Error
-  DEFINE DEBUG_PRINT_ERROR_LEVEL = 0x8000000F
+  !if $(TARGET) == RELEASE
+    DEFINE DEBUG_PRINT_ERROR_LEVEL = 0x80000002
+  !else
+    DEFINE DEBUG_PRINT_ERROR_LEVEL = 0x8000000F
+  !endif
   DEFINE FIRMWARE_VER            = 0.01.001
   DEFINE SECURE_BOOT_ENABLE      = TRUE
   DEFINE TPM2_ENABLE             = TRUE
@@ -235,6 +239,9 @@
   Platform/Ampere/JadePkg/AcpiTables/AcpiTables.inf
   Platform/Ampere/JadePkg/Ac02AcpiTables/Ac02AcpiTables.inf
 
+  MdeModulePkg/Universal/StatusCodeHandler/Pei/StatusCodeHandlerPei.inf
+  MdeModulePkg/Universal/StatusCodeHandler/RuntimeDxe/StatusCodeHandlerRuntimeDxe.inf
+
   #
   # PCIe
   #
@@ -277,6 +284,11 @@
   # System Firmware Update
   #
   Silicon/Ampere/AmpereAltraPkg/Drivers/SystemFirmwareUpdateDxe/SystemFirmwareUpdateDxe.inf
+
+  #
+  # In-band NVPARAM Access
+  #
+  Silicon/Ampere/AmpereAltraPkg/Drivers/NVParamRuntimeDxe/NVParamRuntimeDxe.inf
 
   #
   # Redfish

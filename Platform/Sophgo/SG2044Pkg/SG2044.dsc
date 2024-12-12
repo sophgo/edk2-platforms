@@ -689,6 +689,11 @@
   !endif
 
   #
+  # ASPEED AST2500 GOP driver
+  #
+  Drivers/ASpeed/ASpeedGopBinPkg/ASpeedAst2500GopDxe.inf
+
+  #
   # FAT filesystem + GPT/MBR partitioning + UDF filesystem
   #
   FatPkg/EnhancedFatDxe/Fat.inf

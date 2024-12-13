@@ -1,0 +1,38 @@
+// *++
+// This resource file provides the Unicode string definitions used by the SetDateAndTime UEFI driver.
+//
+// Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
+// --*/
+
+#langdef en-US  "English"
+
+// Unicode strings for SetDateAndTime driver
+#langdef en-US "English"
+#string STR_FORM_SET_TITLE        #language en-US "Set Date and Time"
+#string STR_FORM_SET_TITLE_HELP   #language en-US "This form allows you to set the system date and time."
+#string STR_FORM_TITLE            #language en-US "Date and Time Settings"
+#string STR_DATE_SAMPLE_TITLE     #language en-US "Set System Date"
+#string STR_DATE_SAMPLE_HELP      #language en-US "Please specify the system date in the format MM/DD/YYYY."
+#string STR_TIME_SAMPLE_TITLE     #language en-US "Set System Time"
+#string STR_TIME_SAMPLE_HELP      #language en-US "Please specify the system time in the format HH:MM:SS."
+#string STR_LABEL_START           #language en-US "Dynamic Controls Start"
+#string STR_LABEL_END             #language en-US "Dynamic Controls End"
+#string STR_DEVICE_PATH           #language en-US "Device Path for Set Date and Time"
+#string STR_YEAR_PROMPT           #language en-US  "Year"
+#string STR_YEAR_HELP             #language en-US  "Enter the year (e.g., 2024)."
+#string STR_MONTH_PROMPT          #language en-US  "Month"
+#string STR_MONTH_HELP            #language en-US  "Enter the month (1-12)."
+#string STR_DAY_PROMPT            #language en-US  "Day"
+#string STR_DAY_HELP              #language en-US  "Enter the day (1-31)."
+#string STR_HOUR_PROMPT           #language en-US  "Hour"
+#string STR_HOUR_HELP             #language en-US  "Enter the hour (0-23)."
+#string STR_MINUTE_PROMPT         #language en-US  "Minute"
+#string STR_MINUTE_HELP           #language en-US  "Enter the minute (0-59)."
+#string STR_SECOND_PROMPT         #language en-US  "Second"
+#string STR_SECOND_HELP           #language en-US  "Enter the second (0-59)."
+#string STR_SAVE_PROMPT           #language en-US  "Save"
+#string STR_SAVE_HELP             #language en-US  "Save the current date and time settings."
+#string STR_DATE_FORMAT_LABEL     #language en-US   "Year-Month-Day"
+#string STR_TIME_FORMAT_LABEL     #language en-US   "Hour-Minute-Second"
+// Error messages
+#string STR_INVALID_DATE_ERROR    #language en-US  "Invalid date entered. Please check your input."

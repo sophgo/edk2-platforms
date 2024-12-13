@@ -1,0 +1,63 @@
+## @file
+#
+# This driver shows how HII protocol, VFR and UNI files are used to create a HII 
+# driver which can be dipslayed and configured by a UEFI HII Form Browser.
+#
+# Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = SetDateAndTime
+  MODULE_UNI_FILE                = SetDateAndTime.uni
+  FILE_GUID                      = f77fd9a4-ac62-4a6d-b670-6e550d7a56ec
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = SetDateAndTimeInit
+  UNLOAD_IMAGE                   = SetDateAndTimeUnload
+
+[Sources]
+  SetDateAndTime.c
+  SetDateAndTime.h
+  ShowTimeVfr.vfr
+  SetDateAndTimeStrings.uni
+  SetTimeNv.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  BaseLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiRuntimeServicesTableLib
+  BaseMemoryLib
+  DebugLib
+  HiiLib
+  PrintLib
+  UefiLib
+  DevicePathLib
+  UefiHiiServicesLib
+
+[Guids]
+  gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
+  gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID
+  gDriverSampleInventoryGuid
+  gEfiIfrRefreshIdOpGuid
+  gDriverSampleFormSetGuid
+
+[Protocols]
+  gEfiDevicePathProtocolGuid
+  gEfiHiiConfigRoutingProtocolGuid              ## CONSUMES
+  gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
+  gEfiHiiStringProtocolGuid                  ## CONSUMES
+  gEfiHiiPackageListProtocolGuid             ## CONSUMES
+
+[Depex]
+  gEfiHiiConfigRoutingProtocolGuid  AND
+  gEfiHiiDatabaseProtocolGuid       AND
+  gEfiVariableArchProtocolGuid      AND
+  gEfiVariableWriteArchProtocolGuid AND
+  gEfiPciIoProtocolGuid

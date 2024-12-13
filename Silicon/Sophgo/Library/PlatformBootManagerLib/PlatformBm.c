@@ -1039,13 +1039,9 @@ PlatformBootManagerAfterConsole (
   //
   Key.ScanCode    = SCAN_NULL;
   Key.UnicodeChar = L's';
-  PlatformRegisterFvBootOption (
-    &gUefiShellFileGuid, 
-    L"UEFI Shell",
-    LOAD_OPTION_ACTIVE,
-    &Key);
+  UINTN OptionNumber   = GetOption (L"UEFI Shell", gUefiShellFileGuid);
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &Key, NULL);
 }
-
 /**
   This function is called each second during the boot manager waits the
   timeout.

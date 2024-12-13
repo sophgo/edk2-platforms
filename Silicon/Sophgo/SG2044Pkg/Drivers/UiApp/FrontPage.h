@@ -31,6 +31,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/HiiConfigAccess.h> 
 #include <stdio.h>    
 #include "FrontPageNVDataStruc.h"
+#include "FrontPageCustomizedUiSupport.h"
 
 #define CONFIG_SIZE      1000           
 #define MAX_HW_NUMS     500           
@@ -82,7 +83,6 @@ typedef struct {
   EFI_HANDLE                        DriverHandle[2];
   EFI_STRING_ID                     *LanguageToken;
   EFI_HII_CONFIG_ACCESS_PROTOCOL    ConfigAccess;
-  TIME_DATA                         TimeData;
   EFI_HII_CONFIG_ROUTING_PROTOCOL   *HiiConfigRouting;
   EFI_GUID                          *FormSetGuid;   
   CHAR16                            *VariableName;    
@@ -250,6 +250,11 @@ UpdateHiiData (
     VOID
 );
 
+EFI_STATUS 
+SetupTimerEvent (
+ EFI_HII_HANDLE HiiHandle
+);
+
 VOID 
 UpdateFrontPageForm ( 
 VOID
@@ -269,6 +274,11 @@ VOID
 AppendAltCfgString (
   IN OUT EFI_STRING  *RequestResult,
   IN     EFI_STRING  ConfigRequestHdr
+);
+
+VOID
+GetTimeData (
+  VOID
 );
 
 #endif // _FRONT_PAGE_H_

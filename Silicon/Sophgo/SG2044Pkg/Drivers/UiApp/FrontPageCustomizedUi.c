@@ -28,16 +28,6 @@ UiCustomizeFrontPage (
   )
 {
   //
-  // Create "Select Language" menu with Oneof opcode.
-  //
-  UiCreateLanguageMenu (HiiHandle, StartOpCodeHandle);
-
-  //
-  // Create empty line.
-  //
-  UiCreateEmptyLine (HiiHandle, StartOpCodeHandle);
-
-  //
   // Find third party drivers which need to be shown in the front page.
   //
   UiListThirdPartyDrivers (HiiHandle, &gEfiIfrFrontPageGuid, NULL, StartOpCodeHandle);

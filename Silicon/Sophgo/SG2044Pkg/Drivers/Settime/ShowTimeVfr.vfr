@@ -1,0 +1,70 @@
+/** @file
+  VFR file for SetDateAndTime driver.
+  This file defines the formset, form, and labels required for dynamic
+  insertion of time and date controls.
+
+  Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
+**/
+#include "SetTimeNv.h"
+
+formset
+  guid      = TIME_SET_FORMSET_GUID,
+  title     = STRING_TOKEN(STR_FORM_SET_TITLE),
+  help      = STRING_TOKEN(STR_FORM_SET_TITLE_HELP),
+  classguid = TIME_SET_FORMSET_GUID,
+ 
+  varstore TIME_DATA,
+    varid = VAR_DYNAMIC_TIME_VARID,
+    name  = DynamicTimeData,
+    guid  = TIME_SET_FORMSET_GUID; 
+  form formid = TIME_SET_FORM_ID,
+    title = STRING_TOKEN(STR_FORM_TITLE);
+
+    subtitle text = STRING_TOKEN(STR_DATE_FORMAT_LABEL);
+    numeric varid = DynamicTimeData.Year,
+        prompt = STRING_TOKEN(STR_YEAR_PROMPT),
+        help   = STRING_TOKEN(STR_YEAR_HELP),
+        minimum = 1900,
+        maximum = 2099,
+        step    = 1,
+    endnumeric;
+    numeric varid = DynamicTimeData.Month,
+        prompt = STRING_TOKEN(STR_MONTH_PROMPT),
+        help   = STRING_TOKEN(STR_MONTH_HELP),
+        minimum = 1,
+        maximum = 12,
+        step    = 1,
+    endnumeric;
+    numeric varid = DynamicTimeData.Day,
+        prompt = STRING_TOKEN(STR_DAY_PROMPT),
+        help   = STRING_TOKEN(STR_DAY_HELP),
+        minimum = 1,
+        maximum = 31,
+        step    = 1,
+    endnumeric;
+    subtitle text = STRING_TOKEN(STR_TIME_FORMAT_LABEL);
+    numeric varid = DynamicTimeData.Hour,
+            prompt = STRING_TOKEN(STR_HOUR_PROMPT),
+            help   = STRING_TOKEN(STR_HOUR_HELP),
+            minimum = 0,
+            maximum = 23,
+            step    = 1,
+    endnumeric;
+    numeric varid = DynamicTimeData.Minute,
+            prompt = STRING_TOKEN(STR_MINUTE_PROMPT),
+            help   = STRING_TOKEN(STR_MINUTE_HELP),
+            minimum = 0,
+            maximum = 59,
+    	    step    = 1,
+    endnumeric;
+    numeric varid = DynamicTimeData.Second,
+            prompt = STRING_TOKEN(STR_SECOND_PROMPT),
+            help   = STRING_TOKEN(STR_SECOND_HELP),
+            minimum = 0,
+            maximum = 59,
+            step    = 1,
+    endnumeric;
+
+endform;  
+
+endformset;

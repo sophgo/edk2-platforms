@@ -59,7 +59,7 @@ Scope(_SB)
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
     Name (_SEG, 0)         // Segment of this Root complex
     Name (_BBN, 0)         // Base Bus Number
-    Name (_CCA, 0)
+    Name (_CCA, 1)
 
     // PCI Routing Table
     Name (_PRT, Package () {
@@ -220,7 +220,7 @@ Scope(_SB)
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
     Name (_SEG, 1)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
-    Name (_CCA, 0)
+    Name (_CCA, 1)
 
     Name (_PRT, Package (){
       Package () {0xFFFF, 0, 0, 65},         // INT_A
@@ -379,7 +379,7 @@ Scope(_SB)
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
     Name (_SEG, 2)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
-    Name (_CCA, 0)
+    Name (_CCA, 1)
 
     // PCI Routing Table
     Name (_PRT, Package () {
@@ -539,7 +539,7 @@ Scope(_SB)
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
     Name (_SEG, 3)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
-    Name (_CCA, 0)
+    Name (_CCA, 1)
 
     // PCI Routing Table
     Name (_PRT, Package () {
@@ -699,7 +699,7 @@ Scope(_SB)
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
     Name (_SEG, 0x4)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
-    Name (_CCA, 0)
+    Name (_CCA, 1)
 
     // PCI Routing Table
     Name (_PRT, Package () {

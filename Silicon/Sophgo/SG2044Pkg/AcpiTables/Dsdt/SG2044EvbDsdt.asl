@@ -19,7 +19,7 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
   include ("Mmc.asl")
 //  include ("Ethernet.asl")
   include ("Intc.asl")
-//  include ("Pci.asl")
+  include ("Pci.asl")
 
   Scope (\_SB_.I2C1)
   {

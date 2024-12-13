@@ -1,0 +1,45 @@
+#/** @file
+#
+#    Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#
+#    SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DwSpiDxe
+  FILE_GUID                      = 5516A771-C139-49BC-B243-7204CDA4577D
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DwSpiEntryPoint
+  UNLOAD_IMAGE                   = DwSpiUnload
+
+[Sources]
+  DwSpiDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  UefiBootServicesTableLib
+  UefiLib
+  DebugLib
+  IoLib
+  MemoryAllocationLib
+  BaseLib
+  BaseMemoryLib
+  TimerLib
+
+[Guids]
+
+[Protocols]
+  gFdtClientProtocolGuid          ## CONSUMES
+  gEfiCpuArchProtocolGuid         ## CONSUMES
+  gSophgoSpiProtocolGuid          ## PRODUCES
+
+[Depex]
+  TRUE

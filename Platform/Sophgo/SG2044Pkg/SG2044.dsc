@@ -582,6 +582,7 @@
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
   Silicon/Sophgo/Drivers/Net/StmmacMdioDxe/StmmacMdioDxe.inf
+  Silicon/Sophgo/Drivers/DwSpiDxe/DwSpiDxe.inf
 
   #
   # RISC-V Core module

@@ -57,7 +57,4 @@
 
 [Depex]
   gEfiHiiConfigRoutingProtocolGuid  AND
-  gEfiHiiDatabaseProtocolGuid       AND
-  gEfiVariableArchProtocolGuid      AND
-  gEfiVariableWriteArchProtocolGuid AND
-  gEfiPciIoProtocolGuid
+  gEfiHiiDatabaseProtocolGuid       

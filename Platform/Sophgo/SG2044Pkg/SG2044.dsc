@@ -781,6 +781,8 @@
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
   Silicon/Sophgo/SG2044Pkg/Drivers/Settime/ShowTime.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
+
   #
   # ACPI Support
   #

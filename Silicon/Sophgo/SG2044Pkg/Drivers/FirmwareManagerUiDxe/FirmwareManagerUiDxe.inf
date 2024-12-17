@@ -1,0 +1,65 @@
+## @file
+#  Firmware manager menu.
+#
+#  Copyright (c) 2024, SOPHGO Technologies Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = FirmwareManagerUiDxe
+  MODULE_UNI_FILE                = FirmwareManagerUiDxe.uni
+  FILE_GUID                      = E1A86286-7806-4662-98BA-3DAA97C66B5B
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = FirmwareManagerDriverEntryPoint
+  UNLOAD_IMAGE                   = FirmwareManagerDriverUnload
+
+[Sources]
+  FirmwareManager.c
+  FirmwareManager.h
+  FirmwareManagerFormGuid.h
+  FirmwareManagerVfr.vfr
+  FirmwareManagerStrings.uni
+  FirmwareManagerUiDxe.c
+
+[Packages]
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DxeServicesLib
+  FileExplorerLib
+  HiiLib
+  MemoryAllocationLib
+  PrintLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+  ResetSystemLib
+
+[Guids]
+  gEfiHiiPlatformSetupFormsetGuid
+  gEfiIfrFrontPageGuid                        ## CONSUMES ## GUID
+
+[Protocols]
+  gEfiDevicePathProtocolGuid                  ## CONSUMES
+  gEfiHiiConfigAccessProtocolGuid             ## CONSUMES
+  gEfiHiiConfigRoutingProtocolGuid            ## CONSUMES
+  gSophgoSpiMasterProtocolGuid                ## CONSUMES
+  gSophgoNorFlashProtocolGuid                 ## CONSUMES
+
+[Pcd]
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
+
+[Depex]
+  gSophgoSpiMasterProtocolGuid      AND
+  gSophgoNorFlashProtocolGuid
+

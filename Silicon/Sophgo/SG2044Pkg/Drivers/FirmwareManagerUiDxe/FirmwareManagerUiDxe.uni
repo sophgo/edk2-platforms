@@ -1,0 +1,16 @@
+// /** @file
+// The application to show the Firmware Manager Menu.
+//
+// The application pops up a menu showing the firmware information by and user
+// can select a file to update firmware.
+//
+// Copyright (c) 2024, SOPHGO Technologies Inc. All rights reserved.<BR>
+//
+// SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+// **/
+
+#string STR_MODULE_ABSTRACT             #language en-US "The application to show the Firmware Manager Menu"
+
+#string STR_MODULE_DESCRIPTION          #language en-US "The application pops up a menu to show firmware information and initiate a firmware update"
+

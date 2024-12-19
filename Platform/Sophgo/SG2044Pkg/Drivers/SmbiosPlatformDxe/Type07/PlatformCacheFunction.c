@@ -34,57 +34,116 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformCache) {
     if (EFI_ERROR (Status)) {
       return Status;
     }
-
     UnicodeStr = HiiGetString(mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], NULL);
     if (!StrCmp(UnicodeStr, L"L1 Instruction Cache")) {
       if (IniGetValueBySectionAndName ("CPU", "l1-i-cache-size", value) == 0) {
-        Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
-        if (RETURN_ERROR (Status)) {
-          return RETURN_UNSUPPORTED;
+    	Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
+    	if (RETURN_ERROR (Status)) {
+      	return RETURN_UNSUPPORTED;
+    	}
+
+    	UINT16 InstalledSizeValue;
+    	UINT64 Bytes = Uint * 1024ULL;
+    	UINT32 Bytes32 = (Bytes > MAX_UINT32) ? MAX_UINT32 : (UINT32)Bytes;
+
+    	if (Uint <= 0x7FFF) {
+      	  InstalledSizeValue = (UINT16)Uint;
+    	} else {
+      	  UINT64 Increments = Uint / 64;
+      	if (Increments > 0x7FFF) {
+          Increments = 0x7FFF;
+      	}
+      	InstalledSizeValue = (UINT16)(0x8000 | (UINT16)Increments);
         }
-        InputData->MaximumCacheSize = Uint;
-        InputData->InstalledSize = Uint;
-        InputData->MaximumCacheSize2 = Uint;
-        InputData->InstalledSize2 = Uint;
+
+    	InputData->MaximumCacheSize  = InstalledSizeValue;
+    	InputData->InstalledSize     = InstalledSizeValue;
+    	InputData->MaximumCacheSize2 = Bytes32;
+    	InputData->InstalledSize2    = Bytes32;
+    	}
       }
-    }
 
     if (!StrCmp(UnicodeStr, L"L1 Data Cache")) {
       if (IniGetValueBySectionAndName ("CPU", "l1-d-cache-size", value) == 0) {
-        Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
-        if (RETURN_ERROR (Status)) {
-          return RETURN_UNSUPPORTED;
-        }
-        InputData->MaximumCacheSize = Uint;
-        InputData->InstalledSize = Uint;
-        InputData->MaximumCacheSize2 = Uint;
-        InputData->InstalledSize2 = Uint;
-      }
-    }
+    	Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
+    	if (RETURN_ERROR (Status)) {
+     	 return RETURN_UNSUPPORTED;
+    	}
 
-    if (!StrCmp(UnicodeStr, L"L2 Cache")) {
-      if (IniGetValueBySectionAndName ("CPU", "l2-cache-size", value) == 0) {
-        Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
-        if (RETURN_ERROR (Status)) {
-          return RETURN_UNSUPPORTED;
-        }
-        InputData->MaximumCacheSize = Uint;
-        InputData->InstalledSize = Uint;
-        InputData->MaximumCacheSize2 = Uint;
-        InputData->InstalledSize2 = Uint;
-      }
-    }
+    	UINT16 InstalledSizeValue;
+    	UINT64 Bytes = Uint * 1024ULL;
+    	UINT32 Bytes32 = (Bytes > MAX_UINT32) ? MAX_UINT32 : (UINT32)Bytes;
 
-    if (!StrCmp(UnicodeStr, L"L3 Cache (SLC)")) {
-      if (IniGetValueBySectionAndName ("CPU", "l3-cache-size", value) == 0) {
-        Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
-        if (RETURN_ERROR (Status)) {
-          return RETURN_UNSUPPORTED;
+    	if (Uint <= 0x7FFF) {
+      	InstalledSizeValue = (UINT16)Uint;
+    	} else {
+      	UINT64 Increments = Uint / 64;
+      	if (Increments > 0x7FFF) {
+        Increments = 0x7FFF;
         }
-        InputData->MaximumCacheSize = Uint;
-        InputData->InstalledSize = Uint;
-        InputData->MaximumCacheSize2 = Uint;
-        InputData->InstalledSize2 = Uint;
+        InstalledSizeValue = (UINT16)(0x8000 | (UINT16)Increments);
+       }
+
+    	InputData->MaximumCacheSize  = InstalledSizeValue;
+    	InputData->InstalledSize     = InstalledSizeValue;
+    	InputData->MaximumCacheSize2 = Bytes32;
+    	InputData->InstalledSize2    = Bytes32;
+      }
+   }	
+
+   if (!StrCmp(UnicodeStr, L"L2 Cache")) {
+     if (IniGetValueBySectionAndName ("CPU", "l2-cache-size", value) == 0) {
+    	Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
+    	if (RETURN_ERROR (Status)) {
+      	  return RETURN_UNSUPPORTED;
+    	}
+
+    	UINT16 InstalledSizeValue;
+    	UINT64 Bytes = Uint * 1024ULL;
+    	UINT32 Bytes32 = (Bytes > MAX_UINT32) ? MAX_UINT32 : (UINT32)Bytes;
+
+    	if (Uint <= 0x7FFF) {
+      	InstalledSizeValue = (UINT16)Uint;
+    	} else {
+      	UINT64 Increments = Uint / 64;
+      	if (Increments > 0x7FFF) {
+       	 Increments = 0x7FFF;
+      	}
+      	InstalledSizeValue = (UINT16)(0x8000 | (UINT16)Increments);
+    	}	
+
+    	InputData->MaximumCacheSize  = InstalledSizeValue;
+    	InputData->InstalledSize     = InstalledSizeValue;
+    	InputData->MaximumCacheSize2 = Bytes32;
+    	InputData->InstalledSize2    = Bytes32;
+      }
+   }
+
+  if (!StrCmp(UnicodeStr, L"L3 Cache (SLC)")) {
+    if (IniGetValueBySectionAndName ("CPU", "l3-cache-size", value) == 0) {
+    	Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
+    	if (RETURN_ERROR (Status)) {
+      	  return RETURN_UNSUPPORTED;
+    	}
+
+    	UINT16 InstalledSizeValue;
+    	UINT64 Bytes = Uint * 1024ULL;
+    	UINT32 Bytes32 = (Bytes > MAX_UINT32) ? MAX_UINT32 : (UINT32)Bytes; 
+
+    	if (Uint <= 0x7FFF) {
+      	InstalledSizeValue = (UINT16)Uint; 
+    	} else {
+      	UINT64 Increments = Uint / 64;
+      	if (Increments > 0x7FFF) {
+        Increments = 0x7FFF;
+      	}
+      	InstalledSizeValue = (UINT16)(0x8000 | (UINT16)Increments);
+    	}
+
+    	InputData->MaximumCacheSize  = InstalledSizeValue;
+    	InputData->InstalledSize     = InstalledSizeValue;
+    	InputData->MaximumCacheSize2 = Bytes32;
+    	InputData->InstalledSize2    = Bytes32;
       }
     }
 

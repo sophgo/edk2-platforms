@@ -16,6 +16,50 @@
 #include <Library/PrintLib.h>
 
 #include "SmbiosPlatformDxe.h"
+EFI_STATUS
+UpdateCacheSize(
+  IN CHAR16          *UnicodeStr,
+  IN CHAR8           *IniField,
+  SMBIOS_TABLE_TYPE7  *InputData
+  )
+{
+  EFI_STATUS Status;
+  CHAR8      value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  CHAR8      *End;
+  UINT64     Uint;
+  UINT16     InstalledSizeValue;
+  UINT64     Bytes;
+  UINT32     Bytes32;
+
+  if (IniGetValueBySectionAndName("CPU", IniField, value) == 0) {
+    Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
+    if (RETURN_ERROR(Status)) {
+      return RETURN_UNSUPPORTED;
+    }
+
+    Bytes = Uint * 1024ULL;
+    Bytes32 = (Bytes > MAX_UINT32) ? MAX_UINT32 : (UINT32)Bytes;
+
+    if (Uint <= 0x7FFF) {
+      InstalledSizeValue = (UINT16)Uint;
+    } else {
+      UINT64 Increments = Uint / 64;
+      if (Increments > 0x7FFF) {
+        Increments = 0x7FFF;
+      }
+      InstalledSizeValue = (UINT16)(0x8000 | (UINT16)Increments);
+    }
+
+    InputData->MaximumCacheSize  = InstalledSizeValue;
+    InputData->InstalledSize     = InstalledSizeValue;
+    InputData->MaximumCacheSize2 = Bytes32;
+    InputData->InstalledSize2    = Bytes32;
+
+    return EFI_SUCCESS;
+  }
+
+  return EFI_NOT_FOUND;
+}
 
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformCache) {
   EFI_STATUS          Status;
@@ -23,9 +67,6 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformCache) {
   SMBIOS_TABLE_TYPE7  *Type7Record;
   SMBIOS_TABLE_TYPE7  *InputData;
   CHAR16              *UnicodeStr;
-  CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  CHAR8		      *End;
-  UINT64	       Uint;
   InputData     = (SMBIOS_TABLE_TYPE7 *)RecordData;
   InputStrToken = (STR_TOKEN_INFO *)StrToken;
 
@@ -34,57 +75,32 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformCache) {
     if (EFI_ERROR (Status)) {
       return Status;
     }
-
     UnicodeStr = HiiGetString(mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], NULL);
     if (!StrCmp(UnicodeStr, L"L1 Instruction Cache")) {
-      if (IniGetValueBySectionAndName ("CPU", "l1-i-cache-size", value) == 0) {
-        Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
-        if (RETURN_ERROR (Status)) {
-          return RETURN_UNSUPPORTED;
-        }
-        InputData->MaximumCacheSize = Uint;
-        InputData->InstalledSize = Uint;
-        InputData->MaximumCacheSize2 = Uint;
-        InputData->InstalledSize2 = Uint;
+      Status = UpdateCacheSize(UnicodeStr, "l1-i-cache-size", InputData);
+      if (RETURN_ERROR(Status)) {
+        return Status;
       }
     }
 
     if (!StrCmp(UnicodeStr, L"L1 Data Cache")) {
-      if (IniGetValueBySectionAndName ("CPU", "l1-d-cache-size", value) == 0) {
-        Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
-        if (RETURN_ERROR (Status)) {
-          return RETURN_UNSUPPORTED;
-        }
-        InputData->MaximumCacheSize = Uint;
-        InputData->InstalledSize = Uint;
-        InputData->MaximumCacheSize2 = Uint;
-        InputData->InstalledSize2 = Uint;
+      Status = UpdateCacheSize(UnicodeStr, "l1-d-cache-size", InputData);
+      if (RETURN_ERROR(Status)) {
+        return Status;
       }
     }
 
     if (!StrCmp(UnicodeStr, L"L2 Cache")) {
-      if (IniGetValueBySectionAndName ("CPU", "l2-cache-size", value) == 0) {
-        Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
-        if (RETURN_ERROR (Status)) {
-          return RETURN_UNSUPPORTED;
-        }
-        InputData->MaximumCacheSize = Uint;
-        InputData->InstalledSize = Uint;
-        InputData->MaximumCacheSize2 = Uint;
-        InputData->InstalledSize2 = Uint;
+      Status = UpdateCacheSize(UnicodeStr, "l2-cache-size", InputData);
+      if (RETURN_ERROR(Status)) {
+        return Status;
       }
     }
 
     if (!StrCmp(UnicodeStr, L"L3 Cache (SLC)")) {
-      if (IniGetValueBySectionAndName ("CPU", "l3-cache-size", value) == 0) {
-        Status = AsciiStrDecimalToUint64S (value, &End, &Uint);
-        if (RETURN_ERROR (Status)) {
-          return RETURN_UNSUPPORTED;
-        }
-        InputData->MaximumCacheSize = Uint;
-        InputData->InstalledSize = Uint;
-        InputData->MaximumCacheSize2 = Uint;
-        InputData->InstalledSize2 = Uint;
+      Status = UpdateCacheSize(UnicodeStr, "l3-cache-size", InputData);
+      if (RETURN_ERROR(Status)) {
+        return Status;
       }
     }
 
@@ -93,11 +109,10 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformCache) {
       (VOID *)&InputData,
       sizeof (SMBIOS_TABLE_TYPE7),
       InputStrToken
-      );
+    );
     if (Type7Record == NULL) {
       return EFI_OUT_OF_RESOURCES;
     }
-
     Status = SmbiosPlatformDxeAddRecord ((UINT8 *)Type7Record, NULL);
     if (EFI_ERROR (Status)) {
       FreePool (Type7Record);

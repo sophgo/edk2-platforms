@@ -210,6 +210,12 @@ IniGetValueBySectionAndName (
     CHAR8 *Value
 );
 
+EFI_STATUS
+UpdateCacheSize(
+  IN CHAR16          *UnicodeStr,
+  IN CHAR8           *IniField,
+  SMBIOS_TABLE_TYPE7  *InputData
+);
 //
 // Data Table Array
 //

@@ -87,6 +87,7 @@ INF  Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
 INF  Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
 INF  Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 INF  Silicon/Sophgo/Drivers/DwSpiDxe/DwSpiDxe.inf
+INF  Silicon/Sophgo/Drivers/DwGpioDxe/DwGpioDxe.inf
 
 # RISC-V Core Drivers
 INF  UefiCpuPkg/CpuTimerDxeRiscV64/CpuTimerDxeRiscV64.inf

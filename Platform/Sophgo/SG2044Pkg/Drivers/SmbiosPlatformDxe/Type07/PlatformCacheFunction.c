@@ -78,28 +78,28 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformCache) {
     UnicodeStr = HiiGetString(mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], NULL);
     if (!StrCmp(UnicodeStr, L"L1 Instruction Cache")) {
       Status = UpdateCacheSize(UnicodeStr, "l1-i-cache-size", InputData);
-      if (RETURN_ERROR(Status)) {
+      if (Status == RETURN_UNSUPPORTED) {
         return Status;
       }
     }
 
     if (!StrCmp(UnicodeStr, L"L1 Data Cache")) {
       Status = UpdateCacheSize(UnicodeStr, "l1-d-cache-size", InputData);
-      if (RETURN_ERROR(Status)) {
+      if (Status == RETURN_UNSUPPORTED) {
         return Status;
       }
     }
 
     if (!StrCmp(UnicodeStr, L"L2 Cache")) {
       Status = UpdateCacheSize(UnicodeStr, "l2-cache-size", InputData);
-      if (RETURN_ERROR(Status)) {
+      if (Status == RETURN_UNSUPPORTED) {
         return Status;
       }
     }
 
     if (!StrCmp(UnicodeStr, L"L3 Cache (SLC)")) {
       Status = UpdateCacheSize(UnicodeStr, "l3-cache-size", InputData);
-      if (RETURN_ERROR(Status)) {
+      if (Status == RETURN_UNSUPPORTED) {
         return Status;
       }
     }

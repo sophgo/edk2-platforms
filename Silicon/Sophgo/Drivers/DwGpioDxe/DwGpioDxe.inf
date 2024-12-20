@@ -1,0 +1,43 @@
+## @file
+#  Component description for DwGpioDxe driver for the Designware GPIO controller.
+#
+#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DwGpioDxe
+  FILE_GUID                      = C20C7D4D-B03C-473A-AB69-CB36D30BE2E5
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DwGpioEntryPoint
+  UNLOAD_IMAGE                   = DwGpioUnload
+
+[Sources]
+  DwGpioDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  UefiDriverEntryPoint
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  MemoryAllocationLib
+  DxeServicesTableLib
+
+[Guids]
+
+[Protocols]
+  gFdtClientProtocolGuid          ## CONSUMES
+  gSophgoGpioProtocolGuid         ## PRODUCES
+
+[Depex]
+  TRUE

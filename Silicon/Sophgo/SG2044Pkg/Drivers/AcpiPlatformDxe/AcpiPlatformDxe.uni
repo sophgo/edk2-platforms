@@ -1,5 +1,5 @@
 // /** @file
-// Sample ACPI Platform Driver
+// ACPI Platform Driver
 //
 // Copyright (c) 2024, SOPHGO Inc. All rights reserved.
 // Copyright (c) 2008 - 2014, Intel Corporation. All rights reserved.<BR>
@@ -9,7 +9,7 @@
 // **/
 
 
-#string STR_MODULE_ABSTRACT             #language en-US "Sample ACPI Platform Driver"
+#string STR_MODULE_ABSTRACT             #language en-US "ACPI Platform Driver"
 
-#string STR_MODULE_DESCRIPTION          #language en-US "Sample ACPI Platform Driver"
+#string STR_MODULE_DESCRIPTION          #language en-US "ACPI Platform Driver"
 

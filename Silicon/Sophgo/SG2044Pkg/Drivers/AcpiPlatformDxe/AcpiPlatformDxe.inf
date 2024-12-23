@@ -1,29 +1,24 @@
 ## @file
 #  Sample ACPI Platform Driver
 #
-#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
 #  Copyright (c) 2008 - 2014, Intel Corporation. All rights reserved.<BR>
+#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
 ##
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = AcpiPlatform
-  MODULE_UNI_FILE                = AcpiPlatform.uni
-  FILE_GUID                      = cb933912-df8f-4305-b1f9-7b44fa11395c
+  BASE_NAME                      = AcpiPlatformDxe
+  MODULE_UNI_FILE                = AcpiPlatformDxe.uni
+  FILE_GUID                      = CB933912-DF8F-4305-B1F9-7B44FA11395C
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = AcpiPlatformEntryPoint
-
-#
-# The following information is for reference only and not required by the build tools.
-#
-#  VALID_ARCHITECTURES           = IA32 X64 IPF EBC
-#
+  ENTRY_POINT                    = AcpiPlatformDxeEntryPoint
 
 [Sources]
-  AcpiPlatform.c
+  AcpiPlatformDxe.c
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec
@@ -40,14 +35,15 @@
   UefiDriverEntryPoint
 
 [Protocols]
-  gEfiAcpiTableProtocolGuid                     ## CONSUMES
-  gFdtClientProtocolGuid                        ## CONSUMES
+  gEfiAcpiTableProtocolGuid                                 ## CONSUMES
+  gFdtClientProtocolGuid                                    ## CONSUMES
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiTableStorageFile    ## CONSUMES
 
 [Depex]
-  gEfiAcpiTableProtocolGuid AND gFdtClientProtocolGuid
+  gEfiAcpiTableProtocolGuid AND
+  gFdtClientProtocolGuid
 
 [UserExtensions.TianoCore."ExtraFiles"]
   AcpiPlatformExtra.uni

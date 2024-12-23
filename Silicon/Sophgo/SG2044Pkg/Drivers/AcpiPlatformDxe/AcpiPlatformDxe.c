@@ -1,8 +1,9 @@
 /** @file
   Sample ACPI Platform Driver
 
-  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
   Copyright (c) 2008 - 2011, Intel Corporation. All rights reserved.<BR>
+  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
@@ -62,15 +63,18 @@ LocateFvInstanceWithTables (
     //
     // Defined errors at this time are not found and out of resources.
     //
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a(): Locate Firmware Volume2 protocol failed (Status = %r)!\n",
+      __func__,
+      Status
+      ));
     return Status;
   }
-
-
 
   //
   // Looking for FV with ACPI storage file
   //
-
   for (Index = 0; Index < NumberOfHandles; Index++) {
     //
     // Get the protocol on this handle
@@ -144,7 +148,7 @@ AcpiPlatformChecksum (
   //
   // Update checksum value
   //
-  Buffer[ChecksumOffset] = CalculateCheckSum8(Buffer, Size);
+  Buffer[ChecksumOffset] = CalculateCheckSum8 (Buffer, Size);
 }
 
 
@@ -161,7 +165,7 @@ AcpiPlatformChecksum (
 **/
 EFI_STATUS
 EFIAPI
-AcpiPlatformEntryPoint (
+AcpiPlatformDxeEntryPoint (
   IN EFI_HANDLE         ImageHandle,
   IN EFI_SYSTEM_TABLE   *SystemTable
   )
@@ -184,7 +188,11 @@ AcpiPlatformEntryPoint (
   //
   // Find the AcpiTable protocol
   //
-  Status = gBS->LocateProtocol (&gEfiAcpiTableProtocolGuid, NULL, (VOID**)&AcpiTable);
+  Status = gBS->LocateProtocol (
+    &gEfiAcpiTableProtocolGuid,
+    NULL,
+    (VOID**)&AcpiTable
+    );
   if (EFI_ERROR (Status)) {
     return EFI_ABORTED;
   }
@@ -196,11 +204,11 @@ AcpiPlatformEntryPoint (
   if (EFI_ERROR (Status)) {
     return EFI_ABORTED;
   }
+
   //
   // Read tables from the storage file.
   //
   while (Status == EFI_SUCCESS) {
-
     Status = FwVol->ReadSection (
                       FwVol,
                       (EFI_GUID*)PcdGetPtr (PcdAcpiTableStorageFile),
@@ -210,7 +218,10 @@ AcpiPlatformEntryPoint (
                       &Size,
                       &FvStatus
                       );
-    if (!EFI_ERROR(Status)) {
+
+    if (EFI_ERROR (Status)) {
+      break;
+    } else {
       //
       // Add the table
       //
@@ -251,6 +262,6 @@ AcpiPlatformEntryPoint (
     }
   }
 
-  return Status;
+  return EFI_SUCCESS;
 }
 

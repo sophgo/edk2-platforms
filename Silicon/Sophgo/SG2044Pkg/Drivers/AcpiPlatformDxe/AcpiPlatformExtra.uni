@@ -10,6 +10,6 @@
 
 #string STR_PROPERTIES_MODULE_NAME
 #language en-US
-"ACPI Platform Sample DXE Driver"
+"ACPI Platform DXE Driver"
 
 

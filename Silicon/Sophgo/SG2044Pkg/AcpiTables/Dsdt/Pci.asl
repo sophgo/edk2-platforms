@@ -61,6 +61,10 @@ Scope(_SB)
     Name (_BBN, 0)         // Base Bus Number
     Name (_CCA, 1)
 
+    Name (_DEP, Package () {
+      \_SB.MSI
+    })
+
     // PCI Routing Table
     Name (_PRT, Package () {
       Package () { 0xFFFF, 0, 0, 64 },   // INTA
@@ -222,6 +226,10 @@ Scope(_SB)
     Name (_BBN, 0x0)      // Base Bus Number
     Name (_CCA, 1)
 
+    Name (_DEP, Package () {
+      \_SB.MSI
+    })
+
     Name (_PRT, Package (){
       Package () {0xFFFF, 0, 0, 65},         // INT_A
       Package () {0xFFFF, 1, 0, 65},         // INT_B
@@ -380,6 +388,10 @@ Scope(_SB)
     Name (_SEG, 2)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
     Name (_CCA, 1)
+
+    Name (_DEP, Package () {
+      \_SB.MSI
+    })
 
     // PCI Routing Table
     Name (_PRT, Package () {
@@ -541,6 +553,10 @@ Scope(_SB)
     Name (_BBN, 0x0)      // Base Bus Number
     Name (_CCA, 1)
 
+    Name (_DEP, Package () {
+      \_SB.MSI
+    })
+
     // PCI Routing Table
     Name (_PRT, Package () {
       Package () { 0xFFFF, 0, 0, 74 },   // INTA
@@ -700,6 +716,10 @@ Scope(_SB)
     Name (_SEG, 0x4)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
     Name (_CCA, 1)
+
+    Name (_DEP, Package () {
+      \_SB.MSI
+    })
 
     // PCI Routing Table
     Name (_PRT, Package () {

@@ -35,7 +35,7 @@
     EFI_ACPI_RISCV_CREATOR_REVISION   /* UINT32  CreatorRevision */ \
   }
 
-#define CORE_COUNT      64
+#define CORE_COUNT      4
 #define CLUSTER_COUNT   16
 
 // ACPI OSC Status bits
@@ -140,9 +140,18 @@ typedef enum {
   L1DataCache = 1,
   L1InstructionCache,
   L2Cache,
+  L3Cache,
 } TH_PPTT_CACHE_TYPE;
 
 #pragma pack(1)
+
+// PPTT processor Package structure
+typedef struct {
+  EFI_ACPI_6_5_PPTT_STRUCTURE_PROCESSOR  RootPackage;
+  UINT32                                 ResourceOffset;
+  EFI_ACPI_6_5_PPTT_STRUCTURE_CACHE      L3Cache;
+} TH_PPTT_PACKAGE;
+
 // PPTT processor core structure
 typedef struct {
   EFI_ACPI_6_5_PPTT_STRUCTURE_PROCESSOR  Core;
@@ -175,16 +184,6 @@ typedef struct {
     EFI_ACPI_6_5_PPTT_IMPLEMENTATION_IDENTICAL                                 \
   }
 
-// Processor structure flags for cluster
-#define PPTT_PROCESSOR_CLUSTER_FLAGS                                           \
-  {                                                                            \
-    EFI_ACPI_6_5_PPTT_PACKAGE_NOT_PHYSICAL,                                    \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_ID_VALID,                                      \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_IS_NOT_THREAD,                                 \
-    EFI_ACPI_6_5_PPTT_NODE_IS_NOT_LEAF,                                        \
-    EFI_ACPI_6_5_PPTT_IMPLEMENTATION_IDENTICAL                                 \
-  }
-
 // Processor structure flags for cluster with multi-thread core
 #define PPTT_PROCESSOR_CLUSTER_THREADED_FLAGS                                  \
   {                                                                            \
@@ -201,25 +200,6 @@ typedef struct {
     EFI_ACPI_6_5_PPTT_PACKAGE_NOT_PHYSICAL,                                    \
     EFI_ACPI_6_5_PPTT_PROCESSOR_ID_VALID,                                      \
     EFI_ACPI_6_5_PPTT_PROCESSOR_IS_NOT_THREAD,                                 \
-    EFI_ACPI_6_5_PPTT_NODE_IS_LEAF                                             \
-  }
-
-// Processor structure flags for multi-thread core
-#define PPTT_PROCESSOR_CORE_THREADED_FLAGS                                     \
-  {                                                                            \
-    EFI_ACPI_6_5_PPTT_PACKAGE_NOT_PHYSICAL,                                    \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_ID_INVALID,                                    \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_IS_NOT_THREAD,                                 \
-    EFI_ACPI_6_5_PPTT_NODE_IS_NOT_LEAF,                                        \
-    EFI_ACPI_6_5_PPTT_IMPLEMENTATION_IDENTICAL                                 \
-  }
-
-// Processor structure flags for CPU thread
-#define PPTT_PROCESSOR_THREAD_FLAGS                                            \
-  {                                                                            \
-    EFI_ACPI_6_5_PPTT_PACKAGE_NOT_PHYSICAL,                                    \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_ID_VALID,                                      \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_IS_THREAD,                                     \
     EFI_ACPI_6_5_PPTT_NODE_IS_LEAF                                             \
   }
 

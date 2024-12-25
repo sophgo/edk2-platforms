@@ -11,19 +11,14 @@
 #include <Library/DebugLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
-
+#include <Library/IniParserLib.h>
 #include "IniParserUtil.h"
 
 #define INI_FILE_MAX_SIZE   (FixedPcdGet32(PcdIniFileMaxSize))
 CHAR8 MemoryData[INI_FILE_MAX_SIZE];
 
-typedef struct {
-  CHAR8 *Name;
-  UINTN Addr;
-  // .....
-} TEST_CONFIG;
-
 TEST_CONFIG Config;
+MAC_CONFIG MacConfig;
 
 STATIC
 CHAR8 *
@@ -49,6 +44,30 @@ TestHandler (
 
   if (MATCH ("Processor", "Name")) {
     Config->Name = IniStrDup (Value);
+  } else {
+    return 0;
+  }
+
+  return -1;
+}
+
+STATIC
+INT32
+HandlerMacAddr (
+  IN       VOID  *User,
+  IN CONST CHAR8 *Section,
+  IN CONST CHAR8 *Name,
+  IN CONST CHAR8 *Value
+  )
+{
+  MAC_CONFIG *Config = (MAC_CONFIG *)User;
+
+  #define MATCH(S, N) (AsciiStrCmp (Section, S) == 0 && AsciiStrCmp (Name, N) == 0)
+
+  if (MATCH("mac-address", "mac0")) {
+    Config->Mac0Addr = AsciiStrHexToUintn (Value);
+  } else if (MATCH("mac-address", "mac1")) {
+    Config->Mac1Addr = AsciiStrHexToUintn (Value);
   } else {
     return 0;
   }
@@ -88,7 +107,7 @@ IsIniFileExist (
      return FALSE;
   } else {
      DEBUG ((
-      DEBUG_INFO,
+      DEBUG_VERBOSE,
       "conf.ini has been found!\n"
       ));
      return TRUE;
@@ -111,9 +130,34 @@ TestIniParser (
   }
 
   DEBUG ((
-    DEBUG_INFO,
+    DEBUG_VERBOSE,
     "Config.Name: %a\n",
     Config.Name
+    ));
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
+MacAddrIniParser (
+  VOID
+  )
+{
+  if (IniParseString ((CONST CHAR8 *)MemoryData, HandlerMacAddr, &MacConfig) < 0) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: conf.ini parse failed!\n",
+      __func__
+      ));
+    return EFI_UNSUPPORTED;
+  }
+
+  DEBUG ((
+    DEBUG_VERBOSE,
+    "Mac0Addr: 0x%lx\tMac1Addr: 0x%lx\n",
+    MacConfig.Mac0Addr,
+    MacConfig.Mac1Addr
     ));
 
   return EFI_SUCCESS;

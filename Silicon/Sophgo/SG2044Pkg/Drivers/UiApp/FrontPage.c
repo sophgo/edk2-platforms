@@ -9,17 +9,13 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define MAX_STRING_LEN  500
 #define DEVICE_PATH_0_GUID { 0x8e6d99ee, 0x7531, 0x48f8, { 0x87, 0x45, 0x7f, 0x61, 0x44, 0x46, 0x8f, 0xf2} }
-#define DEVICE_PATH_1_GUID { 0x398b9173, 0xf5ed, 0x499a, { 0xa0, 0xbc, 0x8b, 0x51, 0x98, 0x7b, 0x55, 0xf9} }
 
 EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
-INI_ENTRY gIniEntries[CONFIG_SIZE];
 CHAR8                       *mLanguageString;
 
-EFI_GUID  mFrontPageGuid = FORMSET_GUID;
-EFI_GUID  mConfiginiGuid = CONFIG_INI_FORMSET_GUID;
-UINTN EntryCount = 0;
+EFI_GUID mFrontPageGuid = FORMSET_GUID;
 BOOLEAN  mResetRequired = FALSE;
-BOOLEAN                     mModeInitialized = FALSE;
+BOOLEAN  mModeInitialized = FALSE;
 UINT32  mBootHorizontalResolution = 0;
 UINT32  mBootVerticalResolution   = 0;
 UINT32  mBootTextModeColumn       = 0;
@@ -32,17 +28,14 @@ CHAR16  VariableName[] = L"DynamicTimeData";
 CHAR16  TimeData[] = L"DynamicTimeData";
 FRONT_PAGE_CALLBACK_DATA  gFrontPagePrivate = {
   FRONT_PAGE_CALLBACK_DATA_SIGNATURE,
-  {NULL,NULL},
-  {NULL,NULL},
+  NULL,
+  NULL,
   NULL,
   {
     ExtractConfig,
     RouteConfig,
     FrontPageCallback
-  },
-  NULL,
-  &mFrontPageGuid,
-  VariableName
+  }
 };
 
 HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath0 = {
@@ -56,28 +49,6 @@ HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath0 = {
       }
     },
     DEVICE_PATH_0_GUID
-  },
-  {
-    END_DEVICE_PATH_TYPE,
-    END_ENTIRE_DEVICE_PATH_SUBTYPE,
-    {
-      (UINT8)(END_DEVICE_PATH_LENGTH),
-      (UINT8)((END_DEVICE_PATH_LENGTH) >> 8)
-    }
-  }
-};
-
-HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath1 = {
-  {
-    {
-      HARDWARE_DEVICE_PATH,
-      HW_VENDOR_DP,
-      {
-        (UINT8)(sizeof (VENDOR_DEVICE_PATH)),
-        (UINT8)((sizeof (VENDOR_DEVICE_PATH)) >> 8)
-      }
-    },
-   DEVICE_PATH_1_GUID
   },
   {
     END_DEVICE_PATH_TYPE,
@@ -118,7 +89,7 @@ FrontPageCallback (
   OUT EFI_BROWSER_ACTION_REQUEST            *ActionRequest
   )
 {
-	return UiFrontPageCallbackHandler(gFrontPagePrivate.HiiHandle[0], Action, QuestionId, Type, Value, ActionRequest);
+	return UiFrontPageCallbackHandler(gFrontPagePrivate.HiiHandle, Action, QuestionId, Type, Value, ActionRequest);
 }
 
 EFI_STATUS
@@ -127,17 +98,15 @@ InitializeFrontPage (
   )
 {
   EFI_STATUS  Status;
-  EFI_HII_CONFIG_ROUTING_PROTOCOL        *HiiConfigRouting;
 
   Status = gBS->LocateProtocol (&gEfiFormBrowser2ProtocolGuid, NULL, (VOID **)&gFormBrowser2);
   if (EFI_ERROR (Status)) {
     return Status;
   }
 
-  gFrontPagePrivate.DriverHandle[0] = NULL;
-  gFrontPagePrivate.DriverHandle[1] = NULL;
+  gFrontPagePrivate.DriverHandle = NULL;
   Status      = gBS->InstallMultipleProtocolInterfaces (
-                                          &gFrontPagePrivate.DriverHandle[0],
+                                          &gFrontPagePrivate.DriverHandle,
                                           &gEfiDevicePathProtocolGuid,
                                           &mFrontPageHiiVendorDevicePath0,
                                           &gEfiHiiConfigAccessProtocolGuid,
@@ -145,41 +114,15 @@ InitializeFrontPage (
                                           NULL
                                           );
   ASSERT_EFI_ERROR(Status);
-
-  Status      = gBS->InstallMultipleProtocolInterfaces (
-                                          &gFrontPagePrivate.DriverHandle[1],
-                                          &gEfiDevicePathProtocolGuid,
-                                          &mFrontPageHiiVendorDevicePath1,
-                                          &gEfiHiiConfigAccessProtocolGuid,
-                                          &gFrontPagePrivate.ConfigAccess,
-                                          NULL
-                                          );
-  ASSERT_EFI_ERROR(Status);
-
-  Status = gBS->LocateProtocol (&gEfiHiiConfigRoutingProtocolGuid, NULL, (VOID **)&HiiConfigRouting);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  gFrontPagePrivate.HiiConfigRouting = HiiConfigRouting;  
-  gFrontPagePrivate.HiiHandle[0] = HiiAddPackages (
+  gFrontPagePrivate.HiiHandle = HiiAddPackages (
                                   &mFrontPageGuid,
-                                  gFrontPagePrivate.DriverHandle[0],
+                                  gFrontPagePrivate.DriverHandle,
                                   FrontPageVfrBin,
                                   UiAppStrings,
                                   NULL
                                   );
-  ASSERT (gFrontPagePrivate.HiiHandle[0] != NULL);
-  gFrontPagePrivate.HiiHandle[1] = HiiAddPackages (
-                                  &mConfiginiGuid,
-                                  gFrontPagePrivate.DriverHandle[1],
-                                  ConfiginiVfrBin,
-                                  UiAppStrings,
-                                  NULL
-                                  );
-  ASSERT (gFrontPagePrivate.HiiHandle[1] != NULL);
+  ASSERT (gFrontPagePrivate.HiiHandle != NULL);
   UpdateFrontPageForm ();
-  UpdateHiiData ();
   return Status;
 }
 
@@ -190,27 +133,25 @@ CallFrontPage (
 {
   EFI_STATUS                  Status;
   EFI_BROWSER_ACTION_REQUEST  ActionRequest;
-  EFI_HII_HANDLE 	      HiiHandles[2];
   REPORT_STATUS_CODE (
     EFI_PROGRESS_CODE,
     (EFI_SOFTWARE_DXE_BS_DRIVER | EFI_SW_PC_INPUT_WAIT)
     );
-  
+
   ActionRequest = EFI_BROWSER_ACTION_REQUEST_NONE;
-  HiiHandles[0] = gFrontPagePrivate.HiiHandle[0];
-  HiiHandles[1] = gFrontPagePrivate.HiiHandle[1];
   Status        = gFormBrowser2->SendForm (
                                    gFormBrowser2,
-				   HiiHandles,
-                                   2,
+                                   &gFrontPagePrivate.HiiHandle,
+                                   1,
                                    &mFrontPageGuid,
                                    0,
                                    NULL,
-                                   &ActionRequest);
+                                   &ActionRequest
+				   );
   if (ActionRequest == EFI_BROWSER_ACTION_REQUEST_RESET) {
     EnableResetRequired ();
   }
-  
+
   return Status;
 }
 
@@ -222,7 +163,7 @@ FreeFrontPage (
   EFI_STATUS  Status;
 
   Status = gBS->UninstallMultipleProtocolInterfaces (
-                  gFrontPagePrivate.DriverHandle[0],
+                  gFrontPagePrivate.DriverHandle,
                   &gEfiDevicePathProtocolGuid,
                   &mFrontPageHiiVendorDevicePath0,
                   &gEfiHiiConfigAccessProtocolGuid,
@@ -230,17 +171,7 @@ FreeFrontPage (
                   NULL
                   );
   ASSERT_EFI_ERROR (Status);
-  Status = gBS->UninstallMultipleProtocolInterfaces (
-                  gFrontPagePrivate.DriverHandle[1],
-                  &gEfiDevicePathProtocolGuid,
-                  &mFrontPageHiiVendorDevicePath1,
-                  &gEfiHiiConfigAccessProtocolGuid,
-                  &gFrontPagePrivate.ConfigAccess,
-                  NULL
-                  );
-  ASSERT_EFI_ERROR (Status);
-  HiiRemovePackages (gFrontPagePrivate.HiiHandle[0]);
-  HiiRemovePackages (gFrontPagePrivate.HiiHandle[1]);
+  HiiRemovePackages (gFrontPagePrivate.HiiHandle);
   if (gFrontPagePrivate.LanguageToken != NULL) {
     FreePool (gFrontPagePrivate.LanguageToken);
     gFrontPagePrivate.LanguageToken = NULL;
@@ -405,7 +336,7 @@ UiSetConsoleMode (
   if (EFI_ERROR (Status)) {
     GraphicsOutput = NULL;
   }
-  
+
   Status = gBS->HandleProtocol (
                   gST->ConsoleOutHandle,
                   &gEfiSimpleTextOutProtocolGuid,
@@ -529,103 +460,6 @@ UiSetConsoleMode (
   return EFI_SUCCESS;
 }
 
-INT32
-IniHandler (
-    VOID       *User,
-    CONST CHAR8 *Section,
-    CONST CHAR8 *Name,
-    CONST CHAR8 *Value
- )
-{
-    if (!AsciiStrCmp(Section, "eof"))
-      return 0;
-    if (EntryCount >= CONFIG_SIZE)
-      return 0;
-    AsciiStrCpyS(gIniEntries[EntryCount].Section, sizeof(gIniEntries[EntryCount].Section), Section);
-    AsciiStrCpyS(gIniEntries[EntryCount].Name, sizeof(gIniEntries[EntryCount].Name), Name);
-    AsciiStrCpyS(gIniEntries[EntryCount].Value, sizeof(gIniEntries[EntryCount].Value), Value);
-    EntryCount++;
-
-    return 1;
-}
-
-INT32
-IniConfIniParse (
-    IN INI_HANDLER   Handler,
-    IN VOID          *User
- )
-{
-    INT32 result = -1;
-    if (IsIniFileExist ())
-      result = IniParseString(MemoryData, Handler, User);
-
-    return result;
-}
-
-EFI_STATUS
-EFIAPI
-UpdateHiiData (
-  VOID
-  )
-{
-    VOID *StartOpCodeHandle;
-    VOID *EndOpCodeHandle;
-    EFI_STRING_ID StringId;
-    EFI_STATUS Status;
-    EFI_STRING_ID       HelpToken;
-    UINTN               Index;
-    EFI_IFR_GUID_LABEL  *StartLabel;
-    EFI_IFR_GUID_LABEL  *EndLabel;
-
-    CHAR16 DisplayBuffer[256];
-    ZeroMem(DisplayBuffer, sizeof(DisplayBuffer));
-    StartOpCodeHandle = HiiAllocateOpCodeHandle();
-    ASSERT(StartOpCodeHandle != NULL);
-    EndOpCodeHandle = HiiAllocateOpCodeHandle();
-    ASSERT(EndOpCodeHandle != NULL);
-    gST->ConOut->ClearScreen(gST->ConOut);
-    StartLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode(
-        StartOpCodeHandle,
-        &gEfiIfrTianoGuid,
-        NULL,
-        sizeof(EFI_IFR_GUID_LABEL)
-    );
-    StartLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
-    StartLabel->Number = LABEL_CONFIG_START;
-    EndLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode(
-        EndOpCodeHandle,
-        &gEfiIfrTianoGuid,
-        NULL,
-        sizeof(EFI_IFR_GUID_LABEL)
-    );
-    EndLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
-    EndLabel->Number = LABEL_CONFIG_END;
-    for (Index = 0; Index < EntryCount; Index++) {
-      INI_ENTRY *Entry = &gIniEntries[Index];
-      if (Index == 0 || AsciiStrCmp(gIniEntries[Index - 1].Section, Entry->Section) != 0) {
-        UnicodeSPrint(DisplayBuffer, sizeof(DisplayBuffer), L"Section: %a\n", Entry->Section);
-        StringId = HiiSetString(gFrontPagePrivate.HiiHandle[1], 0, DisplayBuffer, NULL);
-        HelpToken = 0; 
-        HiiCreateTextOpCode(StartOpCodeHandle, StringId, HelpToken, 0);
-      }
-      UnicodeSPrint(DisplayBuffer, sizeof(DisplayBuffer), L"%a: %a\n", Entry->Name, Entry->Value);
-      StringId = HiiSetString(gFrontPagePrivate.HiiHandle[1], 0, DisplayBuffer, NULL); 
-      HelpToken = 0;
-      HiiCreateTextOpCode(StartOpCodeHandle, StringId, HelpToken, 0);
-    }
-    Status = HiiUpdateForm(
-        gFrontPagePrivate.HiiHandle[1],
-        &mConfiginiGuid,
-        CONFIG_FORM_ID,
-	  StartOpCodeHandle,
-        EndOpCodeHandle
-    );
-
-    HiiFreeOpCodeHandle(StartOpCodeHandle);
-    HiiFreeOpCodeHandle(EndOpCodeHandle);
-    return EFI_SUCCESS;
-}
-
 EFI_STATUS
 EFIAPI
 ExtractConfig (
@@ -654,15 +488,15 @@ RouteConfig (
   return EFI_UNSUPPORTED; // Return unsupported to signify fake implementation.
 }
 
-EFI_STATUS 
+EFI_STATUS
 UpdateTimeRegion (
 EFI_HII_HANDLE HiiHandle
-) 
-{   
+)
+{
     EFI_STATUS Status;
     VOID *StartOpCodeHandle;
-    VOID *EndOpCodeHandle;                  
-    
+    VOID *EndOpCodeHandle;
+
     StartOpCodeHandle = HiiAllocateOpCodeHandle();
     if (StartOpCodeHandle == NULL) {
         return EFI_OUT_OF_RESOURCES;
@@ -723,15 +557,15 @@ EFI_HII_HANDLE HiiHandle
     return Status;
 }
 
-EFI_STATUS 
+EFI_STATUS
 UpdateLanguageRegion (
 EFI_HII_HANDLE HiiHandle
-) 
+)
 {
     EFI_STATUS Status;
     VOID *StartOpCodeHandle;
     VOID *EndOpCodeHandle;
-    
+
     StartOpCodeHandle = HiiAllocateOpCodeHandle();
     if (StartOpCodeHandle == NULL) {
         return EFI_OUT_OF_RESOURCES;
@@ -774,10 +608,10 @@ EFI_HII_HANDLE HiiHandle
     return Status;
 }
 
-EFI_STATUS 
+EFI_STATUS
 UpdateBootRegion (
 EFI_HII_HANDLE HiiHandle
-) 
+)
 {
     EFI_STATUS Status;
     VOID *StartOpCodeHandle;
@@ -824,14 +658,14 @@ EFI_HII_HANDLE HiiHandle
     return Status;
 }
 
-VOID 
+VOID
 UpdateFrontPageForm (
 VOID
 ) {
     EFI_STATUS Status;
-    Status = UpdateBootRegion(gFrontPagePrivate.HiiHandle[0]);
-    Status = UpdateTimeRegion(gFrontPagePrivate.HiiHandle[0]);
-    Status = UpdateLanguageRegion(gFrontPagePrivate.HiiHandle[0]);
+    Status = UpdateBootRegion(gFrontPagePrivate.HiiHandle);
+    Status = UpdateTimeRegion(gFrontPagePrivate.HiiHandle);
+    Status = UpdateLanguageRegion(gFrontPagePrivate.HiiHandle);
 }
 
 /**
@@ -947,7 +781,6 @@ UiEntry (
     BootLogo->SetBootLogo (BootLogo, NULL, 0, 0, 0, 0);
   }
 
-  IniConfIniParse(IniHandler, NULL);
   InitializeFrontPage ();
   CallFrontPage ();
   FreeFrontPage ();

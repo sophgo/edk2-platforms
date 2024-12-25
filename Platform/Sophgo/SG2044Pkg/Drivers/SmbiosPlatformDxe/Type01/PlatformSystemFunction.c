@@ -38,7 +38,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformSystem) {
       HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], UnicodeStr, NULL);
     }
 
-    if (IniGetValueBySectionAndName ("product", "name", value) == 0) {
+    if (IniGetValueBySectionAndName ("product", "product_name", value) == 0) {
       AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
       HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStr, NULL);
     }

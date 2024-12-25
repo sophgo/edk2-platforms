@@ -35,20 +35,20 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBios) {
       return Status;
     }
 
-    if (IniGetValueBySectionAndName ("BIOS Information", "vendor", value) == 0) {
+    if (IniGetValueBySectionAndName ("BIOS Information", "bios_vendor", value) == 0) {
       AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
       HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], UnicodeStr, NULL);
     }
 
-    if (IniGetValueBySectionAndName ("BIOS Information", "version", value) == 0) {
+    if (IniGetValueBySectionAndName ("BIOS Information", "bios_version", value) == 0) {
       AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
       HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStr, NULL);
     }
 
-    if (IniGetValueBySectionAndName ("Date Time", "date", value) == 0) {
+    if (IniGetValueBySectionAndName ("BIOS Information", "date", value) == 0) {
       AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
 
-      if (IniGetValueBySectionAndName ("Date Time", "time", value) == 0) {
+      if (IniGetValueBySectionAndName ("BIOS Information", "time", value) == 0) {
         AsciiStrToUnicodeStrS (value, UnicodeStrTmp, SMBIOS_UNICODE_STRING_MAX_LENGTH);
       }
       StrCatS(UnicodeStr, sizeof (UnicodeStr), L" ");

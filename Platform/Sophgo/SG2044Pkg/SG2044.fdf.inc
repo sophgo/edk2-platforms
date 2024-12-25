@@ -46,5 +46,3 @@ DEFINE VARS_FTW_SPARE_SIZE           = 0x00010000
 
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                  = $(CODE_BASE_ADDRESS) + $(FW_SIZE) + 0x1FF0000
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                  = 0x10000
-
-SET gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase              = 0x7030001000

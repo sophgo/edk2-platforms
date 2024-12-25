@@ -32,4 +32,5 @@
 
 [FixedPcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase
-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate

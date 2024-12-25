@@ -481,6 +481,9 @@
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|400000000
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|25000000
   gSophgoTokenSpaceGuid.PcdTrngBase|0x7040020000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x7030001000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|500000000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate|115200
 
 ################################################################################
 #

@@ -468,7 +468,8 @@ SPI_NOR *
 EFIAPI
 SpiMasterSetupSlave (
   IN SOPHGO_SPI_MASTER_PROTOCOL *This,
-  IN SPI_NOR                    *Nor
+  IN SPI_NOR                    *Nor,
+  IN UINT8                      SelectedFlashNumber
   )
 {
   EFI_STATUS            Status;
@@ -485,7 +486,11 @@ SpiMasterSetupSlave (
     }
   }
 
-  Nor->SpiBase = SPIFMC_BASE;
+  if (SelectedFlashNumber == 0) {
+    Nor->SpiBase = FixedPcdGet64 (PcdSPIFMC0Base);
+  } else if (SelectedFlashNumber == 1) {
+    Nor->SpiBase = FixedPcdGet64 (PcdSPIFMC1Base);
+  }
 
   Status = gDS->AddMemorySpace (
       EfiGcdMemoryTypeMemoryMappedIo,

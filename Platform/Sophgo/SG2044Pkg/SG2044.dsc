@@ -460,7 +460,8 @@
   # Flash Offset: 32MB
   #
 !if $(FLASH_ENABLE) == TRUE
-  gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7001000000
+  gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x7001000000
+  gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7005000000
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|TRUE
   gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x80000
 !endif

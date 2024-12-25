@@ -27,9 +27,6 @@
 //
 // SPIFMC registers
 //
-// #define SPIFMC_BASE                        (FixedPcdGet64(PcdSPIFMC0Base))
-#define SPIFMC_BASE                        (FixedPcdGet64(PcdSPIFMC1Base))
-
 #define SPIFMC_CTRL                        0x00
 #define SPIFMC_CTRL_CPHA                      BIT12
 #define SPIFMC_CTRL_CPOL                      BIT13
@@ -170,7 +167,8 @@ SPI_NOR *
 EFIAPI
 SpiMasterSetupSlave (
   IN SOPHGO_SPI_MASTER_PROTOCOL *This,
-  IN SPI_NOR                    *Nor
+  IN SPI_NOR                    *Nor,
+  IN UINT8                      SelectedFlashNumber
   );
 
 EFI_STATUS

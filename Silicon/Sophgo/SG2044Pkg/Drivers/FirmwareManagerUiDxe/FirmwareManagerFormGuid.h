@@ -14,5 +14,6 @@
 #define  FIRMWARE_MANAGER_VARIABLE            L"FirmwareManagerSetup"
 #define  FORM_FIRMWARE_MANAGER_ID             0x3000
 #define  UPDATE_FIRMWARE_KEY                  0x3100
+#define  UPDATE_INI_KEY                       0x3200
 
 #endif

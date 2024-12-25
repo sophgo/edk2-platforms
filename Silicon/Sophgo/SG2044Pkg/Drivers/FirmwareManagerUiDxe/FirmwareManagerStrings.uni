@@ -15,7 +15,12 @@
 
 #string STR_UPDATE_FIRMWARE_TITLE          #language en-US "Update Firmware"
 #string STR_UPDATE_FIRMWARE_HELP           #language en-US "Select the file to update the firmware. Do not power off or reset the device during the update"
+#string STR_UPDATING_WARNING               #language en-US "Do not power off or reset the device during the update"
 
 #string STR_FIRMWARE_UPDATE_SUCC           #language en-US "Firmware update success. Press Enter to reboot the system"
 #string STR_UPDATING_FIRMWARE              #language en-US "Updating Firmware"
-#string STR_UPDATING_FIRMWARE_WARNING      #language en-US "Do not power off or reset the device during the update"
+
+#string STR_UPDATE_INI_TITLE               #language en-US "Update CONF.INI"
+#string STR_UPDATE_INI_HELP                #language en-US "Select the file to update the conf.ini."
+#string STR_UPDATING_INI                   #language en-US "Updating conf.ini"
+#string STR_INI_UPDATE_SUCC                #language en-US "conf.ini update success. Press Enter to reboot the system"

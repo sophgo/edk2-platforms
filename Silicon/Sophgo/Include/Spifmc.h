@@ -89,7 +89,8 @@ typedef
 SPI_NOR *
 (EFIAPI *SG_SPI_MASTER_PROTOCOL_SETUP_DEVICE) (
   IN SOPHGO_SPI_MASTER_PROTOCOL              *This,
-  IN SPI_NOR                                 *Nor
+  IN SPI_NOR                                 *Nor,
+  IN UINT8                                   SelectedFlashNumber
   );
 
 typedef

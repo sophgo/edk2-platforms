@@ -15,11 +15,18 @@ formset
 
   form formid = FORM_FIRMWARE_MANAGER_ID,
        title = STRING_TOKEN (STR_FIRMWARE_MANAGER_TITLE);
+
     goto FORM_FIRMWARE_MANAGER_ID,
       prompt = STRING_TOKEN (STR_UPDATE_FIRMWARE_TITLE),
       help   = STRING_TOKEN (STR_UPDATE_FIRMWARE_HELP),
       flags  = INTERACTIVE,
       key    = UPDATE_FIRMWARE_KEY;
+
+    goto FORM_FIRMWARE_MANAGER_ID,
+      prompt = STRING_TOKEN (STR_UPDATE_INI_TITLE),
+      help   = STRING_TOKEN (STR_UPDATE_INI_HELP),
+      flags  = INTERACTIVE,
+      key    = UPDATE_INI_KEY;
   endform;
 
 endformset;

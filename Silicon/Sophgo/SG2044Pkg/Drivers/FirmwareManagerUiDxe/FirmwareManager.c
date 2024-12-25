@@ -242,11 +242,12 @@ FirmwareManagerRouteConfig (
 /**
   Update firmware in spi nor flash.
 
-  @param[in]  Nor        Structure of nor flash.
-  @param[in]  Address    Address to update.
-  @param[in]  Buffer     A pointer to update firmware data.
-  @param[in]  Size       Size of update firmware to update.
-  @param[in]  String     Start info to print.
+  @param[in]  Nor          Structure of nor flash.
+  @param[in]  Address      Address to update.
+  @param[in]  Buffer       A pointer to update firmware data.
+  @param[in]  Size         Size of update firmware to update.
+  @param[in]  String       Start info to print.
+  @param[in]  SkipVariable Whether skip variable range or not.
 
   @retval     EFI_SUCCESS    Success.
               Other          Failed.
@@ -257,7 +258,8 @@ UpdateFirmware (
   IN UINTN        Address,
   IN UINT8        *Buffer,
   IN UINTN        Size,
-  IN CHAR16       *String
+  IN CHAR16       *String,
+  IN BOOLEAN      SkipVariable
   )
 {
   EFI_STATUS  Status;
@@ -285,7 +287,7 @@ UpdateFirmware (
 
   WarningString = HiiGetString (
 		  gFirmwareUpdateHandle,
-		  STRING_TOKEN (STR_UPDATING_FIRMWARE_WARNING),
+		  STRING_TOKEN (STR_UPDATING_WARNING),
 		  NULL
 		  );
 
@@ -316,9 +318,11 @@ UpdateFirmware (
     //
     // Skip the Variable range
     //
-    if (((VariableBase / BlockSize) <= Index)
-	&& (Index < ((VariableBase + VariableSize) / BlockSize))) {
-      continue;
+    if (SkipVariable) {
+      if (((VariableBase / BlockSize) <= Index)
+		    && (Index < ((VariableBase + VariableSize) / BlockSize))) {
+        continue;
+      }
     }
 
     if (TempBuffer) {
@@ -515,7 +519,7 @@ VOID ClearScreen (
 **/
 VOID
 PressKeytoReset (
-  VOID
+  EFI_STRING_ID    TokenToUpdate
   )
 {
   CHAR16           Str1[64];
@@ -523,7 +527,7 @@ PressKeytoReset (
   UINTN            EventIndex;
   CHAR16           *UpdateSuccString;
 
-  UpdateSuccString = HiiGetString (gFirmwareUpdateHandle, STRING_TOKEN (STR_FIRMWARE_UPDATE_SUCC), NULL);
+  UpdateSuccString = HiiGetString (gFirmwareUpdateHandle, TokenToUpdate, NULL);
   CreatePopUp (
     EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
     NULL,
@@ -591,16 +595,18 @@ NorFlashProbe (
 }
 
 /**
-  Update firmware from file.
+  Update file.
 
-  @param[in]  FilePath    A pointer to update firmware data file path.
+  @param[in]  FilePath        A pointer to update firmware data file path.
+  @param[in]  QuestionId      A unique value which is sent to the original exporting driver
+                              so that it can identify the type of data to expect.
 
   @retval  FALSE       Failed.
 **/
 BOOLEAN
-EFIAPI
 UpdateFromFile (
-  IN EFI_DEVICE_PATH_PROTOCOL    *FilePath
+  IN EFI_DEVICE_PATH_PROTOCOL    *FilePath,
+  IN EFI_QUESTION_ID             QuestionId
 )
 {
   VOID             *FileBuffer;
@@ -608,7 +614,11 @@ UpdateFromFile (
   UINT32           AuthStat;
   EFI_STATUS       Status;
   UINT8            *FirmwareAddress;
+  UINT8            SelectedFlashNumber;
   CHAR16           *UpdatingFirmwareString;
+  BOOLEAN          SkipVariable;
+  EFI_STRING_ID    TokenToUpdate1;
+  EFI_STRING_ID    TokenToUpdate2;
 
   //
   // Locate SPI Master protocol
@@ -636,16 +646,29 @@ UpdateFromFile (
     return FALSE;
   }
 
+  if (QuestionId == UPDATE_FIRMWARE_KEY) {
+    SelectedFlashNumber = 0;
+    TokenToUpdate1 = STRING_TOKEN (STR_UPDATING_FIRMWARE);
+    TokenToUpdate2 = STRING_TOKEN (STR_FIRMWARE_UPDATE_SUCC);
+    SkipVariable = TRUE;
+  } else if (QuestionId == UPDATE_INI_KEY) {
+    SelectedFlashNumber = 1;
+    TokenToUpdate1 = STRING_TOKEN (STR_UPDATING_INI);
+    TokenToUpdate2 = STRING_TOKEN (STR_INI_UPDATE_SUCC);
+    SkipVariable = FALSE;
+  }
+
   //
   // Setup and probe Nor flash
   //
   Nor = SpiMasterProtocol->SetupDevice (
                   SpiMasterProtocol,
-                  Nor
+                  Nor,
+		  SelectedFlashNumber
                   );
 
   if (Nor == NULL) {
-    Print (L"  Nor Flash not found!\n");
+    Print (L"  Nor Flash %d not found!\n", SelectedFlashNumber);
     return FALSE;
   }
 
@@ -657,27 +680,62 @@ UpdateFromFile (
 
   FileBuffer = GetFileBufferByFilePath (FALSE, FilePath, &FileSize, &AuthStat);
 
-  if (!EFI_ERROR(Status)) {
+  if (!EFI_ERROR (Status)) {
     FirmwareAddress = FileBuffer;
     UpdatingFirmwareString = HiiGetString (
 		    gFirmwareUpdateHandle,
-		    STRING_TOKEN (STR_UPDATING_FIRMWARE),
+		    TokenToUpdate1,
 		    NULL
 		    );
     Status = UpdateFirmware (
-	      Nor,
-              0,
-              FirmwareAddress,
-              FileSize,
-              UpdatingFirmwareString
-              );
+		    Nor,
+		    0,
+		    FirmwareAddress,
+		    FileSize,
+		    UpdatingFirmwareString,
+		    SkipVariable
+		    );
 
-    PressKeytoReset ();
+    PressKeytoReset (TokenToUpdate2);
   }
 
   FreePool (FileBuffer);
 
   return FALSE;
+}
+
+/**
+  Update the firmware.bin base on the input file path info.
+
+  @param FilePath    Point to the file path.
+
+  @retval TRUE   Exit caller function.
+  @retval FALSE  Not exit caller function.
+**/
+BOOLEAN
+EFIAPI
+UpdateFirmwareFromFile (
+  IN EFI_DEVICE_PATH_PROTOCOL  *FilePath
+  )
+{
+  return UpdateFromFile (FilePath, UPDATE_FIRMWARE_KEY);
+}
+
+/**
+  Update the conf.ini base on the input file path info.
+
+  @param FilePath    Point to the file path.
+
+  @retval TRUE   Exit caller function.
+  @retval FALSE  Not exit caller function.
+**/
+BOOLEAN
+EFIAPI
+UpdateIniFromFile (
+  IN EFI_DEVICE_PATH_PROTOCOL  *FilePath
+  )
+{
+  return UpdateFromFile (FilePath, UPDATE_INI_KEY);
 }
 
 /**
@@ -713,7 +771,11 @@ FirmwareManagerCallback (
   Status = EFI_SUCCESS;
   if (Action == EFI_BROWSER_ACTION_CHANGING) {
     if (QuestionId == UPDATE_FIRMWARE_KEY) {
-      Status = ChooseFile (NULL, NULL, UpdateFromFile, &File);
+      Status = ChooseFile (NULL, NULL, UpdateFirmwareFromFile, &File);
+    }
+
+    if (QuestionId == UPDATE_INI_KEY) {
+      Status = ChooseFile (NULL, NULL, UpdateIniFromFile, &File);
     }
   }
 

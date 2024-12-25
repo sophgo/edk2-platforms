@@ -24,7 +24,6 @@
 
 #include <Protocol/DevicePath.h>
 #include <Protocol/SimpleFileSystem.h>
-#include <Protocol/NonDiscoverableDevice.h>
 
 #include <Include/Spifmc.h>
 #include <Include/SpiNorFlash.h>
@@ -569,7 +568,8 @@ FirmwareUpdateEntry (
   //
   Nor = SpiMasterProtocol->SetupDevice (
                   SpiMasterProtocol,
-                  Nor
+                  Nor,
+		  0
                   );
 
   if (Nor == NULL) {
@@ -634,6 +634,10 @@ FirmwareUpdateEntry (
 Error:
   if (FirmwareData) {
     FreePages (FirmwareData, EFI_SIZE_TO_PAGES (FirmwareSize));
+  }
+
+  if (Nor) {
+    SpiMasterProtocol->FreeDevice (Nor);
   }
 
   Attribute = EFI_LIGHTGRAY | EFI_BACKGROUND_BLACK;

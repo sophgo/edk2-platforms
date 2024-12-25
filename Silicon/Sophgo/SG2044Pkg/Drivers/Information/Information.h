@@ -7,52 +7,73 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef _FRONT_PAGE_H_
 #define _FRONT_PAGE_H_
 
-#include "String.h"
-#include "Ui.h"
-#include <Protocol/BootLogo.h>
+#include <stdio.h>
 #include <Uefi.h>
+#include <Protocol/BootLogo.h>
+#include <Protocol/HiiConfigRouting.h>
+#include <Protocol/DevicePath.h>
+#include <Protocol/Smbios.h>
+#include <Protocol/SimpleFileSystem.h>
+#include <Protocol/HiiPackageList.h>
+#include <Protocol/HiiDatabase.h>
+#include <Protocol/HiiConfigAccess.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseLib.h>
+#include <Library/PrintLib.h>
 #include <Library/DebugLib.h>
 #include <Library/HiiLib.h>
 #include <Library/FileHandleLib.h>
 #include <Library/IniParserLib.h>
 #include <Library/IniParserLib/IniParserUtil.h>
-#include <Protocol/SimpleFileSystem.h>
-#include <Protocol/HiiPackageList.h>
-#include <Protocol/HiiDatabase.h>
+#include <Library/BaseMemoryLib.h>
 #include <Guid/FileInfo.h>
 #include <Guid/MdeModuleHii.h>
-#include <Library/DevicePathLib.h>
-#include <Library/PrintLib.h>
-#include <Protocol/HiiConfigAccess.h>
-#include <stdio.h>
-#include "FrontPageNVDataStruc.h"
-#include "FrontPageCustomizedUiSupport.h"
+#include <Guid/FileInfo.h>
+#include <Guid/MdeModuleHii.h>
+#include "InformationNVDataStruc.h"
 
 #define CONFIG_SIZE      1000
 #define MAX_HW_NUMS     500
 #define MAX_HW_NAME_LENGTH 500
 #define MAX_KEY_NAME_LENGTH    500
 #define MAX_VALUE_NAME_LENGTH   500
-#define SMBIOS_TYPE4_CPU_SOCKET_POPULATED  BIT6
 #define PRINTABLE_LANGUAGE_NAME_STRING_ID  0x0001
-#define FRONT_PAGE_FORM_ID  0x1000
-#define CONFIG_FORM_ID         0x1000
-#define FRONT_PAGE_CALLBACK_DATA_SIGNATURE  SIGNATURE_32 ('F', 'P', 'C', 'B')
-#define EFI_FP_CALLBACK_DATA_FROM_THIS(a) \
-  CR (a, \
-      FRONT_PAGE_CALLBACK_DATA, \
-      ConfigAccess, \
-      FRONT_PAGE_CALLBACK_DATA_SIGNATURE \
-      )
-#define     QF_DATE_STORAGE_TIME    0x10
+#define INFORMATION_PAGE_CALLBACK_DATA_SIGNATURE  SIGNATURE_32 ('S', 'G', 'I', 'S')
+#define END_DEVICE_PATH_LENGTH (sizeof(EFI_DEVICE_PATH_PROTOCOL))
 
-extern UINT8  FrontPageVfrBin[];
+extern UINT8  ShowInformationVfrBin[];
 extern EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
+extern EFI_HII_CONFIG_ROUTING_PROTOCOL *gHiiConfigRouting;
+
+typedef struct {
+    VENDOR_DEVICE_PATH VendorDevicePath;
+    EFI_DEVICE_PATH_PROTOCOL End;
+} HII_VENDOR_DEVICE_PATH;
+
+typedef struct {
+    CHAR8  Key[MAX_KEY_NAME_LENGTH];
+    CHAR8  Value[MAX_VALUE_NAME_LENGTH];
+} CONFIG_ENTRY;
+
+typedef struct {
+    CHAR8  SectionName[MAX_HW_NAME_LENGTH];
+    CONFIG_ENTRY Entries[CONFIG_SIZE];
+    UINTN EntryCount;
+} CONFIG_SECTION;
+
+typedef struct {
+    UINTN SectionCount;
+    CONFIG_SECTION Sections[MAX_HW_NUMS];
+} PARSED_INI_DATA;
+
+typedef struct {
+    CHAR8 Section[MAX_HW_NAME_LENGTH];
+    CHAR8 Name[MAX_KEY_NAME_LENGTH];
+    CHAR8 Value[MAX_VALUE_NAME_LENGTH];
+} INI_ENTRY;
 
 typedef struct {
   UINTN                             Signature;
@@ -61,9 +82,41 @@ typedef struct {
   EFI_STRING_ID                     *LanguageToken;
   EFI_HII_CONFIG_ACCESS_PROTOCOL    ConfigAccess;
   EFI_HII_CONFIG_ROUTING_PROTOCOL   *HiiConfigRouting;
-  EFI_GUID                          *FormSetGuid;
-  CHAR16                            *VariableName;
-} FRONT_PAGE_CALLBACK_DATA;
+} INFORMATION_PAGE_CALLBACK_DATA;
+
+typedef struct {
+  CHAR16 *BiosVendor;
+  CHAR16 *BiosVersion;
+  CHAR16 *BiosReleaseDate;
+  CHAR16 *SystemManufacturer;
+  CHAR16 *SystemProductName;
+  CHAR16 *SystemSerialNumber;
+  CHAR16 *BaseboardManufacturer;
+  CHAR16 *BaseboardProductName;
+  CHAR16 *ChassisManufacturer;
+  CHAR16 *ProcessorVersion;
+  UINT16 ProcessorCurrentSpeed;
+  UINT8  ProcessorCoreCount;
+  UINT8  ProcessorThreadCount;
+  UINT16 L1ICacheSize;
+  UINT16 L1DCacheSize;
+  UINT16 L2CacheSize;
+  UINT32 L3CacheSize;
+  UINT8 InstallableLanguages;
+  UINT8 BiosLanguageFlags;
+  UINT8  MemoryArrayLocation;
+  UINT8  MemoryArrayUse;
+  CHAR16 *MemoryManufacturer;
+  UINT32 MemorySize;
+  UINT16 ExtendedSpeed;
+  UINT8  MemoryRank;
+  CHAR16 MemoryType[MAX_STRING_LENGTH];
+  UINT64 MemoryArrayMappedStartingAddress;
+  UINT64 MemoryArrayMappedEndingAddress;
+  UINT8 BootStatus;
+  UINT8 IPMIInterfaceType;
+  CHAR16 *SystemVersion;
+} SMBIOS_PARSED_DATA;
 
 /**
   This function allows a caller to extract the current configuration for one
@@ -90,12 +143,11 @@ typedef struct {
 EFI_STATUS
 EFIAPI
 ExtractConfig (
-  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
-  IN  CONST EFI_STRING                      Request,
-  OUT EFI_STRING                            *Progress,
-  OUT EFI_STRING                            *Results
+  IN CONST EFI_HII_CONFIG_ACCESS_PROTOCOL *This,
+  IN CONST EFI_STRING Request,
+  OUT EFI_STRING *Progress,
+  OUT EFI_STRING *Results
 );
-
 /**
   This function processes the results of changes in configuration.
 
@@ -206,50 +258,5 @@ CHAR16 *
 ExtractDevicePathFromHiiHandle (
   IN      EFI_HII_HANDLE  Handle
   );
-
-INT32
-IniHandler (
-    VOID       *User,
-    CONST CHAR8 *Section,
-    CONST CHAR8 *Name,
-    CONST CHAR8 *Value
-);
-
-INT32
-IniConfIniParse (
-    IN INI_HANDLER   Handler,
-    IN VOID          *User
-);
-
-EFI_STATUS
-SetupTimerEvent (
- EFI_HII_HANDLE HiiHandle
-);
-
-VOID
-UpdateFrontPageForm (
-VOID
-);
-
-EFI_STATUS
-UpdateBootRegion (
-EFI_HII_HANDLE HiiHandle
-);
-
-EFI_STATUS
-UpdateTimeRegion (
-EFI_HII_HANDLE HiiHandle
-);
-
-VOID
-AppendAltCfgString (
-  IN OUT EFI_STRING  *RequestResult,
-  IN     EFI_STRING  ConfigRequestHdr
-);
-
-VOID
-GetTimeData (
-  VOID
-);
 
 #endif // _FRONT_PAGE_H_

@@ -37,7 +37,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessor) {
       return Status;
     }
 
-    if (IniGetValueBySectionAndName ("CPU", "type", value) == 0) {
+    if (IniGetValueBySectionAndName ("CPU", "processor_version", value) == 0) {
       AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
       HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStr, NULL);
     }

@@ -236,7 +236,7 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf
 INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/Settime/ShowTime.inf
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
-
+INF  Silicon/Sophgo/SG2044Pkg/Drivers/Information/ShowInformation.inf
 #
 # ACPI Support
 #

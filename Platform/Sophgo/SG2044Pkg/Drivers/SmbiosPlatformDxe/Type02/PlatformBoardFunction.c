@@ -34,7 +34,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBoard) {
       return Status;
     }
 
-    if (IniGetValueBySectionAndName ("board", "name", value) == 0) {
+    if (IniGetValueBySectionAndName ("board", "product_name", value) == 0) {
       AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
       HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStr, NULL);
     }

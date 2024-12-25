@@ -124,8 +124,11 @@ INF  Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 # Network modules
 #
 !include NetworkPkg/Network.fdf.inc
+!if $(ETH_ENABLE) == TRUE
 INF  Silicon/Sophgo/Drivers/Net/StmmacMdioDxe/StmmacMdioDxe.inf
 INF  Silicon/Sophgo/Drivers/Net/MotorcommPhyDxe/Motorcomm8531PhyDxe.inf
+INF  Silicon/Sophgo/Drivers/Net/DwMac4SnpDxe/DwMac4SnpDxe.inf
+!endif
 
 #
 # Random Number Generator Support

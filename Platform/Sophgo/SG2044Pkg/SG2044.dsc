@@ -43,6 +43,7 @@
   DEFINE NETWORK_ISCSI_ENABLE     = FALSE
 
   DEFINE FLASH_ENABLE             = TRUE
+  DEFINE ETH_ENABLE               = FALSE
 
   #
   # x64 Emulator
@@ -276,6 +277,7 @@
   RngLib|Silicon/Sophgo/Library/RngLib/RngLib.inf
 
   ResetSystemLib|OvmfPkg/RiscVVirt/Library/ResetSystemLib/BaseResetSystemLib.inf
+  DmaLib|EmbeddedPkg/Library/NonCoherentDmaLib/NonCoherentDmaLib.inf
 [LibraryClasses.common.SEC]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
   ExtractGuidedSectionLib|MdePkg/Library/BaseExtractGuidedSectionLib/BaseExtractGuidedSectionLib.inf
@@ -469,8 +471,11 @@
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
 
+!if $(ETH_ENABLE) == TRUE
   gSophgoTokenSpaceGuid.PcdPhyResetGpio|TRUE
   gSophgoTokenSpaceGuid.PcdPhyResetGpioPin|28
+  gSophgoTokenSpaceGuid.PcdDwMac4DefaultMacAddress|0x12345678ABCD
+!endif
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|400000000
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|25000000
@@ -585,8 +590,11 @@
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
   Silicon/Sophgo/Drivers/DwSpiDxe/DwSpiDxe.inf
   Silicon/Sophgo/Drivers/DwGpioDxe/DwGpioDxe.inf
+!if $(ETH_ENABLE) == TRUE
   Silicon/Sophgo/Drivers/Net/StmmacMdioDxe/StmmacMdioDxe.inf
   Silicon/Sophgo/Drivers/Net/MotorcommPhyDxe/Motorcomm8531PhyDxe.inf
+  Silicon/Sophgo/Drivers/Net/DwMac4SnpDxe/DwMac4SnpDxe.inf
+!endif
 
   #
   # RISC-V Core module

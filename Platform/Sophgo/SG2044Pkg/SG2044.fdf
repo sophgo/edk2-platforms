@@ -125,6 +125,7 @@ INF  Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 #
 !include NetworkPkg/Network.fdf.inc
 INF  Silicon/Sophgo/Drivers/Net/StmmacMdioDxe/StmmacMdioDxe.inf
+INF  Silicon/Sophgo/Drivers/Net/MotorcommPhyDxe/Motorcomm8531PhyDxe.inf
 
 #
 # Random Number Generator Support

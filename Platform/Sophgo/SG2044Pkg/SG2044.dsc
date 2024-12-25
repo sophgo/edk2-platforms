@@ -469,6 +469,8 @@
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
 
+  gSophgoTokenSpaceGuid.PcdPhyResetGpio|TRUE
+  gSophgoTokenSpaceGuid.PcdPhyResetGpioPin|28
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|400000000
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|25000000
@@ -581,9 +583,10 @@
   Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
-  Silicon/Sophgo/Drivers/Net/StmmacMdioDxe/StmmacMdioDxe.inf
   Silicon/Sophgo/Drivers/DwSpiDxe/DwSpiDxe.inf
   Silicon/Sophgo/Drivers/DwGpioDxe/DwGpioDxe.inf
+  Silicon/Sophgo/Drivers/Net/StmmacMdioDxe/StmmacMdioDxe.inf
+  Silicon/Sophgo/Drivers/Net/MotorcommPhyDxe/Motorcomm8531PhyDxe.inf
 
   #
   # RISC-V Core module

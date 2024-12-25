@@ -1,0 +1,47 @@
+#/** @file
+#
+#    Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#
+#    SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = MotorcommPhyDxe
+  FILE_GUID                      = 6E8DDC1C-4BC2-481E-B64F-F0357457CC60
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = Yt8531PhyDxeEntryPoint
+
+[Sources.common]
+  Motorcomm8531PhyDxe.c
+
+[Packages]
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  PcdLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+
+[Protocols]
+  gSophgoPhyProtocolGuid                                  ## PRODUCES
+  gSophgoMdioProtocolGuid                                 ## CONSUMES
+  gSophgoGpioProtocolGuid                                 ## CONSUMES
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdPhyResetGpio
+  gSophgoTokenSpaceGuid.PcdPhyResetGpioPin
+
+[Depex]
+  gSophgoMdioProtocolGuid AND
+  gSophgoGpioProtocolGuid

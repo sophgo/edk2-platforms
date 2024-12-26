@@ -46,21 +46,22 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessor) {
       AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
       HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[3], UnicodeStr, NULL);
     }
-
-    if (IniGetValueBySectionAndName ("CPU", "frequency", value) == 0) {
-      Status = AsciiStrDecimalToUintnS (value, &End, &Freq);
-      if (RETURN_ERROR (Status) || (End - value > 4)) {
-        return RETURN_UNSUPPORTED;
-      }
-      InputData->CurrentSpeed = Freq;
+    if (IniGetValueBySectionAndName("CPU", "frequency", value) == 0) {
+    	Status = AsciiStrDecimalToUintnS(value, &End, &Freq);
+    	if (RETURN_ERROR(Status)) {
+            return RETURN_UNSUPPORTED;
+    	}
+    	if (Freq >= 1000000) {
+            Freq = Freq / 1000000;
+    	}
+    	InputData->CurrentSpeed = Freq;
     }
-
     SmbiosPlatformDxeCreateTable (
       (VOID *)&Type4Record,
       (VOID *)&InputData,
       sizeof (SMBIOS_TABLE_TYPE4),
       InputStrToken
-      );
+    );
     if (Type4Record == NULL) {
       return EFI_OUT_OF_RESOURCES;
     }
@@ -79,6 +80,6 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessor) {
     InputData++;
     InputStrToken++;
   }
-
   return EFI_SUCCESS;
 }
+

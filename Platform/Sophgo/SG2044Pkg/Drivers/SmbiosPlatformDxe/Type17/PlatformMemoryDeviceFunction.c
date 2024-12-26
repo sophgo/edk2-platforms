@@ -51,8 +51,8 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
           if (RETURN_ERROR (Status)) {
             return RETURN_UNSUPPORTED;
           }
-          InputData->ExtendedSpeed = Uint;
-          InputData->ExtendedConfiguredMemorySpeed = Uint;
+          InputData->ExtendedSpeed = Uint / 1000000;
+          InputData->ExtendedConfiguredMemorySpeed = Uint / 1000000;
       }
 
       if (IniGetValueBySectionAndName ("DDR", "rank", value) == 0) {

@@ -37,13 +37,12 @@ UpdateCacheSize(
       return RETURN_UNSUPPORTED;
     }
 
-    Bytes = Uint * 1024ULL;
-    Bytes32 = (Bytes > MAX_UINT32) ? MAX_UINT32 : (UINT32)Bytes;
-
-    if (Uint <= 0x7FFF) {
-      InstalledSizeValue = (UINT16)Uint;
+    Bytes = Uint / 1024;
+    Bytes32 = (Uint > MAX_UINT32) ? MAX_UINT32 : (UINT32)Uint;
+    if (Bytes <= 0x7FFF) {
+      InstalledSizeValue = (UINT16)Bytes;
     } else {
-      UINT64 Increments = Uint / 64;
+      UINT64 Increments = Bytes / 64;
       if (Increments > 0x7FFF) {
         Increments = 0x7FFF;
       }

@@ -10,6 +10,29 @@
 /*
   See ACPI 6.5 Spec, 6.2.11, PCI Firmware Spec 3.0, 4.5
 */
+#define LNK_DEVICE(Unique_Id, Link_Name, irq)                                  \
+  Device(Link_Name) {                                                          \
+      Name(_HID, EISAID("PNP0C0F"))                                            \
+      Name(_UID, Unique_Id)                                                    \
+      Name(_PRS, ResourceTemplate() {                                          \
+          Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive) { irq }    \
+      })                                                                       \
+      Method (_CRS, 0) { Return (_PRS) }                                       \
+      Method (_SRS, 1) { }                                                     \
+      Method (_DIS) { }                                                        \
+  }
+
+#define PRT_ENTRY(Address, Pin, Link)                                                             \
+        Package (4) {                                                                             \
+            Address,    /* uses the same format as _ADR */                                        \
+            Pin,        /* The PCI pin number of the device (0-INTA, 1-INTB, 2-INTC, 3-INTD). */  \
+            Link,       /* Interrupt allocated via Link device. */                                \
+            Zero        /* global system interrupt number (no used) */                            \
+          }
+
+#define ROOT_PRT_ENTRY(Pin, Link)   PRT_ENTRY(0x0000FFFF, Pin, Link)
+                                                    // Device 0 for Bridge.
+
 #define PCI_OSC_SUPPORT() \
   Name(SUPP, Zero) /* PCI _OSC Support Field value */ \
   Name(CTRL, Zero) /* PCI _OSC Control Field value */ \
@@ -52,6 +75,13 @@
 
 Scope(_SB)
 {
+
+  LNK_DEVICE(1, RCA0, 64)
+  LNK_DEVICE(2, RCA1, 65)
+  LNK_DEVICE(3, RCA2, 73)
+  LNK_DEVICE(4, RCA3, 74)
+  LNK_DEVICE(5, RCA4, 125)
+
   // PCIe Root bus
   Device (PCI0)
   {
@@ -66,11 +96,11 @@ Scope(_SB)
     })
 
     // PCI Routing Table
-    Name (_PRT, Package () {
-      Package () { 0xFFFF, 0, 0, 64 },   // INTA
-      Package () { 0xFFFF, 1, 0, 64 },   // INTB
-      Package () { 0xFFFF, 2, 0, 64 },   // INTC
-      Package () { 0xFFFF, 3, 0, 64 },   // INTD
+    Name(_PRT, Package() {
+      ROOT_PRT_ENTRY(0, RCA0),   // INTA
+      ROOT_PRT_ENTRY(1, RCA0),   // INTB
+      ROOT_PRT_ENTRY(2, RCA0),   // INTC
+      ROOT_PRT_ENTRY(3, RCA0),   // INTD
     })
 
     Name (_DSD, Package () {
@@ -230,11 +260,13 @@ Scope(_SB)
       \_SB.MSI
     })
 
-    Name (_PRT, Package (){
-      Package () {0xFFFF, 0, 0, 65},         // INT_A
-      Package () {0xFFFF, 1, 0, 65},         // INT_B
-      Package () {0xFFFF, 2, 0, 65},         // INT_C
-      Package () {0xFFFF, 3, 0, 65},         // INT_D
+
+    // PCI Routing Table
+    Name(_PRT, Package() {
+      ROOT_PRT_ENTRY(0, RCA1),   // INTA
+      ROOT_PRT_ENTRY(1, RCA1),   // INTB
+      ROOT_PRT_ENTRY(2, RCA1),   // INTC
+      ROOT_PRT_ENTRY(3, RCA1),   // INTD
     })
 
     Name (_DSD, Package () {
@@ -394,11 +426,11 @@ Scope(_SB)
     })
 
     // PCI Routing Table
-    Name (_PRT, Package () {
-      Package () { 0xFFFF, 0, 0, 73 },   // INTA
-      Package () { 0xFFFF, 1, 0, 73 },   // INTB
-      Package () { 0xFFFF, 2, 0, 73 },   // INTC
-      Package () { 0xFFFF, 3, 0, 73 },   // INTD
+    Name(_PRT, Package() {
+      ROOT_PRT_ENTRY(0, RCA2),   // INTA
+      ROOT_PRT_ENTRY(1, RCA2),   // INTB
+      ROOT_PRT_ENTRY(2, RCA2),   // INTC
+      ROOT_PRT_ENTRY(3, RCA2),   // INTD
     })
 
     Name (_DSD, Package () {
@@ -558,11 +590,11 @@ Scope(_SB)
     })
 
     // PCI Routing Table
-    Name (_PRT, Package () {
-      Package () { 0xFFFF, 0, 0, 74 },   // INTA
-      Package () { 0xFFFF, 1, 0, 74 },   // INTB
-      Package () { 0xFFFF, 2, 0, 74 },   // INTC
-      Package () { 0xFFFF, 3, 0, 74 },   // INTD
+    Name(_PRT, Package() {
+      ROOT_PRT_ENTRY(0, RCA3),   // INTA
+      ROOT_PRT_ENTRY(1, RCA3),   // INTB
+      ROOT_PRT_ENTRY(2, RCA3),   // INTC
+      ROOT_PRT_ENTRY(3, RCA3),   // INTD
     })
 
     Name (_DSD, Package () {
@@ -722,11 +754,11 @@ Scope(_SB)
     })
 
     // PCI Routing Table
-    Name (_PRT, Package () {
-      Package () { 0xFFFF, 0, 0, 125 },   // INTA
-      Package () { 0xFFFF, 1, 0, 125 },   // INTB
-      Package () { 0xFFFF, 2, 0, 125 },   // INTC
-      Package () { 0xFFFF, 3, 0, 125 },   // INTD
+    Name(_PRT, Package() {
+      ROOT_PRT_ENTRY(0, RCA4),   // INTA
+      ROOT_PRT_ENTRY(1, RCA4),   // INTB
+      ROOT_PRT_ENTRY(2, RCA4),   // INTC
+      ROOT_PRT_ENTRY(3, RCA4),   // INTD
     })
 
     Name (_DSD, Package () {

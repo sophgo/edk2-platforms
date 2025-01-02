@@ -97,7 +97,7 @@ typedef struct {
 // RHCT Revision (as defined in ACPI 6.5 spec.)
 //
 #define EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE_REVISION  0x01
-
+#define MAX_ISA_LENGTH 256
 //
 // RISC-V Hart Capabilities Table header definition.  The rest of the table
 // must be defined in a platform specific manner.
@@ -116,7 +116,7 @@ typedef struct {
   UINT16     Length;
   UINT16     Revision;
   UINT16     ISALen;
-  CHAR8      ISAStr[218];
+  CHAR8      ISAStr[MAX_ISA_LENGTH];
 } EFI_ACPI_6_6_ISA_STRING_NODE_STRUCTURE;
 
 // CMO node structure

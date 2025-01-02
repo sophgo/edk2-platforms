@@ -46,9 +46,9 @@ STATIC EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE Rhct = {
   },
   {
     0,
-    226,                     // 8 + N + P: Size of this structure.
+    OFFSET_OF (EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE, CMONode) - OFFSET_OF (EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE, ISAStrNode),                     // 8 + N + P: Size of this structure.
     1,
-    216,
+    MAX_ISA_LENGTH,
     "rv64imafdcv_zicbom_zicboz_zicntr_zicond_zicsr_zifencei_zihintntl_zihintpause_zihpm_zawrs_zfa_zfh_zfhmin_zca_zcb_zcd_zba_zbb_zbc_zbs_zve32f_zve32x_zve64d_zve64f_zve64x_zvfh_zvfhmin_sscofpmf_sstc_svinval_svnapot_svpbmt"
   },
   {

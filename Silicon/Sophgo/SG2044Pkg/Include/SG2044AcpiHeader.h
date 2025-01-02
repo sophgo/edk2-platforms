@@ -116,7 +116,7 @@ typedef struct {
   UINT16     Length;
   UINT16     Revision;
   UINT16     ISALen;
-  CHAR8      ISAStr[12];
+  CHAR8      ISAStr[216];
 } EFI_ACPI_6_6_ISA_STRING_NODE_STRUCTURE;
 
 // CMO node structure

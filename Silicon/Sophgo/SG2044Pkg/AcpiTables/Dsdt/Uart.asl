@@ -15,7 +15,6 @@ Scope(_SB)
     Name(_HID, "SGPH0003")              // _HID: Hardware ID
     Name(_CID, "HISI0032")              // _CID: Compatible ID
     Name(_UID, 0)
-    Name(_CCA, 1)                       // _CCA: Cache Coherency Attribute
     Name(_DSD, Package () {
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package () {

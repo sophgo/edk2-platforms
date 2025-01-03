@@ -15,7 +15,7 @@ Scope(_SB)
   {
     Name (_HID, "SGPH0015")
     Name (_UID, 0x00)           // _UID: Unique ID
-    Name (_CCA, 0x01)           // _CCA: Cache Coherency Attribute
+    Name (_CCA, 0x00)           // _CCA: Cache Coherency Attribute
     Method (_STA)
     {
       Return(0x0)
@@ -50,7 +50,7 @@ Scope(_SB)
   {
     Name (_HID, "SGPH0016")
     Name (_UID, 0x1)
-    Name (_CCA, 0x01)           // _CCA: Cache Coherency Attribute
+    Name (_CCA, 0x00)           // _CCA: Cache Coherency Attribute
     Method (_STA)
     {
       Return(0xf)

@@ -8,6 +8,7 @@
 **/
 #ifndef FRONT_PAGE_NV_DATA_STRUC_H_
 #define FRONT_PAGE_NV_DATA_STRUC_H_
+#include <Library/PasswordConfigData.h>
 
 #define TIME_DATA_VARSTORE_NAME           L"DynamicTimeData"
 #define DYNAMIC_TIME_QUESTION_ID          0x1002
@@ -22,9 +23,9 @@
 #define LABEL_MANAGER                  0x1000
 #define LABEL_END                      0xffff
 #define CONFIG_FORM_ID                 0x1000
-#define LABEL_CONFIG_START        0x1000
-#define LABEL_CONFIG_END          0xffff
-
+#define LABEL_CONFIG_START             0x1000
+#define LABEL_CONFIG_END               0xffff
+#define FORM_PASSWORDCONFIG_ID         0x9001
 
 #endif
 

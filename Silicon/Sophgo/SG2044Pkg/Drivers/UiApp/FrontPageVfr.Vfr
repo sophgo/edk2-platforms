@@ -9,7 +9,7 @@ formset
   title    = STRING_TOKEN(STR_FRONT_PAGE_TITLE),
   help     = STRING_TOKEN(STR_EMPTY_STRING ),
   classguid = FORMSET_GUID,
-  
+
   form formid = FRONT_PAGE_FORM_ID,
        title  = STRING_TOKEN(STR_FRONT_PAGE_TITLE);
     label LABEL_TIME_START;
@@ -18,51 +18,58 @@ formset
     label LABEL_END;
     goto
       formsetguid = CONFIG_INI_FORMSET_GUID,
-      formid  = NEW_FORM_ID,                               
+      formid  = NEW_FORM_ID,
       question = NEW_FORM_ID,
-      prompt  = STRING_TOKEN(STR_GOTO_DYNAMIC), 
-      help    = STRING_TOKEN(STR_GOTO_HELP),     
-      flags   = INTERACTIVE;                  
+      prompt  = STRING_TOKEN(STR_GOTO_DYNAMIC),
+      help    = STRING_TOKEN(STR_GOTO_HELP),
+      flags   = INTERACTIVE;
+    goto
+      formsetguid = PASSWORDCONFIG_FORMSET_GUID,
+      formid  =  FORM_PASSWORDCONFIG_ID,
+      question = FORM_PASSWORDCONFIG_ID,
+      prompt  = STRING_TOKEN(STR_GOTO_PASSWORD),
+      help    = STRING_TOKEN(STR_GOTO_PASSWORD_HELP),
+      flags   = INTERACTIVE;
     goto
       formsetguid = TIME_SET_FORMSET_GUID,
       formid  = TIME_SET_ID,
       question = TIME_SET_ID,
       prompt  = STRING_TOKEN(STR_GOTO_TIME_SET),
       help    = STRING_TOKEN(STR_GOTO_TIME_SET_HELP),
-      flags   = INTERACTIVE; 
+      flags   = INTERACTIVE;
     goto 0x1234,
       prompt  = STRING_TOKEN(STR_SERIALPORT),
       help    = STRING_TOKEN(STR_SERIALPORT_HELP),
       flags   = INTERACTIVE,
-      key     = 0x1234; 
+      key     = 0x1234;
     label LABEL_MANAGER;
     label LABEL_END;
   endform;
 
-  form formid = 0x1234, 
+  form formid = 0x1234,
         title = STRING_TOKEN(STR_SERIALPORT_TITLE);
         text
            help = STRING_TOKEN(STR_TREM_TYPE_HELP),
-           text = STRING_TOKEN(STR_TERM_TYPE);     
+           text = STRING_TOKEN(STR_TERM_TYPE);
 
         text
            help = STRING_TOKEN(STR_BAUD_RATE_HELP),
-           text = STRING_TOKEN(STR_BAUD_RATE); 
+           text = STRING_TOKEN(STR_BAUD_RATE);
 
         text
            help = STRING_TOKEN(STR_DATA_BITS_HELP),
-           text = STRING_TOKEN(STR_DATA_BITS); 
+           text = STRING_TOKEN(STR_DATA_BITS);
 
         text
            help = STRING_TOKEN(STR_PARITY_HELP),
-           text = STRING_TOKEN(STR_PARITY); 
+           text = STRING_TOKEN(STR_PARITY);
 
         text
            help = STRING_TOKEN(STR_STOP_BITS_HELP),
-           text = STRING_TOKEN(STR_STOP_BITS); 
-        
+           text = STRING_TOKEN(STR_STOP_BITS);
+
         text
            help = STRING_TOKEN(STR_FLOW_CONTROL_HELP),
-           text = STRING_TOKEN(STR_FLOW_CONTROL);  
+           text = STRING_TOKEN(STR_FLOW_CONTROL);
   endform;
 endformset;

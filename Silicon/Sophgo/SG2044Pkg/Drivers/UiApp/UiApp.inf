@@ -25,6 +25,7 @@
   FrontPageCustomizedUiSupport.c
   FrontPageCustomizedUi.h
   FrontPageCustomizedUiSupport.h
+  PasswordRead.c
 
 [Packages]
   MdePkg/MdePkg.dec
@@ -48,7 +49,6 @@
   PcdLib
   UefiHiiServicesLib
   UefiBootManagerLib
-  IniParserLib
 
 [Guids]
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)

@@ -6,14 +6,16 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include "FrontPage.h"
 #include "FrontPageCustomizedUi.h"
-
 #define MAX_STRING_LEN  500
 #define DEVICE_PATH_0_GUID { 0x8e6d99ee, 0x7531, 0x48f8, { 0x87, 0x45, 0x7f, 0x61, 0x44, 0x46, 0x8f, 0xf2} }
+#define PASSWORD_CONFIG_ATTRIBUTES (EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS)
 
+extern EFI_HII_HANDLE gStringPackHandle;
 EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
 CHAR8                       *mLanguageString;
 
 EFI_GUID mFrontPageGuid = FORMSET_GUID;
+EFI_GUID gPasswordConfigVarGuid = PASSWORDCONFIG_VAR_GUID;
 BOOLEAN  mResetRequired = FALSE;
 BOOLEAN  mModeInitialized = FALSE;
 UINT32  mBootHorizontalResolution = 0;
@@ -90,6 +92,125 @@ FrontPageCallback (
   )
 {
 	return UiFrontPageCallbackHandler(gFrontPagePrivate.HiiHandle, Action, QuestionId, Type, Value, ActionRequest);
+}
+
+EFI_STATUS
+FrontPagePasswordCheck(
+  VOID
+)
+{
+  CHAR16                  TempStr[PASSWD_MAXLEN];
+  CHAR16                  UsernameStr[PASSWD_MAXLEN];
+  CHAR16                  ChanceStr[30];
+  PASSWORD_CONFIG_DATA    PasswordConfigData;
+  UINTN                   VarSize;
+  EFI_STATUS              Status;
+  EFI_INPUT_KEY           Key;
+  CHAR16                  *EnterUsernameString;
+  CHAR16                  *EnterPasswordString;
+  CHAR16                  *PasswordIncorrectString;
+  CHAR16                  *UsernameNotFoundString;
+  CHAR16                  *YouHaveChanceLeftString;
+  CHAR16                  *PressEnterContinueString;
+
+  UINT8 Chance = 4;
+  ZeroMem(TempStr,      sizeof(TempStr));
+  ZeroMem(UsernameStr,  sizeof(UsernameStr));
+  ZeroMem(&PasswordConfigData, sizeof(PasswordConfigData));
+  VarSize = sizeof(PASSWORD_CONFIG_DATA);
+  Status = gRT->GetVariable(
+      VAR_PASSWORD_CONFIG_NAME,
+      &gPasswordConfigVarGuid,
+      NULL,
+      &VarSize,
+      &PasswordConfigData
+  );
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to get password config variable. Status: %r\n", Status));
+    return Status;
+  }
+  CONST CHAR16            *AdminName = L"admin";
+  CONST CHAR16            *UserName = L"user";
+
+  while (TRUE) {
+    EnterUsernameString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_ENTER_USERNAME), NULL);
+    ReadString(EnterUsernameString, UsernameStr);
+    if (StrCmp(UsernameStr, AdminName) == 0) {
+      PasswordConfigData.UserPriv = 1;
+      break;
+    } else if (StrCmp(UsernameStr, UserName) == 0) {
+      if (PasswordConfigData.UserPasswordEnable == 0) {
+        DEBUG((DEBUG_WARN, "User password is not enabled. Cannot login.\n"));
+        UsernameNotFoundString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_USERNAME_NOT_ENABLED), NULL);
+        if (UsernameNotFoundString == NULL) {
+          UsernameNotFoundString = L"User password is disabled. No login.";
+        }
+        do {
+          CreateDialog(&Key, UsernameNotFoundString, NULL);
+        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+
+        gST->ConOut->ClearScreen(gST->ConOut);
+        continue;
+      }
+      PasswordConfigData.UserPriv = 0;
+      break;
+    } else {
+      UsernameNotFoundString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_USERNAME_NOT_FOUND), NULL);
+      if (UsernameNotFoundString == NULL) {
+        UsernameNotFoundString = L"Username not found.";
+      }
+      do {
+        CreateDialog(&Key, UsernameNotFoundString, NULL);
+      } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+      gST->ConOut->ClearScreen(gST->ConOut);
+    }
+  }
+
+  while (Chance > 0) {
+    EnterPasswordString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_ENTER_PASSWORD), NULL);
+    ReadString(EnterPasswordString, TempStr);
+    if ((PasswordConfigData.UserPriv == 1) &&
+        (StrCmp(TempStr, PasswordConfigData.AdminPassword) == 0)) {
+      break;
+    } else if (
+        (PasswordConfigData.UserPriv == 0) &&
+        (StrCmp(TempStr, PasswordConfigData.UserPassword) == 0)
+      ) {
+      break;
+    } else {
+      DEBUG((DEBUG_WARN, "Password validation failed. Remaining chances: %d\n", Chance - 1));
+      gST->ConOut->ClearScreen(gST->ConOut);
+      Chance--;
+      if (Chance == 0) {
+        DEBUG((DEBUG_ERROR, "Maximum attempts reached. System resetting...\n"));
+        gRT->ResetSystem(EfiResetCold, EFI_SUCCESS, 0, NULL);
+      } else {
+        YouHaveChanceLeftString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_YOU_HAVE_CHANCE_LEFT), NULL);
+        UnicodeSPrint(ChanceStr, sizeof(ChanceStr), YouHaveChanceLeftString, Chance);
+
+        PasswordIncorrectString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_PASSWORD_INCORRECT), NULL);
+        PressEnterContinueString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_PRESEE_ENTER_CONTINUE), NULL);
+        do {
+          CreateDialog(&Key, PasswordIncorrectString, ChanceStr, PressEnterContinueString, NULL);
+        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+      }
+    }
+    ZeroMem(TempStr, sizeof(TempStr));
+  }
+
+  Status = gRT->SetVariable(
+      VAR_PASSWORD_CONFIG_NAME,
+      &gPasswordConfigVarGuid,
+      PLATFORM_SETUP_VARIABLE_FLAG,
+      sizeof(PASSWORD_CONFIG_DATA),
+      &PasswordConfigData
+  );
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to set password config variable. Status: %r\n", Status));
+    return Status;
+  }
+
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -740,7 +861,7 @@ InitializeUserInterface (
   HiiHandle = ExportFonts ();
   ASSERT (HiiHandle != NULL);
   InitializeStringSupport ();
-
+ // FrontPagePasswordCheck ();
   UiSetConsoleMode (TRUE);
   UiEntry (FALSE);
   UiSetConsoleMode (FALSE);

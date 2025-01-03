@@ -799,6 +799,7 @@
   Silicon/Sophgo/SG2044Pkg/Drivers/Settime/ShowTime.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/Information/ShowInformation.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
 
   #
   # ACPI Support

@@ -28,10 +28,12 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/MdeModuleHii.h>
 #include <Library/DevicePathLib.h>
 #include <Library/PrintLib.h>
+#include <Library/CustomizedDisplayLib/Colors.h>
 #include <Protocol/HiiConfigAccess.h>
 #include <stdio.h>
 #include "FrontPageNVDataStruc.h"
 #include "FrontPageCustomizedUiSupport.h"
+#include <Library/PasswordRead.h>
 
 #define CONFIG_SIZE      1000
 #define MAX_HW_NUMS     500

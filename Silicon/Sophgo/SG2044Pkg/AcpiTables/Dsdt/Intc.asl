@@ -23,14 +23,6 @@ Scope(_SB)
       )
     })
 
-    Name(_DSD, Package () {
-      ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
-      Package ()
-      {
-        Package () { "riscv,ndev", 863 },
-      }
-    })
-
     Method(_GSB) {
       Return (0x0) // Global System Interrupt Base for I/O APIC starts at 0
     }
@@ -87,7 +79,7 @@ Scope(_SB)
       }
 
       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) {
-        607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618, 
+        607, 608, 609, 610, 611, 612, 613, 614, 615, 616, 617, 618,
         619, 620, 621, 622, 623, 624, 625, 626, 627, 628, 629, 630,
         631, 632, 633, 634, 635, 636, 637, 638, 639, 640, 641, 642,
         643, 644, 645, 646, 647, 648, 649, 650, 651, 652, 653, 654,
@@ -107,12 +99,7 @@ Scope(_SB)
         811, 812, 813, 814, 815, 816, 817, 818, 819, 820, 821, 822,
         823, 824, 825, 826, 827, 828, 829, 830, 831, 832, 833, 834,
         835, 836, 837, 838, 839, 840, 841, 842, 843, 844, 845, 846,
-        847, 848, 849, 850, 851, 852, 853, 854, 855, 856, 857, 858,
-        859, 860, 861
-      }
-
-      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) {
-        862, 863
+        847, 848, 849, 850, 851, 852, 853, 854, 855
       }
 
     })
@@ -121,8 +108,8 @@ Scope(_SB)
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package ()
       {
-        Package () { "for-msi", 1 },
         Package () { "reg-bitwidth", 32 },
+        Package () { "sophgo,msi-num-vecs", 504 },
       }
     })
   }

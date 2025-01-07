@@ -10,6 +10,11 @@ formset
   help     = STRING_TOKEN(STR_EMPTY_STRING ),
   classguid = FORMSET_GUID,
 
+  varstore PASSWORD_CHECK_DATA,
+    varid = VARSTORE_ID_PASSWORD_CHECK,
+    name = PasswordCheckData,
+    guid = FORMSET_GUID;
+
   form formid = FRONT_PAGE_FORM_ID,
        title  = STRING_TOKEN(STR_FRONT_PAGE_TITLE);
     label LABEL_TIME_START;
@@ -44,6 +49,15 @@ formset
       key     = 0x1234;
     label LABEL_MANAGER;
     label LABEL_END;
+  grayoutif ideqval PASSWORD_CHECK_DATA.IsFirst == 1 AND ideqval PASSWORD_CHECK_DATA.UserPriv == 0 AND ideqval PASSWORD_CHECK_DATA.PasswordCheckEnabled == 1;
+    oneof varid  = PASSWORD_CHECK_DATA.PasswordCheckEnabled,
+      prompt = STRING_TOKEN(STR_PASSWORD_CHECK_PROMPT),
+      help   = STRING_TOKEN(STR_PASSWORD_CHECK_HELP),
+      flags  = INTERACTIVE,
+      option text = STRING_TOKEN(STR_DISABLE), value = 0x0, flags = DEFAULT;
+      option text = STRING_TOKEN(STR_ENABLE), value = 0x1, flags = 0;
+    endoneof;
+  endif;
   endform;
 
   form formid = 0x1234,

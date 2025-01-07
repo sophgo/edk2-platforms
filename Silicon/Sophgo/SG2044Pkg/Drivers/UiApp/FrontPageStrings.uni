@@ -66,8 +66,8 @@
 #string STR_YOU_HAVE_CHANCE_LEFT       #language en-US "You have %d chance(s) left."
 #string STR_PRESEE_ENTER_CONTINUE      #language en-US "Press Enter to continue."
 #string STR_USERNAME_NOT_ENABLED       #language en-US "User is not enabled. No login."
-#string STR_PASSWORD_CHECK_PROMPT      #language en-US "Password Check"
-#string STR_PASSWORD_CHECK_HELP        #language en-US "Enable or disable password check."
+#string STR_PASSWORD_CHECK_PROMPT      #language en-US "Password Enable/Disable"
+#string STR_PASSWORD_CHECK_HELP        #language en-US "Enable or disable password check. WARINING!!! Non-administrator users do not have permission to disable the password feature once it is enabled. During the first login, non-administrator users are allowed to enable the password feature, but after it is enabled, only administrators have the permission to disable it."
 #string STR_ENABLE                     #language en-US "Enable"
 #string STR_DISABLE                    #language en-US "Disable"
 

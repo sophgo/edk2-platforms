@@ -12,10 +12,12 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 extern EFI_HII_HANDLE gStringPackHandle;
 EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
+PASSWORD_CHECK_DATA         PasswordCheckData;
 CHAR8                       *mLanguageString;
 
 EFI_GUID mFrontPageGuid = FORMSET_GUID;
 EFI_GUID gPasswordConfigVarGuid = PASSWORDCONFIG_VAR_GUID;
+EFI_GUID gMenuPasswordCheckVarGuid = PASSWORD_CHECK_VARSTORE_GUID;
 BOOLEAN  mResetRequired = FALSE;
 BOOLEAN  mModeInitialized = FALSE;
 UINT32  mBootHorizontalResolution = 0;
@@ -26,8 +28,7 @@ UINT32  mSetupTextModeColumn       = 0;
 UINT32  mSetupTextModeRow          = 0;
 UINT32  mSetupHorizontalResolution = 0;
 UINT32  mSetupVerticalResolution   = 0;
-CHAR16  VariableName[] = L"DynamicTimeData";
-CHAR16  TimeData[] = L"DynamicTimeData";
+
 FRONT_PAGE_CALLBACK_DATA  gFrontPagePrivate = {
   FRONT_PAGE_CALLBACK_DATA_SIGNATURE,
   NULL,
@@ -95,6 +96,66 @@ FrontPageCallback (
 }
 
 EFI_STATUS
+InitializePasswordCheckVariable (
+  VOID
+)
+{
+  EFI_STATUS Status;
+  UINTN VarSize;
+  VarSize = sizeof(PASSWORD_CHECK_DATA);
+
+  Status = gRT->GetVariable(
+      L"PasswordCheckData",
+      &gMenuPasswordCheckVarGuid,
+      NULL,
+      &VarSize,
+      &PasswordCheckData
+  );
+  if (EFI_ERROR(Status)) {
+    if (Status == EFI_NOT_FOUND) {
+      PasswordCheckData.PasswordCheckEnabled = 0;
+      PasswordCheckData.IsFirst = 0;
+      PasswordCheckData.UserPriv = 0;
+      Status = gRT->SetVariable(
+          L"PasswordCheckData",
+          &gMenuPasswordCheckVarGuid,
+          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+          sizeof(PASSWORD_CHECK_DATA),
+          &PasswordCheckData
+      );
+
+      if (EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR, "Failed to initialize PasswordCheckData. Status=%r\n", Status));
+        return Status;
+      }
+    } else {
+      DEBUG((DEBUG_ERROR, "Failed to read PasswordCheckData. Status=%r\n", Status));
+      return Status;
+    }
+  }
+  return EFI_SUCCESS;
+}
+
+BOOLEAN
+CheckPasswordOnMenuEntry (
+  VOID
+)
+{
+  UINTN VarSize;
+  EFI_STATUS Status;
+  VarSize = sizeof(PasswordCheckData);
+  Status = gRT->GetVariable(
+    L"PasswordCheckData",
+    &gMenuPasswordCheckVarGuid,
+    NULL,
+    &VarSize,
+    &PasswordCheckData
+  );
+
+  return (PasswordCheckData.PasswordCheckEnabled == 1) ? TRUE : FALSE;
+}
+
+EFI_STATUS
 FrontPagePasswordCheck(
   VOID
 )
@@ -137,6 +198,7 @@ FrontPagePasswordCheck(
     ReadString(EnterUsernameString, UsernameStr);
     if (StrCmp(UsernameStr, AdminName) == 0) {
       PasswordConfigData.UserPriv = 1;
+      PasswordCheckData.UserPriv = 1;
       break;
     } else if (StrCmp(UsernameStr, UserName) == 0) {
       if (PasswordConfigData.UserPasswordEnable == 0) {
@@ -153,6 +215,7 @@ FrontPagePasswordCheck(
         continue;
       }
       PasswordConfigData.UserPriv = 0;
+      PasswordCheckData.UserPriv = 0;
       break;
     } else {
       UsernameNotFoundString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_USERNAME_NOT_FOUND), NULL);
@@ -204,6 +267,13 @@ FrontPagePasswordCheck(
       PLATFORM_SETUP_VARIABLE_FLAG,
       sizeof(PASSWORD_CONFIG_DATA),
       &PasswordConfigData
+  );
+  Status = gRT->SetVariable(
+    L"PasswordCheckData",
+    &gMenuPasswordCheckVarGuid,
+    EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+    sizeof(PASSWORD_CHECK_DATA),
+    &PasswordCheckData
   );
   if (EFI_ERROR(Status)) {
     DEBUG((DEBUG_ERROR, "Failed to set password config variable. Status: %r\n", Status));
@@ -590,10 +660,58 @@ ExtractConfig (
   OUT EFI_STRING                            *Results
   )
 {
-  *Progress = Request;
-  *Results = NULL;
+  EFI_STATUS                       Status;
+  PASSWORD_CHECK_DATA              PasswordCheckData;
+  UINTN                            VarSize = sizeof(PASSWORD_CHECK_DATA);
+  EFI_STRING                       ConfigRequestHdr;
 
-  return EFI_UNSUPPORTED; // Return unsupported to signify fake implementation.
+  if ((Progress == NULL) || (Results == NULL)) {
+    DEBUG((DEBUG_ERROR, "ExtractConfig: Invalid parameters. Progress=%p, Results=%p\n", Progress, Results));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  *Progress = Request;
+
+  ConfigRequestHdr = HiiConstructConfigHdr(
+    &mFrontPageGuid,
+    L"PasswordCheckData",
+    NULL
+  );
+  if (ConfigRequestHdr == NULL) {
+    DEBUG((DEBUG_ERROR, "ExtractConfig: Failed to construct ConfigRequestHdr.\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  if ((Request == NULL) || !HiiIsConfigHdrMatch(Request, &mFrontPageGuid, L"PasswordCheckData")) {
+    DEBUG((DEBUG_ERROR, "ExtractConfig: Request does not match ConfigHdr.\n"));
+    FreePool(ConfigRequestHdr);
+    return EFI_NOT_FOUND;
+  }
+
+  Status = gRT->GetVariable(
+    L"PasswordCheckData",
+    &gMenuPasswordCheckVarGuid,
+    NULL,
+    &VarSize,
+    &PasswordCheckData
+  );
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_WARN, "ExtractConfig: Failed to get variable. Status=%r\n", Status));
+    FreePool(ConfigRequestHdr);
+    return Status;
+  }
+
+  Status = gHiiConfigRouting->BlockToConfig(
+    gHiiConfigRouting,
+    Request,
+    (UINT8 *)&PasswordCheckData,
+    VarSize,
+    Results,
+    Progress
+  );
+
+  FreePool(ConfigRequestHdr);
+  return Status;
 }
 
 EFI_STATUS
@@ -604,9 +722,52 @@ RouteConfig (
   OUT EFI_STRING                            *Progress
   )
 {
-  *Progress = Configuration;
+  EFI_STATUS            Status;
+  PASSWORD_CHECK_DATA   PasswordCheckData;
+  UINTN                 VarSize = sizeof(PASSWORD_CHECK_DATA);
 
-  return EFI_UNSUPPORTED; // Return unsupported to signify fake implementation.
+  if ((Configuration == NULL) || (Progress == NULL)) {
+    DEBUG((DEBUG_ERROR, "RouteConfig: Invalid parameters. Configuration=%p, Progress=%p\n", Configuration, Progress));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  *Progress = Configuration;
+  if (!HiiIsConfigHdrMatch(Configuration, &mFrontPageGuid, L"PasswordCheckData")) {
+    DEBUG((DEBUG_ERROR, "RouteConfig: Configuration does not match ConfigHdr.\n"));
+    return EFI_NOT_FOUND;
+  }
+
+  Status = gRT->GetVariable(
+    L"PasswordCheckData",
+    &gMenuPasswordCheckVarGuid,
+    NULL,
+    &VarSize,
+    &PasswordCheckData
+  );
+  if (EFI_ERROR(Status) && (Status != EFI_NOT_FOUND)) {
+    DEBUG((DEBUG_WARN, "RouteConfig: Failed to get variable. Status=%r\n", Status));
+    return Status;
+  }
+
+  Status = gHiiConfigRouting->ConfigToBlock(
+    gHiiConfigRouting,
+    Configuration,
+    (UINT8 *)&PasswordCheckData,
+    &VarSize,
+    Progress
+  );
+  if (EFI_ERROR(Status)) {
+    return Status;
+  }
+
+  Status = gRT->SetVariable(
+    L"PasswordCheckData",
+    &gMenuPasswordCheckVarGuid,
+    EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+    sizeof(PASSWORD_CHECK_DATA),
+    &PasswordCheckData
+  );
+  return Status;
 }
 
 EFI_STATUS
@@ -861,7 +1022,18 @@ InitializeUserInterface (
   HiiHandle = ExportFonts ();
   ASSERT (HiiHandle != NULL);
   InitializeStringSupport ();
- // FrontPagePasswordCheck ();
+  InitializePasswordCheckVariable();
+  if (CheckPasswordOnMenuEntry()) {
+      FrontPagePasswordCheck();
+      PasswordCheckData.IsFirst = 1;
+      gRT->SetVariable(
+          L"PasswordCheckData",
+          &gMenuPasswordCheckVarGuid,
+          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+          sizeof(PASSWORD_CHECK_DATA),
+          &PasswordCheckData
+      );
+  }
   UiSetConsoleMode (TRUE);
   UiEntry (FALSE);
   UiSetConsoleMode (FALSE);
@@ -901,7 +1073,6 @@ UiEntry (
   if (!EFI_ERROR (Status) && (BootLogo != NULL)) {
     BootLogo->SetBootLogo (BootLogo, NULL, 0, 0, 0, 0);
   }
-
   InitializeFrontPage ();
   CallFrontPage ();
   FreeFrontPage ();

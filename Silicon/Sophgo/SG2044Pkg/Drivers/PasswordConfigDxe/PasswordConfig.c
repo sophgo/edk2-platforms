@@ -677,8 +677,6 @@ PasswordConfigCallback (
       break;
 
    case FORM_USER_PASSWD_ENABLE:
-
-      UINTN VarSize = sizeof(PASSWORD_CONFIG_DATA);
       Status = gRT->GetVariable(
                 VAR_PASSWORD_CONFIG_NAME,
                 &gPasswordConfigVarGuid,

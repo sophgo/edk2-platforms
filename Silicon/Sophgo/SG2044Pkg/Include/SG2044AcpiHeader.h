@@ -313,6 +313,7 @@ typedef struct {
 } EFI_ACPI_6_6_RINTC_STRUCTURE;
 
 #define ACPI_BUILD_INTC_ID(socket, index) ((socket << 24) | (index))
+#define ACPI_BUILD_IMSIC_BASE(base, index) (base + index * 0x4)
 
 // EFI_ACPI_6_6_RINTC_STRUCTURE
 #define EFI_ACPI_6_6_RINTC_STRUCTURE_INIT(Flags, HartId, AcpiCpuUid,               \
@@ -350,7 +351,7 @@ typedef struct {
 #define EFI_ACPI_6_6_PLIC_STRUCTURE_INIT(PlicId, HwId, TotalExtIntSrcsSup,     \
   MaxPriority, PLICSize, PLICBase, SystemVectorBase) {                         \
     0x1B,                                 /* Type */                           \
-    sizeof (EFI_ACPI_6_6_PLIC_STRUCTURE),                                      \
+    sizeof (EFI_ACPI_6_6_PLIC_STRUCTURE), /* Length */                         \
     1,                                    /* Version */                        \
     PlicId,                               /* PlicId */                         \
     {0, 0, 0, 0, 0, 0, 0, HwId},          /* Hardware ID */                    \
@@ -360,6 +361,39 @@ typedef struct {
     PLICSize,                             /* PLIC Size */                      \
     PLICBase,                             /* PLIC Address */                   \
     SystemVectorBase                      /* Global System Interrupt Vector Base */         \
+  }
+
+//
+// IMSIC Structure
+//
+typedef struct {
+  UINT8     Type;
+  UINT8     Length;
+  UINT8     Version;
+  UINT8     Reserved;
+  UINT32    Flags;
+  UINT16    NumId;
+  UINT16    NumGuestId;
+  UINT8     GuestIndexBits;
+  UINT8     HartIndexBits;
+  UINT8     GroupIndexBits;
+  UINT8     GroupIndexShift;
+} EFI_ACPI_6_6_IMSIC_STRUCTURE;
+
+// EFI_ACPI_6_6_IMSIC_STRUCTURE
+#define EFI_ACPI_6_6_IMSIC_STRUCTURE_INIT(NumId, NumGuestId, GuestIndexBits,                         \
+  HartIndexBits, GroupIndexBits, GroupIndexShift) {                                                  \
+    0x19,                                   /* Type */                                               \
+    sizeof (EFI_ACPI_6_6_IMSIC_STRUCTURE),  /* Length */                                             \
+    1,                                      /* Version */                                            \
+    EFI_ACPI_RESERVED_BYTE,                 /* Reserved */                                           \
+    0,                                      /* Flags */                                              \
+    NumId,                                  /* Number of supervisor mode Interrupt Identitieses */   \
+    NumGuestId,                             /* Number of guest mode Interrupt Identities */          \
+    GuestIndexBits,                         /* Guest Index Bits */                                   \
+    HartIndexBits,                          /* Hart Index Bits */                                    \
+    GroupIndexBits,                         /* Group Index Bits */                                   \
+    GroupIndexShift                         /* Group Index Shift */                                  \
   }
 
 #pragma pack(1)

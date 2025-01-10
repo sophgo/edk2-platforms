@@ -9,6 +9,11 @@
 EFI_HANDLE                  DriverHandle;
 DATE_TIME_PRIVATE_DATA      *PrivateData = NULL;
 EFI_GUID  mTimeSetFormSetGuid = TIME_SET_FORMSET_GUID;
+EFI_GUID  gSetDateAndTimeDataGuid = VAR_TIME_DATA_GUID;
+
+STATIC RESTORE_PROTOCOL gSetDateAndTimeRestoreProtocol = {
+  TimeDataRestoreDefaults
+};
 
 /**
  * @brief   Defines a vendor-specific device path structure for the Set Date and Time HII formset.
@@ -45,6 +50,47 @@ HII_VENDOR_DEVICE_PATH  mSetDateAndTimeHiiVendorDevicePath = {
     }
   }
 };
+
+EFI_STATUS
+EFIAPI
+TimeDataRestoreDefaults (
+  VOID
+  )
+{
+  TIME_DATA TimeData;
+  EFI_STATUS Status;
+  PrivateData->TimeData.Year   = 2000;
+  PrivateData->TimeData.Month  = 1;
+  PrivateData->TimeData.Day    = 1;
+  PrivateData->TimeData.Hour   = 0;
+  PrivateData->TimeData.Minute = 0;
+  PrivateData->TimeData.Second = 0;
+  TimeData.Year   = 2000;
+  TimeData.Month  = 1;
+  TimeData.Day    = 1;
+  TimeData.Hour   = 0;
+  TimeData.Minute = 0;
+  TimeData.Second = 0;
+
+Status = gRT->SetVariable(
+    L"DynamicTimeData",
+    &gSetDateAndTimeDataGuid,
+    EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+    sizeof(TIME_DATA),
+    &TimeData
+);
+if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to set EFI variable: %r\n", Status));
+    return Status;
+}
+Status = UpdateSystemTimeFromHiiInput(&PrivateData->TimeData);
+if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to set EFI variable: %r\n", Status));
+    return Status;
+  }
+
+return EFI_SUCCESS;
+}
 
 /**
  * @brief   Validates if the provided year, month, and day constitute a valid date.
@@ -98,9 +144,9 @@ IsValidDate (
  *
  * @details
  *          - The function first validates the provided date using the IsValidDate() function.
- *          - If the date is valid, it updates the system time using the runtime service 
+ *          - If the date is valid, it updates the system time using the runtime service
  *            gRT->SetTime().
- *          - If the date is invalid, the function returns EFI_INVALID_PARAMETER without updating 
+ *          - If the date is invalid, the function returns EFI_INVALID_PARAMETER without updating
  *            the system time.
  *          - This ensures that only valid date-time values are applied to the system.
  */
@@ -141,8 +187,8 @@ UpdateSystemTimeFromHiiInput (
                                  driver.
 
 **/
-EFI_STATUS 
-EFIAPI 
+EFI_STATUS
+EFIAPI
 ExtractConfig(
   IN CONST EFI_HII_CONFIG_ACCESS_PROTOCOL *This,
   IN CONST EFI_STRING Request,
@@ -205,8 +251,8 @@ ExtractConfig(
                                  driver.
 
 **/
-EFI_STATUS 
-EFIAPI 
+EFI_STATUS
+EFIAPI
 RouteConfig(
   IN CONST EFI_HII_CONFIG_ACCESS_PROTOCOL *This,
   IN CONST EFI_STRING Configuration,
@@ -305,7 +351,7 @@ SetDateAndTimeInit (
   EFI_HII_HANDLE                  HiiHandle;
   EFI_HII_CONFIG_ROUTING_PROTOCOL *HiiConfigRouting;
   CHAR16                    	  *NewString;
-  
+
   NewString        = NULL;
   PrivateData = AllocateZeroPool (sizeof (DATE_TIME_PRIVATE_DATA));
   if (PrivateData == NULL) {
@@ -324,7 +370,6 @@ SetDateAndTimeInit (
     PrivateData->TimeData.Year = 2000;
     PrivateData->TimeData.Month = 1;
     PrivateData->TimeData.Day = 1;
-    while(1);
   }
   //
   // Locate ConfigRouting protocol
@@ -334,14 +379,21 @@ SetDateAndTimeInit (
     return Status;
   }
   PrivateData->HiiConfigRouting = HiiConfigRouting;
-
-  Status = gBS->InstallMultipleProtocolInterfaces (
+  Status = gBS->InstallMultipleProtocolInterfaces(
                   &DriverHandle,
                   &gEfiDevicePathProtocolGuid,
                   &mSetDateAndTimeHiiVendorDevicePath,
                   &gEfiHiiConfigAccessProtocolGuid,
                   &PrivateData->ConfigAccess,
                   NULL
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  Status = gBS->InstallProtocolInterface(
+                  &DriverHandle,
+                  &gSetDateAndTimeRestoreProtocolGuid,
+                  EFI_NATIVE_INTERFACE,
+                  (VOID *)&gSetDateAndTimeRestoreProtocol
                   );
   ASSERT_EFI_ERROR (Status);
 
@@ -353,7 +405,7 @@ SetDateAndTimeInit (
                    &mTimeSetFormSetGuid,
                    DriverHandle,
                    SetDateAndTimeStrings,
-                   ShowTimeVfrBin,
+                   SetDateAndTimeVfrBin,
                    NULL
                    );
   if (HiiHandle == NULL) {

@@ -8,7 +8,7 @@ Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
 #define _SET_DATETIME_H_
 
 #include <Uefi.h>
-#include <Library/UefiHiiServicesLib.h> 
+#include <Library/UefiHiiServicesLib.h>
 #include <Protocol/HiiConfigRouting.h>
 #include <Protocol/HiiConfigAccess.h>
 #include <Protocol/HiiString.h>
@@ -29,16 +29,17 @@ Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
 #include <Guid/HiiFormMapMethodGuid.h>
 #include <Guid/DriverSampleHii.h>
 #include <Guid/ZeroGuid.h>
-#include "SetTimeNv.h"
+#include "SetDateAndTimeNv.h"
 #include <Library/FileHandleLib.h>
 #include <Protocol/HiiPackageList.h>
 #include <Protocol/HiiDatabase.h>
 #include <Guid/FileInfo.h>
+#include <Library/RestoreDefaults.h>
 
 /**
  * Extern declarations for .vfr and .uni data.
  */
-extern UINT8  ShowTimeVfrBin[];
+extern UINT8  SetDateAndTimeVfrBin[];
 extern UINT8  SetDateAndTimeStrings[];
 
 /**
@@ -72,6 +73,17 @@ typedef struct {
 EFI_STATUS
 UpdateSystemTime (
 IN EFI_TIME *TimeData
+);
+
+EFI_STATUS
+EFIAPI
+TimeDataRestoreDefaults (
+  VOID
+);
+
+EFI_STATUS
+UpdateSystemTimeFromHiiInput (
+  IN EFI_TIME *TimeData
 );
 
 #endif

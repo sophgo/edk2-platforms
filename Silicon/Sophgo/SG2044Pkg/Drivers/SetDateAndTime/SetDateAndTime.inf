@@ -1,6 +1,6 @@
 ## @file
 #
-# This driver shows how HII protocol, VFR and UNI files are used to create a HII 
+# This driver shows how HII protocol, VFR and UNI files are used to create a HII
 # driver which can be dipslayed and configured by a UEFI HII Form Browser.
 #
 # Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
@@ -19,13 +19,15 @@
 [Sources]
   SetDateAndTime.c
   SetDateAndTime.h
-  ShowTimeVfr.vfr
+  SetDateAndTimeVfr.Vfr
   SetDateAndTimeStrings.uni
-  SetTimeNv.h
+  SetDateAndTimeNv.h
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
 
 [LibraryClasses]
   BaseLib
@@ -54,7 +56,8 @@
   gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
   gEfiHiiStringProtocolGuid                  ## CONSUMES
   gEfiHiiPackageListProtocolGuid             ## CONSUMES
+  gSetDateAndTimeRestoreProtocolGuid                         ## PRODUCES
 
 [Depex]
   gEfiHiiConfigRoutingProtocolGuid  AND
-  gEfiHiiDatabaseProtocolGuid       
+  gEfiHiiDatabaseProtocolGuid

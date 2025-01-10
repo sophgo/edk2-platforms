@@ -12,12 +12,12 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 extern EFI_HII_HANDLE gStringPackHandle;
 EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
-PASSWORD_CHECK_DATA         PasswordCheckData;
+PASSWORD_TOGGLE_DATA         PassWordToggleData;
 CHAR8                       *mLanguageString;
-
+VOID         *ProtocolPtr;
 EFI_GUID mFrontPageGuid = FORMSET_GUID;
 EFI_GUID gPasswordConfigVarGuid = PASSWORDCONFIG_VAR_GUID;
-EFI_GUID gMenuPasswordCheckVarGuid = PASSWORD_CHECK_VARSTORE_GUID;
+EFI_GUID gMenuPasswordToggleVarGuid = PASSWORD_TOGGLE_VARSTORE_GUID;
 BOOLEAN  mResetRequired = FALSE;
 BOOLEAN  mModeInitialized = FALSE;
 UINT32  mBootHorizontalResolution = 0;
@@ -28,6 +28,10 @@ UINT32  mSetupTextModeColumn       = 0;
 UINT32  mSetupTextModeRow          = 0;
 UINT32  mSetupHorizontalResolution = 0;
 UINT32  mSetupVerticalResolution   = 0;
+
+STATIC RESTORE_PROTOCOL gPassWordToggleRestoreProtocol = {
+  PassWordToggleRestore
+};
 
 FRONT_PAGE_CALLBACK_DATA  gFrontPagePrivate = {
   FRONT_PAGE_CALLBACK_DATA_SIGNATURE,
@@ -63,6 +67,84 @@ HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath0 = {
   }
 };
 
+BOOLEAN
+ConfirmResetDefaults(
+CHAR16 *ConfirmPrompt
+)
+{
+    EFI_INPUT_KEY Key;
+
+    CreatePopUp(EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE, NULL,
+                ConfirmPrompt,
+                L"[Y] Yes    [N] No",
+                NULL);
+
+    while (TRUE) {
+        gBS->WaitForEvent(1, &gST->ConIn->WaitForKey, NULL);
+        gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
+        if (Key.UnicodeChar == 'Y' || Key.UnicodeChar == 'y') {
+            return TRUE;
+        } else if (Key.UnicodeChar == 'N' || Key.UnicodeChar == 'n') {
+            return FALSE;
+        }
+    }
+}
+
+EFI_STATUS
+EFIAPI
+RestoreFactoryDefaults(
+VOID
+) {
+    EFI_STATUS Status;
+    EFI_STATUS OverallStatus = EFI_SUCCESS;
+    EFI_GUID *ModuleGuids[] = {
+        &gSetDateAndTimeRestoreProtocolGuid,
+        &gPasswordRestoreProtocolGuid,
+        &gPassWordToggleRestoreProtocolGuid,
+    };
+
+    for (UINTN i = 0; i < ARRAY_SIZE(ModuleGuids); i++) {
+        RESTORE_PROTOCOL *RestoreProtocol = NULL;
+        Status = gBS->LocateProtocol(ModuleGuids[i], NULL, (VOID **)&RestoreProtocol);
+        if (EFI_ERROR(Status)) {
+            DEBUG((DEBUG_ERROR, "Failed to locate protocol for module %u: %r\n", i, Status));
+            if (!EFI_ERROR(OverallStatus)) {
+                OverallStatus = Status;
+            }
+            continue;
+        }
+
+        if (RestoreProtocol == NULL) {
+            DEBUG((DEBUG_ERROR, "RestoreProtocol is NULL for module %u.\n", i));
+            if (!EFI_ERROR(OverallStatus)) {
+                OverallStatus = EFI_DEVICE_ERROR;
+            }
+            continue;
+        }
+
+        if (RestoreProtocol->RestoreDefaults == NULL) {
+            DEBUG((DEBUG_ERROR, "RestoreDefaults function pointer is NULL for module %u.\n", i));
+            if (!EFI_ERROR(OverallStatus)) {
+                OverallStatus = EFI_DEVICE_ERROR;
+            }
+            continue;
+        }
+        Status = RestoreProtocol->RestoreDefaults();
+        if (EFI_ERROR(Status)) {
+            DEBUG((DEBUG_ERROR, "Failed to restore defaults for module %u: %r\n", i, Status));
+            if (!EFI_ERROR(OverallStatus)) {
+                OverallStatus = Status;
+            }
+        }
+    }
+
+    if (EFI_ERROR(OverallStatus)) {
+        DEBUG((DEBUG_ERROR, "One or more modules failed to restore defaults.\n"));
+    }
+
+    return OverallStatus;
+}
+
 /**
   This function processes the results of changes in configuration.
 
@@ -79,57 +161,105 @@ HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath0 = {
   @retval  EFI_OUT_OF_RESOURCES  Not enough storage is available to hold the variable and its data.
   @retval  EFI_DEVICE_ERROR      The variable could not be saved.
   @retval  EFI_UNSUPPORTED       The specified Action is not supported by the callback.
-
 **/
 EFI_STATUS
 EFIAPI
-FrontPageCallback (
-  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
-  IN  EFI_BROWSER_ACTION                    Action,
-  IN  EFI_QUESTION_ID                       QuestionId,
-  IN  UINT8                                 Type,
-  IN  EFI_IFR_TYPE_VALUE                    *Value,
-  OUT EFI_BROWSER_ACTION_REQUEST            *ActionRequest
-  )
+FrontPageCallback(
+    IN CONST EFI_HII_CONFIG_ACCESS_PROTOCOL *This,
+    IN EFI_BROWSER_ACTION Action,
+    IN EFI_QUESTION_ID QuestionId,
+    IN UINT8 Type,
+    IN EFI_IFR_TYPE_VALUE *Value,
+    OUT EFI_BROWSER_ACTION_REQUEST *ActionRequest
+)
 {
-	return UiFrontPageCallbackHandler(gFrontPagePrivate.HiiHandle, Action, QuestionId, Type, Value, ActionRequest);
+    EFI_STATUS Status;
+    CHAR16 *ConfirmResetPrompt = NULL;
+
+    if (Action == EFI_BROWSER_ACTION_CHANGED) {
+      if (QuestionId == RESTORE_DEFAULTS_QUESTION_ID) {
+          ConfirmResetPrompt = HiiGetString(gFrontPagePrivate.HiiHandle, STRING_TOKEN(STR_CONFIRM_RESET_PROMPT), NULL);
+    	  if (ConfirmResetPrompt == NULL) {
+             DEBUG((DEBUG_ERROR, "Failed to get confirm reset prompt string.\n"));
+             return EFI_OUT_OF_RESOURCES;
+          }
+
+    	  if (!ConfirmResetDefaults(ConfirmResetPrompt)) {
+            FreePool(ConfirmResetPrompt);
+            return EFI_SUCCESS;
+    	  }
+    	  FreePool(ConfirmResetPrompt);
+    	  Status = RestoreFactoryDefaults();
+    	  if (EFI_ERROR(Status)) {
+            DEBUG((DEBUG_ERROR, "Failed to restore factory defaults: %r\n", Status));
+            return Status;
+          }
+       }
+    }
+    return UiFrontPageCallbackHandler(gFrontPagePrivate.HiiHandle, Action, QuestionId, Type, Value, ActionRequest);
 }
 
 EFI_STATUS
-InitializePasswordCheckVariable (
+EFIAPI
+PassWordToggleRestore (
+ VOID
+) {
+  EFI_STATUS Status;
+  UINTN VarSize;
+  VarSize = sizeof(PASSWORD_TOGGLE_DATA);
+
+  PassWordToggleData.PasswordCheckEnabled = 0;
+  PassWordToggleData.IsFirst = 0;
+  PassWordToggleData.UserPriv = 0;
+  Status = gRT->SetVariable(
+          L"PassWordToggleData",
+          &gMenuPasswordToggleVarGuid,
+          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+          sizeof(PASSWORD_TOGGLE_DATA),
+          &PassWordToggleData
+          );
+  if (EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR, "Failed to Restore PassWordToggleData. Status=%r\n", Status));
+        return Status;
+  }
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+InitializePasswordToggleVariable (
   VOID
 )
 {
   EFI_STATUS Status;
   UINTN VarSize;
-  VarSize = sizeof(PASSWORD_CHECK_DATA);
+  VarSize = sizeof(PASSWORD_TOGGLE_DATA);
 
   Status = gRT->GetVariable(
-      L"PasswordCheckData",
-      &gMenuPasswordCheckVarGuid,
+      L"PassWordToggleData",
+      &gMenuPasswordToggleVarGuid,
       NULL,
       &VarSize,
-      &PasswordCheckData
+      &PassWordToggleData
   );
   if (EFI_ERROR(Status)) {
     if (Status == EFI_NOT_FOUND) {
-      PasswordCheckData.PasswordCheckEnabled = 0;
-      PasswordCheckData.IsFirst = 0;
-      PasswordCheckData.UserPriv = 0;
+      PassWordToggleData.PasswordCheckEnabled = 0;
+      PassWordToggleData.IsFirst = 0;
+      PassWordToggleData.UserPriv = 0;
       Status = gRT->SetVariable(
-          L"PasswordCheckData",
-          &gMenuPasswordCheckVarGuid,
+          L"PassWordToggleData",
+          &gMenuPasswordToggleVarGuid,
           EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
-          sizeof(PASSWORD_CHECK_DATA),
-          &PasswordCheckData
+          sizeof(PASSWORD_TOGGLE_DATA),
+          &PassWordToggleData
       );
 
       if (EFI_ERROR(Status)) {
-        DEBUG((DEBUG_ERROR, "Failed to initialize PasswordCheckData. Status=%r\n", Status));
+        DEBUG((DEBUG_ERROR, "Failed to initialize PassWordToggleData. Status=%r\n", Status));
         return Status;
       }
     } else {
-      DEBUG((DEBUG_ERROR, "Failed to read PasswordCheckData. Status=%r\n", Status));
+      DEBUG((DEBUG_ERROR, "Failed to read PassWordToggleData. Status=%r\n", Status));
       return Status;
     }
   }
@@ -137,22 +267,22 @@ InitializePasswordCheckVariable (
 }
 
 BOOLEAN
-CheckPasswordOnMenuEntry (
+PassWordToggleEntry (
   VOID
 )
 {
   UINTN VarSize;
   EFI_STATUS Status;
-  VarSize = sizeof(PasswordCheckData);
+  VarSize = sizeof(PassWordToggleData);
   Status = gRT->GetVariable(
-    L"PasswordCheckData",
-    &gMenuPasswordCheckVarGuid,
+    L"PassWordToggleData",
+    &gMenuPasswordToggleVarGuid,
     NULL,
     &VarSize,
-    &PasswordCheckData
+    &PassWordToggleData
   );
 
-  return (PasswordCheckData.PasswordCheckEnabled == 1) ? TRUE : FALSE;
+  return (PassWordToggleData.PasswordCheckEnabled == 1) ? TRUE : FALSE;
 }
 
 EFI_STATUS
@@ -198,7 +328,7 @@ FrontPagePasswordCheck(
     ReadString(EnterUsernameString, UsernameStr);
     if (StrCmp(UsernameStr, AdminName) == 0) {
       PasswordConfigData.UserPriv = 1;
-      PasswordCheckData.UserPriv = 1;
+      PassWordToggleData.UserPriv = 1;
       break;
     } else if (StrCmp(UsernameStr, UserName) == 0) {
       if (PasswordConfigData.UserPasswordEnable == 0) {
@@ -215,7 +345,7 @@ FrontPagePasswordCheck(
         continue;
       }
       PasswordConfigData.UserPriv = 0;
-      PasswordCheckData.UserPriv = 0;
+      PassWordToggleData.UserPriv = 0;
       break;
     } else {
       UsernameNotFoundString = HiiGetString(gStringPackHandle, STRING_TOKEN(STR_USERNAME_NOT_FOUND), NULL);
@@ -269,11 +399,11 @@ FrontPagePasswordCheck(
       &PasswordConfigData
   );
   Status = gRT->SetVariable(
-    L"PasswordCheckData",
-    &gMenuPasswordCheckVarGuid,
+    L"PassWordToggleData",
+    &gMenuPasswordToggleVarGuid,
     EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
-    sizeof(PASSWORD_CHECK_DATA),
-    &PasswordCheckData
+    sizeof(PASSWORD_TOGGLE_DATA),
+    &PassWordToggleData
   );
   if (EFI_ERROR(Status)) {
     DEBUG((DEBUG_ERROR, "Failed to set password config variable. Status: %r\n", Status));
@@ -304,6 +434,13 @@ InitializeFrontPage (
                                           &gFrontPagePrivate.ConfigAccess,
                                           NULL
                                           );
+  ASSERT_EFI_ERROR(Status);
+  Status = gBS->InstallProtocolInterface(
+                  &gFrontPagePrivate.DriverHandle,
+                  &gPassWordToggleRestoreProtocolGuid,
+                  EFI_NATIVE_INTERFACE,
+                  (VOID *)&gPassWordToggleRestoreProtocol
+                  );
   ASSERT_EFI_ERROR(Status);
   gFrontPagePrivate.HiiHandle = HiiAddPackages (
                                   &mFrontPageGuid,
@@ -661,8 +798,8 @@ ExtractConfig (
   )
 {
   EFI_STATUS                       Status;
-  PASSWORD_CHECK_DATA              PasswordCheckData;
-  UINTN                            VarSize = sizeof(PASSWORD_CHECK_DATA);
+  PASSWORD_TOGGLE_DATA              PassWordToggleData;
+  UINTN                            VarSize = sizeof(PASSWORD_TOGGLE_DATA);
   EFI_STRING                       ConfigRequestHdr;
 
   if ((Progress == NULL) || (Results == NULL)) {
@@ -674,7 +811,7 @@ ExtractConfig (
 
   ConfigRequestHdr = HiiConstructConfigHdr(
     &mFrontPageGuid,
-    L"PasswordCheckData",
+    L"PassWordToggleData",
     NULL
   );
   if (ConfigRequestHdr == NULL) {
@@ -682,18 +819,18 @@ ExtractConfig (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  if ((Request == NULL) || !HiiIsConfigHdrMatch(Request, &mFrontPageGuid, L"PasswordCheckData")) {
+  if ((Request == NULL) || !HiiIsConfigHdrMatch(Request, &mFrontPageGuid, L"PassWordToggleData")) {
     DEBUG((DEBUG_ERROR, "ExtractConfig: Request does not match ConfigHdr.\n"));
     FreePool(ConfigRequestHdr);
     return EFI_NOT_FOUND;
   }
 
   Status = gRT->GetVariable(
-    L"PasswordCheckData",
-    &gMenuPasswordCheckVarGuid,
+    L"PassWordToggleData",
+    &gMenuPasswordToggleVarGuid,
     NULL,
     &VarSize,
-    &PasswordCheckData
+    &PassWordToggleData
   );
   if (EFI_ERROR(Status)) {
     DEBUG((DEBUG_WARN, "ExtractConfig: Failed to get variable. Status=%r\n", Status));
@@ -704,7 +841,7 @@ ExtractConfig (
   Status = gHiiConfigRouting->BlockToConfig(
     gHiiConfigRouting,
     Request,
-    (UINT8 *)&PasswordCheckData,
+    (UINT8 *)&PassWordToggleData,
     VarSize,
     Results,
     Progress
@@ -723,8 +860,8 @@ RouteConfig (
   )
 {
   EFI_STATUS            Status;
-  PASSWORD_CHECK_DATA   PasswordCheckData;
-  UINTN                 VarSize = sizeof(PASSWORD_CHECK_DATA);
+  PASSWORD_TOGGLE_DATA   PassWordToggleData;
+  UINTN                 VarSize = sizeof(PASSWORD_TOGGLE_DATA);
 
   if ((Configuration == NULL) || (Progress == NULL)) {
     DEBUG((DEBUG_ERROR, "RouteConfig: Invalid parameters. Configuration=%p, Progress=%p\n", Configuration, Progress));
@@ -732,17 +869,17 @@ RouteConfig (
   }
 
   *Progress = Configuration;
-  if (!HiiIsConfigHdrMatch(Configuration, &mFrontPageGuid, L"PasswordCheckData")) {
+  if (!HiiIsConfigHdrMatch(Configuration, &mFrontPageGuid, L"PassWordToggleData")) {
     DEBUG((DEBUG_ERROR, "RouteConfig: Configuration does not match ConfigHdr.\n"));
     return EFI_NOT_FOUND;
   }
 
   Status = gRT->GetVariable(
-    L"PasswordCheckData",
-    &gMenuPasswordCheckVarGuid,
+    L"PassWordToggleData",
+    &gMenuPasswordToggleVarGuid,
     NULL,
     &VarSize,
-    &PasswordCheckData
+    &PassWordToggleData
   );
   if (EFI_ERROR(Status) && (Status != EFI_NOT_FOUND)) {
     DEBUG((DEBUG_WARN, "RouteConfig: Failed to get variable. Status=%r\n", Status));
@@ -752,7 +889,7 @@ RouteConfig (
   Status = gHiiConfigRouting->ConfigToBlock(
     gHiiConfigRouting,
     Configuration,
-    (UINT8 *)&PasswordCheckData,
+    (UINT8 *)&PassWordToggleData,
     &VarSize,
     Progress
   );
@@ -761,11 +898,11 @@ RouteConfig (
   }
 
   Status = gRT->SetVariable(
-    L"PasswordCheckData",
-    &gMenuPasswordCheckVarGuid,
+    L"PassWordToggleData",
+    &gMenuPasswordToggleVarGuid,
     EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
-    sizeof(PASSWORD_CHECK_DATA),
-    &PasswordCheckData
+    sizeof(PASSWORD_TOGGLE_DATA),
+    &PassWordToggleData
   );
   return Status;
 }
@@ -1022,16 +1159,16 @@ InitializeUserInterface (
   HiiHandle = ExportFonts ();
   ASSERT (HiiHandle != NULL);
   InitializeStringSupport ();
-  InitializePasswordCheckVariable();
-  if (CheckPasswordOnMenuEntry()) {
+  InitializePasswordToggleVariable();
+  if (PassWordToggleEntry()) {
       FrontPagePasswordCheck();
-      PasswordCheckData.IsFirst = 1;
+      PassWordToggleData.IsFirst = 1;
       gRT->SetVariable(
-          L"PasswordCheckData",
-          &gMenuPasswordCheckVarGuid,
+          L"PassWordToggleData",
+          &gMenuPasswordToggleVarGuid,
           EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
-          sizeof(PASSWORD_CHECK_DATA),
-          &PasswordCheckData
+          sizeof(PASSWORD_TOGGLE_DATA),
+          &PassWordToggleData
       );
   }
   UiSetConsoleMode (TRUE);

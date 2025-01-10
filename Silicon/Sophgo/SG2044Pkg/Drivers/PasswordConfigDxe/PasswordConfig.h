@@ -27,6 +27,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/UefiHiiServicesLib.h>
 #include "PasswordConfigData.h"
 #include "PasswordConfigFormGuid.h"
+#include <Library/RestoreDefaults.h>
 
 typedef UINT16  STRING_REF;
 
@@ -175,6 +176,12 @@ InstallPasswordConfigForm (
 VOID
 UninstallPasswordConfigForm (
   IN OUT PASSWORD_CONFIG_PRIVATE_DATA    *PrivateData
+  );
+
+EFI_STATUS
+EFIAPI
+PasswordRestore (
+  VOID
   );
 
 #endif

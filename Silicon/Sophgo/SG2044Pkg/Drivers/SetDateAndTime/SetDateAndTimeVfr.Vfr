@@ -5,18 +5,18 @@
 
   Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
 **/
-#include "SetTimeNv.h"
+#include "SetDateAndTimeNv.h"
 
 formset
   guid      = TIME_SET_FORMSET_GUID,
   title     = STRING_TOKEN(STR_FORM_SET_TITLE),
   help      = STRING_TOKEN(STR_FORM_SET_TITLE_HELP),
   classguid = TIME_SET_FORMSET_GUID,
- 
+
   varstore TIME_DATA,
     varid = VAR_DYNAMIC_TIME_VARID,
     name  = DynamicTimeData,
-    guid  = TIME_SET_FORMSET_GUID; 
+    guid  = TIME_SET_FORMSET_GUID;
   form formid = TIME_SET_FORM_ID,
     title = STRING_TOKEN(STR_FORM_TITLE);
 
@@ -65,6 +65,6 @@ formset
             step    = 1,
     endnumeric;
 
-endform;  
+endform;
 
 endformset;

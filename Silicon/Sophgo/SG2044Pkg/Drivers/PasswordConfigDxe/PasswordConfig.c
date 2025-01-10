@@ -20,6 +20,9 @@ extern UINT8 PasswordConfigUiBin[];
 BOOLEAN  mFirstEnterPasswordConfigForm;
 EFI_GUID mPasswordConfigGuid = PASSWORDCONFIG_FORMSET_GUID;
 EFI_GUID gPasswordConfigVarGuid = PASSWORDCONFIG_VAR_GUID;
+STATIC RESTORE_PROTOCOL gPasswordRestoreProtocol = {
+ PasswordRestore
+};
 
 HII_VENDOR_DEVICE_PATH  mPasswordConfigHiiVendorDevicePath = {
   {
@@ -53,6 +56,34 @@ PASSWORD_CONFIG_PRIVATE_DATA gPasswordConfigPrivate = {
     PasswordConfigCallback
   }
 };
+
+EFI_STATUS
+EFIAPI
+PasswordRestore (
+  VOID
+  )
+{
+  EFI_STATUS Status;
+  PASSWORD_CONFIG_DATA  PasswordConfigData;
+
+  PasswordConfigData.UserPriv = 0;
+  PasswordConfigData.UserPasswordEnable = 1;
+  PasswordConfigData.AdminPasswordEnable = 1;
+  StrCpyS(PasswordConfigData.UserPassword, PASSWD_MAXLEN, L"user1234");
+  StrCpyS(PasswordConfigData.AdminPassword, PASSWD_MAXLEN, L"admin1234");
+  Status = gRT->SetVariable(
+              VAR_PASSWORD_CONFIG_NAME,
+              &gPasswordConfigVarGuid,
+              PLATFORM_SETUP_VARIABLE_FLAG,
+              sizeof(PASSWORD_CONFIG_DATA),
+              &PasswordConfigData
+   );
+   if(EFI_ERROR(Status)) {
+      return Status;
+   }
+  return EFI_SUCCESS;
+}
+
 /**
   Password configuration restore defaults.
 
@@ -64,7 +95,7 @@ PasswordConfigDefault (
   IN OUT PASSWORD_CONFIG_DATA  *PasswordConfigData
   )
 {
-  PasswordConfigData->UserPasswordEnable = 0;
+  PasswordConfigData->UserPasswordEnable = 1;
   PasswordConfigData->AdminPasswordEnable = 1;
   StrCpyS(PasswordConfigData->UserPassword, PASSWD_MAXLEN, L"user1234");
   StrCpyS(PasswordConfigData->AdminPassword, PASSWD_MAXLEN, L"admin1234");
@@ -753,6 +784,16 @@ InstallPasswordConfigForm (
   if (EFI_ERROR (Status)) {
     return Status;
   }
+  Status = gBS->InstallProtocolInterface(
+                  &DriverHandle,
+                  &gPasswordRestoreProtocolGuid,
+                  EFI_NATIVE_INTERFACE,
+                  (VOID *)&gPasswordRestoreProtocol
+                  );
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
+
   PrivateData->DriverHandle = DriverHandle;
   HiiHandle = HiiAddPackages (
                 &mPasswordConfigGuid,

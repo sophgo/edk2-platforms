@@ -236,7 +236,7 @@ INF  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
 INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf
 INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
-INF  Silicon/Sophgo/SG2044Pkg/Drivers/Settime/ShowTime.inf
+INF  Silicon/Sophgo/SG2044Pkg/Drivers/SetDateAndTime/SetDateAndTime.inf
 !if $(FLASH_ENABLE) == TRUE
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
 !endif

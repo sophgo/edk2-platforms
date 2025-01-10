@@ -34,13 +34,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "FrontPageNVDataStruc.h"
 #include "FrontPageCustomizedUiSupport.h"
 #include <Library/PasswordRead.h>
+#include <Library/RestoreDefaults.h>
 
-#define CONFIG_SIZE      1000
-#define MAX_HW_NUMS     500
-#define MAX_HW_NAME_LENGTH 500
-#define MAX_KEY_NAME_LENGTH    500
-#define MAX_VALUE_NAME_LENGTH   500
-#define SMBIOS_TYPE4_CPU_SOCKET_POPULATED  BIT6
 #define PRINTABLE_LANGUAGE_NAME_STRING_ID  0x0001
 #define FRONT_PAGE_FORM_ID  0x1000
 #define CONFIG_FORM_ID         0x1000
@@ -209,25 +204,6 @@ ExtractDevicePathFromHiiHandle (
   IN      EFI_HII_HANDLE  Handle
   );
 
-INT32
-IniHandler (
-    VOID       *User,
-    CONST CHAR8 *Section,
-    CONST CHAR8 *Name,
-    CONST CHAR8 *Value
-);
-
-INT32
-IniConfIniParse (
-    IN INI_HANDLER   Handler,
-    IN VOID          *User
-);
-
-EFI_STATUS
-SetupTimerEvent (
- EFI_HII_HANDLE HiiHandle
-);
-
 VOID
 UpdateFrontPageForm (
 VOID
@@ -249,9 +225,10 @@ AppendAltCfgString (
   IN     EFI_STRING  ConfigRequestHdr
 );
 
-VOID
-GetTimeData (
-  VOID
+EFI_STATUS
+EFIAPI
+PassWordToggleRestore (
+ VOID
 );
 
 #endif // _FRONT_PAGE_H_

@@ -70,4 +70,7 @@
 #string STR_PASSWORD_CHECK_HELP        #language en-US "Enable or disable password check. WARINING!!! Non-administrator users do not have permission to disable the password feature once it is enabled. During the first login, non-administrator users are allowed to enable the password feature, but after it is enabled, only administrators have the permission to disable it."
 #string STR_ENABLE                     #language en-US "Enable"
 #string STR_DISABLE                    #language en-US "Disable"
-
+#string STR_RESET_TO_DEFAULTS_PROMPT   #language en-US "Restore Defaults"
+#string STR_RESET_TO_DEFAULTS_HELP     #language en-US "Restore all settings to their defaul"
+#string STR_CONFIRM_RESET_PROMPT       #language en-US "Are you sure you want to restore defaults?"
+#string STR_RESET_SUCCESS_PROMPT       #language en-US "Defaults restored successfully."

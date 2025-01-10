@@ -216,7 +216,9 @@ INF  MdeModulePkg/Universal/Disk/UdfDxe/UdfDxe.inf
 #
 # Update Firmware in Nor Flash (whole chip)
 #
+!if $(FLASH_ENABLE) == TRUE
 INF  Silicon/Sophgo/Applications/FirmwareUpdate/FirmwareUpdate.inf
+!endif
 
 #
 # UEFI application (Shell Embedded Boot Loader)
@@ -235,7 +237,9 @@ INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf
 INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/Settime/ShowTime.inf
+!if $(FLASH_ENABLE) == TRUE
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
+!endif
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/Information/ShowInformation.inf
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
 

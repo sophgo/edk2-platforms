@@ -722,7 +722,9 @@
   #
   # Update Firmware in Nor Flash (whole chip)
   #
+!if $(FLASH_ENABLE) == TRUE
   Silicon/Sophgo/Applications/FirmwareUpdate/FirmwareUpdate.inf
+!endif
 
   #
   # UEFI Application (Shell Embedded Boot Loader)
@@ -797,7 +799,10 @@
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
   Silicon/Sophgo/SG2044Pkg/Drivers/Settime/ShowTime.inf
+
+!if $(FLASH_ENABLE) == TRUE
   Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
+!endif
   Silicon/Sophgo/SG2044Pkg/Drivers/Information/ShowInformation.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
 

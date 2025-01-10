@@ -14,12 +14,12 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
                  EFI_ACPI_RISCV_OEM_REVISION) {
   include ("Cpu.asl")
   include ("CommonDevices.asl")
-//  include ("Clk.asl")
   include ("Uart.asl")
   include ("Mmc.asl")
 //  include ("Ethernet.asl")
   include ("Intc.asl")
   include ("Pci.asl")
+  include ("PowerButton.asl")
 
   Scope (\_SB_.I2C1)
   {
@@ -346,5 +346,5 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
       Name(_TZP, 200)
       Name (_STR, Unicode ("System thermal zone1"))
     }
-  } 
+  }
 }

@@ -144,7 +144,6 @@ Scope(_SB)
     })
   }
 
-  //!! no size found
   Device (PCTL) {
     Name(_HID, "SGPH0021")
     Name(_CRS, ResourceTemplate() {
@@ -172,7 +171,6 @@ Scope(_SB)
     })
   }
 
-  // I2C for 100k
   Device (I2C0) {
     Name(_HID, "SGPH0011")
     Name(_CID, "HISI02A2")
@@ -199,8 +197,8 @@ Scope(_SB)
       )
       Interrupt(ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 31 }
     })
-    Name(SSCN, Package() { 0x3E2, 0x47D, 0 })  // !! not found
-    Name(FMCN, Package() { 0xA4, 0x13F, 0 })   // !! not found
+    Name(SSCN, Package() { 0x3E2, 0x47D, 0 })
+    Name(FMCN, Package() { 0xA4, 0x13F, 0 })
   }
 
   Device (I2C1) {

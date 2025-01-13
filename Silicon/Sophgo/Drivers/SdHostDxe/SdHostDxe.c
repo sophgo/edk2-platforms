@@ -460,7 +460,7 @@ SdHostInitialize (
                       );
     if (EFI_ERROR (Status)) {
       DEBUG ((
-        DEBUG_ERROR,
+        DEBUG_VERBOSE,
         "%a: GetNodeProperty () failed (Status == %r)\n",
         __func__,
         Status

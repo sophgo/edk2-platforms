@@ -1073,7 +1073,7 @@ SnpTransmit (
   DMA_DESCRIPTOR                    *TxDescriptor;
   DMA_DESCRIPTOR                    *TxDescriptorMap;
   UINT8                             *EthernetPacket;
-  UINT8                             *Tmp;
+  UINT64                            *Tmp;
   EFI_STATUS                        Status;
   EFI_PHYSICAL_ADDRESS              TxBufferPhysAddress;
   UINT32                            Index;

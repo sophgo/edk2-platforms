@@ -43,7 +43,7 @@
   DEFINE NETWORK_ISCSI_ENABLE     = FALSE
 
   DEFINE FLASH_ENABLE             = TRUE
-  DEFINE ETH_ENABLE               = FALSE
+  DEFINE ETH_ENABLE               = TRUE
 
   #
   # x64 Emulator

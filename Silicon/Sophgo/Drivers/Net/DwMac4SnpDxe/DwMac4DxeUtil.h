@@ -1064,10 +1064,9 @@ typedef struct {
   EFI_LOCK                               Lock;
 
   UINTN                                  RegBase;
-#if 1
+
   // Array of the recycled transmit buffer address
-  //UINT64                                 *RecycledTxBuf;
-  UINT8                                  *RecycledTxBuf;
+  UINT64                                 *RecycledTxBuf;
 
   // The maximum number of recycled buffer pointers in RecycledTxBuf
   UINT32                                 MaxRecycledTxBuf;
@@ -1077,7 +1076,6 @@ typedef struct {
 
   // For TX buffer DmaUnmap
   VOID                                   *MappingTxbuf;
-#endif
 } SOPHGO_SIMPLE_NETWORK_DRIVER;
 
 #define SNP_DRIVER_SIGNATURE             SIGNATURE_32('A', 'S', 'N', 'P')

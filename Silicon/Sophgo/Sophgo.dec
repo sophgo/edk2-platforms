@@ -46,9 +46,6 @@
   gSophgoTokenSpaceGuid.PcdPhyResetGpio|FALSE|BOOLEAN|0x00001013
   gSophgoTokenSpaceGuid.PcdPhyResetGpioPin|0x0|UINT8|0x00001014
   gSophgoTokenSpaceGuid.PcdDwMac4DefaultMacAddress|0x0|UINT64|0x00001015
-  gSophgoTokenSpaceGuid.PcdSerialRegisterBase|0x0|UINT64|0x00001016
-  gSophgoTokenSpaceGuid.PcdSerialClockRateBase|0x0|UINT32|0x00001017
-  gSophgoTokenSpaceGuid.PcdSerialBaudRate|0x0|UINT32|0x00001018
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

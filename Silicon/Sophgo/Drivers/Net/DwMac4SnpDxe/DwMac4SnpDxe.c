@@ -22,6 +22,7 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/IniParserLib.h>
+#include <Protocol/FdtClient.h>
 
 #include "DwMac4SnpDxe.h"
 #include "DwMac4DxeUtil.h"
@@ -1645,9 +1646,44 @@ DwMac4SnpDxeEntry (
   UINTN                             BufferSize;
   UINT32                            Index;
   EFI_HANDLE                        Handle;
-  EFI_CPU_ARCH_PROTOCOL             *gCpu;
+
+  INT32                             Node;
+  CONST VOID                        *Prop;
+  FDT_CLIENT_PROTOCOL               *FdtClient;
 
   Handle = NULL;
+
+  //
+  // Extract reg addr from device tree
+  //
+  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid,
+                                NULL,
+                                (VOID **) &FdtClient
+                                );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a(): Failed to locate FDT_CLIENT_PROTOCOL\n", __func__));
+    return Status;
+  }
+
+  Status = FdtClient->FindCompatibleNode (FdtClient,
+                                          "sophgo,ethernet",
+                                          &Node
+                                          );
+  if (Status == EFI_NOT_FOUND) {
+    DEBUG ((DEBUG_ERROR, "%a(): Failed to find ethernet node\n", __func__));
+    return Status;
+  }
+
+  Status = FdtClient->GetNodeProperty (FdtClient,
+                                       Node,
+                                       "reg",
+                                       &Prop,
+                                       NULL
+                                       );
+  if (Status == EFI_NOT_FOUND) {
+    DEBUG ((DEBUG_ERROR, "%a(): Failed to get reg's base addr\n", __func__));
+    return Status;
+  }
 
   //
   // Allocate Resources
@@ -1666,20 +1702,6 @@ DwMac4SnpDxeEntry (
   if (DevicePath == NULL) {
     DEBUG ((DEBUG_ERROR, "%a() for DeivcePath is NULL!\n", __func__));
     return EFI_OUT_OF_RESOURCES;
-  }
-
-  Status = gBS->LocateProtocol (
-                  &gEfiCpuArchProtocolGuid,
-                  NULL,
-                  (VOID **)&gCpu
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a(): LocateProtocol gEfiCpuArchProtocolGuid Status = %r !\n",
-      __func__,
-      Status
-      ));
   }
 
   //
@@ -1850,7 +1872,7 @@ DwMac4SnpDxeEntry (
   //
   // Get MAC controller base address
   //
-  DwMac4Driver->RegBase = 0x7030006000;
+  DwMac4Driver->RegBase = SwapBytes64 (((CONST UINT64 *) Prop)[0]);
 
   //
   // Assign fields and func pointers

@@ -43,7 +43,7 @@
   gEfiDevicePathProtocolGuid                              ## PRODUCES
   gEfiSimpleNetworkProtocolGuid                           ## PRODUCES
   gSophgoPhyProtocolGuid                                  ## CONSUMES
-  gEfiCpuArchProtocolGuid		                  ## CONSUMES
+  gFdtClientProtocolGuid                                  ## CONSUMES
 
 [FixedPcd]
   gSophgoTokenSpaceGuid.PcdDwMac4DefaultMacAddress        ## CONSUMES

@@ -74,3 +74,6 @@
 #string STR_RESET_TO_DEFAULTS_HELP     #language en-US "Restore all settings to their defaul"
 #string STR_CONFIRM_RESET_PROMPT       #language en-US "Are you sure you want to restore defaults?"
 #string STR_RESET_SUCCESS_PROMPT       #language en-US "Defaults restored successfully."
+#string STR_SHUTDOWN_STRING_HELP       #language en-US "Power off"
+#string STR_SHUTDOWN_STRING            #language en-US "Power off"
+

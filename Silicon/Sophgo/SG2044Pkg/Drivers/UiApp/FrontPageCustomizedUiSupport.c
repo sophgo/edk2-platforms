@@ -24,7 +24,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/DevicePathLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include "FrontPageCustomizedUiSupport.h"
-
+#include <Library/ResetSystemLib.h>
 //
 // This is the VFR compiler generated header file which defines the
 // string identifiers.
@@ -37,7 +37,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define FRONT_PAGE_KEY_RESET     0x1001
 #define FRONT_PAGE_KEY_LANGUAGE  0x1002
 #define FRONT_PAGE_KEY_DRIVER    0x2000
-
+#define FRONT_PAGE_KEY_POWER_OFF 0x1003
 typedef struct {
   EFI_STRING_ID    PromptId;
   EFI_STRING_ID    HelpId;
@@ -181,10 +181,10 @@ UiSupportLibCallbackHandler (
   OUT EFI_STATUS                  *Status
   )
 {
-  if ((QuestionId != FRONT_PAGE_KEY_CONTINUE) &&
-      (QuestionId != FRONT_PAGE_KEY_RESET) &&
-      (QuestionId != FRONT_PAGE_KEY_LANGUAGE))
-  {
+  if (QuestionId != FRONT_PAGE_KEY_CONTINUE &&
+      QuestionId != FRONT_PAGE_KEY_RESET &&
+      QuestionId != FRONT_PAGE_KEY_POWER_OFF &&
+      QuestionId != FRONT_PAGE_KEY_LANGUAGE) {
     return FALSE;
   }
 
@@ -230,8 +230,12 @@ UiSupportLibCallbackHandler (
         //
         // Reset
         //
-        gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
-        *Status = EFI_UNSUPPORTED;
+        ResetWarm();
+      case FRONT_PAGE_KEY_POWER_OFF:
+        //
+        // PowerOff
+        //
+        ResetShutdown();
 
       default:
         break;
@@ -450,6 +454,29 @@ UiCreateResetMenu (
     FRONT_PAGE_KEY_RESET,
     STRING_TOKEN (STR_RESET_STRING),
     STRING_TOKEN (STR_RESET_STRING),
+    EFI_IFR_FLAG_CALLBACK,
+    0
+    );
+}
+
+/**
+  Create PowerOff menu in the front page.
+
+  @param[in]    HiiHandle           The hii handle for the Uiapp driver.
+  @param[in]    StartOpCodeHandle   The opcode handle to save the new opcode.
+
+**/
+VOID
+UiCreatePowerOffMenu (
+  IN EFI_HII_HANDLE              HiiHandle,
+  IN VOID                        *StartOpCodeHandle
+  )
+{
+  HiiCreateActionOpCode (
+    StartOpCodeHandle,
+    FRONT_PAGE_KEY_POWER_OFF,
+    STRING_TOKEN (STR_SHUTDOWN_STRING),
+    STRING_TOKEN (STR_SHUTDOWN_STRING_HELP),
     EFI_IFR_FLAG_CALLBACK,
     0
     );

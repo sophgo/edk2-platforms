@@ -270,6 +270,8 @@
 
   IniParserLib|Silicon/Sophgo/Library/IniParserLib/IniParserLib.inf
 
+  EfuseLib|Silicon/Sophgo/Library/EfuseLib/EfuseLib.inf
+
   #
   # Random Generator Library
   #
@@ -471,6 +473,13 @@
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum|2
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
+
+  gSophgoTokenSpaceGuid.PcdEfuseControllerNum|2
+  gSophgoTokenSpaceGuid.PcdEfuse0Base|0x7040000000
+  gSophgoTokenSpaceGuid.PcdEfuse1Base|0x7040001000
+  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits|8
+  gSophgoTokenSpaceGuid.PcdEfuseNumCells|128
+  gSophgoTokenSpaceGuid.PcdEfuseCellWidth|4
 
 !if $(ETH_ENABLE) == TRUE
   gSophgoTokenSpaceGuid.PcdPhyResetGpio|TRUE

@@ -1,0 +1,46 @@
+## @file
+#
+#  Copyright (c) 2025, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = EfuseLib
+  FILE_GUID                      = 8C311381-C89D-4DD1-B908-AB882158F9B7
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = EfuseLib
+  CONSTRUCTOR                    = EfuseLibConstructor
+  DESTRUCTOR                     = EfuseLibDestructor
+
+[Sources.common]
+  EfuseLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  DxeServicesTableLib
+  MemoryAllocationLib
+
+[Guids]
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdEfuseControllerNum    ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdEfuse0Base            ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdEfuse1Base            ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits      ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdEfuseNumCells         ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdEfuseCellWidth        ## CONSUMES
+
+[Protocols]
+  gFdtClientProtocolGuid          ## CONSUMES

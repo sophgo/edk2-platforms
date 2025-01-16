@@ -40,12 +40,18 @@
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|0x0|UINT32|0x00001007
   gSophgoTokenSpaceGuid.PcdMisa|0x0|UINT32|0x00001008
   gSophgoTokenSpaceGuid.PcdTrngBase|0x0|UINT64|0x00001009
-  gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|FALSE|BOOLEAN|0x00001010
-  gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x0|UINT64|0x00001011
-  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum|0x0|UINT32|0x00001012
-  gSophgoTokenSpaceGuid.PcdPhyResetGpio|FALSE|BOOLEAN|0x00001013
-  gSophgoTokenSpaceGuid.PcdPhyResetGpioPin|0x0|UINT8|0x00001014
-  gSophgoTokenSpaceGuid.PcdDwMac4DefaultMacAddress|0x0|UINT64|0x00001015
+  gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|FALSE|BOOLEAN|0x0000100A
+  gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x0|UINT64|0x0000100B
+  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum|0x0|UINT32|0x0000100C
+  gSophgoTokenSpaceGuid.PcdPhyResetGpio|FALSE|BOOLEAN|0x0000100D
+  gSophgoTokenSpaceGuid.PcdPhyResetGpioPin|0x0|UINT8|0x0000100E
+  gSophgoTokenSpaceGuid.PcdDwMac4DefaultMacAddress|0x0|UINT64|0x0000100F
+  gSophgoTokenSpaceGuid.PcdEfuseControllerNum|0x0|UINT32|0x00001010
+  gSophgoTokenSpaceGuid.PcdEfuse0Base|0x0|UINT64|0x00001011
+  gSophgoTokenSpaceGuid.PcdEfuse1Base|0x0|UINT64|0x00001012
+  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits|0x0|UINT32|0x00001013
+  gSophgoTokenSpaceGuid.PcdEfuseNumCells|0x0|UINT32|0x00001014
+  gSophgoTokenSpaceGuid.PcdEfuseCellWidth|0x0|UINT32|0x00001015
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

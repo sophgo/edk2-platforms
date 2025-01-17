@@ -352,6 +352,12 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutGopSupport|TRUE
   gEfiMdeModulePkgTokenSpaceGuid.PcdConOutUgaSupport|FALSE
 
+[PcdsFeatureFlag.common]
+  ## Indicates if S3 performance data will be supported in ACPI FPDT table.
+  #   TRUE  - S3 performance data will be supported in ACPI FPDT table.
+  #   FALSE - S3 performance data will not be supported in ACPI FPDT table.
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwarePerformanceDataTableS3Support|FALSE
+
   #
   # Activate AcpiSdtProtocol
   #

@@ -4,14 +4,9 @@
   Copyright (c) 2021, Hewlett Packard Enterprise Development LP. All rights reserved.<BR>
   Copyright (c) 2006 - 2014, Intel Corporation. All rights reserved.<BR>
   Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
-  Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
-
-Module Name:
-
-  MemDetect.c
-
 **/
 
 #include <PiPei.h>
@@ -25,6 +20,7 @@ Module Name:
 #include <Library/PrePiLib.h>
 #include <libfdt.h>
 #include <Guid/FdtHob.h>
+#include <Library/BaseRiscVSbiLib.h>
 
 VOID
 BuildMemoryTypeInformationHob (
@@ -238,9 +234,10 @@ AddReservedMemoryMap (
 **/
 EFI_STATUS
 MemoryPeimInitialization (
-  IN  VOID  *DeviceTreeAddress
+  VOID
   )
 {
+  EFI_RISCV_FIRMWARE_CONTEXT  *FirmwareContext;
   CONST UINT64                *RegProp;
   CONST CHAR8                 *Type;
   UINT64                      UefiMemoryBase;
@@ -253,7 +250,21 @@ MemoryPeimInitialization (
   INT32                       Node;
   INT32                       Prev;
   INT32                       Len;
+  VOID                        *DeviceTreeAddress;
 
+  FirmwareContext = NULL;
+  GetFirmwareContextPointer (&FirmwareContext);
+
+  if (FirmwareContext == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Firmware Context is NULL\n",
+      __func__
+      ));
+    return EFI_UNSUPPORTED;
+  }
+
+  DeviceTreeAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
   UefiMemoryBase = (UINT64)FixedPcdGet32 (PcdTemporaryRamBase) + FixedPcdGet32 (PcdTemporaryRamSize) - SIZE_32MB;
   FwMemBase      = PcdGet32 (PcdRiscVDxeFvBase);
   FwMemSize      = PcdGet32 (PcdRiscVDxeFvSize);

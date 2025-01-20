@@ -3,7 +3,7 @@
 
   Copyright (c) 2022, Ventana Micro Systems Inc. All rights reserved.<BR>
   Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
-  Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -26,8 +26,6 @@
 #include <Library/PeCoffLib.h>
 #include <Library/PeiServicesLib.h>
 #include <Library/PeiServicesTablePointerLib.h>
-#include <Library/DebugPrintErrorLevelLib.h>
-#include <Library/PrintLib.h>
 #include <Library/BaseRiscVSbiLib.h>
 #include <Library/PrePiLib.h>
 #include <Library/PrePiHobListPointerLib.h>
@@ -61,7 +59,7 @@ SecStartup (
 EFI_STATUS
 EFIAPI
 PlatformPeimInitialization (
-  IN  VOID  *DeviceTreeAddress
+  VOID
   );
 
 /**
@@ -75,7 +73,7 @@ PlatformPeimInitialization (
 EFI_STATUS
 EFIAPI
 MemoryPeimInitialization (
-  IN  VOID  *DeviceTreeAddress
+  VOID
   );
 
 /**

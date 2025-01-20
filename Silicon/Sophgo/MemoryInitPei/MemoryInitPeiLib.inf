@@ -1,0 +1,43 @@
+#/** @file
+#
+#  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = RiscVMemoryInitPeiLib
+  FILE_GUID                      = DAA9A9F8-48FD-41AB-8960-D6003AAA1580
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = MemoryInitPeiLib|SEC PEIM
+
+[Sources]
+  MemoryInitPeiLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
+
+[LibraryClasses]
+  FdtLib
+  PcdLib
+  DebugLib
+  HobLib
+  RiscVSbiLib
+
+[FixedPcd]
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvBase                         ## CONSUMES
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvSize                         ## CONSUMES
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                       ## CONSUMES
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                       ## CONSUMES
+
+[Guids]
+  gFdtHobGuid      ## PRODUCES
+
+[Depex]
+  TRUE

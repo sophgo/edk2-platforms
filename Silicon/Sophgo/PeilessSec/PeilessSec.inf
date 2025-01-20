@@ -1,9 +1,9 @@
 ## @file
-#  SEC Driver for RISC-V
+#  SEC Driver for PEI-less RISC-V platforms
 #
 #  Copyright (c) 2022, Ventana Micro Systems Inc. All rights reserved.<BR>
 #  Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
-#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+#  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -11,11 +11,10 @@
 
 [Defines]
   INF_VERSION                    = 1.30
-  BASE_NAME                      = SecMainRiscV64
+  BASE_NAME                      = PeilessSec
   FILE_GUID                      = 71DE2F3C-1586-4558-97F2-7F0631C6908A
   MODULE_TYPE                    = SEC
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = SecMain
 
 #
 # The following information is for reference only and not required by the build tools.
@@ -25,11 +24,8 @@
 
 [Sources]
   SecEntry.S
-  SecMain.c
-  SecMain.h
-  Cpu.c
-  Memory.c
-  Platform.c
+  PeilessSec.c
+  PeilessSec.h
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec
@@ -52,14 +48,13 @@
   MemoryAllocationLib
   HobLib
   SerialPortLib
+  MemoryInitPeiLib
+  CpuPeiLib
+  PlatformPeiLib
 
 [FixedPcd]
-  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvBase                         ## CONSUMES
-  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvSize                         ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                       ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                       ## CONSUMES
-  gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize                                 ## CONSUMES
-  gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize                                     ## CONSUMES
 
 [Guids]
   gFdtHobGuid      ## PRODUCES

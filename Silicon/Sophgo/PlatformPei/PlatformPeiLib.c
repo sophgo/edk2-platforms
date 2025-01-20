@@ -16,6 +16,7 @@
 #include <Include/Library/PrePiLib.h>
 #include <libfdt.h>
 #include <Guid/FdtHob.h>
+#include <Library/BaseRiscVSbiLib.h>
 
 /**
   Build memory map I/O range resource HOB using the
@@ -102,7 +103,7 @@ PopulateIoResources (
 EFI_STATUS
 EFIAPI
 PlatformPeimInitialization (
-  IN  VOID  *DeviceTreeAddress
+  VOID
   )
 {
   VOID                        *Base;
@@ -110,13 +111,28 @@ PlatformPeimInitialization (
   UINTN                       FdtSize;
   UINTN                       FdtPages;
   UINT64                      *FdtHobData;
+  VOID                        *DeviceTreeAddress;
+  EFI_RISCV_FIRMWARE_CONTEXT  *FirmwareContext;
 
+  FirmwareContext = NULL;
+  GetFirmwareContextPointer (&FirmwareContext);
+
+  if (FirmwareContext == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Firmware Context is NULL\n",
+      __func__
+      ));
+    return EFI_UNSUPPORTED;
+  }
+
+  DeviceTreeAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
   if (DeviceTreeAddress == NULL) {
     DEBUG ((DEBUG_ERROR, "%a: Invalid FDT pointer\n", __func__));
     return EFI_UNSUPPORTED;
   }
 
-  DEBUG ((DEBUG_INFO, "%a: Build FDT HOB - FDT at address: 0x%x \n", __func__, DeviceTreeAddress));
+  DEBUG ((DEBUG_INFO, "%a: Build FDT HOB - FDT at address: 0x%lx \n", __func__, DeviceTreeAddress));
   Base = DeviceTreeAddress;
   if (fdt_check_header (Base) != 0) {
     DEBUG ((DEBUG_ERROR, "%a: Corrupted DTB\n", __func__));

@@ -1,0 +1,36 @@
+#/** @file
+#
+#  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = RiscVCpuPeiLib
+  FILE_GUID                      = F21E370E-4532-453F-BF82-2C9F5A6DE728
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = CpuPeiLib|SEC PEIM
+
+[Sources]
+  CpuPeiLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  PcdLib
+  DebugLib
+  HobLib
+
+[FixedPcd]
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize                                 ## CONSUMES
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize                                     ## CONSUMES
+
+[Depex]
+  TRUE

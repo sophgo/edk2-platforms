@@ -5,7 +5,7 @@
 
  */
 
-#include "SecMain.h"
+#include "PeilessSec.h"
 
 ASM_FUNC (_ModuleEntryPoint)
   /* Use Temp memory as the stack for calling to C code */

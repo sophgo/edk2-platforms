@@ -287,6 +287,9 @@
   HobLib|EmbeddedPkg/Library/PrePiHobLib/PrePiHobLib.inf
   PrePiHobListPointerLib|OvmfPkg/RiscVVirt/Library/PrePiHobListPointerLib/PrePiHobListPointerLib.inf
   MemoryAllocationLib|EmbeddedPkg/Library/PrePiMemoryAllocationLib/PrePiMemoryAllocationLib.inf
+  MemoryInitPeiLib|Silicon/Sophgo/MemoryInitPei/MemoryInitPeiLib.inf
+  CpuPeiLib|Silicon/Sophgo/CpuPei/CpuPeiLib.inf
+  PlatformPeiLib|Silicon/Sophgo/PlatformPei/PlatformPeiLib.inf
 
 !ifdef $(SOURCE_DEBUG_ENABLE)
   DebugAgentLib|SourceLevelDebugPkg/Library/DebugAgent/SecPeiDebugAgentLib.inf
@@ -551,7 +554,7 @@
   #
   # SEC Phase modules
   #
-  Silicon/Sophgo/Sec/SecMain.inf  {
+  Silicon/Sophgo/PeilessSec/PeilessSec.inf  {
     <LibraryClasses>
       ExtractGuidedSectionLib|EmbeddedPkg/Library/PrePiExtractGuidedSectionLib/PrePiExtractGuidedSectionLib.inf
       LzmaDecompressLib|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf

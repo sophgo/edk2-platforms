@@ -4,12 +4,13 @@
   Copyright (c) 2008 - 2023, Intel Corporation. All rights reserved.<BR>
   Copyright (c) 2022, Ventana Micro Systems Inc. All rights reserved.<BR>
   Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
+  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
 **/
 
-#include "SecMain.h"
+#include "PeilessSec.h"
 
 /**
   Initialize the memory and CPU, setting the boot mode, and platform
@@ -21,19 +22,19 @@ STATIC
 EFI_STATUS
 EFIAPI
 SecInitializePlatform (
-  IN  VOID  *DeviceTreeAddress
+  VOID
   )
 {
   EFI_STATUS  Status;
 
-  MemoryPeimInitialization (DeviceTreeAddress);
+  MemoryPeimInitialization ();
 
   CpuPeimInitialization ();
 
   // Set the Boot Mode
   SetBootMode (BOOT_WITH_FULL_CONFIGURATION);
 
-  Status = PlatformPeimInitialization (DeviceTreeAddress);
+  Status = PlatformPeimInitialization ();
   ASSERT_EFI_ERROR (Status);
 
   return EFI_SUCCESS;
@@ -71,13 +72,14 @@ SecStartup (
   //
   DEBUG ((
     DEBUG_INFO,
-    "%a() BootHartId: 0x%x, DeviceTreeAddress=0x%x\n",
+    "%a() BootHartId: 0x%x, DeviceTreeAddress=0x%lx\n",
     __func__,
     BootHartId,
     DeviceTreeAddress
     ));
 
   FirmwareContext.BootHartId          = BootHartId;
+  FirmwareContext.FlattenedDeviceTree = (UINT64)DeviceTreeAddress;
   SetFirmwareContextPointer (&FirmwareContext);
 
   StackBase      = (UINT64)FixedPcdGet32 (PcdTemporaryRamBase);
@@ -93,7 +95,7 @@ SecStartup (
               );
   PrePeiSetHobList (HobList);
 
-  SecInitializePlatform (DeviceTreeAddress);
+  SecInitializePlatform ();
 
   BuildStackHob (StackBase, StackSize);
 

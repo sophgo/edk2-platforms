@@ -2,7 +2,7 @@
  The library call to pass the device tree to DXE via HOB.
 
  Copyright (c) 2021, Hewlett Packard Enterprise Development LP. All rights reserved.<BR>
- Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+ Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.<BR>
 
  SPDX-License-Identifier: BSD-2-Clause-Patent
 

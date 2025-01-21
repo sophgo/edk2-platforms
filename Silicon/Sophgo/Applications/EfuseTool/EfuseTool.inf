@@ -1,0 +1,57 @@
+## @file
+# Operate eFuse.
+#
+# Copyright (C) 2025, SOPHGO Technologies Inc. All rights reserved.
+#
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010009
+  BASE_NAME                      = UefiShellEfuseTool
+  FILE_GUID                      = 6D9414FB-C1EB-41F4-8F33-B2A8F2D3D00B
+  MODULE_TYPE                    = UEFI_APPLICATION
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = NULL|UEFI_APPLICATION UEFI_DRIVER
+  CONSTRUCTOR                    = ShellEfuseToolConstructor
+  DESTRUCTOR                     = ShellEfuseToolDestructor
+
+[Sources]
+  EfuseTool.c
+  EfuseTool.uni
+
+[Packages]
+  MdePkg/MdePkg.dec
+  ShellPkg/ShellPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  UefiLib
+  UefiBootServicesTableLib
+  MemoryAllocationLib
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  ShellCommandLib
+  ShellLib
+  UefiRuntimeServicesTableLib
+  HiiLib
+  EfuseLib
+  FileHandleLib
+  PcdLib
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdEfuseWriteEnableGpio
+  gSophgoTokenSpaceGuid.PcdEfuseWriteEnableGpioPin
+  gSophgoTokenSpaceGuid.PcdEfuseIsGpioHighToEnableWrite
+
+[Guids]
+  gShellEfuseHiiGuid
+
+[Protocols]
+  gSophgoGpioProtocolGuid
+
+[Depex]
+  TRUE

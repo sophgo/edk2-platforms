@@ -490,6 +490,18 @@
   gSophgoTokenSpaceGuid.PcdEfuseNumCells|128
   gSophgoTokenSpaceGuid.PcdEfuseCellWidth|4
 
+  #
+  # 1. PcdEfuseWriteEnableGpio set to TRUE indicates that writing data to
+  #    eFuse requires configuring the GPIO level.
+  # 2. PcdEfuseWriteEnableGpioPin indicates the GPIO number that needs to
+  #    be configured.
+  # 3. PcdEfuseIsGpioHighToEnableWrite set to TRUE indicates that eFuse
+  #    writing is enabled when the GPIO level is set to high.
+  #
+  gSophgoTokenSpaceGuid.PcdEfuseWriteEnableGpio|TRUE
+  gSophgoTokenSpaceGuid.PcdEfuseWriteEnableGpioPin|18
+  gSophgoTokenSpaceGuid.PcdEfuseIsGpioHighToEnableWrite|TRUE
+
 !if $(ETH_ENABLE) == TRUE
   gSophgoTokenSpaceGuid.PcdPhyResetGpio|TRUE
   gSophgoTokenSpaceGuid.PcdPhyResetGpioPin|28
@@ -758,6 +770,7 @@
       NULL|ShellPkg/Library/UefiShellInstall1CommandsLib/UefiShellInstall1CommandsLib.inf
       NULL|ShellPkg/Library/UefiShellNetwork1CommandsLib/UefiShellNetwork1CommandsLib.inf
       NULL|ShellPkg/Library/UefiShellAcpiViewCommandLib/UefiShellAcpiViewCommandLib.inf
+      NULL|Silicon/Sophgo/Applications/EfuseTool/EfuseTool.inf
       HandleParsingLib|ShellPkg/Library/UefiHandleParsingLib/UefiHandleParsingLib.inf
       SortLib|MdeModulePkg/Library/UefiSortLib/UefiSortLib.inf
       PrintLib|MdePkg/Library/BasePrintLib/BasePrintLib.inf

@@ -14,6 +14,7 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
+#include <Library/ConfigUtilsLib.h>
 
 #include "SmbiosPlatformDxe.h"
 
@@ -22,8 +23,11 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBios) {
   STR_TOKEN_INFO      *InputStrToken;
   SMBIOS_TABLE_TYPE0  *Type0Record;
   SMBIOS_TABLE_TYPE0  *InputData;
+  CHAR16               UnicodeStrVersion[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  CHAR16               UnicodeStrDate[SMBIOS_UNICODE_STRING_MAX_LENGTH];
   CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  CHAR16               UnicodeStrTmp[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  CHAR8                Version[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  CHAR8                Date[SMBIOS_UNICODE_STRING_MAX_LENGTH];
   CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
 
   InputData     = (SMBIOS_TABLE_TYPE0 *)RecordData;
@@ -34,26 +38,16 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBios) {
     if (EFI_ERROR (Status)) {
       return Status;
     }
+    if (ReadVersionAndDateFromFlash(Version, Date, 0x0, 0x200) == 0) {
+      AsciiStrToUnicodeStrS (Version, UnicodeStrVersion, SMBIOS_UNICODE_STRING_MAX_LENGTH);
+      AsciiStrToUnicodeStrS (Date, UnicodeStrDate, SMBIOS_UNICODE_STRING_MAX_LENGTH);
+      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStrVersion, NULL);
+      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStrDate, NULL);
+    }
 
-    if (IniGetValueBySectionAndName ("BIOS Information", "bios_vendor", value) == 0) {
+    if (IniGetValueBySectionAndName ("BIOS Information", "vendor", value) == 0) {
       AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
       HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], UnicodeStr, NULL);
-    }
-
-    if (IniGetValueBySectionAndName ("BIOS Information", "bios_version", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStr, NULL);
-    }
-
-    if (IniGetValueBySectionAndName ("BIOS Information", "date", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-
-      if (IniGetValueBySectionAndName ("BIOS Information", "time", value) == 0) {
-        AsciiStrToUnicodeStrS (value, UnicodeStrTmp, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      }
-      StrCatS(UnicodeStr, sizeof (UnicodeStr), L" ");
-      StrCatS(UnicodeStr, sizeof (UnicodeStr), UnicodeStrTmp);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStr, NULL);
     }
 
     SmbiosPlatformDxeCreateTable (

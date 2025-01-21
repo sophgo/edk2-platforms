@@ -54,6 +54,7 @@
   Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
   Silicon/RISC-V/ProcessorPkg/RiscVProcessorPkg.dec
   Silicon/Sophgo/Sophgo.dec
+  EmbeddedPkg/EmbeddedPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -64,6 +65,7 @@
   UefiDriverEntryPoint
   UefiLib
   IniParserLib
+  ConfigUtilsLib
 
 [Protocols]
   gEfiSmbiosProtocolGuid                            ## CONSUMED

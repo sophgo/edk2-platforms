@@ -44,7 +44,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define INFORMATION_PAGE_CALLBACK_DATA_SIGNATURE  SIGNATURE_32 ('S', 'G', 'I', 'S')
 #define END_DEVICE_PATH_LENGTH (sizeof(EFI_DEVICE_PATH_PROTOCOL))
 
-extern UINT8  ShowInformationVfrBin[];
+extern UINT8  InformationVfrBin[];
 extern EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
 extern EFI_HII_CONFIG_ROUTING_PROTOCOL *gHiiConfigRouting;
 
@@ -108,6 +108,7 @@ typedef struct {
   UINT8  MemoryArrayUse;
   CHAR16 *MemoryManufacturer;
   UINT32 MemorySize;
+  UINT32 ExtendSize;
   UINT16 ExtendedSpeed;
   UINT8  MemoryRank;
   CHAR16 MemoryType[MAX_STRING_LENGTH];

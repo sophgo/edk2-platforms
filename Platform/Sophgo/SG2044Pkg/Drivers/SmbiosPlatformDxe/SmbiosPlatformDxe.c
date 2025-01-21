@@ -23,7 +23,6 @@
 #include <Library/PrintLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/IniParserLib.h>
-#include <Library/IniParserLib/IniParserUtil.h>
 
 #include "SmbiosPlatformDxe.h"
 
@@ -35,77 +34,6 @@ STATIC EFI_STRING           mDefaultHiiDatabaseStr;
 STATIC EFI_SMBIOS_PROTOCOL  *mPlatformDxeSmbios = NULL;
 
 EFI_HII_HANDLE  mSmbiosPlatformDxeHiiHandle;
-
-#define MAX_SECTION_LENGTH	128
-#define MAX_NAME_LENGTH		128
-#define MAX_VALUE_LENGTH	128
-#define MAX_ENTRIES		500
-
-typedef struct {
-  CHAR8 Section[MAX_SECTION_LENGTH];  // section name
-  CHAR8 Name[MAX_NAME_LENGTH];        // name
-  CHAR8 Value[MAX_VALUE_LENGTH];      // value
-} INI_ENTRY;
-
-STATIC UINTN EntryCount = 0;
-STATIC INI_ENTRY gIniEntries[MAX_ENTRIES];
-
-INT32
-IniGetValueBySectionAndName (
-    CONST CHAR8 *Section,
-    CONST CHAR8 *Name,
-    CHAR8 *Value
- )
-{
-  for (UINTN i = 0; i < EntryCount; i++) {
-    if (AsciiStrCmp(gIniEntries[i].Section, Section) != 0)
-      continue;
-
-    if (AsciiStrCmp(gIniEntries[i].Name, Name) != 0)
-      continue;
-
-    AsciiStrCpyS(Value, SMBIOS_UNICODE_STRING_MAX_LENGTH, gIniEntries[i].Value);
-    return 0;
-  }
-
-  return -1;
-};
-
-INT32
-IniHandler (
-    VOID       *User,
-    CONST CHAR8 *Section,
-    CONST CHAR8 *Name,
-    CONST CHAR8 *Value
- )
-{
-    if (!AsciiStrCmp(Section, "eof"))
-      return 0;
-
-    if (EntryCount >= MAX_ENTRIES)
-      return 0;
-
-    AsciiStrCpyS(gIniEntries[EntryCount].Section, sizeof(gIniEntries[EntryCount].Section), Section);
-    AsciiStrCpyS(gIniEntries[EntryCount].Name, sizeof(gIniEntries[EntryCount].Name), Name);
-    AsciiStrCpyS(gIniEntries[EntryCount].Value, sizeof(gIniEntries[EntryCount].Value), Value);
-    EntryCount++;
-
-    return 1;
-}
-
-INT32
-IniConfIniParse (
-    IN INI_HANDLER   Handler,
-    IN VOID          *User
- )
-{
-    INT32 result = -1;
-
-    if (IsIniFileExist ())
-      result = IniParseString(MemoryData, Handler, User);
-
-    return result;
-}
 
 /**
   Standard EFI driver point. This driver parses the mSmbiosPlatformDataTable

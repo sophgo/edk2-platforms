@@ -339,7 +339,7 @@ ParseSmbiosTable (VOID) {
         if (Type17->Size & 0x8000) {
           ParsedData.MemorySize *= 1024;
         }
-
+        ParsedData.ExtendSize = Type17->ExtendedSize;
         ParsedData.ExtendedSpeed = Type17->ExtendedSpeed;
         switch (Type17->MemoryType) {
           case 0x1E:
@@ -406,6 +406,7 @@ FillInformationData (
   StrCpyS(InformationData->MemoryType, MAX_STRING_LENGTH, ParsedData->MemoryType);
   InformationData->ExtendedSpeed = ParsedData->ExtendedSpeed;
   InformationData->MemoryRank = ParsedData->MemoryRank;
+  InformationData->ExtendSize = ParsedData->ExtendSize / (1024 * 1024);
   StrCpyS(InformationData->BoardProductName, MAX_STRING_LENGTH, ParsedData->BaseboardProductName);
   StrCpyS(InformationData->BoardVersion, MAX_STRING_LENGTH, ParsedData->BaseboardManufacturer);
   StrCpyS(InformationData->ProductName, MAX_STRING_LENGTH, ParsedData->SystemProductName);
@@ -502,7 +503,7 @@ InformationInit(
   PrivateData->HiiHandle = HiiAddPackages(
     &mConfiginiGuid,
     DriverHandle,
-    ShowInformationVfrBin,
+    InformationVfrBin,
     InformationStrings,
     NULL
   );

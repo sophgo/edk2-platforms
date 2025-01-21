@@ -14,7 +14,7 @@
   ENTRY_POINT                    = InformationInit
 
 [Sources]
-  ShowInformationVfr.Vfr
+  InformationVfr.Vfr
   InformationStrings.uni
   Information.c
   Information.h

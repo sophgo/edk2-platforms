@@ -15,6 +15,7 @@
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
 #include <Library/ConfigUtilsLib.h>
+#include <Library/IniParserLib.h>
 
 #include "SmbiosPlatformDxe.h"
 

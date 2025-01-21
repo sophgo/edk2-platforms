@@ -83,7 +83,6 @@ IniHandler (
 /**
   Parse INI-format data.
 
-  @param[in] Handler    The handler function for processing INI data.
   @param[in] User       User-defined context data.
 
   @retval >=0           Number of successfully parsed key-value pairs.
@@ -91,7 +90,6 @@ IniHandler (
 **/
 INT32
 IniConfIniParse (
-  IN INT32 (*Handler)(VOID *User, CONST CHAR8 *Section, CONST CHAR8 *Name, CONST CHAR8 *Value),
   IN VOID  *User
   );
 

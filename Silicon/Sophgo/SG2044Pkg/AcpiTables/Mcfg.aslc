@@ -22,7 +22,7 @@
 typedef struct
 {
   EFI_ACPI_MEMORY_MAPPED_CONFIGURATION_BASE_ADDRESS_TABLE_HEADER Header;
-  EFI_ACPI_MEMORY_MAPPED_ENHANCED_CONFIGURATION_SPACE_BASE_ADDRESS_ALLOCATION_STRUCTURE Structure[5];
+  EFI_ACPI_MEMORY_MAPPED_ENHANCED_CONFIGURATION_SPACE_BASE_ADDRESS_ALLOCATION_STRUCTURE Structure[10];
 } EFI_ACPI_PCI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE;
 #pragma pack()
 
@@ -45,29 +45,64 @@ EFI_ACPI_PCI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE Mcfg = {
       0x00000000,                                           // Reserved
     },
     {
-      0x4800000000,                                         // Base Address
+      0x4400000000,                                         // Base Address
       0x1,                                                  // Segment Group Number
       0x0,                                                  // Start Bus Number
       0xff,                                                 // End Bus Number
       0x00000000,                                           // Reserved
     },
     {
-      0x5000000000,                                         // Base Address
+      0x4800000000,                                         // Base Address
       0x2,                                                  // Segment Group Number
       0x0,                                                  // Start Bus Number
       0xff,                                                 // End Bus Number
       0x00000000,                                           // Reserved
     },
     {
-      0x5800000000,                                         // Base Address
+      0x4c00000000,                                         // Base Address
       0x3,                                                  // Segment Group Number
       0x0,                                                  // Start Bus Number
       0xff,                                                 // End Bus Number
       0x00000000,                                           // Reserved
     },
     {
-      0x6000000000,                                         // Base Address
+      0x5000000000,                                         // Base Address
       0x4,                                                  // Segment Group Number
+      0x0,                                                  // Start Bus Number
+      0xff,                                                 // End Bus Number
+      0x00000000,                                           // Reserved
+    },
+    {
+      0x5400000000,                                         // Base Address
+      0x5,                                                  // Segment Group Number
+      0x0,                                                  // Start Bus Number
+      0xff,                                                 // End Bus Number
+      0x00000000,                                           // Reserved
+    },
+    {
+      0x5800000000,                                         // Base Address
+      0x6,                                                  // Segment Group Number
+      0x0,                                                  // Start Bus Number
+      0xff,                                                 // End Bus Number
+      0x00000000,                                           // Reserved
+    },
+    {
+      0x5c00000000,                                         // Base Address
+      0x7,                                                  // Segment Group Number
+      0x0,                                                  // Start Bus Number
+      0xff,                                                 // End Bus Number
+      0x00000000,                                           // Reserved
+    },
+    {
+      0x6000000000,                                         // Base Address
+      0x8,                                                  // Segment Group Number
+      0x0,                                                  // Start Bus Number
+      0xff,                                                 // End Bus Number
+      0x00000000,                                           // Reserved
+    },
+    {
+      0x6400000000,                                         // Base Address
+      0x9,                                                  // Segment Group Number
       0x0,                                                  // Start Bus Number
       0xff,                                                 // End Bus Number
       0x00000000,                                           // Reserved

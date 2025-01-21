@@ -203,13 +203,6 @@ SmbiosPlatformDxeDirectAddRecord (
   IN OUT EFI_SMBIOS_HANDLE  *SmbiosHandle OPTIONAL
   );
 
-INT32
-IniGetValueBySectionAndName (
-    CONST CHAR8 *Section,
-    CONST CHAR8 *Name,
-    CHAR8 *Value
-);
-
 EFI_STATUS
 UpdateCacheSize(
   IN CHAR16          *UnicodeStr,

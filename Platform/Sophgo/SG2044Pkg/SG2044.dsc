@@ -218,6 +218,7 @@
   # S3BootScriptLib|MdeModulePkg/Library/PiDxeS3BootScriptLib/DxeS3BootScriptLib.inf
   SmbusLib|MdePkg/Library/BaseSmbusLibNull/BaseSmbusLibNull.inf
   OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrderedCollectionRedBlackTreeLib.inf
+  AcpiLib|EmbeddedPkg/Library/AcpiLib/AcpiLib.inf
 
 [LibraryClasses.common]
   #
@@ -478,7 +479,7 @@
   gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x80000
 !endif
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
-  gSophgoTokenSpaceGuid.PcdIniFileMaxSize|2048
+  gSophgoTokenSpaceGuid.PcdIniFileMaxSize|8192
   gSophgoTokenSpaceGuid.PcdMisa|0x00B4112F
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum|2
 

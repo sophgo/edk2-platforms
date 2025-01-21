@@ -14,6 +14,10 @@
 #include <Library/IniParserLib.h>
 #include "IniParserUtil.h"
 
+#define MAX_SECTION_LENGTH	128
+#define MAX_NAME_LENGTH		128
+#define MAX_VALUE_LENGTH	128
+#define MAX_ENTRIES		500
 #define INI_FILE_MAX_SIZE   (FixedPcdGet32(PcdIniFileMaxSize))
 #define MAX_SECTION_LENGTH      128
 #define MAX_NAME_LENGTH         128
@@ -173,14 +177,13 @@ IniHandler (
 
 INT32
 IniConfIniParse (
-  IN INI_HANDLER   Handler,
-  IN VOID          *User
+    IN VOID          *User
  )
 {
     INT32 result = -1;
 
     if (IsIniFileExist ())
-      result = IniParseString(MemoryData, Handler, User);
+      result = IniParseString(MemoryData, IniHandler, User);
 
     return result;
 }

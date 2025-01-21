@@ -57,7 +57,7 @@ SmbiosPlatformDxeEntry (
 
   mSmbiosPlatformDxeImageHandle = ImageHandle;
 
-  Status = IniConfIniParse (IniHandler, NULL);
+  Status = IniConfIniParse (NULL);
   if (EFI_ERROR(Status)) {
     DEBUG ((DEBUG_ERROR, "Config INI parse fail. %r\n", Status));
   }

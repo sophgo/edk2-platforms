@@ -25,6 +25,7 @@
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
 
 [LibraryClasses]
   DxeServicesLib
@@ -33,10 +34,13 @@
   DebugLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
+  IniParserLib
+  AcpiLib
 
 [Protocols]
   gEfiAcpiTableProtocolGuid                                 ## CONSUMES
   gFdtClientProtocolGuid                                    ## CONSUMES
+  gEfiAcpiSdtProtocolGuid
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiTableStorageFile    ## CONSUMES

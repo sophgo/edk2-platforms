@@ -386,4 +386,26 @@ Scope(_SB)
       }
     })
   }
+
+  Device (TPU0) {
+    Name (_HID, "SGPH0090")
+    Name (_CID, "HISI1690")
+    Name (_UID, 0x0)
+    Name (_CCA, 0)
+    Method (_STA)
+    {
+      Return (0xF)
+    }
+    Name (_CRS, ResourceTemplate () {
+      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 863 }
+    })
+
+    Name (_DSD, Package ()  // _DSD: Device-Specific Data
+    {
+      ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+      Package () {
+        Package (2) { "chip_type", 0x1690 },
+      }
+    })
+  }
 }

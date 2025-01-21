@@ -44,6 +44,7 @@
 
   DEFINE FLASH_ENABLE             = TRUE
   DEFINE ETH_ENABLE               = TRUE
+  DEFINE ACPI_ENABLE              = TRUE
 
   #
   # x64 Emulator

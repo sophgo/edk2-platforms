@@ -32,7 +32,7 @@
 #string STR_L1_DCACHE_SIZE #language en-US "L1-DCache-Size(KB): "
 #string STR_L2_CACHE_SIZE #language en-US "L2-Cache-Size(KB): "
 #string STR_L3_CACHE_SIZE #language en-US "L3-Cache-Size(KB): "
-#string STR_MEMORY_SIZE #language en-US "DDR Size: "
+#string STR_MEMORY_SIZE  #language en-US "DDR Size(GB): "
 #string STR_MEMORY_SPEED #language en-US "DDR Speed(MT/s): "
 #string STR_MEMORY_RANK  #language en-US "DDR Rank: "
 #string STR_MEMORY_TYPE  #language en-US "DDR Type: "

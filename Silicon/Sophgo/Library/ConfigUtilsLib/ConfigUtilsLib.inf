@@ -1,0 +1,55 @@
+## @file
+#  Implementation for ConfigUtils library class interfaces.
+#
+#  Copyright (c) 2025. SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 1.29
+  BASE_NAME                      = ConfigUtilsLib
+  FILE_GUID                      = 3a5b09c3-f53d-4222-8a27-ca48f30a1010
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = ConfigUtilsLib
+
+[Sources]
+  ConfigUtilsLib.c
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
+  Silicon/RISC-V/ProcessorPkg/RiscVProcessorPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  HiiLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+  NorFlashInfoLib
+  TimerLib
+  EfuseLib
+
+[Protocols]
+  gSophgoNorFlashProtocolGuid                       ## CONSUMES
+  gSophgoSpiMasterProtocolGuid                      ## CONSUMES
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdMisa
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset
+
+[Depex]
+  TRUE
+

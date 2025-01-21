@@ -12,6 +12,7 @@
 #include <Library/HiiLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PrintLib.h>
+#include <Library/ConfigUtilsLib.h>
 
 #include "SmbiosPlatformDxe.h"
 
@@ -22,6 +23,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
   SMBIOS_TABLE_TYPE17  *Type17Record;
   CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
   CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  UINT32               Size;
   UINT64	       Uint;
   CHAR8		       *End;
   InputData         = (SMBIOS_TABLE_TYPE17 *)RecordData;
@@ -62,7 +64,15 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
           }
           InputData->Attributes = Uint;
       }
-
+      if (UpdateSmbiosFromEfuse(1, 352, 4, &Size) == 0) {
+         UINT32 SizeInGB = Size * 8;
+         UINT32 DefaultSize = 0x4000000;
+	 if (SizeInGB != 64 && SizeInGB != 128) {
+              InputData->ExtendedSize = DefaultSize;
+         } else {
+	      InputData->ExtendedSize = Size;
+	 }
+      }
       SmbiosPlatformDxeCreateTable (
         (VOID *)&Type17Record,
         (VOID *)&InputData,

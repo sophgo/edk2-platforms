@@ -29,6 +29,7 @@ typedef struct {
   UINT32 L1DCacheSize;
   UINT32 L2CacheSize;
   UINT32 L3CacheSize;
+  UINT32 ExtendSize;
   UINT16 ExtendedSpeed;
   UINT8  MemoryRank;
   CHAR16 BiosVersion[MAX_STRING_LENGTH];

@@ -15,6 +15,20 @@
 #include "IniParserUtil.h"
 
 #define INI_FILE_MAX_SIZE   (FixedPcdGet32(PcdIniFileMaxSize))
+#define MAX_SECTION_LENGTH      128
+#define MAX_NAME_LENGTH         128
+#define MAX_VALUE_LENGTH        128
+#define MAX_ENTRIES             500
+
+typedef struct {
+  CHAR8 Section[MAX_SECTION_LENGTH];
+  CHAR8 Name[MAX_NAME_LENGTH];
+  CHAR8 Value[MAX_VALUE_LENGTH];
+} INI_ENTRY;
+
+STATIC UINTN EntryCount = 0;
+STATIC INI_ENTRY gIniEntries[MAX_ENTRIES];
+
 CHAR8 MemoryData[INI_FILE_MAX_SIZE];
 
 TEST_CONFIG Config;
@@ -112,6 +126,63 @@ IsIniFileExist (
       ));
      return TRUE;
   }
+}
+
+INT32
+IniGetValueBySectionAndName (
+  CONST CHAR8 *Section,
+  CONST CHAR8 *Name,
+  CHAR8 *Value
+ )
+{
+  for (UINTN i = 0; i < EntryCount; i++) {
+    if (AsciiStrCmp(gIniEntries[i].Section, Section) != 0)
+      continue;
+
+    if (AsciiStrCmp(gIniEntries[i].Name, Name) != 0)
+      continue;
+
+    AsciiStrCpyS(Value, MAX_VALUE_LENGTH, gIniEntries[i].Value);
+    return 0;
+  }
+
+  return -1;
+}
+
+INT32
+IniHandler (
+  VOID       *User,
+  CONST CHAR8 *Section,
+  CONST CHAR8 *Name,
+  CONST CHAR8 *Value
+ )
+{
+    if (!AsciiStrCmp(Section, "eof"))
+      return 0;
+
+    if (EntryCount >= MAX_ENTRIES)
+      return 0;
+
+    AsciiStrCpyS(gIniEntries[EntryCount].Section, sizeof(gIniEntries[EntryCount].Section), Section);
+    AsciiStrCpyS(gIniEntries[EntryCount].Name, sizeof(gIniEntries[EntryCount].Name), Name);
+    AsciiStrCpyS(gIniEntries[EntryCount].Value, sizeof(gIniEntries[EntryCount].Value), Value);
+    EntryCount++;
+
+    return 1;
+}
+
+INT32
+IniConfIniParse (
+  IN INI_HANDLER   Handler,
+  IN VOID          *User
+ )
+{
+    INT32 result = -1;
+
+    if (IsIniFileExist ())
+      result = IniParseString(MemoryData, Handler, User);
+
+    return result;
 }
 
 EFI_STATUS

@@ -150,6 +150,14 @@ formset
              maximum = 4,
              step    = 1,
      endnumeric;
+     numeric varid = InformationData.ExtendSize,
+             prompt = STRING_TOKEN(STR_MEMORY_SIZE),
+             help   = STRING_TOKEN(STR_NULL_STRING),
+             flags  = READ_ONLY,
+             minimum = 0,
+             maximum = 1000,
+             step    = 1,
+     endnumeric;
   endform;
 
   form formid = BOARD_FORM_ID,

@@ -1,0 +1,45 @@
+/** @file
+*
+*  Copyright (c) 2018, Hisilicon Limited. All rights reserved.
+*  Copyright (c) 2018, Linaro Limited. All rights reserved.
+*  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+*
+*  SPDX-License-Identifier: BSD-2-Clause-Patent
+*
+*  Based on the files under Platform/ARM/JunoPkg/AcpiTables/
+*
+**/
+
+[Defines]
+  INF_VERSION                    = 0x0001001A
+  BASE_NAME                      = AcpiPptt
+  FILE_GUID                      = fd5375c9-775a-4b28-8fcd-201419e05abc
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = PpttEntryPoint
+
+[Sources.common]
+  Pptt.c
+
+[Packages]
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  HobLib
+  UefiDriverEntryPoint
+  UefiRuntimeServicesTableLib
+  IniParserLib
+
+[Protocols]
+  gEfiAcpiSdtProtocolGuid                       ## PROTOCOL ALWAYS_CONSUMED
+  gEfiAcpiTableProtocolGuid                     ## PROTOCOL ALWAYS_CONSUMED
+
+[Depex]
+  gEfiAcpiTableProtocolGuid AND gEfiAcpiSdtProtocolGuid
+

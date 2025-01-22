@@ -272,10 +272,10 @@ UpdateStatusMethodObject (
 
 void debug_qword_resource(struct qword_address_space_desc *tmp)
 {
-	DEBUG ((DEBUG_INFO, "min: %lx\n", tmp->min));
-	DEBUG ((DEBUG_INFO, "max: %lx\n", tmp->max));
-	DEBUG ((DEBUG_INFO, "transl: %lx\n", tmp->transl));
-	DEBUG ((DEBUG_INFO, "lenth: %lx\n", tmp->length));
+	DEBUG ((DEBUG_VERBOSE, "min: %lx\n", tmp->min));
+	DEBUG ((DEBUG_VERBOSE, "max: %lx\n", tmp->max));
+	DEBUG ((DEBUG_VERBOSE, "transl: %lx\n", tmp->transl));
+	DEBUG ((DEBUG_VERBOSE, "length: %lx\n", tmp->length));
 }
 
 STATIC EFI_STATUS

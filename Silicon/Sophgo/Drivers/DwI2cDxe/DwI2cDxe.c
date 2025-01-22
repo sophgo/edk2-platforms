@@ -450,7 +450,15 @@ I2cXfer (
   IN INT32    NMsgs
   )
 {
-  return DesignwareI2cXfer ((VOID *)&mI2cInfo[I2c].Dev, Msg, NMsgs);
+  EFI_STATUS Status;
+  DW_I2C     *DwI2c;
+  DwI2c = (VOID *)&mI2cInfo[I2c].Dev;
+
+  DwI2cEnable (DwI2c->Regs, TRUE);
+  Status = DesignwareI2cXfer (DwI2c, Msg, NMsgs);
+  DwI2cEnable (DwI2c->Regs, FALSE);
+
+  return Status;
 }
 
 /**

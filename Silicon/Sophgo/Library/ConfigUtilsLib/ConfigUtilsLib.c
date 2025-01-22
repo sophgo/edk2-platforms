@@ -17,14 +17,9 @@ UpdateSmbiosFromEfuse (
   }
 
    Buffer = AllocateZeroPool(Count);
-   if (Buffer == NULL) {
-    DEBUG((DEBUG_ERROR, "Failed to allocate memory for Buffer.\n"));
+   if (Buffer == NULL || Size == NULL) {
     return -1;
-   }
-   if (Size == NULL) {
-    return -1;
-   }
-
+  }
   Status = EfuseReadBytes(BusNum, Offset, Count, Buffer);
   if (EFI_ERROR(Status)) {
     DEBUG((DEBUG_ERROR, "Failed to read from eFuse: %r\n", Status));
@@ -43,6 +38,7 @@ ReadVersionAndDateFromFlash (
   UINTN EndAddress
   )
 {
+  EFI_STATUS Status;
   SOPHGO_NOR_FLASH_PROTOCOL *NorFlashProtocol = NULL;
   SOPHGO_SPI_MASTER_PROTOCOL *SpiMasterProtocol = NULL;
   SPI_NOR *Nor = NULL;
@@ -56,28 +52,48 @@ ReadVersionAndDateFromFlash (
   RangeSize = EndAddress - StartAddress;
 
   Buffer = AllocateZeroPool(RangeSize);
+  if (Buffer == NULL) {
+    return -1;
+  }
 
-  gBS->LocateProtocol(
+  Status = gBS->LocateProtocol(
     &gSophgoSpiMasterProtocolGuid,
     NULL,
     (VOID **)&SpiMasterProtocol
   );
+  if (EFI_ERROR(Status)) {
+    return -1;
+  }
 
-  gBS->LocateProtocol(
+  Status = gBS->LocateProtocol(
     &gSophgoNorFlashProtocolGuid,
     NULL,
     (VOID **)&NorFlashProtocol
   );
+  if (EFI_ERROR(Status)) {
+    return -1;
+  }
 
   Nor = SpiMasterProtocol->SetupDevice(
     SpiMasterProtocol,
     NULL,
     0
   );
+  if(Nor == NULL) {
+    return -1;
+  }
 
-  NorFlashProtocol->GetFlashid(Nor, TRUE);
-  NorFlashProtocol->Init(NorFlashProtocol, Nor);
-  EFI_STATUS Status = NorFlashProtocol->ReadData(
+  Status = NorFlashProtocol->GetFlashid(Nor, TRUE);
+  if (EFI_ERROR(Status)) {
+    return -1;
+  }
+
+  Status = NorFlashProtocol->Init(NorFlashProtocol, Nor);
+  if (EFI_ERROR(Status)) {
+    return -1;
+  }
+
+  Status = NorFlashProtocol->ReadData(
     Nor,
     StartAddress,
     RangeSize,

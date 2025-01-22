@@ -51,5 +51,6 @@
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset
 
 [Depex]
-  TRUE
+  gSophgoSpiMasterProtocolGuid      AND
+  gSophgoNorFlashProtocolGuid
 

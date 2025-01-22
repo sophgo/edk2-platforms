@@ -21,7 +21,8 @@
 #include <Library/PcdLib.h>
 #include <Include/DwI2c.h>
 
-#define I2C_SLAVE_RTC_ADDR  0x68
+#define DS1307_ADDR         0x68
+#define INS5609_ADDR        0x32
 
 #define DS1307_SEC_BIT_CH   0x80  /* Clock Halt (in Register 0) */
 
@@ -54,6 +55,10 @@ STATIC SOPHGO_I2C_MASTER_PROTOCOL  *mI2cMasterProtocol;
 STATIC EFI_EVENT                   mVirtualAddrChangeEvent;
 STATIC UINT32                      mI2cBusNum;
 
+STATIC UINT8 mRtcSlaveAddrs[] = {DS1307_ADDR,
+                                 INS5609_ADDR};
+STATIC UINT8 mSlaveAddr;
+
 /**
   Read data from RTC.
 
@@ -72,7 +77,7 @@ RtcRead (
 
   Status = mI2cMasterProtocol->Read (mI2cMasterProtocol,
                                      mI2cBusNum,
-                                     I2C_SLAVE_RTC_ADDR,
+                                     mSlaveAddr,
                                      0, Length, Data);
 
   return Status;
@@ -96,7 +101,7 @@ RtcWrite (
 
   Status = mI2cMasterProtocol->Write (mI2cMasterProtocol,
                                       mI2cBusNum,
-                                      I2C_SLAVE_RTC_ADDR,
+                                      mSlaveAddr,
                                       0, Length, Data);
 
   return Status;
@@ -275,6 +280,30 @@ VirtualNotifyEvent (
   EfiConvertPointer (0x0, (VOID**)&mI2cMasterProtocol);
 }
 
+STATIC
+EFI_STATUS
+FindOneRtcSlave (
+  VOID
+  )
+{
+  EFI_STATUS Status;
+  UINT32     Index;
+  UINT8      Data = 0;
+
+  for (Index = 0; Index < sizeof (mRtcSlaveAddrs); ++Index) {
+    Status = mI2cMasterProtocol->ReadByte (mI2cMasterProtocol,
+                                           mI2cBusNum,
+                                           mRtcSlaveAddrs[Index],
+                                           0, &Data);
+    if (!EFI_ERROR (Status)) {
+      mSlaveAddr = mRtcSlaveAddrs[Index];
+      return Status;
+    }
+  }
+
+  return EFI_NOT_FOUND;
+}
+
 /**
   This is the declaration of an EFI image entry point. This can be the entry point to an application
   written to this specification, an EFI boot service driver, or an EFI runtime driver.
@@ -324,6 +353,12 @@ LibRtcInitialize (
     }
   }
   mI2cBusNum = FixedPcdGet32 (PcdRtcI2cBusNum);
+
+  Status = FindOneRtcSlave ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to find a RTC slave!\n"));
+    return Status;
+  }
 
   return EFI_SUCCESS;
 }

@@ -29,6 +29,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/IniParserLib.h>
 #include <Library/IniParserLib/IniParserUtil.h>
 #include <Library/BaseMemoryLib.h>
+#include <Library/SmbiosInformationLib.h>
 #include <Guid/FileInfo.h>
 #include <Guid/MdeModuleHii.h>
 #include <Guid/FileInfo.h>
@@ -84,40 +85,6 @@ typedef struct {
   EFI_HII_CONFIG_ROUTING_PROTOCOL   *HiiConfigRouting;
 } INFORMATION_PAGE_CALLBACK_DATA;
 
-typedef struct {
-  CHAR16 *BiosVendor;
-  CHAR16 *BiosVersion;
-  CHAR16 *BiosReleaseDate;
-  CHAR16 *SystemManufacturer;
-  CHAR16 *SystemProductName;
-  CHAR16 *SystemSerialNumber;
-  CHAR16 *BaseboardManufacturer;
-  CHAR16 *BaseboardProductName;
-  CHAR16 *ChassisManufacturer;
-  CHAR16 *ProcessorVersion;
-  UINT16 ProcessorCurrentSpeed;
-  UINT8  ProcessorCoreCount;
-  UINT8  ProcessorThreadCount;
-  UINT16 L1ICacheSize;
-  UINT16 L1DCacheSize;
-  UINT16 L2CacheSize;
-  UINT32 L3CacheSize;
-  UINT8 InstallableLanguages;
-  UINT8 BiosLanguageFlags;
-  UINT8  MemoryArrayLocation;
-  UINT8  MemoryArrayUse;
-  CHAR16 *MemoryManufacturer;
-  UINT32 MemorySize;
-  UINT32 ExtendSize;
-  UINT16 ExtendedSpeed;
-  UINT8  MemoryRank;
-  CHAR16 MemoryType[MAX_STRING_LENGTH];
-  UINT64 MemoryArrayMappedStartingAddress;
-  UINT64 MemoryArrayMappedEndingAddress;
-  UINT8 BootStatus;
-  UINT8 IPMIInterfaceType;
-  CHAR16 *SystemVersion;
-} SMBIOS_PARSED_DATA;
 
 /**
   This function allows a caller to extract the current configuration for one

@@ -20,8 +20,7 @@
 #define PRODUCT_FORM_ID                0x1005
 #define BOARD_FORM_ID                  0x1006
 #define VAR_INFORMATION_VARID          0x1007
-#define MAX_STRING_LENGTH 	       64
-
+#define MAX_LENGTH                     64
 #pragma pack(2)
 typedef struct {
   UINT16 ProcessorMaxSpeed;
@@ -32,17 +31,17 @@ typedef struct {
   UINT32 ExtendSize;
   UINT16 ExtendedSpeed;
   UINT8  MemoryRank;
-  CHAR16 BiosVersion[MAX_STRING_LENGTH];
-  CHAR16 BiosReleaseDate[MAX_STRING_LENGTH];
-  CHAR16 BiosVendor[MAX_STRING_LENGTH];
-  CHAR16 ProcessorVersion[MAX_STRING_LENGTH];
-  CHAR16 PartNumber[MAX_STRING_LENGTH];
-  CHAR16 MemoryType[MAX_STRING_LENGTH];
-  CHAR16 BoardProductName[MAX_STRING_LENGTH];
-  CHAR16 BoardVersion[MAX_STRING_LENGTH];
-  CHAR16 ProductName[MAX_STRING_LENGTH];
-  CHAR16 ProductVersion[MAX_STRING_LENGTH];
-  CHAR16 Manufacturer[MAX_STRING_LENGTH];
+  CHAR16 BiosVersion[MAX_LENGTH];
+  CHAR16 BiosReleaseDate[MAX_LENGTH];
+  CHAR16 BiosVendor[MAX_LENGTH];
+  CHAR16 ProcessorVersion[MAX_LENGTH];
+  CHAR16 PartNumber[MAX_LENGTH];
+  CHAR16 MemoryType[MAX_LENGTH];
+  CHAR16 BoardProductName[MAX_LENGTH];
+  CHAR16 BoardVersion[MAX_LENGTH];
+  CHAR16 ProductName[MAX_LENGTH];
+  CHAR16 ProductVersion[MAX_LENGTH];
+  CHAR16 Manufacturer[MAX_LENGTH];
 } INFORMATION_DATA;
 #pragma pack()
 #endif

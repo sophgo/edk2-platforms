@@ -54,21 +54,21 @@ formset
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
      string varid = InformationData.BiosReleaseDate,
             prompt = STRING_TOKEN(STR_BIOS_RELEASE_DATE),
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
      string varid = InformationData.BiosVendor,
             prompt = STRING_TOKEN(STR_BIOS_VENDOR),
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
   endform;
 
@@ -80,7 +80,7 @@ formset
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
      numeric varid = InformationData.ProcessorMaxSpeed,
              prompt = STRING_TOKEN(STR_PROCESSOR_MAX_SPEED),
@@ -132,7 +132,7 @@ formset
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
      numeric varid = InformationData.ExtendedSpeed,
              prompt = STRING_TOKEN(STR_MEMORY_SPEED),
@@ -168,14 +168,14 @@ formset
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
      string varid = InformationData.BoardVersion,
             prompt = STRING_TOKEN(STR_BOARD_VERSION),
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
   endform;
 
@@ -187,21 +187,21 @@ formset
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
      string varid = InformationData.ProductVersion,
             prompt = STRING_TOKEN(STR_PRODUCT_VERSION),
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
      string varid = InformationData.Manufacturer,
             prompt = STRING_TOKEN(STR_MANUFACTURER),
             help   = STRING_TOKEN(STR_NULL_STRING),
             flags  = READ_ONLY,
             minsize = 1,
-            maxsize = MAX_STRING_LENGTH,
+            maxsize = MAX_LENGTH,
      endstring;
   endform;
 endformset;

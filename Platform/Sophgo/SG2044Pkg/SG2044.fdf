@@ -255,6 +255,12 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
   INF Silicon/Sophgo/SG2044Pkg/Pptt/Pptt.inf
 !endif
 
+
+# bmc ipmi ssif Dxe
+INF Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfig/BmcConfig.inf
+INF Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
+INF Features/ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
+
 ################################################################################
 
 [FV.FVMAIN_COMPACT]

@@ -61,24 +61,26 @@ ExtractString(
   return EFI_SUCCESS;
 }
 
-INT32
-ParseSmbiosTable (
-  OUT SMBIOS_PARSED_DATA *ParsedData
+SMBIOS_PARSED_DATA *
+AllocSmbiosData (
+  VOID
 ) {
   EFI_SMBIOS_PROTOCOL      *Smbios;
   EFI_SMBIOS_HANDLE        SmbiosHandle;
   EFI_SMBIOS_TABLE_HEADER  *Record;
   EFI_STATUS               Status;
-
+  SMBIOS_PARSED_DATA       *ParsedData;
+  ParsedData = AllocateZeroPool(sizeof(SMBIOS_PARSED_DATA));
   if (ParsedData == NULL) {
-    return -1;
+    DEBUG((DEBUG_ERROR, "Failed to allocate memory for ParsedData\n"));
+    return NULL;
   }
-
   ZeroMem(ParsedData, sizeof(SMBIOS_PARSED_DATA));
   Status = gBS->LocateProtocol(&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
   if (EFI_ERROR(Status)) {
     DEBUG((DEBUG_ERROR, "Failed to locate SMBIOS protocol: %r\n", Status));
-    return -1;
+    FreePool(ParsedData);
+    return NULL;
   }
 
   SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
@@ -247,5 +249,51 @@ ParseSmbiosTable (
     }
   }
 
-  return EFI_SUCCESS;
+  return ParsedData;
+}
+
+INT32
+FreeSmbiosData (
+  IN SMBIOS_PARSED_DATA *ParsedData
+) {
+  if (ParsedData == NULL) {
+    DEBUG((DEBUG_ERROR, "%a:ParsedData Ptr NULL\n",__func__));
+    return -1;
+  }
+  if (ParsedData->BiosVendor != NULL)
+    FreePool(ParsedData->BiosVendor);
+
+  if (ParsedData->BiosVersion != NULL)
+    FreePool(ParsedData->BiosVersion);
+
+  if (ParsedData->BiosReleaseDate != NULL)
+    FreePool(ParsedData->BiosReleaseDate);
+
+  if (ParsedData->SystemManufacturer != NULL)
+    FreePool(ParsedData->SystemManufacturer);
+
+  if (ParsedData->SystemProductName != NULL)
+    FreePool(ParsedData->SystemProductName);
+
+  if (ParsedData->SystemSerialNumber != NULL)
+    FreePool(ParsedData->SystemSerialNumber);
+
+  if (ParsedData->BaseboardManufacturer != NULL)
+    FreePool(ParsedData->BaseboardManufacturer);
+
+  if (ParsedData->BaseboardProductName != NULL)
+    FreePool(ParsedData->BaseboardProductName);
+
+  if (ParsedData->ChassisManufacturer != NULL)
+    FreePool(ParsedData->ChassisManufacturer);
+
+  if (ParsedData->ProcessorVersion != NULL)
+    FreePool(ParsedData->ProcessorVersion);
+
+  if (ParsedData->MemoryManufacturer != NULL)
+    FreePool(ParsedData->MemoryManufacturer);
+
+  FreePool(ParsedData);
+  return 1;
+
 }

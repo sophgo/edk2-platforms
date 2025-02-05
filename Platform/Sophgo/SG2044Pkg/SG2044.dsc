@@ -222,6 +222,14 @@
   OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrderedCollectionRedBlackTreeLib.inf
   AcpiLib|EmbeddedPkg/Library/AcpiLib/AcpiLib.inf
 
+
+  PlatformBmcReadyLib|Features/ManageabilityPkg/Library/PlatformBmcReadyLibNull/PlatformBmcReadyLibNull.inf
+  ManageabilityTransportHelperLib|Features/ManageabilityPkg/Library/BaseManageabilityTransportHelperLib/BaseManageabilityTransportHelper.inf
+  SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
+  IpmiLib|MdeModulePkg/Library/DxeIpmiLibIpmiProtocol/DxeIpmiLibIpmiProtocol.inf
+  IpmiCommandLib|Features/ManageabilityPkg/Library/IpmiCommandLib/IpmiCommandLib.inf
+  ManageabilityTransportLib|Features/ManageabilityPkg/Library/ManageabilityTransportSsifLib/Dxe/DxeManageabilityTransportSsif.inf
+
 [LibraryClasses.common]
   #
   # Secure Boot dependencies
@@ -485,6 +493,7 @@
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|8192
   gSophgoTokenSpaceGuid.PcdMisa|0x00B4112F
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum|2
+  gSophgoTokenSpaceGuid.PcdSsifI2cBusNum|3
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
 
@@ -744,6 +753,15 @@
   # ASPEED AST2500 GOP driver
   #
   Drivers/ASpeed/ASpeedGopBinPkg/ASpeedAst2500GopDxe.inf
+
+
+  #
+  # bmc ipmi ssif Dxe
+  #
+  # Silicon/Sophgo/Drivers/BmConfigDxe/BmcConfigDxe.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfig/BmcConfig.inf
+  Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
+  Features/ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning + UDF filesystem

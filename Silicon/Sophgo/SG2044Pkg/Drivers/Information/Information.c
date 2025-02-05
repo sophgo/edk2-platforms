@@ -231,25 +231,26 @@ InformationInit(
 ) {
   EFI_STATUS Status;
   EFI_HII_CONFIG_ROUTING_PROTOCOL *HiiConfigRouting;
-  ParsedData = AllocateZeroPool(sizeof(SMBIOS_PARSED_DATA));
+  ParsedData = AllocSmbiosData();
   if (ParsedData == NULL) {
-    DEBUG((DEBUG_ERROR, "Failed to allocate memory for ParsedData\n"));
-    return EFI_OUT_OF_RESOURCES;
-  }
-  if (ParseSmbiosTable(ParsedData) == -1) {
-     DEBUG((DEBUG_ERROR, "ParseSmbiosTable failed, initializing default values.\n"));
-     StrCpyS(ParsedData->BiosVendor, MAX_LENGTH, L"Unknown");
-     StrCpyS(ParsedData->BiosVersion, MAX_LENGTH, L"Unknown");
-     StrCpyS(ParsedData->BiosReleaseDate, MAX_LENGTH, L"Unknown");
-     ParsedData->ProcessorCurrentSpeed = 0;
-     ParsedData->L1ICacheSize = 0;
-     ParsedData->L1DCacheSize = 0;
-     ParsedData->L2CacheSize = 0;
-     ParsedData->L3CacheSize = 0;
-     StrCpyS(ParsedData->MemoryType, MAX_LENGTH, L"Unknown");
-     ParsedData->ExtendedSpeed = 0;
-     ParsedData->MemoryRank = 0;
-     ParsedData->ExtendSize = 0;
+    DEBUG((DEBUG_ERROR, "ParseSmbiosTable failed, initializing default values.\n"));
+    ParsedData = AllocateZeroPool(sizeof(SMBIOS_PARSED_DATA));
+    if (ParsedData == NULL) {
+      DEBUG((DEBUG_ERROR, "Failed to allocate memory for ParsedData\n"));
+      return EFI_OUT_OF_RESOURCES;
+    }
+    StrCpyS(ParsedData->BiosVendor, MAX_LENGTH, L"Unknown");
+    StrCpyS(ParsedData->BiosVersion, MAX_LENGTH, L"Unknown");
+    StrCpyS(ParsedData->BiosReleaseDate, MAX_LENGTH, L"Unknown");
+    ParsedData->ProcessorCurrentSpeed = 0;
+    ParsedData->L1ICacheSize = 0;
+    ParsedData->L1DCacheSize = 0;
+    ParsedData->L2CacheSize = 0;
+    ParsedData->L3CacheSize = 0;
+    StrCpyS(ParsedData->MemoryType, MAX_LENGTH, L"Unknown");
+    ParsedData->ExtendedSpeed = 0;
+    ParsedData->MemoryRank = 0;
+    ParsedData->ExtendSize = 0;
   }
   FillInformationData(&gInformationData);
   SyncToVarStore(&gInformationData);
@@ -317,8 +318,14 @@ InformationUnload(
     HiiRemovePackages(PrivateData->HiiHandle);
   }
 
-  FreePool(PrivateData);
-  PrivateData = NULL;
+  if (PrivateData != NULL) {
+    FreePool(PrivateData);
+    PrivateData = NULL;
+  }
+  if (ParsedData) {
+    FreeSmbiosData(ParsedData);
+    ParsedData = NULL;
+  }
 
   return EFI_SUCCESS;
 }

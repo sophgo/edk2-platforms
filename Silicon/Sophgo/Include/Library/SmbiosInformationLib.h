@@ -56,9 +56,14 @@ typedef struct {
   CHAR16 *SystemVersion;
 } SMBIOS_PARSED_DATA;
 
-INT32
-ParseSmbiosTable(
-  OUT SMBIOS_PARSED_DATA *ParsedData
+SMBIOS_PARSED_DATA *
+AllocSmbiosData (
+  VOID
 );
+
+INT32
+FreeSmbiosData (
+  SMBIOS_PARSED_DATA *ParsedData
+) ;
 
 #endif

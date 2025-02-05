@@ -307,7 +307,7 @@ SsifCommonSendCommand (
   if (RequestTemp == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
-
+  ((IPMI_SSIF_REQUEST_HEADER *)RequestTemp)->Len     = RequestDataSize + sizeof (IPMI_SSIF_REQUEST_HEADER);
   ((IPMI_SSIF_REQUEST_HEADER *)RequestTemp)->NetFunc = (UINT8)((NetFunction << 2) | (MANAGEABILITY_IPMI_BMC_LUN & 0x3));
   ((IPMI_SSIF_REQUEST_HEADER *)RequestTemp)->Command = Command;
 

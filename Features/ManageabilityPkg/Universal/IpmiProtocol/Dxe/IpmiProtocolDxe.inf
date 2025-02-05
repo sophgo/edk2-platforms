@@ -27,7 +27,7 @@
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  ManageabilityPkg/ManageabilityPkg.dec
+  Features/ManageabilityPkg/ManageabilityPkg.dec
 
 [LibraryClasses]
   BaseMemoryLib

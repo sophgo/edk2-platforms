@@ -1,0 +1,59 @@
+/** @file
+  VFR file for SetDateAndTime driver.
+  This file defines the formset, form, and labels required for dynamic
+  insertion of time and date controls.
+
+  Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
+**/
+#include "BMCNv.h"
+
+formset
+  guid      = BMC_FORMSET_GUID,
+  title     = STRING_TOKEN(STR_BMC_CONFIG_TITLE),
+  help      = STRING_TOKEN(STR_BMC_CONFIG_HELP),
+  classguid = BMC_FORMSET_GUID,
+
+  varstore BMC_DATA,
+    varid = VAR_BMC_VARID,
+    name  = BMCConfigData,
+    guid  = BMC_FORMSET_GUID;
+
+ form formid = BMC_FORM_ID,
+       title = STRING_TOKEN(STR_BMC_FORM_TITLE);
+       oneof varid      = BMCConfigData.EnableDHCP,
+           questionid   = DHCP_QUESTION_ID,
+           prompt       = STRING_TOKEN(STR_DHCP_PROMPT),
+           help         = STRING_TOKEN(STR_DHCP_HELP),
+           flags        = INTERACTIVE,
+           option text  = STRING_TOKEN(STR_DHCP_ENABLED), value = 0x02, flags = 0;
+           option text  = STRING_TOKEN(STR_DHCP_DISABLED), value = 0x01, flags = DEFAULT;
+       endoneof;
+       goto NETWORK_SET_FORM_ID,
+             prompt  = STRING_TOKEN(STR_NETWORK_SET_PROMPT),
+             help    = STRING_TOKEN(STR_NETWORK_SET_HELP),
+             flags   = INTERACTIVE,
+             key     = NETWORK_SET_FORM_ID;
+       goto NETWORK_GET_FORM_ID,
+             prompt  = STRING_TOKEN(STR_NETWORK_GET_PROMPT),
+             help    = STRING_TOKEN(STR_NETWORK_GET_HELP),
+             flags   = INTERACTIVE,
+             key     = NETWORK_GET_FORM_ID;
+  endform;
+  form formid = NETWORK_SET_FORM_ID,
+     title = STRING_TOKEN(STR_BMC_SET_FORM_TITLE);
+     grayoutif ideqval BMCConfigData.EnableDHCP == 2;
+      label LABEL_SET;
+      label LABEL_END;
+      endif;
+  endform;
+  form formid = NETWORK_GET_FORM_ID,
+      title = STRING_TOKEN(STR_BMC_GET_FORM_TITLE);
+      label LABEL_START;
+      label LABEL_END;
+      text
+       help     = STRING_TOKEN(STR_REFRESH_HELP),
+       text   = STRING_TOKEN(STR_REFRESH_PROMPT),
+       flags    = INTERACTIVE,
+       key      = REFRESH_QUESTION_ID;
+  endform;
+endformset;

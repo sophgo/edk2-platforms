@@ -1,0 +1,57 @@
+/** @file
+  UNI file for SetDateAndTime driver.
+  This file defines the strings for dynamic
+  insertion of time and date controls.
+
+  Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
+**/
+#langdef   en-US "English"
+
+#string STR_BMC_CONFIG_TITLE        #language en-US "BMC Network Configuration"
+#string STR_BMC_CONFIG_HELP         #language en-US "Configure the BMC IP Address, Subnet Mask, and Gateway."
+#string STR_BMC_FORM_TITLE          #language en-US "BMC Network Settings"
+
+#string STR_DHCP_PROMPT             #language en-US "Enable DHCP"
+#string STR_DHCP_HELP               #language en-US "Enable DHCP to automatically obtain IP Address, Subnet Mask, and Gateway."
+
+#string STR_NETWORK_SET_PROMPT      #language en-US "Set BMC Network Configuration"
+#string STR_NETWORK_SET_HELP        #language en-US "Modify the BMC's IP Address, Subnet Mask, and Gateway manually."
+
+#string STR_NETWORK_GET_PROMPT      #language en-US "Get BMC Network Configuration"
+#string STR_NETWORK_GET_HELP        #language en-US "View the current BMC's IP Address, Subnet Mask, and Gateway."
+
+#string STR_BMC_SET_FORM_TITLE   #language en-US "BMC Network Configuration Form"
+
+#string STR_IP_HELP                 #language en-US "Enter the BMC IP Address (e.g., 192.168.0.1)."
+#string STR_IP_INVALID              #language en-US "Invalid IP Address format!"
+#string STR_EXPECTED_IP             #language en-US "192.168.0.1"
+
+#string STR_SUBNET_HELP             #language en-US "Enter the Subnet Mask (e.g., 255.255.255.0)."
+#string STR_SUBNET_INVALID          #language en-US "Invalid Subnet Mask format!"
+#string STR_EXPECTED_SUBNET         #language en-US "255.255.255.0"
+
+#string STR_GATEWAY_HELP            #language en-US "Enter the Gateway address (e.g., 192.168.0.254)."
+#string STR_GATEWAY_INVALID         #language en-US "Invalid Gateway Address format!"
+#string STR_EXPECTED_GATEWAY        #language en-US "192.168.0.254"
+
+#string STR_BMC_GET_FORM_TITLE      #language en-US "View BMC Network Configuration"
+#string STR_IP_PROMPT               #language en-US "BMC IP Address   :"
+#string STR_SUBNET_PROMPT           #language en-US "Subnet Mask      :"
+#string STR_GATEWAY_PROMPT          #language en-US "Gateway          :"
+#string STR_DHCP_ENABLED            #language en-US "Enable"
+#string STR_DHCP_DISABLED           #language en-US "Disable"
+#string STR_REFRESH_PROMPT          #language en-US "Refresh"
+#string STR_REFRESH_HELP            #language en-US "Resfresh to show new information"
+#string STR_IP_HELP               #language en-US "IP"
+#string STR_SUBNET_HELP           #language en-US "Subnet MasK"
+#string STR_GATEWAY_HELP          #language en-US "Gateway"
+#string STR_IP_INVALID_PROMPT     #language en-US "Invalid IP Address. Please enter a valid IP."
+#string STR_SUBNET_INVALID_PROMPT #language en-US "Invalid Subnet Mask. Please enter a valid one."
+#string STR_GATEWAY_INVALID_PROMPT  #language en-US "Invalid Gateway. Please enter a valid one."
+#string STR_ERROR_TITLE             #language en-US "Error"
+#string STR_IP_INVALID              #language en-US "Invalid IP Address. Please enter a valid IP."
+#string STR_SUBNET_INVALID              #language en-US "Invalid SUBNET Address. Please enter a valid SUBNET."
+#string STR_GATEWAY_INVALID              #language en-US "Invalid GATEWAY Address. Please enter a valid GATEWAY."
+#string STR_EXPECTED_IP #language en-US "192.168.1.1"
+#string STR_EXPECTED_SUBNET #language en-US "255.255.255.0"
+#string STR_EXPECTED_GAETWAY #language en-US "192.168.0.264"

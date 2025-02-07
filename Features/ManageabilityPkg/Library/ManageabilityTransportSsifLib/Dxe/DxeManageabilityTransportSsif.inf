@@ -25,7 +25,7 @@
   ../Common/ManageabilityTransportSsif.h
 
 [Packages]
-  ManageabilityPkg/ManageabilityPkg.dec
+  Features/ManageabilityPkg/ManageabilityPkg.dec
   MdePkg/MdePkg.dec
 
 [LibraryClasses]

@@ -56,6 +56,7 @@
   gSophgoTokenSpaceGuid.PcdEfuseWriteEnableGpio|FALSE|BOOLEAN|0x00001016
   gSophgoTokenSpaceGuid.PcdEfuseWriteEnableGpioPin|0x0|UINT8|0x00001017
   gSophgoTokenSpaceGuid.PcdEfuseIsGpioHighToEnableWrite|FALSE|BOOLEAN|0x00001018
+  gSophgoTokenSpaceGuid.PcdSsifI2cBusNum|0x0|UINT32|0x00001019
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

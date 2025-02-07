@@ -1,7 +1,7 @@
 /**
   @file
   This header file defines the SMBIOS_PARSED_DATA structure and the
-  ParseSmbiosTable function, which extracts information from SMBIOS tables.
+  AllocSmbiosData function, which extracts information from SMBIOS tables.
 
   Copyright (c) Sophgo Inc. All rights reserved.
 **/
@@ -56,9 +56,14 @@ typedef struct {
   CHAR16 *SystemVersion;
 } SMBIOS_PARSED_DATA;
 
-INT32
-ParseSmbiosTable(
-  OUT SMBIOS_PARSED_DATA *ParsedData
+SMBIOS_PARSED_DATA *
+AllocSmbiosData (
+  VOID
 );
+
+INT32
+FreeSmbiosData (
+  SMBIOS_PARSED_DATA *ParsedData
+) ;
 
 #endif

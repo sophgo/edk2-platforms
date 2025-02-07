@@ -22,11 +22,11 @@ UpdateSmbiosFromEfuse (
   }
   Status = EfuseReadBytes(BusNum, Offset, Count, Buffer);
   if (EFI_ERROR(Status)) {
+    FreePool(Buffer);
     DEBUG((DEBUG_ERROR, "Failed to read from eFuse: %r\n", Status));
     return -1;
   }
 
-  *Size = SwapBytes32(*(UINT32 *)Buffer);
   return 0;
 }
 

@@ -66,13 +66,29 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
           InputData->Attributes = Uint;
       }
       if (UpdateSmbiosFromEfuse(1, 352, 4, &Size) == 0) {
-         UINT32 SizeInGB = Size * 8;
-         UINT32 DefaultSize = 0x4000000;
-	 if (SizeInGB != 64 && SizeInGB != 128) {
-              InputData->ExtendedSize = DefaultSize;
-         } else {
-	      InputData->ExtendedSize = Size;
-	 }
+        if (((Size >> 13) & 0x1) ^ ((Size >> 12) & 0x1)) {
+          UINT32 capacityBits = (Size >> 2) & 0x3;
+          UINT32 dramCapacityMB;
+
+          switch (capacityBits) {
+          case 0:
+            dramCapacityMB = 128 * 1024 * 1024;
+            break;
+          case 1:
+            dramCapacityMB = 64 * 1024 * 1024;
+            break;
+          default:
+            dramCapacityMB = 0;
+            break;
+          }
+          if (dramCapacityMB == 0) {
+            InputData->ExtendedSize = 0x4000000;
+          } else {
+            InputData->ExtendedSize = dramCapacityMB;
+          }
+        } else {
+            InputData->ExtendedSize = 0x4000000;
+        }
       }
       SmbiosPlatformDxeCreateTable (
         (VOID *)&Type17Record,

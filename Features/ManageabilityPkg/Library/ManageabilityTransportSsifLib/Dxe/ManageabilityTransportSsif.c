@@ -77,12 +77,14 @@ SsifTransportInit (
     mSsifHardwareInfo.BmcSlaveAddress = ((MANAGEABILITY_TRANSPORT_SSIF_HARDWARE_INFO *)HardwareInfo.Ssif)->BmcSlaveAddress;
   }
 
-  Status = SsifTransportGetCapabilities (
-             &mPecSupport,
-             &mTransactionSupport,
-             &mMaxRequestSize,
-             &mMaxResponseSize
-             );
+  // TODO 20250206
+  // Status = SsifTransportGetCapabilities (
+  //            &mPecSupport,
+  //            &mTransactionSupport,
+  //            &mMaxRequestSize,
+  //            &mMaxResponseSize
+  //            );
+  Status = EFI_TIMEOUT;
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_MANAGEABILITY_INFO, "%a: Could not retrieve IPMI SSIF capabilites, use default settings.\n", __func__));
   }

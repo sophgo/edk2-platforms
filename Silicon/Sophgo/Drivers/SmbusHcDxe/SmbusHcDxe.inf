@@ -1,0 +1,42 @@
+## @file
+#
+# Copyright (c) 2024, Ampere Computing LLC. All rights reserved.<BR>
+# Copyright (c) 2025, Sophgo Computing LLC. All rights reserved.<BR>
+#
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = SmbusHcDxe
+  FILE_GUID                      = A92C6874-B59E-49A7-957D-8511C9D8520E
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = InitializeSmbus
+
+[Sources]
+  SmbusHcDxe.c
+  SmbusHcCommon.c
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gEfiSmbusHcProtocolGuid                 # PRODUCES
+  gSophgoI2cMasterProtocolGuid            ## CONSUMES
+
+[Pcd]
+gSophgoTokenSpaceGuid.PcdSsifI2cBusNum
+
+[Depex]
+  TRUE

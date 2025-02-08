@@ -411,6 +411,9 @@ AcpiPatchPCIe(
 	  break;
         }
 
+	if (Index <= 4)
+	  continue;
+
         Status = AcpiSdtProtocol->GetOption (StaHandle, 2, &DataType, (VOID *)&Buffer, &DataSize);
         if (!EFI_ERROR (Status)) {
           Buffer[3] = 0;

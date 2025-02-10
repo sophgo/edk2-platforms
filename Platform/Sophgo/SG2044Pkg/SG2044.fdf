@@ -261,6 +261,7 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
 #
 INF Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
 INF Features/ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
+INF Silicon/Sophgo/SG2044Pkg/Drivers/BmcLanConfigDxe/BmcLanConfig.inf
 
 ################################################################################
 

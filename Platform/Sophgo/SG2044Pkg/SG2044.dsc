@@ -529,6 +529,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|500000000
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate|115200
 
+  gSophgoTokenSpaceGuid.PcdServerNamePrefix|L"SR"
+
 ################################################################################
 #
 # Pcd Dynamic Section - list of all EDK II PCD Entries defined by this Platform
@@ -759,6 +761,7 @@
   #
   Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
   Features/ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/BmcLanConfigDxe/BmcLanConfig.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning + UDF filesystem

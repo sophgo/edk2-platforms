@@ -1,0 +1,69 @@
+## @file
+#
+# This driver shows how HII protocol, VFR and UNI files are used to create a HII
+# driver which can be dipslayed and configured by a UEFI HII Form Browser.
+#
+# Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = BMC
+  MODULE_UNI_FILE                = BMC.uni
+  FILE_GUID                      = b1e21fa9-fdf9-405d-af62-ce57f68924eb
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = BmcLanConfigEntry
+  UNLOAD_IMAGE                   = BmcLanConfigUnload
+
+[Sources]
+  BmcLanConfig.c
+  BmcLanConfigIpmi.c
+  BmcLanConfigVfr.Vfr
+  BmcLanConfigStr.uni
+  BmcLanConfigNv.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiRuntimeServicesTableLib
+  BaseMemoryLib
+  DebugLib
+  HiiLib
+  PrintLib
+  UefiLib
+  DevicePathLib
+  UefiHiiServicesLib
+  IpmiCommandLib
+  SmbiosInformationLib
+
+[Guids]
+  gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
+  gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID
+  gDriverSampleInventoryGuid
+  gEfiIfrRefreshIdOpGuid
+  gDriverSampleFormSetGuid
+
+[Protocols]
+  gEfiDevicePathProtocolGuid
+  gEfiHiiConfigRoutingProtocolGuid              ## CONSUMES
+  gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
+  gEfiHiiStringProtocolGuid                  ## CONSUMES
+  gEfiHiiPackageListProtocolGuid             ## CONSUMES
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdServerNamePrefix
+
+[Depex]
+  gEfiHiiConfigRoutingProtocolGuid  AND
+  gEfiHiiDatabaseProtocolGuid       AND
+  gSophgoI2cMasterProtocolGuid      AND
+  gIpmiProtocolGuid

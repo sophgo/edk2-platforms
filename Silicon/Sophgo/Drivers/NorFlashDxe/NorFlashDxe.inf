@@ -46,6 +46,7 @@
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base                             ## CONSUMES
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset                     ## CONSUMES
   gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress              ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdFdOffset                                ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvSize            ## CONSUMES
 
 [Depex]

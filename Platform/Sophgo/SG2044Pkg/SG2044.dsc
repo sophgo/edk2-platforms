@@ -488,6 +488,7 @@
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7005000000
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|TRUE
   gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x80000
+  gSophgoTokenSpaceGuid.PcdFdOffset|0x600000
 !endif
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|8192

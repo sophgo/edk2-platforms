@@ -596,10 +596,13 @@ SpiNorGetFlashVariableOffset (
     if (Info->Magic != DPT_MAGIC) {
       DEBUG ((
         DEBUG_ERROR,
-        "%a: Bad partition table magic!\n",
+        "%a: Bad partition table magic, set default variable offset!\n",
         __func__,
         Status
         ));
+
+      PcdSet64S (PcdFlashVariableOffset, PcdGet64 (PcdFdOffset) + PcdGet32 (PcdRiscVDxeFvSize));
+
       goto Error;
     }
 

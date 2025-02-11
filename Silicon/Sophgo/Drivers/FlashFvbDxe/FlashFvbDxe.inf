@@ -22,6 +22,7 @@
   EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   Silicon/Sophgo/Sophgo.dec
+  Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -44,6 +45,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFdBlockSize
 
 [Guids]
   gEfiEventVirtualAddressChangeGuid

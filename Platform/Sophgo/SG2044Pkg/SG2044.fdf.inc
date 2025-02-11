@@ -20,7 +20,7 @@ DEFINE FW_BLOCKS         = 0x900
 DEFINE CODE_BASE_ADDRESS = $(FW_BASE_ADDRESS)
 DEFINE CODE_SIZE         = 0x00800000
 DEFINE CODE_BLOCKS       = 0x800
-DEFINE VARS_BLOCKS       = 0x20
+DEFINE VARS_BLOCKS       = 0x30
 
 #
 # Other FV regions are in the second FW domain.
@@ -44,5 +44,6 @@ DEFINE VARS_FTW_WORKING_SIZE         = 0x00010000
 DEFINE VARS_FTW_SPARE_OFFSET         = $(VARS_FTW_WORKING_OFFSET) + $(VARS_FTW_WORKING_SIZE)
 DEFINE VARS_FTW_SPARE_SIZE           = 0x00010000
 
+SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFdBlockSize               = $(BLOCK_SIZE)
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                  = $(CODE_BASE_ADDRESS) + $(FW_SIZE) + 0x1FF0000
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                  = 0x10000

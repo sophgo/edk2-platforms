@@ -451,7 +451,7 @@ FvbGetPhysicalAddress (
 
   DEBUG ((
     DEBUG_VERBOSE,
-    "FvbGetPhysicalAddress(BaseAddress=0x%08x)\n",
+    "FvbGetPhysicalAddress(BaseAddress=0x%lX)\n",
     Instance->RegionBaseAddress
     ));
 
@@ -592,7 +592,7 @@ FvbRead (
 
   DEBUG ((
     DEBUG_VERBOSE,
-    "FvbRead(Parameters: Lba=%ld, Offset=0x%x, *NumBytes=0x%x, Buffer @ 0x%08x)\n",
+    "FvbRead(Parameters: Lba=%ld, Offset=0x%x, *NumBytes=0x%x, Buffer @ 0x%lX)\n",
     Instance->StartLba + Lba,
     Offset,
     *NumBytes,
@@ -732,7 +732,7 @@ FvbWrite (
 
   DEBUG ((
     DEBUG_VERBOSE,
-    "FvbWrite(Parameters: Lba=%ld, Offset=0x%x, *NumBytes=0x%x, Buffer @ 0x%08x)\n",
+    "FvbWrite(Parameters: Lba=%ld, Offset=0x%x, *NumBytes=0x%x, Buffer @ 0x%lX)\n",
     Instance->StartLba + Lba,
     Offset,
     *NumBytes,
@@ -929,7 +929,7 @@ FvbEraseBlocks (
       //
       DEBUG ((
         DEBUG_VERBOSE,
-        "FvbEraseBlocks: Erasing Lba=%ld @ 0x%08x.\n",
+        "FvbEraseBlocks: Erasing Lba=%ld @ 0x%lX.\n",
         Instance->StartLba + StartingLba,
         BlockAddress
         ));
@@ -1210,7 +1210,7 @@ FlashFvbConfigureFlashInstance (
   FlashInstance->FvbOffset = PcdGet64 (PcdFlashVariableOffset);
 
   FlashInstance->Media.MediaId = 0;
-  FlashInstance->Media.BlockSize = FlashInstance->Nor->Info->SectorSize;
+  FlashInstance->Media.BlockSize = PcdGet32 (PcdVariableFdBlockSize);
 
   FlashInstance->Media.LastBlock = FlashInstance->Size /
                                    FlashInstance->Media.BlockSize - 1;

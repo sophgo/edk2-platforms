@@ -76,4 +76,11 @@
 #string STR_RESET_SUCCESS_PROMPT       #language en-US "Defaults restored successfully."
 #string STR_SHUTDOWN_STRING_HELP       #language en-US "Power off"
 #string STR_SHUTDOWN_STRING            #language en-US "Power off"
-
+#string STR_SYSTEM_INFORMATION_PROMPT  #language en-US "System Information"
+#string STR_SYSTEM_INFORMATION_HELP    #language en-US "String identifier for displaying the prompt of system information."
+#string STR_SYSTEM_INFORMATION_TITLE #language en-US "System Information"
+#string STR_SYSTEM_SETTING_PROMPT    #language en-US "System Setting"
+#string STR_SYSTEM_SETTING_HELP      #language en-US "String identifier for providing help text related to system settings."
+#string STR_SYSTEM_SETTING_TITLE     #language en-US "System Setting"
+#string STR_GOTO_BMC                 #language en-US "BMC Config"
+#string STR_GOTO_BMC_HELP            #language en-US "BMC configuration settings."

@@ -35,10 +35,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "FrontPageCustomizedUiSupport.h"
 #include <Library/PasswordRead.h>
 #include <Library/RestoreDefaults.h>
+#include <Library/SmbiosInformationLib.h>
 
 #define PRINTABLE_LANGUAGE_NAME_STRING_ID  0x0001
-#define FRONT_PAGE_FORM_ID  0x1000
-#define CONFIG_FORM_ID         0x1000
 #define FRONT_PAGE_CALLBACK_DATA_SIGNATURE  SIGNATURE_32 ('F', 'P', 'C', 'B')
 #define EFI_FP_CALLBACK_DATA_FROM_THIS(a) \
   CR (a, \
@@ -50,7 +49,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 extern UINT8  FrontPageVfrBin[];
 extern EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
-
+extern EFI_GUID mFrontPageGuid;
 typedef struct {
   UINTN                             Signature;
   EFI_HII_HANDLE                    HiiHandle;

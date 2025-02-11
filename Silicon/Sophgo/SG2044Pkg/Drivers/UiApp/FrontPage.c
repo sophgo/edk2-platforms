@@ -28,6 +28,7 @@ UINT32  mSetupTextModeColumn       = 0;
 UINT32  mSetupTextModeRow          = 0;
 UINT32  mSetupHorizontalResolution = 0;
 UINT32  mSetupVerticalResolution   = 0;
+SMBIOS_PARSED_DATA *ParsedData = NULL;
 
 STATIC RESTORE_PROTOCOL gPassWordToggleRestoreProtocol = {
   PassWordToggleRestore
@@ -66,6 +67,27 @@ HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath0 = {
     }
   }
 };
+
+BOOLEAN
+hasServerNamePrefix(
+    IN CHAR16 *Str
+  )
+{
+  CONST CHAR16 *ServerNamePrefix;
+  UINTN PrefixLength;
+  if (Str == NULL)
+  {
+    return FALSE;
+  }
+  ServerNamePrefix = PcdGetPtr(PcdServerNamePrefix);
+  PrefixLength = StrLen(ServerNamePrefix);
+  DEBUG((DEBUG_VERBOSE, "ServerNamePrefix: %s, StrLen: %d\n", ServerNamePrefix, PrefixLength));
+  if (StrnCmp(Str, ServerNamePrefix, PrefixLength) == 0)
+  {
+    return TRUE;
+  }
+  return FALSE;
+}
 
 BOOLEAN
 ConfirmResetDefaults(
@@ -246,6 +268,7 @@ InitializePasswordToggleVariable (
       PassWordToggleData.PasswordCheckEnabled = 0;
       PassWordToggleData.IsFirst = 0;
       PassWordToggleData.UserPriv = 0;
+      PassWordToggleData.IsEvb = 0;
       Status = gRT->SetVariable(
           L"PassWordToggleData",
           &gMenuPasswordToggleVarGuid,
@@ -1112,6 +1135,16 @@ InitializeUserInterface (
   EFI_SIMPLE_TEXT_OUTPUT_PROTOCOL  *SimpleTextOut;
   UINTN                            BootTextColumn;
   UINTN                            BootTextRow;
+  BOOLEAN                          IsServerBoard;
+
+  ParsedData = AllocSmbiosData();
+  if (ParsedData == NULL)
+  {
+    DEBUG((DEBUG_ERROR, "%a :Failed to alloc smbios data\n", __func__));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  IsServerBoard = hasServerNamePrefix(ParsedData->BaseboardProductName);
 
   if (!mModeInitialized) {
     Status = gBS->HandleProtocol (
@@ -1160,6 +1193,14 @@ InitializeUserInterface (
   ASSERT (HiiHandle != NULL);
   InitializeStringSupport ();
   InitializePasswordToggleVariable();
+  PassWordToggleData.IsEvb = IsServerBoard ? 0 : 1;
+  Status = gRT->SetVariable(
+          L"PassWordToggleData",
+          &gMenuPasswordToggleVarGuid,
+          EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
+          sizeof(PASSWORD_TOGGLE_DATA),
+          &PassWordToggleData
+      );
   if (PassWordToggleEntry()) {
       FrontPagePasswordCheck();
       PassWordToggleData.IsFirst = 1;

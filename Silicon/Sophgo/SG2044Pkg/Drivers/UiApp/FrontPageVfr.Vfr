@@ -21,40 +21,28 @@ formset
     label LABEL_END;
     label LABEL_LANGUAGE;
     label LABEL_END;
-    goto
-      formsetguid = CONFIG_INI_FORMSET_GUID,
-      formid  = NEW_FORM_ID,
-      question = NEW_FORM_ID,
-      prompt  = STRING_TOKEN(STR_GOTO_DYNAMIC),
-      help    = STRING_TOKEN(STR_GOTO_HELP),
-      flags   = INTERACTIVE;
-    goto
-      formsetguid = PASSWORDCONFIG_FORMSET_GUID,
-      formid  =  FORM_PASSWORDCONFIG_ID,
-      question = FORM_PASSWORDCONFIG_ID,
-      prompt  = STRING_TOKEN(STR_GOTO_PASSWORD),
-      help    = STRING_TOKEN(STR_GOTO_PASSWORD_HELP),
-      flags   = INTERACTIVE;
-    goto
-      formsetguid = TIME_SET_FORMSET_GUID,
-      formid  = TIME_SET_ID,
-      question = TIME_SET_ID,
-      prompt  = STRING_TOKEN(STR_GOTO_TIME_SET),
-      help    = STRING_TOKEN(STR_GOTO_TIME_SET_HELP),
-      flags   = INTERACTIVE;
-    goto 0x1234,
-      prompt  = STRING_TOKEN(STR_SERIALPORT),
-      help    = STRING_TOKEN(STR_SERIALPORT_HELP),
+    goto SYSTEM_INFORMATION_ID,
+      prompt  = STRING_TOKEN(STR_SYSTEM_INFORMATION_PROMPT),
+      help    = STRING_TOKEN(STR_SYSTEM_INFORMATION_HELP),
       flags   = INTERACTIVE,
-      key     = 0x1234;
+      key     = SYSTEM_INFORMATION_ID;
+    goto SYSTEM_SETTING_ID,
+      prompt  = STRING_TOKEN(STR_SYSTEM_SETTING_PROMPT),
+      help    = STRING_TOKEN(STR_SYSTEM_SETTING_HELP),
+      flags   = INTERACTIVE,
+      key     = SYSTEM_SETTING_ID;
+   suppressif ideqval PASSWORD_TOGGLE_DATA.IsEvb == 1;
+    goto
+          formsetguid = BMC_FORMSET_GUID,
+          formid  = BMC_FORM_ID,
+          question = BMC_FORM_ID,
+          prompt  = STRING_TOKEN(STR_GOTO_BMC),
+          help    = STRING_TOKEN(STR_GOTO_BMC_HELP),
+          flags   = INTERACTIVE;
+   endif;
     label LABEL_MANAGER;
     label LABEL_END;
    grayoutif ideqval PASSWORD_TOGGLE_DATA.IsFirst == 1 AND ideqval PASSWORD_TOGGLE_DATA.UserPriv == 0 AND ideqval PASSWORD_TOGGLE_DATA.PasswordCheckEnabled == 1;
-    text
-       help     = STRING_TOKEN(STR_RESET_TO_DEFAULTS_HELP),
-       text   = STRING_TOKEN(STR_RESET_TO_DEFAULTS_PROMPT),
-       flags    = INTERACTIVE,
-       key      = RESTORE_DEFAULTS_QUESTION_ID;
     oneof varid  = PASSWORD_TOGGLE_DATA.PasswordCheckEnabled,
       prompt = STRING_TOKEN(STR_PASSWORD_CHECK_PROMPT),
       help   = STRING_TOKEN(STR_PASSWORD_CHECK_HELP),
@@ -62,9 +50,47 @@ formset
       option text = STRING_TOKEN(STR_DISABLE), value = 0x0, flags = DEFAULT;
       option text = STRING_TOKEN(STR_ENABLE), value = 0x1, flags = 0;
     endoneof;
-  endif;
+   endif;
   endform;
-
+  form formid = SYSTEM_INFORMATION_ID,
+        title = STRING_TOKEN(STR_SYSTEM_INFORMATION_TITLE);
+        goto
+          formsetguid = CONFIG_INI_FORMSET_GUID,
+          formid  = INFORMATION_FORM_ID,
+          question = INFORMATION_FORM_ID,
+          prompt  = STRING_TOKEN(STR_GOTO_DYNAMIC),
+          help    = STRING_TOKEN(STR_GOTO_HELP),
+          flags   = INTERACTIVE;
+        goto 0x1234,
+          prompt  = STRING_TOKEN(STR_SERIALPORT),
+          help    = STRING_TOKEN(STR_SERIALPORT_HELP),
+          flags   = INTERACTIVE,
+          key     = 0x1234;
+  endform;
+  form formid = SYSTEM_SETTING_ID,
+        title = STRING_TOKEN(STR_SYSTEM_SETTING_TITLE);
+        goto
+         formsetguid = PASSWORDCONFIG_FORMSET_GUID,
+         formid  =  FORM_PASSWORDCONFIG_ID,
+         question = FORM_PASSWORDCONFIG_ID,
+         prompt  = STRING_TOKEN(STR_GOTO_PASSWORD),
+         help    = STRING_TOKEN(STR_GOTO_PASSWORD_HELP),
+         flags   = INTERACTIVE;
+        goto
+         formsetguid = TIME_SET_FORMSET_GUID,
+         formid  = TIME_SET_ID,
+         question = TIME_SET_ID,
+         prompt  = STRING_TOKEN(STR_GOTO_TIME_SET),
+         help    = STRING_TOKEN(STR_GOTO_TIME_SET_HELP),
+         flags   = INTERACTIVE;
+        grayoutif ideqval PASSWORD_TOGGLE_DATA.IsFirst == 1 AND ideqval PASSWORD_TOGGLE_DATA.UserPriv == 0 AND ideqval PASSWORD_TOGGLE_DATA.PasswordCheckEnabled == 1;
+         text
+           help     = STRING_TOKEN(STR_RESET_TO_DEFAULTS_HELP),
+           text   = STRING_TOKEN(STR_RESET_TO_DEFAULTS_PROMPT),
+           flags    = INTERACTIVE,
+           key      = RESTORE_DEFAULTS_QUESTION_ID;
+        endif;
+  endform;
   form formid = 0x1234,
         title = STRING_TOKEN(STR_SERIALPORT_TITLE);
         text

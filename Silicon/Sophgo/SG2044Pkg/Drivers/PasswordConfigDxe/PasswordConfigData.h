@@ -23,7 +23,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define VARSTORE_ID_PASSWORD_CONFIG              0x9100
 #define PASSWORD_PRIV                            L"PasswordPriv"
 
-#pragma pack(2)
+#pragma pack(4)
 typedef struct {
   UINT8         UserPasswordEnable;
   UINT8         AdminPasswordEnable;

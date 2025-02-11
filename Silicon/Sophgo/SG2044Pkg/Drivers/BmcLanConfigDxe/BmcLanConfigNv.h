@@ -10,7 +10,7 @@ Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
 
 #define BMC_FORMSET_GUID                    { 0x84618f61, 0xed56, 0x430d, { 0x9a, 0xea, 0x7a, 0xa4, 0x8e, 0x01, 0x21, 0xf4 } }
 #define VAR_BMC_DATA_GUID                   { 0x11a0dfca, 0x0cf7, 0x4d03, { 0xb5, 0x2a, 0x97, 0xe6, 0x9a, 0xdb, 0xc6, 0xbc } }
-#define BMC_FORM_ID                         0x1006
+#define BMC_FORM_ID                         0x3200
 #define DHCP_QUESTION_ID                    0x1001
 #define VAR_BMC_VARID                       0x1010
 #define NETWORK_SET_FORM_ID                 0x1235

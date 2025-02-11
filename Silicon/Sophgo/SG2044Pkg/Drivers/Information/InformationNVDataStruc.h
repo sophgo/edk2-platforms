@@ -12,16 +12,16 @@
 #define CONFIG_INI_FORMSET_GUID        {0x4a618233, 0x07f9, 0x4d73, {0x91, 0x53, 0x51, 0x1f, 0x28, 0x93, 0xa0, 0x1e}}
 #define LABEL_START		       0x1000
 #define LABEL_END                      0xffff
-#define CONFIG_FORM_ID                 0x1000
-#define BIOS_INFORMATION_FORM_ID       0x1001
-#define DDR_FORM_ID                    0x1002
-#define CPU_FORM_ID                    0x1003
-#define CHASSIS_FORM_ID                0x1004
-#define PRODUCT_FORM_ID                0x1005
-#define BOARD_FORM_ID                  0x1006
-#define VAR_INFORMATION_VARID          0x1007
+#define CONFIG_FORM_ID                 0x3300
+#define BIOS_INFORMATION_FORM_ID       0x3301
+#define DDR_FORM_ID                    0x3302
+#define CPU_FORM_ID                    0x3303
+#define CHASSIS_FORM_ID                0x3304
+#define PRODUCT_FORM_ID                0x3305
+#define BOARD_FORM_ID                  0x3306
+#define VAR_INFORMATION_VARID          0x3307
 #define MAX_LENGTH                     64
-#pragma pack(2)
+#pragma pack(4)
 typedef struct {
   UINT16 ProcessorMaxSpeed;
   UINT32 L1ICacheSize;

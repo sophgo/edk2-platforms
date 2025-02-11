@@ -31,7 +31,6 @@ UiCustomizeFrontPage (
   // Find third party drivers which need to be shown in the front page.
   //
   UiListThirdPartyDrivers (HiiHandle, &gEfiIfrFrontPageGuid, NULL, StartOpCodeHandle);
-
   //
   // Create empty line.
   //

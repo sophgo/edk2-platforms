@@ -50,6 +50,7 @@
   UefiHiiServicesLib
   UefiBootManagerLib
   ResetSystemLib
+  SmbiosInformationLib
 
 [Guids]
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
@@ -76,6 +77,7 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution    ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString           ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdTestKeyUsed                     ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdServerNamePrefix                         ## CONSUMES
 
 [UserExtensions.TianoCore."ExtraFiles"]
   UiAppExtra.uni

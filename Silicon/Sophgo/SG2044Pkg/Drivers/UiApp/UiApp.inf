@@ -60,8 +60,9 @@
   gEfiSmbiosProtocolGuid                        ## CONSUMES
   gEfiHiiConfigAccessProtocolGuid               ## CONSUMES
   gSetDateAndTimeRestoreProtocolGuid            ## CONSUMES
-  gPasswordRestoreProtocolGuid                 ## CONSUMES
-  gPassWordToggleRestoreProtocolGuid    ## CONSUMES ## PRODUCES
+  gPasswordRestoreProtocolGuid                  ## CONSUMES
+  gPassWordToggleRestoreProtocolGuid            ## CONSUMES ## PRODUCES
+  gReserveMemoryRestoreProtocolGuid             ## CONSUMES
 
 [FeaturePcd]
 

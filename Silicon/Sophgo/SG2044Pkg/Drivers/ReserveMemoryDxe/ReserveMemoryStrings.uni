@@ -1,0 +1,19 @@
+///** @file
+//String definitions Reserve Memory menu.
+//
+//Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.
+//
+//SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+//**/
+
+/=#
+#langdef    en-US  "English"
+
+#string STR_RESERVE_MEMORY_TITLE  #language en-US  "Reserve Memory"
+#string STR_RESERVE_MEMORY_HELP   #language en-US  "View and set the reserved memory."
+
+#string STR_RESERVED_MEM_PROMPT   #language en-US  "Reserved Memory Size (GB)"
+#string STR_RESERVED_MEM_HELP     #language en-US  "Enter the reserved memory size.\n0: Disable TPU\n[8-%dGB]: Enable TPU"
+
+#string STR_INVALID_SIZE_ERROR    #language en-US  "Invalid reserved memory size!"

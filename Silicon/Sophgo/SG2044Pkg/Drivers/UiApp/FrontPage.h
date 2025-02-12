@@ -47,9 +47,9 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
       )
 #define     QF_DATE_STORAGE_TIME    0x10
 
-extern UINT8  FrontPageVfrBin[];
+extern UINT8                       FrontPageVfrBin[];
 extern EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
-extern EFI_GUID mFrontPageGuid;
+extern EFI_GUID                    mFrontPageGuid;
 typedef struct {
   UINTN                             Signature;
   EFI_HII_HANDLE                    HiiHandle;
@@ -90,7 +90,7 @@ ExtractConfig (
   IN  CONST EFI_STRING                      Request,
   OUT EFI_STRING                            *Progress,
   OUT EFI_STRING                            *Results
-);
+  );
 
 /**
   This function processes the results of changes in configuration.
@@ -114,8 +114,7 @@ RouteConfig (
   IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
   IN  CONST EFI_STRING                      Configuration,
   OUT EFI_STRING                            *Progress
-
-);
+  );
 
 /**
   This function processes the results of changes in configuration.
@@ -203,31 +202,31 @@ ExtractDevicePathFromHiiHandle (
   IN      EFI_HII_HANDLE  Handle
   );
 
-VOID
+EFI_STATUS
 UpdateFrontPageForm (
-VOID
-);
+  VOID
+  );
 
 EFI_STATUS
 UpdateBootRegion (
-EFI_HII_HANDLE HiiHandle
-);
+  EFI_HII_HANDLE HiiHandle
+  );
 
 EFI_STATUS
 UpdateTimeRegion (
-EFI_HII_HANDLE HiiHandle
-);
+  EFI_HII_HANDLE HiiHandle
+  );
 
 VOID
 AppendAltCfgString (
   IN OUT EFI_STRING  *RequestResult,
   IN     EFI_STRING  ConfigRequestHdr
-);
+  );
 
 EFI_STATUS
 EFIAPI
 PassWordToggleRestore (
- VOID
-);
+  VOID
+  );
 
 #endif // _FRONT_PAGE_H_

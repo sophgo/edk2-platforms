@@ -1,0 +1,62 @@
+## @file
+#
+#  This driver shows how HII protocol, VFR and UNI files are used to create a HII
+#  driver which can be dipslayed and configured by a UEFI HII Form Browser.
+#
+#  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = ReserveMemoryDxe
+  MODULE_UNI_FILE                = ReserveMemoryDxe.uni
+  FILE_GUID                      = BFD0E2C6-76C9-4A95-8F76-CA5A87FC354D
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = ReserveMemoryDriverEntryPoint
+  UNLOAD_IMAGE                   = ReserveMemoryDriverUnload
+
+[Sources]
+  ReserveMemoryDxe.c
+  ReserveMemoryDxe.h
+  ReserveMemoryVfr.vfr
+  ReserveMemoryStrings.uni
+  ReserveMemoryNv.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiRuntimeServicesTableLib
+  BaseMemoryLib
+  DebugLib
+  HiiLib
+  PrintLib
+  UefiLib
+  DevicePathLib
+  UefiHiiServicesLib
+  SmbiosInformationLib
+
+[Guids]
+  gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID
+
+[Protocols]
+  gEfiDevicePathProtocolGuid
+  gEfiHiiConfigRoutingProtocolGuid              ## CONSUMES
+  gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
+  gEfiHiiStringProtocolGuid                     ## CONSUMES
+  gEfiHiiPackageListProtocolGuid                ## CONSUMES
+  gReserveMemoryRestoreProtocolGuid             ## PRODUCES
+
+[Depex]
+  gEfiHiiConfigRoutingProtocolGuid  AND
+  gEfiHiiDatabaseProtocolGuid

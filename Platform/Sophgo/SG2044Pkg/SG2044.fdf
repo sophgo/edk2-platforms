@@ -242,6 +242,7 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.
 !endif
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/Information/Information.inf
 INF  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
+INF  Silicon/Sophgo/SG2044Pkg/Drivers/ReserveMemoryDxe/ReserveMemoryDxe.inf
 
 #
 # ACPI Support

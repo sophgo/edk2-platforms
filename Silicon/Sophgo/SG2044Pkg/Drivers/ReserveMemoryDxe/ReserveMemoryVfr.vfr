@@ -1,0 +1,36 @@
+///**
+//Reserve Memory formset.
+//
+//Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.
+//
+//SPDX-License-Identifier: BSD-2-Clause-Patent
+//**/
+#include "ReserveMemoryNv.h"
+
+formset
+  guid      = RESERVE_MEMORY_FORMSET_GUID,
+  title     = STRING_TOKEN (STR_RESERVE_MEMORY_TITLE),
+  help      = STRING_TOKEN (STR_RESERVE_MEMORY_HELP),
+  classguid = gEfiIfrFrontPageGuid,
+
+  varstore RESERVE_MEMORY_DATA,
+    varid   = VARSTORE_ID_RESERVE_MEMORY,
+    name    = ReservedMemorySize,
+    guid    = RESERVE_MEMORY_FORMSET_GUID;
+
+  form formid  = FORM_RESERVE_MEMORY_ID,
+    title   = STRING_TOKEN (STR_RESERVE_MEMORY_TITLE);
+
+    numeric varid = RESERVE_MEMORY_DATA.Value,
+        prompt  = STRING_TOKEN (STR_RESERVED_MEM_PROMPT),
+        help    = STRING_TOKEN (STR_RESERVED_MEM_HELP),
+        flags   = INTERACTIVE | NUMERIC_SIZE_4 | DISPLAY_UINT_DEC,
+        key     = RESERVED_MEM_QUESTION_ID,
+        minimum = 0,
+        maximum = 128,
+        step    = 1,
+        default = 0,
+    endnumeric;
+
+  endform;
+endformset;

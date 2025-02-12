@@ -56,8 +56,8 @@
   gSophgoNorFlashProtocolGuid                 ## CONSUMES
 
 [Pcd]
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset                     ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize     ## CONSUMES
 
 [Depex]
   gSophgoSpiMasterProtocolGuid      AND

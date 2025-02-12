@@ -35,7 +35,7 @@ HII_VENDOR_DEVICE_PATH  mFirmwareManagerHiiVendorDevicePath = {
         (UINT8) ((sizeof (VENDOR_DEVICE_PATH)) >> 8)
       }
     },
-    { 0xF0EA4C6C, 0x47C5, 0x4AED, { 0xB3, 0xA2, 0x4E, 0xE4, 0x97, 0x05, 0x9B, 0x6C }}
+    { 0xF0EA4C6C, 0x47C5, 0x4AED, { 0xB3, 0xA2, 0x4E, 0xE4, 0x97, 0x05, 0x9B, 0x6C } }
   },
   {
     END_DEVICE_PATH_TYPE,
@@ -57,6 +57,43 @@ FIRMWARE_MANAGER_CALLBACK_DATA gFirmwareManagerPrivate = {
     FirmwareManagerCallback
   }
 };
+
+/**
+  Display an information popup.
+
+  @param[in]  StringToken1    The first string token.
+  @param[in]  StringToken2    The second string token.
+
+  @retval  TRUE
+**/
+BOOLEAN
+PopupInformation (
+  IN CHAR16       *Str1,
+  IN CHAR16       *Str2
+  )
+{
+  EFI_INPUT_KEY  InputKey;
+  UINTN          EventIndex;
+
+  CreatePopUp (
+    EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+    NULL,
+    Str1,
+    Str2,
+    NULL
+    );
+
+  while (1) {
+    gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, &EventIndex);
+    gST->ConIn->ReadKeyStroke (gST->ConIn, &InputKey);
+    if (InputKey.ScanCode == SCAN_NULL
+	&& InputKey.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+      break;
+    }
+  }
+
+  return TRUE;
+}
 
 /**
   This function allows a caller to extract the current configuration for one
@@ -242,15 +279,15 @@ FirmwareManagerRouteConfig (
 /**
   Update firmware in spi nor flash.
 
-  @param[in]  Nor          Structure of nor flash.
-  @param[in]  Address      Address to update.
-  @param[in]  Buffer       A pointer to update firmware data.
-  @param[in]  Size         Size of update firmware to update.
-  @param[in]  String       Start info to print.
-  @param[in]  SkipVariable Whether skip variable range or not.
+  @param[in]  Nor                 Structure of nor flash.
+  @param[in]  Address             Address to update.
+  @param[in]  Buffer              A pointer to update firmware data.
+  @param[in]  Size                Size of update firmware to update.
+  @param[in]  String              Start info to print.
+  @param[in]  PromptSkipVariable  Whether to prompt user to skip variable range.
 
-  @retval     EFI_SUCCESS    Success.
-              Other          Failed.
+  @retval     EFI_SUCCESS         Success.
+              Other               Failed.
 **/
 EFI_STATUS
 UpdateFirmware (
@@ -259,23 +296,27 @@ UpdateFirmware (
   IN UINT8        *Buffer,
   IN UINTN        Size,
   IN CHAR16       *String,
-  IN BOOLEAN      SkipVariable
+  IN BOOLEAN      PromptSkipVariable
   )
 {
-  EFI_STATUS  Status;
-  UINTN       Index;
-  UINTN       Count;
-  VOID        *TempBuffer;
-  CHAR16      Space[]  = L"                 ";
-  UINTN       Columns;
-  UINTN       Rows;
-  UINTN       StringLen;
-  CHAR16      *WarningString;
-  UINTN       VariableBase;
-  UINT32      VariableSize;
-  UINTN       BlockSize;
+  EFI_STATUS     Status;
+  UINTN          Index;
+  UINTN          Count;
+  VOID           *TempBuffer;
+  CHAR16         Space[]  = L"                 ";
+  UINTN          Columns;
+  UINTN          Rows;
+  UINTN          StringLen;
+  CHAR16         *WarningString;
+  CHAR16         *PromptString;
+  UINTN          VariableBase;
+  UINT32         VariableSize;
+  UINTN          BlockSize;
+  BOOLEAN        SkipVariable;
+  EFI_INPUT_KEY  Key;
 
-  VariableBase = PcdGet64 (PcdFlashNvStorageVariableBase64);
+  SkipVariable = FALSE;
+  VariableBase = PcdGet64 (PcdFlashVariableOffset);
   VariableSize = PcdGet32 (PcdFlashNvStorageVariableSize);
 
   BlockSize = Nor->Info->SectorSize;
@@ -290,6 +331,31 @@ UpdateFirmware (
 		  STRING_TOKEN (STR_UPDATING_WARNING),
 		  NULL
 		  );
+  if (PromptSkipVariable) {
+    PromptString = HiiGetString (
+		  gFirmwareUpdateHandle,
+		  STRING_TOKEN (STR_UPDATE_PROMPT_MESSAGE),
+		  NULL
+		  );
+    CreatePopUp (
+	  EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+          NULL,
+          PromptString,
+          L"[Y] Yes    [N] No",
+          NULL);
+
+    while (1) {
+      gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, NULL);
+      gST->ConIn->ReadKeyStroke (gST->ConIn, &Key);
+      if (Key.UnicodeChar == 'Y' || Key.UnicodeChar == 'y') {
+        SkipVariable = TRUE;
+	break;
+      } else if (Key.UnicodeChar == 'N' || Key.UnicodeChar == 'n') {
+        SkipVariable = FALSE;
+	break;
+      }
+    }
+  }
 
   CreatePopUp (
     EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
@@ -415,56 +481,6 @@ RetrieveAndFormatString (
 }
 
 /**
-  Display an invalid information popup.
-
-  @param[in]  StringToken1    The first string token.
-  @param[in]  StringToken2    The second string token.
-
-  @retval  TRUE
-**/
-BOOLEAN
-PopupInvalidInformation (
-  IN UINT16  StringToken1,
-  IN UINT16  StringToken2
-  )
-{
-  CHAR16         Str1[STRING_BUFFER_SIZE];
-  CHAR16         Str2[STRING_BUFFER_SIZE];
-  EFI_INPUT_KEY  InputKey;
-  UINTN          EventIndex;
-
-  //
-  // Retrieve and format the two strings
-  //
-  if (EFI_ERROR (RetrieveAndFormatString (StringToken1, Str1))) {
-    Str1[0] = L'\0';
-  }
-
-  if (EFI_ERROR (RetrieveAndFormatString (StringToken2, Str2))) {
-    Str2[0] = L'\0';
-  }
-
-  CreatePopUp (
-    EFI_LIGHTGRAY | EFI_BACKGROUND_RED,
-    NULL,
-    Str1,
-    Str2,
-    NULL
-    );
-
-  while (1) {
-    gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, &EventIndex);
-    gST->ConIn->ReadKeyStroke (gST->ConIn, &InputKey);
-    if (InputKey.ScanCode == SCAN_NULL
-	&& InputKey.UnicodeChar == CHAR_CARRIAGE_RETURN) {
-      break;
-    }
-  }
-
-  return TRUE;
-}
-
-/**
   Clear the Display card buffer
 
   @param  NULL
@@ -523,27 +539,13 @@ PressKeytoReset (
   )
 {
   CHAR16           Str1[64];
-  EFI_INPUT_KEY    InputKey;
-  UINTN            EventIndex;
   CHAR16           *UpdateSuccString;
 
   UpdateSuccString = HiiGetString (gFirmwareUpdateHandle, TokenToUpdate, NULL);
-  CreatePopUp (
-    EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
-    NULL,
-    Str1,
-    UpdateSuccString,
-    NULL
-    );
-  while (1) {
-    gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, &EventIndex);
-    gST->ConIn->ReadKeyStroke (gST->ConIn, &InputKey);
-    if (InputKey.UnicodeChar == CHAR_CARRIAGE_RETURN) {
-      break;
-    }
-  }
 
-  DEBUG ((DEBUG_INFO , "The ENTER key is pressed, next clear screen and reboot!\n"));
+  PopupInformation (Str1, UpdateSuccString);
+
+  DEBUG ((DEBUG_VERBOSE, "The ENTER key is pressed, next clear screen and reboot!\n"));
 
   ClearScreen();
 
@@ -616,7 +618,7 @@ UpdateFromFile (
   UINT8            *FirmwareAddress;
   UINT8            SelectedFlashNumber;
   CHAR16           *UpdatingFirmwareString;
-  BOOLEAN          SkipVariable;
+  BOOLEAN          PromptSkipVariable;
   EFI_STRING_ID    TokenToUpdate1;
   EFI_STRING_ID    TokenToUpdate2;
 
@@ -650,12 +652,12 @@ UpdateFromFile (
     SelectedFlashNumber = 0;
     TokenToUpdate1 = STRING_TOKEN (STR_UPDATING_FIRMWARE);
     TokenToUpdate2 = STRING_TOKEN (STR_FIRMWARE_UPDATE_SUCC);
-    SkipVariable = TRUE;
+    PromptSkipVariable = TRUE;
   } else if (QuestionId == UPDATE_INI_KEY) {
     SelectedFlashNumber = 1;
     TokenToUpdate1 = STRING_TOKEN (STR_UPDATING_INI);
     TokenToUpdate2 = STRING_TOKEN (STR_INI_UPDATE_SUCC);
-    SkipVariable = FALSE;
+    PromptSkipVariable = FALSE;
   }
 
   //
@@ -693,7 +695,7 @@ UpdateFromFile (
 		    FirmwareAddress,
 		    FileSize,
 		    UpdatingFirmwareString,
-		    SkipVariable
+		    PromptSkipVariable
 		    );
 
     PressKeytoReset (TokenToUpdate2);

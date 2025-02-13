@@ -49,12 +49,13 @@
   PcdLib
   UefiHiiServicesLib
   UefiBootManagerLib
-  ResetSystemLib
   SmbiosInformationLib
+  ResetSystemLib
 
 [Guids]
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
   gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID
+  gEfiSophgoGlobalVariableGuid                  ## CONSUMES ## GUID
 
 [Protocols]
   gEfiSmbiosProtocolGuid                        ## CONSUMES

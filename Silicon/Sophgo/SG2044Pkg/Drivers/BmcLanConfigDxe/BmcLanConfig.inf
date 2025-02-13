@@ -48,6 +48,7 @@
 [Guids]
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
   gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID
+  gEfiSophgoGlobalVariableGuid                  ## CONSUMES ## GUID
   gDriverSampleInventoryGuid
   gEfiIfrRefreshIdOpGuid
   gDriverSampleFormSetGuid

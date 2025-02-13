@@ -9,7 +9,7 @@
 
 EFI_HANDLE DriverHandle;
 EFI_GUID gBmcConfigFormSetGuid = BMC_FORMSET_GUID;
-EFI_GUID gBMCDataGuid = VAR_BMC_DATA_GUID;
+
 NET_PRIVATE_DATA *PrivateData = NULL;
 SMBIOS_PARSED_DATA *ParsedData = NULL;
 
@@ -175,8 +175,8 @@ UpdateBmcConfigData(
       BmcGateway.IpAddress[3]);
 
   Status = gRT->SetVariable(
-      L"BMCConfigData",
-      &gBMCDataGuid,
+      EFI_BMC_CONFIG_VARIABLE_NAME,
+      &gEfiSophgoGlobalVariableGuid,
       EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
       sizeof(BMC_DATA),
       BmcData);
@@ -196,11 +196,15 @@ UpdateBmcVarStore(
 {
   EFI_STATUS Status;
   Status = gRT->SetVariable(
-      L"BMCConfigData",
-      &gBMCDataGuid,
+      EFI_BMC_CONFIG_VARIABLE_NAME,
+      &gEfiSophgoGlobalVariableGuid,
       EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
       sizeof(BMC_DATA),
       &PrivateData->BmcConfigData);
+  if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_ERROR, "SetVariable(%s) failed: %r\n", EFI_BMC_CONFIG_VARIABLE_NAME, Status));
+      return Status;
+  }
   return Status;
 }
 
@@ -215,8 +219,8 @@ InitializeBmcVarstore(
 
   VarSize = sizeof(BMC_DATA);
   Status = gRT->GetVariable(
-      L"BMCConfigData",
-      &gBMCDataGuid,
+      EFI_BMC_CONFIG_VARIABLE_NAME,
+      &gEfiSophgoGlobalVariableGuid,
       NULL,
       &VarSize,
       &PrivateData->BmcConfigData);
@@ -235,8 +239,8 @@ InitializeBmcVarstore(
   }
 
   gRT->SetVariable(
-      L"BMCConfigData",
-      &gBMCDataGuid,
+      EFI_BMC_CONFIG_VARIABLE_NAME,
+      &gEfiSophgoGlobalVariableGuid,
       EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
       sizeof(BMC_DATA),
       &PrivateData->BmcConfigData);
@@ -342,8 +346,8 @@ UpdateNetworkConfigForm(
 
   UINTN VarSize = sizeof(BMC_DATA);
   Status = gRT->GetVariable(
-      L"BMCConfigData",
-      &gBMCDataGuid,
+      EFI_BMC_CONFIG_VARIABLE_NAME,
+      &gEfiSophgoGlobalVariableGuid,
       NULL,
       &VarSize,
       &PrivateData->BmcConfigData);
@@ -715,8 +719,8 @@ DriverCallback(
   }
   VarSize = sizeof(BMC_DATA);
   Status = gRT->GetVariable(
-      L"BMCConfigData",
-      &gBMCDataGuid,
+      EFI_BMC_CONFIG_VARIABLE_NAME,
+      &gEfiSophgoGlobalVariableGuid,
       NULL,
       &VarSize,
       &PrivateData->BmcConfigData);

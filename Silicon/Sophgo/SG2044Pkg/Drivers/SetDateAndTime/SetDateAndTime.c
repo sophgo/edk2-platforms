@@ -9,7 +9,6 @@
 EFI_HANDLE                  DriverHandle;
 DATE_TIME_PRIVATE_DATA      *PrivateData = NULL;
 EFI_GUID  mTimeSetFormSetGuid = TIME_SET_FORMSET_GUID;
-EFI_GUID  gSetDateAndTimeDataGuid = VAR_TIME_DATA_GUID;
 
 STATIC RESTORE_PROTOCOL gSetDateAndTimeRestoreProtocol = {
   TimeDataRestoreDefaults
@@ -72,24 +71,24 @@ TimeDataRestoreDefaults (
   TimeData.Minute = 0;
   TimeData.Second = 0;
 
-Status = gRT->SetVariable(
-    L"DynamicTimeData",
-    &gSetDateAndTimeDataGuid,
+  Status = gRT->SetVariable(
+    EFI_TIME_VARIABLE_NAME,
+    &gEfiSophgoGlobalVariableGuid,
     EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
     sizeof(TIME_DATA),
     &TimeData
-);
-if (EFI_ERROR(Status)) {
+   );
+  if (EFI_ERROR(Status)) {
     DEBUG((DEBUG_ERROR, "Failed to set EFI variable: %r\n", Status));
     return Status;
-}
-Status = UpdateSystemTimeFromHiiInput(&PrivateData->TimeData);
-if (EFI_ERROR(Status)) {
+  }
+  Status = UpdateSystemTimeFromHiiInput(&PrivateData->TimeData);
+  if (EFI_ERROR(Status)) {
     DEBUG((DEBUG_ERROR, "Failed to set EFI variable: %r\n", Status));
     return Status;
   }
 
-return EFI_SUCCESS;
+  return EFI_SUCCESS;
 }
 
 /**
@@ -228,7 +227,10 @@ ExtractConfig(
     Results,
     Progress
   );
-
+  if (EFI_ERROR(Status)) {
+     DEBUG((DEBUG_ERROR, "BlockToConfig failed: %r\n", Status));
+     return Status;
+  }
   FreePool(ConfigRequestHdr);
   return Status;
 }
@@ -292,7 +294,6 @@ RouteConfig(
     DEBUG((DEBUG_ERROR, "Failed to update system time: %r\n", Status));
     return Status;
   }
-
   return EFI_SUCCESS;
 }
 

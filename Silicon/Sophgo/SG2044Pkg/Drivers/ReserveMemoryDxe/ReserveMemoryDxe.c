@@ -10,7 +10,6 @@
 #include "ReserveMemoryDxe.h"
 
 EFI_GUID  mReserveMemoryGuid     = RESERVE_MEMORY_FORMSET_GUID;
-EFI_GUID  gReserveMemoryVarGuid  = RESERVE_MEMORY_VAR_GUID;
 
 STATIC RESTORE_PROTOCOL gReserveMemoryRestoreProtocol = {
   RestoreReservedMemoryDefaults
@@ -63,14 +62,18 @@ RestoreReservedMemoryDefaults (
   EFI_STATUS                     Status;
   RESERVE_MEMORY_CALLBACK_DATA   *PrivateData;
 
-  PrivateData = NULL;
+  Status = gBS->AllocatePool(EfiBootServicesData, sizeof(RESERVE_MEMORY_CALLBACK_DATA), (VOID **)&PrivateData);
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "%a: Failed to allocate memory for PrivateData: %r\n", __func__, Status));
+    return Status;
+  }
 
   PrivateData->ReserveMemoryData.Value = 0;
   ReservedMemData.Value = 0;
 
   Status = gRT->SetVariable (
-		  RESERVE_MEMORY_VARIABLE,
-		  &gReserveMemoryVarGuid,
+		  EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
 		  EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
 		  sizeof (RESERVE_MEMORY_DATA),
 		  &ReservedMemData
@@ -183,8 +186,8 @@ UpdateReserveMemoryConfig (
 
   VarSize = sizeof (RESERVE_MEMORY_DATA);
   Status = gRT->GetVariable (
-		  RESERVE_MEMORY_VARIABLE,
-		  &gReserveMemoryVarGuid,
+		  EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
 		  &ReservedMemData
@@ -223,7 +226,7 @@ ReserveMemorySetupConfig (
 
   if (!HiiGetBrowserData (
 	&mReserveMemoryGuid,
-	RESERVE_MEMORY_VARIABLE,
+        EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
 	sizeof (RESERVE_MEMORY_DATA),
 	(UINT8 *) &ReservedMemData))
   {
@@ -238,8 +241,8 @@ ReserveMemorySetupConfig (
   CopyMem (&PrivateData->ReserveMemoryData, &ReservedMemData,
 		  sizeof (RESERVE_MEMORY_DATA));
   Status = gRT->SetVariable (
-		  RESERVE_MEMORY_VARIABLE,
-		  &gReserveMemoryVarGuid,
+		  EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
 		  EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
 		  sizeof (RESERVE_MEMORY_DATA),
 		  &ReservedMemData
@@ -318,7 +321,7 @@ ReserveMemoryExtractConfig (
   }
 
   *Progress = Request;
-  if ((Request != NULL) && !HiiIsConfigHdrMatch (Request, &mReserveMemoryGuid, RESERVE_MEMORY_VARIABLE)) {
+  if ((Request != NULL) && !HiiIsConfigHdrMatch (Request, &mReserveMemoryGuid, EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME)) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): HiiIsConfigHdrMatch not match\n",
@@ -343,7 +346,7 @@ ReserveMemoryExtractConfig (
     //
     ConfigRequestHdr = HiiConstructConfigHdr (
 		    &mReserveMemoryGuid,
-		    RESERVE_MEMORY_VARIABLE,
+		    EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
 		    Private->DriverHandle
 		    );
     Size = (StrLen (ConfigRequestHdr) + 32 + 1) * sizeof (CHAR16);
@@ -431,7 +434,7 @@ ReserveMemoryRouteConfig (
   if (!HiiIsConfigHdrMatch (
           Configuration,
 	  &mReserveMemoryGuid,
-	  RESERVE_MEMORY_VARIABLE
+	  EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME
 	  ))
   {
     DEBUG ((
@@ -508,8 +511,8 @@ ReserveMemoryCallback (
   VarSize = sizeof (RESERVE_MEMORY_DATA);
 
   Status = gRT->GetVariable (
-		  RESERVE_MEMORY_VARIABLE,
-		  &gReserveMemoryVarGuid,
+		  EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &InputSize
@@ -537,8 +540,8 @@ ReserveMemoryCallback (
     // Set variable
     //
     Status = gRT->SetVariable (
-		    RESERVE_MEMORY_VARIABLE,
-		    &gReserveMemoryVarGuid,
+		    EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
+		    &gEfiSophgoGlobalVariableGuid,
 		    EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
 		    VarSize,
 		    &InputSize
@@ -551,7 +554,7 @@ ReserveMemoryCallback (
 
     HiiSetBrowserData (
 		  &mReserveMemoryGuid,
-    		  RESERVE_MEMORY_VARIABLE,
+    		  EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
 		  VarSize,
     		  (UINT8*)&InputSize,
     		  NULL
@@ -581,8 +584,8 @@ ReservedMemoryConfigInit (
 
   VarSize = sizeof (RESERVE_MEMORY_DATA);
   Status = gRT->GetVariable (
-		  RESERVE_MEMORY_VARIABLE,
-		  &gReserveMemoryVarGuid,
+		  EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &ReservedMemData
@@ -599,8 +602,8 @@ ReservedMemoryConfigInit (
     //
     ReservedMemData.Value = 0;
     Status = gRT->SetVariable (
-		    RESERVE_MEMORY_VARIABLE,
-		    &gReserveMemoryVarGuid,
+		    EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
+		    &gEfiSophgoGlobalVariableGuid,
 		    EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
                     VarSize,
                     &ReservedMemData

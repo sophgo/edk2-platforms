@@ -19,8 +19,6 @@ formset
        title  = STRING_TOKEN(STR_FRONT_PAGE_TITLE);
     label LABEL_TIME_START;
     label LABEL_END;
-    label LABEL_LANGUAGE;
-    label LABEL_END;
     goto SYSTEM_INFORMATION_ID,
       prompt  = STRING_TOKEN(STR_SYSTEM_INFORMATION_PROMPT),
       help    = STRING_TOKEN(STR_SYSTEM_INFORMATION_HELP),
@@ -69,6 +67,8 @@ formset
   endform;
   form formid = SYSTEM_SETTING_ID,
         title = STRING_TOKEN(STR_SYSTEM_SETTING_TITLE);
+        label LABEL_LANGUAGE;
+        label LABEL_END;
         goto
          formsetguid = PASSWORDCONFIG_FORMSET_GUID,
          formid  =  FORM_PASSWORDCONFIG_ID,

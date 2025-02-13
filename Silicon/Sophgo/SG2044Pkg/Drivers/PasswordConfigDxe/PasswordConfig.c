@@ -19,7 +19,7 @@ UINT8                 mCheckFlag;
 extern UINT8 PasswordConfigUiBin[];
 BOOLEAN  mFirstEnterPasswordConfigForm;
 EFI_GUID mPasswordConfigGuid = PASSWORDCONFIG_FORMSET_GUID;
-EFI_GUID gPasswordConfigVarGuid = PASSWORDCONFIG_VAR_GUID;
+
 STATIC RESTORE_PROTOCOL gPasswordRestoreProtocol = {
  PasswordRestore
 };
@@ -72,8 +72,8 @@ PasswordRestore (
   StrCpyS(PasswordConfigData.UserPassword, PASSWD_MAXLEN, L"user1234");
   StrCpyS(PasswordConfigData.AdminPassword, PASSWD_MAXLEN, L"admin1234");
   Status = gRT->SetVariable(
-              VAR_PASSWORD_CONFIG_NAME,
-              &gPasswordConfigVarGuid,
+              EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+              &gEfiSophgoGlobalVariableGuid,
               PLATFORM_SETUP_VARIABLE_FLAG,
               sizeof(PASSWORD_CONFIG_DATA),
               &PasswordConfigData
@@ -119,8 +119,8 @@ PasswordConfigInit (
 
   VarSize = sizeof(PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable (
-                  VAR_PASSWORD_CONFIG_NAME,
-                  &gPasswordConfigVarGuid,
+                  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &PasswordConfigData
@@ -129,8 +129,8 @@ PasswordConfigInit (
   if (Status == EFI_NOT_FOUND) {
     PasswordConfigDefault (&PasswordConfigData);
     Status = gRT->SetVariable(
-              VAR_PASSWORD_CONFIG_NAME,
-              &gPasswordConfigVarGuid,
+              EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+              &gEfiSophgoGlobalVariableGuid,
               PLATFORM_SETUP_VARIABLE_FLAG,
               sizeof(PASSWORD_CONFIG_DATA),
               &PasswordConfigData
@@ -162,8 +162,8 @@ GetPrivData (
 
   VarSize = sizeof (PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable (
-                  VAR_PASSWORD_CONFIG_NAME,
-                  &gPasswordConfigVarGuid,
+                  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &PrivateData->PasswordConfigData
@@ -208,8 +208,8 @@ GetPasswordConfigData (
 
   VarSize = sizeof(PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable (
-                  VAR_PASSWORD_CONFIG_NAME,
-                  &gPasswordConfigVarGuid,
+                  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &PasswordConfigData
@@ -248,8 +248,8 @@ UpdatePasswordConfig (
   Status = EFI_SUCCESS;
   VarSize = sizeof (PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable (
-                  VAR_PASSWORD_CONFIG_NAME,
-                  &gPasswordConfigVarGuid,
+                  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &PasswordConfigData
@@ -284,8 +284,8 @@ PasswordConfigSetupConfig (
 
   CopyMem (&PrivateData->PasswordConfigData, &PasswordData, sizeof(PASSWORD_CONFIG_DATA));
   Status = gRT->SetVariable(
-              VAR_PASSWORD_CONFIG_NAME,
-              &gPasswordConfigVarGuid,
+              EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+              &gEfiSophgoGlobalVariableGuid,
               PLATFORM_SETUP_VARIABLE_FLAG,
               sizeof(PASSWORD_CONFIG_DATA),
               &PasswordData
@@ -368,6 +368,10 @@ PasswordConfigExtractConfig (
                                 Results,
                                 Progress
                                 );
+  if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_ERROR, "BlockToConfig failed: %r\n", Status));
+      return Status;
+  }
   if (AllocatedRequest) {
     FreePool (ConfigRequest);
     ConfigRequest = NULL;
@@ -524,8 +528,8 @@ CleanUserPasswordConfigData (
 
   VarSize = sizeof(PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable(
-                  VAR_PASSWORD_CONFIG_NAME,
-                  &gPasswordConfigVarGuid,
+                  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &TempData
@@ -543,8 +547,8 @@ CleanUserPasswordConfigData (
     StrCpyS(TempData.UserPassword, PASSWD_MAXLEN, L"user1234");
     TempData.UserPasswordEnable = 1;
     Status = gRT->SetVariable (
-                    VAR_PASSWORD_CONFIG_NAME,
-                    &gPasswordConfigVarGuid,
+                    EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                    &gEfiSophgoGlobalVariableGuid,
                     PLATFORM_SETUP_VARIABLE_FLAG,
                     sizeof (PASSWORD_CONFIG_DATA),
                     &TempData
@@ -606,8 +610,8 @@ ProcessPasswordConfigData (
   }
 
   Status = gRT->GetVariable(
-    VAR_PASSWORD_CONFIG_NAME,
-    &gPasswordConfigVarGuid,
+    EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+    &gEfiSophgoGlobalVariableGuid,
     NULL,
     &VarSize,
     &PasswordConfigData
@@ -622,12 +626,16 @@ ProcessPasswordConfigData (
     }
 
     Status = gRT->SetVariable(
-      VAR_PASSWORD_CONFIG_NAME,
-      &gPasswordConfigVarGuid,
+      EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+      &gEfiSophgoGlobalVariableGuid,
       PLATFORM_SETUP_VARIABLE_FLAG,
       sizeof(PASSWORD_CONFIG_DATA),
       &Private->PasswordConfigData
     );
+    if (EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR, "SetVariable(%s) failed: %r\n", EFI_PASSWORD_CONFIG_VARIABLE_NAME, Status));
+        return Status;
+    }
     GetPasswordConfigData(Private);
   }
 
@@ -673,8 +681,8 @@ PasswordConfigCallback (
   Status  = EFI_SUCCESS;
   VarSize = sizeof(PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable (
-                  VAR_PASSWORD_CONFIG_NAME,
-                  &gPasswordConfigVarGuid,
+                  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &PasswordConfigData
@@ -709,8 +717,8 @@ PasswordConfigCallback (
 
    case FORM_USER_PASSWD_ENABLE:
       Status = gRT->GetVariable(
-                VAR_PASSWORD_CONFIG_NAME,
-                &gPasswordConfigVarGuid,
+                EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                &gEfiSophgoGlobalVariableGuid,
                 NULL,
                 &VarSize,
                 &PasswordConfigData
@@ -721,8 +729,8 @@ PasswordConfigCallback (
       }
       PasswordConfigData.UserPasswordEnable = Value->u8;
       Status = gRT->SetVariable(
-                  VAR_PASSWORD_CONFIG_NAME,
-                  &gPasswordConfigVarGuid,
+                  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   PLATFORM_SETUP_VARIABLE_FLAG,
                   sizeof(PASSWORD_CONFIG_DATA),
                   &PasswordConfigData

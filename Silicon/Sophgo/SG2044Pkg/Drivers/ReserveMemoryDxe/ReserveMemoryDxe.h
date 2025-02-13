@@ -15,6 +15,7 @@
 #include <Guid/HiiFormMapMethodGuid.h>
 #include <Guid/DriverSampleHii.h>
 #include <Guid/ZeroGuid.h>
+#include <Guid/VendorGlobalVariables.h>
 
 #include <Protocol/HiiConfigRouting.h>
 #include <Protocol/HiiConfigAccess.h>

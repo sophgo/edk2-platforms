@@ -21,7 +21,7 @@
 #define BOARD_FORM_ID                  0x3306
 #define VAR_INFORMATION_VARID          0x3307
 #define MAX_LENGTH                     64
-#pragma pack(4)
+#pragma pack()
 typedef struct {
   UINT16 ProcessorMaxSpeed;
   UINT32 L1ICacheSize;

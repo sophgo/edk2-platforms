@@ -20,8 +20,6 @@ CHAR8                       *mLanguageString;
 VOID                        *ProtocolPtr;
 
 EFI_GUID mFrontPageGuid             = FORMSET_GUID;
-EFI_GUID gPasswordConfigVarGuid     = PASSWORDCONFIG_VAR_GUID;
-EFI_GUID gMenuPasswordToggleVarGuid = PASSWORD_TOGGLE_VARSTORE_GUID;
 BOOLEAN  mResetRequired             = FALSE;
 BOOLEAN  mModeInitialized           = FALSE;
 UINT32   mBootHorizontalResolution  = 0;
@@ -128,7 +126,7 @@ RestoreFactoryDefaults (
     &gSetDateAndTimeRestoreProtocolGuid,
     &gPasswordRestoreProtocolGuid,
     &gPassWordToggleRestoreProtocolGuid,
-    &gReserveMemoryRestoreProtocolGuid,
+    &gReserveMemoryRestoreProtocolGuid
   };
 
   for (UINTN i = 0; i < ARRAY_SIZE (ModuleGuids); i++) {
@@ -244,8 +242,8 @@ PassWordToggleRestore (
   PassWordToggleData.UserPriv = 0;
 
   Status = gRT->SetVariable (
-		  L"PassWordToggleData",
-		  &gMenuPasswordToggleVarGuid,
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
 		  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
 		  sizeof (PASSWORD_TOGGLE_DATA),
 		  &PassWordToggleData
@@ -269,8 +267,8 @@ InitializePasswordToggleVariable (
   VarSize = sizeof (PASSWORD_TOGGLE_DATA);
 
   Status = gRT->GetVariable (
-		  L"PassWordToggleData",
-                  &gMenuPasswordToggleVarGuid,
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &PassWordToggleData
@@ -282,8 +280,8 @@ InitializePasswordToggleVariable (
       PassWordToggleData.UserPriv = 0;
       PassWordToggleData.IsEvb = 0;
       Status = gRT->SetVariable (
-		      L"PassWordToggleData",
-		      &gMenuPasswordToggleVarGuid,
+		      EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+		      &gEfiSophgoGlobalVariableGuid,
 		      EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
 		      sizeof (PASSWORD_TOGGLE_DATA),
 		      &PassWordToggleData
@@ -312,13 +310,16 @@ PassWordToggleEntry (
 
   VarSize = sizeof(PassWordToggleData);
   Status = gRT->GetVariable (
-		  L"PassWordToggleData",
-		  &gMenuPasswordToggleVarGuid,
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
 		  NULL,
 		  &VarSize,
 		  &PassWordToggleData
 		  );
-
+  if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "Failed to Get PassWordToggleData. Status=%r\n", Status));
+        return Status;
+  }
   return (PassWordToggleData.PasswordCheckEnabled == 1) ? TRUE : FALSE;
 }
 
@@ -347,8 +348,8 @@ FrontPagePasswordCheck (
   ZeroMem (&PasswordConfigData, sizeof (PasswordConfigData));
   VarSize = sizeof (PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable (
-		  VAR_PASSWORD_CONFIG_NAME,
-                  &gPasswordConfigVarGuid,
+		  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &PasswordConfigData
@@ -429,21 +430,26 @@ FrontPagePasswordCheck (
   }
 
   Status = gRT->SetVariable (
-		  VAR_PASSWORD_CONFIG_NAME,
-		  &gPasswordConfigVarGuid,
+		  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
 		  PLATFORM_SETUP_VARIABLE_FLAG,
 		  sizeof (PASSWORD_CONFIG_DATA),
 		  &PasswordConfigData
 		  );
+   if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to set password config variable. Status: %r\n", Status));
+    return Status;
+  }
+
   Status = gRT->SetVariable (
-		  L"PassWordToggleData",
-		  &gMenuPasswordToggleVarGuid,
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
 		  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
 		  sizeof (PASSWORD_TOGGLE_DATA),
                   &PassWordToggleData
                   );
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Failed to set password config variable. Status: %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "Failed to set passwordtoggle config variable. Status: %r\n", Status));
     return Status;
   }
 
@@ -854,7 +860,7 @@ ExtractConfig (
 
   ConfigRequestHdr = HiiConstructConfigHdr (
 		  &mFrontPageGuid,
-		  L"PassWordToggleData",
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
 		  NULL
 		  );
   if (ConfigRequestHdr == NULL) {
@@ -862,15 +868,15 @@ ExtractConfig (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  if ((Request == NULL) || !HiiIsConfigHdrMatch (Request, &mFrontPageGuid, L"PassWordToggleData")) {
+  if ((Request == NULL) || !HiiIsConfigHdrMatch (Request, &mFrontPageGuid, EFI_PASSWORD_TOGGLE_VARIABLE_NAME)) {
     DEBUG ((DEBUG_ERROR, "ExtractConfig: Request does not match ConfigHdr.\n"));
     FreePool (ConfigRequestHdr);
     return EFI_NOT_FOUND;
   }
 
   Status = gRT->GetVariable (
-		  L"PassWordToggleData",
-		  &gMenuPasswordToggleVarGuid,
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+		  &gEfiSophgoGlobalVariableGuid,
 		  NULL,
 		  &VarSize,
 		  &PassWordToggleData
@@ -915,14 +921,14 @@ RouteConfig (
   }
 
   *Progress = Configuration;
-  if (!HiiIsConfigHdrMatch (Configuration, &mFrontPageGuid, L"PassWordToggleData")) {
+  if (!HiiIsConfigHdrMatch (Configuration, &mFrontPageGuid, EFI_PASSWORD_TOGGLE_VARIABLE_NAME)) {
     DEBUG ((DEBUG_ERROR, "RouteConfig: Configuration does not match ConfigHdr.\n"));
     return EFI_NOT_FOUND;
   }
 
   Status = gRT->GetVariable (
-		  L"PassWordToggleData",
-                  &gMenuPasswordToggleVarGuid,
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   NULL,
                   &VarSize,
                   &PassWordToggleData
@@ -944,8 +950,8 @@ RouteConfig (
   }
 
   Status = gRT->SetVariable (
-		  L"PassWordToggleData",
-                  &gMenuPasswordToggleVarGuid,
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
                   sizeof (PASSWORD_TOGGLE_DATA),
                   &PassWordToggleData
@@ -1022,10 +1028,12 @@ UpdateTimeRegion (
                   StartOpCodeHandle,
                   EndOpCodeHandle
                   );
-
+  if (EFI_ERROR(Status)) {
+     DEBUG((DEBUG_ERROR, "HiiUpdateForm failed: %r\n", Status));
+     return Status;
+  }
   HiiFreeOpCodeHandle (StartOpCodeHandle);
   HiiFreeOpCodeHandle (EndOpCodeHandle);
-
   return Status;
 }
 
@@ -1070,7 +1078,7 @@ UpdateLanguageRegion (
   Status = HiiUpdateForm (
 		  HiiHandle,
 		  &mFrontPageGuid,
-		  FRONT_PAGE_FORM_ID,
+		  SYSTEM_SETTING_ID,
 		  StartOpCodeHandle,
                   EndOpCodeHandle
                   );
@@ -1252,23 +1260,30 @@ InitializeUserInterface (
   InitializePasswordToggleVariable ();
   PassWordToggleData.IsEvb = IsServerBoard ? 0 : 1;
   Status = gRT->SetVariable (
-		  L"PassWordToggleData",
-                  &gMenuPasswordToggleVarGuid,
+		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
                   EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
                   sizeof (PASSWORD_TOGGLE_DATA),
                   &PassWordToggleData
                   );
-
+  if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_ERROR, "SetVariable(%s) failed: %r\n", EFI_PASSWORD_TOGGLE_VARIABLE_NAME, Status));
+      return Status;
+  }
   if (PassWordToggleEntry ()) {
     FrontPagePasswordCheck ();
     PassWordToggleData.IsFirst = 1;
     Status = gRT->SetVariable (
-		    L"PassWordToggleData",
-                    &gMenuPasswordToggleVarGuid,
+		    EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
+                    &gEfiSophgoGlobalVariableGuid,
                     EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS,
                     sizeof (PASSWORD_TOGGLE_DATA),
                     &PassWordToggleData
                     );
+    if (EFI_ERROR(Status)) {
+  	DEBUG((DEBUG_ERROR, "SetVariable(%s) failed: %r\n", EFI_PASSWORD_TOGGLE_VARIABLE_NAME, Status));
+        return Status;
+    }
   }
 
   UiSetConsoleMode (TRUE);

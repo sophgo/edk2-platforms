@@ -9,6 +9,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #include <stdio.h>
 #include <Uefi.h>
+
 #include <Protocol/BootLogo.h>
 #include <Protocol/HiiConfigRouting.h>
 #include <Protocol/DevicePath.h>
@@ -17,6 +18,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Protocol/HiiPackageList.h>
 #include <Protocol/HiiDatabase.h>
 #include <Protocol/HiiConfigAccess.h>
+
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -30,17 +32,15 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/IniParserLib/IniParserUtil.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/SmbiosInformationLib.h>
+
 #include <Guid/FileInfo.h>
 #include <Guid/MdeModuleHii.h>
 #include <Guid/FileInfo.h>
 #include <Guid/MdeModuleHii.h>
+#include <Guid/VendorGlobalVariables.h>
+
 #include "InformationNVDataStruc.h"
 
-#define CONFIG_SIZE      1000
-#define MAX_HW_NUMS     500
-#define MAX_HW_NAME_LENGTH 500
-#define MAX_KEY_NAME_LENGTH    500
-#define MAX_VALUE_NAME_LENGTH   500
 #define PRINTABLE_LANGUAGE_NAME_STRING_ID  0x0001
 #define INFORMATION_PAGE_CALLBACK_DATA_SIGNATURE  SIGNATURE_32 ('S', 'G', 'I', 'S')
 #define END_DEVICE_PATH_LENGTH (sizeof(EFI_DEVICE_PATH_PROTOCOL))
@@ -53,28 +53,6 @@ typedef struct {
     VENDOR_DEVICE_PATH VendorDevicePath;
     EFI_DEVICE_PATH_PROTOCOL End;
 } HII_VENDOR_DEVICE_PATH;
-
-typedef struct {
-    CHAR8  Key[MAX_KEY_NAME_LENGTH];
-    CHAR8  Value[MAX_VALUE_NAME_LENGTH];
-} CONFIG_ENTRY;
-
-typedef struct {
-    CHAR8  SectionName[MAX_HW_NAME_LENGTH];
-    CONFIG_ENTRY Entries[CONFIG_SIZE];
-    UINTN EntryCount;
-} CONFIG_SECTION;
-
-typedef struct {
-    UINTN SectionCount;
-    CONFIG_SECTION Sections[MAX_HW_NUMS];
-} PARSED_INI_DATA;
-
-typedef struct {
-    CHAR8 Section[MAX_HW_NAME_LENGTH];
-    CHAR8 Name[MAX_KEY_NAME_LENGTH];
-    CHAR8 Value[MAX_VALUE_NAME_LENGTH];
-} INI_ENTRY;
 
 typedef struct {
   UINTN                             Signature;

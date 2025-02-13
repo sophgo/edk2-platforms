@@ -8,11 +8,13 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef  PASSWORD_CONFIG_H_
 #define  PASSWORD_CONFIG_H_
 
-#include <Guid/MdeModuleHii.h>
-#include <Guid/GlobalVariable.h>
 #include <Protocol/HiiConfigAccess.h>
 #include <Protocol/DevicePathToText.h>
 #include <Protocol/FormBrowserEx2.h>
+
+#include <Guid/MdeModuleHii.h>
+#include <Guid/VendorGlobalVariables.h>
+
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/DevicePathLib.h>
@@ -25,10 +27,10 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/HobLib.h>
 #include <Library/UefiHiiServicesLib.h>
-#include "PasswordConfigData.h"
-#include "PasswordConfigFormGuid.h"
+#include <Library/PasswordConfigData.h>
 #include <Library/RestoreDefaults.h>
 
+#include "PasswordConfigFormGuid.h"
 typedef UINT16  STRING_REF;
 
 ///

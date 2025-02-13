@@ -7,13 +7,21 @@ Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
 #ifndef _SET_DATETIME_H_
 #define _SET_DATETIME_H_
 
-#include <Uefi.h>
-#include <Library/UefiHiiServicesLib.h>
 #include <Protocol/HiiConfigRouting.h>
 #include <Protocol/HiiConfigAccess.h>
 #include <Protocol/HiiString.h>
 #include <Protocol/HiiPopup.h>
+#include <Protocol/HiiPackageList.h>
+#include <Protocol/HiiDatabase.h>
+
 #include <Guid/MdeModuleHii.h>
+#include <Guid/DriverSampleHii.h>
+#include <Guid/ZeroGuid.h>
+#include <Guid/FileInfo.h>
+#include <Guid/VendorGlobalVariables.h>
+
+#include <Library/RestoreDefaults.h>
+#include <Library/UefiHiiServicesLib.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -25,17 +33,10 @@ Copyright (c) 2024, Sophgo Corporation. All rights reserved.<BR>
 #include <Library/DevicePathLib.h>
 #include <Library/PrintLib.h>
 #include <Library/UefiLib.h>
-#include <Guid/HiiPlatformSetupFormset.h>
-#include <Guid/HiiFormMapMethodGuid.h>
-#include <Guid/DriverSampleHii.h>
-#include <Guid/ZeroGuid.h>
-#include "SetDateAndTimeNv.h"
 #include <Library/FileHandleLib.h>
-#include <Protocol/HiiPackageList.h>
-#include <Protocol/HiiDatabase.h>
-#include <Guid/FileInfo.h>
-#include <Library/RestoreDefaults.h>
 
+#include <Uefi.h>
+#include "SetDateAndTimeNv.h"
 /**
  * Extern declarations for .vfr and .uni data.
  */

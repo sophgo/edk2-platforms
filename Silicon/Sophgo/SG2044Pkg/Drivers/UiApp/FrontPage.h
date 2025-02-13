@@ -7,10 +7,22 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #ifndef _FRONT_PAGE_H_
 #define _FRONT_PAGE_H_
 
-#include "String.h"
-#include "Ui.h"
-#include <Protocol/BootLogo.h>
 #include <Uefi.h>
+#include <stdio.h>
+
+#include <Protocol/BootLogo.h>
+#include <Protocol/SimpleFileSystem.h>
+#include <Protocol/HiiPackageList.h>
+#include <Protocol/HiiDatabase.h>
+#include <Protocol/HiiConfigAccess.h>
+
+#include <Guid/FileInfo.h>
+#include <Guid/MdeModuleHii.h>
+#include <Guid/VendorGlobalVariables.h>
+
+#include <Library/PasswordRead.h>
+#include <Library/RestoreDefaults.h>
+#include <Library/SmbiosInformationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/UefiLib.h>
 #include <Library/UefiRuntimeServicesTableLib.h>
@@ -21,21 +33,14 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/FileHandleLib.h>
 #include <Library/IniParserLib.h>
 #include <Library/IniParserLib/IniParserUtil.h>
-#include <Protocol/SimpleFileSystem.h>
-#include <Protocol/HiiPackageList.h>
-#include <Protocol/HiiDatabase.h>
-#include <Guid/FileInfo.h>
-#include <Guid/MdeModuleHii.h>
 #include <Library/DevicePathLib.h>
 #include <Library/PrintLib.h>
 #include <Library/CustomizedDisplayLib/Colors.h>
-#include <Protocol/HiiConfigAccess.h>
-#include <stdio.h>
+
 #include "FrontPageNVDataStruc.h"
 #include "FrontPageCustomizedUiSupport.h"
-#include <Library/PasswordRead.h>
-#include <Library/RestoreDefaults.h>
-#include <Library/SmbiosInformationLib.h>
+#include "String.h"
+#include "Ui.h"
 
 #define PRINTABLE_LANGUAGE_NAME_STRING_ID  0x0001
 #define FRONT_PAGE_CALLBACK_DATA_SIGNATURE  SIGNATURE_32 ('F', 'P', 'C', 'B')

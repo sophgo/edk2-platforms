@@ -72,7 +72,7 @@ ExtractConfig (
   *Progress = Request;
   ConfigRequestHdr = HiiConstructConfigHdr(
     &mConfiginiGuid,
-    L"InformationData",
+    EFI_INFORMATION_VARIABLE_NAME,
     PrivateData->DriverHandle
   );
 
@@ -96,7 +96,7 @@ ExtractConfig (
     );
     FreePool(ConfigRequestHdr);
   } else {
-    if (!HiiIsConfigHdrMatch(Request, &mConfiginiGuid, L"InformationData")) {
+    if (!HiiIsConfigHdrMatch(Request, &mConfiginiGuid, EFI_INFORMATION_VARIABLE_NAME)) {
       FreePool(ConfigRequestHdr);
       return EFI_NOT_FOUND;
     }
@@ -111,12 +111,14 @@ ExtractConfig (
     Results,
     Progress
   );
+  if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_ERROR, "BlockToConfig failed: %r\n", Status));
+      return Status;
+  }
   if (ConfigRequest != Request) {
     FreePool(ConfigRequest);
   }
-  if (EFI_ERROR(Status)) {
-    DEBUG((DEBUG_ERROR, "ExtractConfig: BlockToConfig failed: %r\n", Status));
-  }
+
   return Status;
 }
 
@@ -135,7 +137,7 @@ RouteConfig (
   }
   *Progress = Configuration;
 
-  if (!HiiIsConfigHdrMatch(Configuration, &mConfiginiGuid, L"InformationData")) {
+  if (!HiiIsConfigHdrMatch(Configuration, &mConfiginiGuid, EFI_INFORMATION_VARIABLE_NAME)) {
     return EFI_NOT_FOUND;
   }
   BufferSize = sizeof(INFORMATION_DATA);
@@ -184,8 +186,8 @@ SyncToVarStore (
   EFI_STATUS Status;
 
   Status = gRT->SetVariable(
-    L"InformationData",
-    &mConfiginiGuid,
+    EFI_INFORMATION_VARIABLE_NAME,
+    &gEfiSophgoGlobalVariableGuid,
     EFI_VARIABLE_NON_VOLATILE |
     EFI_VARIABLE_BOOTSERVICE_ACCESS,
     sizeof(INFORMATION_DATA),
@@ -209,7 +211,7 @@ UpdateHiiBrowserData (
 
   Status = HiiSetBrowserData(
     &mConfiginiGuid,
-    L"InformationData",
+    EFI_INFORMATION_VARIABLE_NAME,
     sizeof(INFORMATION_DATA),
     (UINT8 *)&gInformationData,
     NULL

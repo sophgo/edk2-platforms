@@ -8,13 +8,25 @@ Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
 #define _BMC_LAN_CONFIG_H_
 
 #include <Uefi.h>
-#include <Library/PcdLib.h>
-#include <Library/UefiHiiServicesLib.h>
+#include <string.h>
+
 #include <Protocol/HiiConfigRouting.h>
 #include <Protocol/HiiConfigAccess.h>
 #include <Protocol/HiiString.h>
 #include <Protocol/HiiPopup.h>
+#include <Protocol/HiiPackageList.h>
+#include <Protocol/HiiDatabase.h>
+
 #include <Guid/MdeModuleHii.h>
+#include <Guid/HiiPlatformSetupFormset.h>
+#include <Guid/HiiFormMapMethodGuid.h>
+#include <Guid/DriverSampleHii.h>
+#include <Guid/ZeroGuid.h>
+#include <Guid/VendorGlobalVariables.h>
+#include <Guid/FileInfo.h>
+
+#include <Library/PcdLib.h>
+#include <Library/UefiHiiServicesLib.h>
 #include <Library/DebugLib.h>
 #include <Library/BaseLib.h>
 #include <Library/BaseMemoryLib.h>
@@ -26,22 +38,12 @@ Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
 #include <Library/DevicePathLib.h>
 #include <Library/PrintLib.h>
 #include <Library/UefiLib.h>
-#include <Guid/HiiPlatformSetupFormset.h>
-#include <Guid/HiiFormMapMethodGuid.h>
-#include <Guid/DriverSampleHii.h>
-#include <Guid/ZeroGuid.h>
-#include "BmcLanConfigNv.h"
-#include <Library/FileHandleLib.h>
-#include <Protocol/HiiPackageList.h>
-#include <Protocol/HiiDatabase.h>
-#include <Guid/FileInfo.h>
-#include <Protocol/HiiConfigRouting.h>
-#include <Protocol/HiiConfigAccess.h>
-#include <Library/UefiHiiServicesLib.h>
-#include "BmcLanConfigIpmi.h"
-
 #include <Library/SmbiosInformationLib.h>
-#include <string.h>
+#include <Library/FileHandleLib.h>
+#include <Library/UefiHiiServicesLib.h>
+
+#include "BmcLanConfigNv.h"
+#include "BmcLanConfigIpmi.h"
 /**
  * Extern declarations for .vfr and .uni data.
  */

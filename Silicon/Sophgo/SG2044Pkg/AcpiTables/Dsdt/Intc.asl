@@ -29,7 +29,7 @@ Scope(_SB)
   }
 
   Device (MSI) {        // PCIe-MSI
-    Name(_HID, "SGPH0002")
+    Name(_HID, "SOPH0001")
     Name(_CRS, ResourceTemplate() {
       QWordMemory (
         ResourceProducer, PosDecode,

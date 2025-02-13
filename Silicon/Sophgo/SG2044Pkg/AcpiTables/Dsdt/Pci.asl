@@ -200,7 +200,7 @@ Scope(_SB)
 
     Device (RES0)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x0)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -370,7 +370,7 @@ Scope(_SB)
 
     Device (RES1)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x1)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -538,7 +538,7 @@ Scope(_SB)
 
     Device (RES2)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x2)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -706,7 +706,7 @@ Scope(_SB)
 
     Device (RES3)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x3)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -874,7 +874,7 @@ Scope(_SB)
 
     Device (RES4)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x4)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -1042,7 +1042,7 @@ Scope(_SB)
 
     Device (RES4)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x5)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -1210,7 +1210,7 @@ Scope(_SB)
 
     Device (RES4)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x6)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -1378,7 +1378,7 @@ Scope(_SB)
 
     Device (RES4)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x7)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -1546,7 +1546,7 @@ Scope(_SB)
 
     Device (RES4)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x8)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -1714,7 +1714,7 @@ Scope(_SB)
 
     Device (RES4)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x9)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {

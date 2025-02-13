@@ -11,8 +11,8 @@
 Scope(_SB)
 {
   Device (ETH0) {
-    Name (_HID, "SGPH0007")
-    Name (_UID, Zero)
+    Name (_HID, "SOPH0006")
+    Name (_UID, 0)
     Name (_CCA, 0)
     Method (_STA)
     {
@@ -20,7 +20,7 @@ Scope(_SB)
     }
 
     /** Clock Divider Control Register of Divider for clk_tx_eth0
-    *   
+    *
     *   bit[0]: Divider Reset Control
     *   bit[3]: Select Divide Factor from Register
     *   bit[32-16]: Clock Divider Factor
@@ -66,7 +66,7 @@ Scope(_SB)
       Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 296 }
       GpioIo (Exclusive, PullUp, 0, 0, IoRestrictionOutputOnly, "\\_SB.GPI0", 0, ResourceConsumer) { 28 }
     })
-    
+
     Name (_DSD, Package ()  // _DSD: Device-Specific Data
     {
       ToUUID ("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),

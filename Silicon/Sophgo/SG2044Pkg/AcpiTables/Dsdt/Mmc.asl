@@ -13,9 +13,10 @@ Scope(_SB)
 {
   Device (MMC0)
   {
-    Name (_HID, "SGPH0015")
+    Name (_HID, "SOPH0012")
     Name (_UID, 0x00)           // _UID: Unique ID
     Name (_CCA, 0x00)           // _CCA: Cache Coherency Attribute
+
     Method (_STA)
     {
       Return(0x0)
@@ -48,13 +49,15 @@ Scope(_SB)
 
   Device (SDC0)
   {
-    Name (_HID, "SGPH0016")
+    Name (_HID, "SOPH0005")
     Name (_UID, 0x1)
     Name (_CCA, 0x00)           // _CCA: Cache Coherency Attribute
+
     Method (_STA)
     {
       Return(0xf)
     }
+
     Name (_CRS, ResourceTemplate () {   // _CRS: Current Resource Settings
       QWordMemory ( // 64-bit memory
         ResourceConsumer, PosDecode,

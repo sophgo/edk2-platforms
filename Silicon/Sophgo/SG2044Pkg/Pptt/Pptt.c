@@ -206,7 +206,7 @@ STATIC EFI_ACPI_6_5_PROCESSOR_PROPERTIES_TOPOLOGY_TABLE Pptt = {
 };
 
 STATIC
-UINT64
+INT64
 GetCacheSize(
   IN CHAR8           *IniField
   )
@@ -214,14 +214,15 @@ GetCacheSize(
   EFI_STATUS Status;
   CHAR8      value[128];
   CHAR8      *End;
-  UINT64     Uint = -1;
+  UINT64     Uint;
 
-  if (IniGetValueBySectionAndName("CPU", IniField, value) == 0) {
-    Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
-    if (RETURN_ERROR(Status)) {
-      return RETURN_UNSUPPORTED;
-    }
-  }
+  if (IniGetValueBySectionAndName("CPU", IniField, value))
+    return -1;
+
+  Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
+  if (RETURN_ERROR(Status))
+    return -1;
+
   return Uint;
 }
 
@@ -235,7 +236,7 @@ PpttSetAcpiTable(
   UINTN                                         AcpiTableHandle;
   EFI_STATUS                                    Status;
   UINT8                                         Checksum;
-  UINT64					size;
+  INT64					        size;
   UINT16					loop0, loop1;
   UINT32					L1IcacheSize, L1DcacheSize;
 
@@ -244,7 +245,6 @@ PpttSetAcpiTable(
   Status = IniConfIniParse (NULL);
   if (EFI_ERROR(Status)) {
     DEBUG ((DEBUG_ERROR, "Config INI parse fail. %r\n", Status));
-    return ;
   }
 
   size = GetCacheSize("l3-cache-size");

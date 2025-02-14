@@ -40,10 +40,6 @@ ExtractString(
   }
 
   if (Index != 1 || *CurrentStrPtr == '\0') {
-    *String = AllocateZeroPool(sizeof(CHAR16));
-    if (*String == NULL) {
-      return EFI_OUT_OF_RESOURCES;
-    }
     return EFI_NOT_FOUND;
   }
 
@@ -300,3 +296,60 @@ FreeSmbiosData (
   FreePool(ParsedData);
   return 1;
 }
+
+BOOLEAN
+IsServerProduct(
+    VOID
+  )
+{
+  BOOLEAN                   IsServerBoard;
+  EFI_SMBIOS_PROTOCOL      *Smbios;
+  EFI_SMBIOS_HANDLE         SmbiosHandle;
+  EFI_SMBIOS_TABLE_HEADER  *Record;
+  EFI_STATUS                Status;
+  CONST CHAR16             *ServerNamePrefix;
+  UINTN                     PrefixLength;
+  CHAR16                   *ProductName;
+
+  IsServerBoard = FALSE;
+  ProductName   = NULL;
+
+  Status = gBS->LocateProtocol(&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to locate SMBIOS protocol: %r\n", Status));
+  } else {
+    //
+    // Instantiate the ProductName pointer
+    //
+    SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+    while (TRUE) {
+      Status = Smbios->GetNext(Smbios, &SmbiosHandle, NULL, &Record, NULL);
+      if (EFI_ERROR(Status)) {
+        break;
+      }
+      if (Record->Type == SMBIOS_TYPE_BASEBOARD_INFORMATION) {
+        SMBIOS_TABLE_TYPE2 *Type2 = (SMBIOS_TABLE_TYPE2 *)Record;
+        ExtractString((CHAR8 *)((UINT8 *)Type2 + Type2->Hdr.Length), Type2->ProductName, &ProductName);
+        break;
+      }
+    }
+    //
+    //Determine whether the ProductName string prefix is PcdServerNamePrefix
+    //
+    if (ProductName != NULL) {
+      ServerNamePrefix = PcdGetPtr(PcdServerNamePrefix);
+      PrefixLength = StrLen(ServerNamePrefix);
+      DEBUG((DEBUG_VERBOSE, "ProductName : %s,ServerNamePrefix: %s, StrLen: %d\n", ProductName, ServerNamePrefix, PrefixLength));
+      if (StrnCmp(ProductName, ServerNamePrefix, PrefixLength) == 0)
+      {
+        IsServerBoard = TRUE;
+      } else {
+        IsServerBoard = FALSE;
+      }
+      FreePool(ProductName);
+    }
+  }
+
+  return IsServerBoard;
+}
+

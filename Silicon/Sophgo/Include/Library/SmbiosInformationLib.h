@@ -66,4 +66,9 @@ FreeSmbiosData (
   SMBIOS_PARSED_DATA *ParsedData
 ) ;
 
+BOOLEAN
+IsServerProduct(
+    VOID
+  );
+
 #endif

@@ -71,27 +71,6 @@ HII_VENDOR_DEVICE_PATH mFrontPageHiiVendorDevicePath0 = {
 };
 
 BOOLEAN
-hasServerNamePrefix (
-  IN CHAR16 *Str
-  )
-{
-  CONST CHAR16 *ServerNamePrefix;
-  UINTN PrefixLength;
-  if (Str == NULL) {
-    return FALSE;
-  }
-
-  ServerNamePrefix = PcdGetPtr (PcdServerNamePrefix);
-  PrefixLength = StrLen (ServerNamePrefix);
-  DEBUG ((DEBUG_VERBOSE, "ServerNamePrefix: %s, StrLen: %d\n", ServerNamePrefix, PrefixLength));
-  if (StrnCmp (Str, ServerNamePrefix, PrefixLength) == 0) {
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-BOOLEAN
 ConfirmResetDefaults (
   CHAR16 *ConfirmPrompt
   )
@@ -1207,7 +1186,7 @@ InitializeUserInterface (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  IsServerBoard = hasServerNamePrefix(ParsedData->BaseboardProductName);
+  IsServerBoard = IsServerProduct();
 
   if (!mModeInitialized) {
     Status = gBS->HandleProtocol (

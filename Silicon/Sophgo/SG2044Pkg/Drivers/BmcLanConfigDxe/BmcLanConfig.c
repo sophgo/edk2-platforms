@@ -11,7 +11,6 @@ EFI_HANDLE DriverHandle;
 EFI_GUID gBmcConfigFormSetGuid = BMC_FORMSET_GUID;
 
 NET_PRIVATE_DATA *PrivateData = NULL;
-SMBIOS_PARSED_DATA *ParsedData = NULL;
 
 #define SMBIO_INFO_MAX_LENGTH 64
 
@@ -50,27 +49,6 @@ HII_VENDOR_DEVICE_PATH mBMCHiiVendorDevicePath = {
     }
   }
 };
-
-BOOLEAN
-hasServerNamePrefix(
-    IN CHAR16 *Str
-  )
-{
-  CONST CHAR16 *ServerNamePrefix;
-  UINTN PrefixLength;
-  if (Str == NULL)
-  {
-    return FALSE;
-  }
-  ServerNamePrefix = PcdGetPtr(PcdServerNamePrefix);
-  PrefixLength = StrLen(ServerNamePrefix);
-  DEBUG((DEBUG_VERBOSE, "ServerNamePrefix: %s, StrLen: %d\n", ServerNamePrefix, PrefixLength));
-  if (StrnCmp(Str, ServerNamePrefix, PrefixLength) == 0)
-  {
-    return TRUE;
-  }
-  return FALSE;
-}
 
 EFI_STATUS
 EFIAPI
@@ -901,20 +879,10 @@ BmcLanConfigEntry(
   EFI_STATUS Status;
   EFI_HII_HANDLE HiiHandle;
   EFI_HII_CONFIG_ROUTING_PROTOCOL *HiiConfigRouting;
-  BOOLEAN IsServerBoard;
 
-  ParsedData = AllocSmbiosData();
-  if (ParsedData == NULL)
+  if (!IsServerProduct())
   {
-    DEBUG((DEBUG_ERROR, "%a :Failed to alloc smbios data\n", __func__));
-    return EFI_OUT_OF_RESOURCES;
-  }
-
-  IsServerBoard = hasServerNamePrefix(ParsedData->BaseboardProductName);
-
-  if (!IsServerBoard)
-  {
-    DEBUG((DEBUG_INFO, "%a: %s is not server board\n", __func__, ParsedData->BaseboardProductName));
+    DEBUG((DEBUG_INFO, "%a:  is not server board\n", __func__));
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -1001,11 +969,6 @@ BmcLanConfigUnload(
   {
     FreePool(PrivateData);
     PrivateData = NULL;
-  }
-  if (ParsedData != NULL)
-  {
-    FreeSmbiosData(ParsedData);
-    ParsedData = NULL;
   }
   return EFI_SUCCESS;
 }

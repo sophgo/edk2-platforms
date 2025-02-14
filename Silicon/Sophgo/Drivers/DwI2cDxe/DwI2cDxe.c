@@ -231,11 +231,6 @@ I2cXferFinish (
   EFI_STATUS  Status;
   UINT64      StartTime;
 
-  //
-  // send stop bit
-  //
-  MmioWrite32 ((UINTN)(&I2cBase->IC_CMD_DATA), 1 << 9);
-
   StartTime = GetPerformanceCounter ();
 
   while (1) {
@@ -334,6 +329,14 @@ DesignwareI2cXfer (
     }
   }
 
+  if (BufIndex == 0)
+    return EFI_SUCCESS;
+
+  //
+  // set stop bit
+  //
+  CmdBuf[BufIndex - 1] |= (1 << 9);
+
   SubIndex = 0;
   Wait     = 0;
   for (Index = 0; Index < BufIndex || SubIndex < SubBufIndex;) {
@@ -374,7 +377,7 @@ DesignwareI2cXfer (
     Wait++;
     MicroSecondDelay (10);
     if (Wait > 5000) {
-      DEBUG ((DEBUG_ERROR, "i2c xfer timeout %d\n", __LINE__));
+      DEBUG ((DEBUG_ERROR, "[%a:%d] i2c xfer timeout!\n", __func__, __LINE__));
       return EFI_TIMEOUT;
     }
   }

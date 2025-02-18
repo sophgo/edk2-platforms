@@ -838,7 +838,7 @@ ExtractConfig (
   *Progress = Request;
 
   ConfigRequestHdr = HiiConstructConfigHdr (
-		  &mFrontPageGuid,
+		  &gEfiSophgoGlobalVariableGuid,
 		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
 		  NULL
 		  );
@@ -847,7 +847,18 @@ ExtractConfig (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  if ((Request == NULL) || !HiiIsConfigHdrMatch (Request, &mFrontPageGuid, EFI_PASSWORD_TOGGLE_VARIABLE_NAME)) {
+  if (Request == NULL) {
+    *Results = AllocateCopyPool (StrSize (ConfigRequestHdr), ConfigRequestHdr);
+    if (*Results == NULL) {
+      FreePool (ConfigRequestHdr);
+      return EFI_OUT_OF_RESOURCES;
+    }
+
+    FreePool (ConfigRequestHdr);
+    return EFI_SUCCESS;
+  }
+
+  if (!HiiIsConfigHdrMatch (Request, &gEfiSophgoGlobalVariableGuid, EFI_PASSWORD_TOGGLE_VARIABLE_NAME)) {
     DEBUG ((DEBUG_ERROR, "ExtractConfig: Request does not match ConfigHdr.\n"));
     FreePool (ConfigRequestHdr);
     return EFI_NOT_FOUND;
@@ -900,7 +911,7 @@ RouteConfig (
   }
 
   *Progress = Configuration;
-  if (!HiiIsConfigHdrMatch (Configuration, &mFrontPageGuid, EFI_PASSWORD_TOGGLE_VARIABLE_NAME)) {
+  if (!HiiIsConfigHdrMatch (Configuration, &gEfiSophgoGlobalVariableGuid, EFI_PASSWORD_TOGGLE_VARIABLE_NAME)) {
     DEBUG ((DEBUG_ERROR, "RouteConfig: Configuration does not match ConfigHdr.\n"));
     return EFI_NOT_FOUND;
   }

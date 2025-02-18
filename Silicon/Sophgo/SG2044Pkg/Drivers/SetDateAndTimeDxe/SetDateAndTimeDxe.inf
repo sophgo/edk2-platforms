@@ -17,8 +17,8 @@
   UNLOAD_IMAGE                   = SetDateAndTimeUnload
 
 [Sources]
-  SetDateAndTime.c
-  SetDateAndTime.h
+  SetDateAndTimeDxe.c
+  SetDateAndTimeDxe.h
   SetDateAndTimeVfr.Vfr
   SetDateAndTimeStrings.uni
   SetDateAndTimeNv.h

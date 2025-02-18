@@ -4,6 +4,7 @@
 //  SPDX-License-Identifier: BSD-2-Clause-Patent
 //**/
 #include "FrontPageNVDataStruc.h"
+
 formset
   guid     = FORMSET_GUID,
   title    = STRING_TOKEN(STR_FRONT_PAGE_TITLE),
@@ -13,7 +14,7 @@ formset
   varstore PASSWORD_TOGGLE_DATA,
     varid = VARSTORE_ID_PASSWORD_CHECK,
     name = PassWordToggleData,
-    guid = FORMSET_GUID;
+    guid = gEfiSophgoGlobalVariableGuid;
 
   form formid = FRONT_PAGE_FORM_ID,
        title  = STRING_TOKEN(STR_FRONT_PAGE_TITLE);

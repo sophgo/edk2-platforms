@@ -5,7 +5,7 @@ Copyright (c) 2024, Sophgo. All rights reserved.
 
 SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
-#include "PasswordConfig.h"
+#include "PasswordConfigDxe.h"
 
 #define ADMIN_USER_CLEAN_TOGETHER  1
 #define DEVICE_PATH_0_GUID { 0x44fe1427, 0x41c9, 0x4c35, { 0x8a, 0xdc, 0xbc, 0x8e, 0x84, 0x48, 0x11, 0x7e }}
@@ -344,15 +344,17 @@ PasswordConfigExtractConfig (
   Private = PASSWORD_CONFIG_PRIVATE_DATA_FROM_THIS (This);
   UpdatePasswordConfig (Private);
   *Progress = Request;
-  if ((Request != NULL) && !HiiIsConfigHdrMatch (Request, &mPasswordConfigGuid, PASSWORD_CONFIG_VARIABLE)) {
-    return EFI_NOT_FOUND;
+  if (Request != NULL) {
+     if(!HiiIsConfigHdrMatch (Request, &gEfiSophgoGlobalVariableGuid, EFI_PASSWORD_CONFIG_VARIABLE_NAME)) {
+        return EFI_NOT_FOUND;
+    }
   }
   ConfigRequestHdr = NULL;
   ConfigRequest  = NULL;
   AllocatedRequest = FALSE;
   ConfigRequest = Request;
   if ((Request == NULL) || (StrStr (Request, L"OFFSET") == NULL)) {
-    ConfigRequestHdr = HiiConstructConfigHdr (&mPasswordConfigGuid, PASSWORD_CONFIG_VARIABLE, Private->DriverHandle);
+    ConfigRequestHdr = HiiConstructConfigHdr (&gEfiSophgoGlobalVariableGuid, EFI_PASSWORD_CONFIG_VARIABLE_NAME, Private->DriverHandle);
     Size = (StrLen (ConfigRequestHdr) + 32 + 1) * sizeof (CHAR16);
     ConfigRequest = AllocateZeroPool (Size);
     ASSERT (ConfigRequest != NULL);
@@ -433,7 +435,7 @@ PasswordConfigRouteConfig (
   }
 
   // Check if the Configuration matches
-  if (!HiiIsConfigHdrMatch(Configuration, &mPasswordConfigGuid, PASSWORD_CONFIG_VARIABLE)) {
+  if (!HiiIsConfigHdrMatch(Configuration, &gEfiSophgoGlobalVariableGuid, EFI_PASSWORD_CONFIG_VARIABLE_NAME)) {
     DEBUG((DEBUG_ERROR, "PasswordConfigRouteConfig: Configuration header does not match.\n"));
     return EFI_NOT_FOUND;
   }

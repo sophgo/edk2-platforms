@@ -854,12 +854,12 @@
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
-  Silicon/Sophgo/SG2044Pkg/Drivers/SetDateAndTime/SetDateAndTime.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
 
 !if $(FLASH_ENABLE) == TRUE
   Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
 !endif
-  Silicon/Sophgo/SG2044Pkg/Drivers/Information/Information.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/InformationDxe/InformationDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/ReserveMemoryDxe/ReserveMemoryDxe.inf
 

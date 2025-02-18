@@ -540,14 +540,15 @@ BmcConfigExtractConfig(
   AllocatedRequest = FALSE;
   BufferSize = sizeof(BMC_DATA);
 
-  if ((Request != NULL) && !HiiIsConfigHdrMatch(Request, &gBmcConfigFormSetGuid, L"BMCConfigData"))
-  {
-    return EFI_NOT_FOUND;
+  if (Request != NULL) {
+    if(!HiiIsConfigHdrMatch(Request, &gEfiSophgoGlobalVariableGuid, EFI_BMC_CONFIG_VARIABLE_NAME)) {
+      return EFI_NOT_FOUND;
+    }
   }
 
   if (Request == NULL)
   {
-    ConfigRequestHdr = HiiConstructConfigHdr(&gBmcConfigFormSetGuid, L"BMCConfigData", PrivateData->DriverHandle);
+    ConfigRequestHdr = HiiConstructConfigHdr(&gEfiSophgoGlobalVariableGuid, EFI_BMC_CONFIG_VARIABLE_NAME, PrivateData->DriverHandle);
     if (ConfigRequestHdr == NULL)
     {
       return EFI_OUT_OF_RESOURCES;
@@ -628,7 +629,7 @@ BmcConfigRouteConfig(
     return Status;
   }
 
-  if (!HiiIsConfigHdrMatch(Configuration, &gBmcConfigFormSetGuid, L"BMCConfigData"))
+  if (!HiiIsConfigHdrMatch(Configuration, &gEfiSophgoGlobalVariableGuid, EFI_BMC_CONFIG_VARIABLE_NAME))
   {
     DEBUG((DEBUG_WARN, "RouteConfig: Configuration does not match ConfigHdr.\n"));
     return EFI_NOT_FOUND;

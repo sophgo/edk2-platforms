@@ -5,7 +5,7 @@ Copyright (c) 2024, Phytium Sophgo. All rights reserved.
 
 SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
-#include "PasswordConfig.h"
+#include "PasswordConfigDxe.h"
 
 /**
   The entry point for Phytium password configuration driver.

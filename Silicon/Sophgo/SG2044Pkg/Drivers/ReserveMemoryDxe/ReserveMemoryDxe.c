@@ -225,7 +225,7 @@ ReserveMemorySetupConfig (
   RESERVE_MEMORY_DATA  ReservedMemData;
 
   if (!HiiGetBrowserData (
-	&mReserveMemoryGuid,
+	&gEfiSophgoGlobalVariableGuid,
         EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
 	sizeof (RESERVE_MEMORY_DATA),
 	(UINT8 *) &ReservedMemData))
@@ -321,7 +321,7 @@ ReserveMemoryExtractConfig (
   }
 
   *Progress = Request;
-  if ((Request != NULL) && !HiiIsConfigHdrMatch (Request, &mReserveMemoryGuid, EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME)) {
+  if ((Request != NULL) && !HiiIsConfigHdrMatch (Request, &gEfiSophgoGlobalVariableGuid, EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME)) {
     DEBUG ((
       DEBUG_ERROR,
       "%a(): HiiIsConfigHdrMatch not match\n",
@@ -345,7 +345,7 @@ ReserveMemoryExtractConfig (
     // followed by "&OFFSET=0&WIDTH=WWWWWWWWWWWWWWWW" followed by a Null-terminator
     //
     ConfigRequestHdr = HiiConstructConfigHdr (
-		    &mReserveMemoryGuid,
+		    &gEfiSophgoGlobalVariableGuid,
 		    EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
 		    Private->DriverHandle
 		    );
@@ -433,7 +433,7 @@ ReserveMemoryRouteConfig (
   //
   if (!HiiIsConfigHdrMatch (
           Configuration,
-	  &mReserveMemoryGuid,
+	  &gEfiSophgoGlobalVariableGuid,
 	  EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME
 	  ))
   {

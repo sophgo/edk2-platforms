@@ -4,7 +4,7 @@
   Copyright (c) 2024 Sophgo Corporation. All rights reserved.
 **/
 
-#include "Information.h"
+#include "InformationDxe.h"
 #include <Library/UefiBootServicesTableLib.h>
 
 EFI_HANDLE                  DriverHandle;
@@ -71,7 +71,7 @@ ExtractConfig (
   }
   *Progress = Request;
   ConfigRequestHdr = HiiConstructConfigHdr(
-    &mConfiginiGuid,
+    &gEfiSophgoGlobalVariableGuid,
     EFI_INFORMATION_VARIABLE_NAME,
     PrivateData->DriverHandle
   );
@@ -96,7 +96,7 @@ ExtractConfig (
     );
     FreePool(ConfigRequestHdr);
   } else {
-    if (!HiiIsConfigHdrMatch(Request, &mConfiginiGuid, EFI_INFORMATION_VARIABLE_NAME)) {
+    if (!HiiIsConfigHdrMatch(Request, &gEfiSophgoGlobalVariableGuid, EFI_INFORMATION_VARIABLE_NAME)) {
       FreePool(ConfigRequestHdr);
       return EFI_NOT_FOUND;
     }
@@ -137,7 +137,7 @@ RouteConfig (
   }
   *Progress = Configuration;
 
-  if (!HiiIsConfigHdrMatch(Configuration, &mConfiginiGuid, EFI_INFORMATION_VARIABLE_NAME)) {
+  if (!HiiIsConfigHdrMatch(Configuration, &gEfiSophgoGlobalVariableGuid, EFI_INFORMATION_VARIABLE_NAME)) {
     return EFI_NOT_FOUND;
   }
   BufferSize = sizeof(INFORMATION_DATA);

@@ -16,7 +16,7 @@ formset
   varstore RESERVE_MEMORY_DATA,
     varid   = VARSTORE_ID_RESERVE_MEMORY,
     name    = ReservedMemorySize,
-    guid    = RESERVE_MEMORY_FORMSET_GUID;
+    guid    = gEfiSophgoGlobalVariableGuid;
 
   form formid  = FORM_RESERVE_MEMORY_ID,
     title   = STRING_TOKEN (STR_RESERVE_MEMORY_TITLE);

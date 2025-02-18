@@ -4,7 +4,7 @@
 # Copyright (c) 2024  Sophgo Corporation. All rights reserved.<BR>
 **/
 
-#include "SetDateAndTime.h"
+#include "SetDateAndTimeDxe.h"
 
 EFI_HANDLE                  DriverHandle;
 DATE_TIME_PRIVATE_DATA      *PrivateData = NULL;
@@ -206,7 +206,7 @@ ExtractConfig(
   *Progress = Request;
   *Results = NULL;
 
-  ConfigRequestHdr = HiiConstructConfigHdr(&mTimeSetFormSetGuid, L"DynamicTimeData", PrivateData->DriverHandle);
+  ConfigRequestHdr = HiiConstructConfigHdr(&gEfiSophgoGlobalVariableGuid, EFI_TIME_VARIABLE_NAME, PrivateData->DriverHandle);
   if (ConfigRequestHdr == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
@@ -214,7 +214,7 @@ ExtractConfig(
   EFI_STRING EffectiveRequest = Request;
   if (Request == NULL) {
     EffectiveRequest = ConfigRequestHdr;
-  } else if (!HiiIsConfigHdrMatch(Request, &mTimeSetFormSetGuid, L"DynamicTimeData")) {
+  } else if (!HiiIsConfigHdrMatch(Request, &gEfiSophgoGlobalVariableGuid, EFI_TIME_VARIABLE_NAME)) {
     FreePool(ConfigRequestHdr);
     return EFI_NOT_FOUND;
   }
@@ -271,7 +271,7 @@ RouteConfig(
   PrivateData = SET_DATEANDTIME_PRIVATE_FROM_THIS(This);
   *Progress = Configuration;
 
-  if (!HiiIsConfigHdrMatch(Configuration, &mTimeSetFormSetGuid, L"DynamicTimeData")) {
+  if (!HiiIsConfigHdrMatch(Configuration, &gEfiSophgoGlobalVariableGuid, EFI_TIME_VARIABLE_NAME)) {
     DEBUG((DEBUG_ERROR, "Configuration header does not match.\n"));
     return EFI_NOT_FOUND;
   }
@@ -325,10 +325,10 @@ EFI_STATUS EFIAPI DriverCallback(
   IN EFI_IFR_TYPE_VALUE *Value,
   OUT EFI_BROWSER_ACTION_REQUEST *ActionRequest
 ) {
+
   if (Action != EFI_BROWSER_ACTION_CHANGED && Action != EFI_BROWSER_ACTION_SUBMITTED) {
     return EFI_UNSUPPORTED;
   }
-
   return EFI_SUCCESS;
 }
 

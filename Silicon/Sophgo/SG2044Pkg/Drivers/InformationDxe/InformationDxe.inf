@@ -16,8 +16,8 @@
 [Sources]
   InformationVfr.Vfr
   InformationStrings.uni
-  Information.c
-  Information.h
+  InformationDxe.c
+  InformationDxe.h
   InformationNVDataStruc.h
 
 [Packages]

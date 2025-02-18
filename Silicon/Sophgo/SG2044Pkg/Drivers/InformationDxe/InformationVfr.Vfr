@@ -14,7 +14,7 @@ formset
   varstore INFORMATION_DATA,
     varid = VAR_INFORMATION_VARID,
     name  = InformationData,
-    guid  = CONFIG_INI_FORMSET_GUID;
+    guid  = gEfiSophgoGlobalVariableGuid;
 
   form formid = CONFIG_FORM_ID,
      title  = STRING_TOKEN(STR_CONFIG_FORM_TITLE);

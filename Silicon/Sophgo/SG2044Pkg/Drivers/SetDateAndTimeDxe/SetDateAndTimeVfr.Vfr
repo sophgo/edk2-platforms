@@ -16,7 +16,7 @@ formset
   varstore TIME_DATA,
     varid = VAR_DYNAMIC_TIME_VARID,
     name  = DynamicTimeData,
-    guid  = TIME_SET_FORMSET_GUID;
+    guid  = gEfiSophgoGlobalVariableGuid;
   form formid = TIME_SET_FORM_ID,
     title = STRING_TOKEN(STR_FORM_TITLE);
 

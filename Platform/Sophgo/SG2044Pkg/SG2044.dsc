@@ -763,6 +763,7 @@
   Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
   Features/ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/BmcLanConfigDxe/BmcLanConfig.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/IpmiBootDxe/IpmiBootDxe.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning + UDF filesystem

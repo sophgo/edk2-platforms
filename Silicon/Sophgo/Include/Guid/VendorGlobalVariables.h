@@ -67,4 +67,29 @@ extern EFI_GUID  gEfiSophgoGlobalVariableGuid;
 // The variable name must be a Unicode string (CHAR16 array).
 //
 #define EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME  L"ReservedMemorySize"
-#endif
+
+//
+// Allows the OS to request the firmware to enable certain features and to take certain actions.
+// Its attribute is NV+BS+RT.
+//
+#define EFI_OS_INDICATIONS_VARIABLE_NAME  L"OsIndications"
+
+//
+// The ordered boot option load list.
+// Its attribute is NV+BS+RT.
+//
+#define EFI_BOOT_ORDER_VARIABLE_NAME  L"BootOrder"
+
+//
+// The order of boot options that were successfully used during the last boot process.
+//
+#define LAST_BOOT_ORDER_VARIABLE_NAME  L"LastBootOrder"
+
+//
+// This variable is used to inidicate the persistent boot to UiApp.
+//   0: Disable persistent boot to UiApp
+//   1: Enable persistent boot to UiApp
+//
+#define FORCE_UIAPP_VARIABLE_NAME  L"ForceUiApp"
+
+#endif //__GLOBAL_VARIABLE_GUID_H__

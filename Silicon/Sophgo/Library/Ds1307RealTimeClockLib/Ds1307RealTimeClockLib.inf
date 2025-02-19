@@ -31,7 +31,8 @@
   UefiRuntimeLib
 
 [Pcd]
-  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum   ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum0   ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum1   ## CONSUMES
 
 [Protocols]
   gSophgoI2cMasterProtocolGuid            ## CONSUMES

@@ -287,17 +287,25 @@ FindOneRtcSlave (
   )
 {
   EFI_STATUS Status;
-  UINT32     Index;
+  UINT32     SlaveIndex, BusIndex;
   UINT8      Data = 0;
+  UINT32     I2cBusNums[2];
 
-  for (Index = 0; Index < sizeof (mRtcSlaveAddrs); ++Index) {
-    Status = mI2cMasterProtocol->ReadByte (mI2cMasterProtocol,
-                                           mI2cBusNum,
-                                           mRtcSlaveAddrs[Index],
-                                           0, &Data);
-    if (!EFI_ERROR (Status)) {
-      mSlaveAddr = mRtcSlaveAddrs[Index];
-      return Status;
+  gBS->SetMem (I2cBusNums, sizeof (I2cBusNums), 0);
+  I2cBusNums[0] = FixedPcdGet32 (PcdRtcI2cBusNum0);
+  I2cBusNums[1] = FixedPcdGet32 (PcdRtcI2cBusNum1);
+
+  for (BusIndex = 0; BusIndex < sizeof (I2cBusNums); ++BusIndex){
+    for (SlaveIndex = 0; SlaveIndex < sizeof (mRtcSlaveAddrs); ++SlaveIndex) {
+      Status = mI2cMasterProtocol->ReadByte (mI2cMasterProtocol,
+                                             I2cBusNums[BusIndex],
+                                             mRtcSlaveAddrs[SlaveIndex],
+                                             0, &Data);
+      if (!EFI_ERROR (Status)) {
+        mI2cBusNum = I2cBusNums[BusIndex];
+        mSlaveAddr = mRtcSlaveAddrs[SlaveIndex];
+        return Status;
+      }
     }
   }
 
@@ -352,7 +360,6 @@ LibRtcInitialize (
       return Status;
     }
   }
-  mI2cBusNum = FixedPcdGet32 (PcdRtcI2cBusNum);
 
   Status = FindOneRtcSlave ();
   if (EFI_ERROR (Status)) {

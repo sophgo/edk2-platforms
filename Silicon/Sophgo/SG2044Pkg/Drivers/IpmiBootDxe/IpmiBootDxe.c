@@ -774,8 +774,8 @@ IpmiBootEntry (
 
   if (!IsServerProduct())
   {
-    DEBUG((DEBUG_INFO, "%a:  is not server board\n", __func__));
-    return RETURN_INVALID_PARAMETER;
+    DEBUG((DEBUG_INFO, "%a: Non-server board detected. Skipping server-specific initialization.\n", __func__));
+    return EFI_SUCCESS;
   }
 
   Status = RestoreBootOrder ();

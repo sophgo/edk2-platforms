@@ -883,8 +883,8 @@ BmcLanConfigEntry(
 
   if (!IsServerProduct())
   {
-    DEBUG((DEBUG_INFO, "%a:  is not server board\n", __func__));
-    return EFI_OUT_OF_RESOURCES;
+    DEBUG((DEBUG_INFO, "%a: Non-server board detected. Skipping server-specific initialization.\n", __func__));
+    return EFI_SUCCESS;
   }
 
   PrivateData = AllocateZeroPool(sizeof(NET_PRIVATE_DATA));

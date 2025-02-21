@@ -19,6 +19,8 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Guid/FileInfo.h>
 #include <Guid/MdeModuleHii.h>
 #include <Guid/VendorGlobalVariables.h>
+#include <Guid/Acpi.h>
+#include <Guid/FdtHob.h>
 
 #include <Library/PasswordRead.h>
 #include <Library/RestoreDefaults.h>
@@ -36,6 +38,7 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include <Library/DevicePathLib.h>
 #include <Library/PrintLib.h>
 #include <Library/CustomizedDisplayLib/Colors.h>
+#include <Library/BaseRiscVSbiLib.h>
 
 #include "FrontPageNVDataStruc.h"
 #include "FrontPageCustomizedUiSupport.h"

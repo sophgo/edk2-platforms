@@ -41,15 +41,11 @@ formset
    endif;
     label LABEL_MANAGER;
     label LABEL_END;
-   grayoutif ideqval PASSWORD_TOGGLE_DATA.IsFirst == 1 AND ideqval PASSWORD_TOGGLE_DATA.UserPriv == 0 AND ideqval PASSWORD_TOGGLE_DATA.PasswordCheckEnabled == 1;
-    oneof varid  = PASSWORD_TOGGLE_DATA.PasswordCheckEnabled,
-      prompt = STRING_TOKEN(STR_PASSWORD_CHECK_PROMPT),
-      help   = STRING_TOKEN(STR_PASSWORD_CHECK_HELP),
-      flags  = INTERACTIVE,
-      option text = STRING_TOKEN(STR_DISABLE), value = 0x0, flags = DEFAULT;
-      option text = STRING_TOKEN(STR_ENABLE), value = 0x1, flags = 0;
-    endoneof;
-   endif;
+    text
+           help  = STRING_TOKEN(STR_ACPI_HELP),
+           text  = STRING_TOKEN(STR_ACPI_PROMPT),
+           flags = INTERACTIVE,
+           key   = ACPI_DISABLE_QUESTION_ID;
   endform;
   form formid = SYSTEM_INFORMATION_ID,
         title = STRING_TOKEN(STR_SYSTEM_INFORMATION_TITLE);
@@ -90,6 +86,15 @@ formset
            text   = STRING_TOKEN(STR_RESET_TO_DEFAULTS_PROMPT),
            flags    = INTERACTIVE,
            key      = RESTORE_DEFAULTS_QUESTION_ID;
+        endif;
+        grayoutif ideqval PASSWORD_TOGGLE_DATA.IsFirst == 1 AND ideqval PASSWORD_TOGGLE_DATA.UserPriv == 0 AND ideqval PASSWORD_TOGGLE_DATA.PasswordCheckEnabled == 1;
+         oneof varid  = PASSWORD_TOGGLE_DATA.PasswordCheckEnabled,
+            prompt = STRING_TOKEN(STR_PASSWORD_CHECK_PROMPT),
+            help   = STRING_TOKEN(STR_PASSWORD_CHECK_HELP),
+            flags  = INTERACTIVE,
+            option text = STRING_TOKEN(STR_DISABLE), value = 0x0, flags = DEFAULT;
+            option text = STRING_TOKEN(STR_ENABLE), value = 0x1, flags = 0;
+         endoneof;
         endif;
   endform;
   form formid = 0x1234,

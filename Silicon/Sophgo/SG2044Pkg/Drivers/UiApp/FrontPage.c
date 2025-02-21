@@ -10,7 +10,6 @@
 #include "FrontPageCustomizedUi.h"
 
 #define MAX_STRING_LEN             500
-#define DEVICE_PATH_0_GUID         { 0x8e6d99ee, 0x7531, 0x48f8, { 0x87, 0x45, 0x7f, 0x61, 0x44, 0x46, 0x8f, 0xf2} }
 #define PASSWORD_CONFIG_ATTRIBUTES (EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS)
 
 extern EFI_HII_HANDLE       gStringPackHandle;
@@ -20,6 +19,8 @@ CHAR8                       *mLanguageString;
 VOID                        *ProtocolPtr;
 
 EFI_GUID mFrontPageGuid             = FORMSET_GUID;
+EFI_GUID gEfiAcpiTableGuid          = ACPI_TABLE_GUID;
+EFI_GUID gEfiLinuxDtbTableGuid      = LINUX_EFI_DT_TABLE_GUID;
 BOOLEAN  mResetRequired             = FALSE;
 BOOLEAN  mModeInitialized           = FALSE;
 UINT32   mBootHorizontalResolution  = 0;
@@ -31,6 +32,8 @@ UINT32   mSetupTextModeRow          = 0;
 UINT32   mSetupHorizontalResolution = 0;
 UINT32   mSetupVerticalResolution   = 0;
 SMBIOS_PARSED_DATA *ParsedData      = NULL;
+VOID *SavedAcpiTable = NULL;
+VOID *SavedAcpi20Table = NULL;
 
 STATIC RESTORE_PROTOCOL gPassWordToggleRestoreProtocol = {
   PassWordToggleRestore
@@ -58,7 +61,7 @@ HII_VENDOR_DEVICE_PATH mFrontPageHiiVendorDevicePath0 = {
         (UINT8)((sizeof (VENDOR_DEVICE_PATH)) >> 8)
       }
     },
-    DEVICE_PATH_0_GUID
+    DEVICE_PATH_GUID
   },
   {
     END_DEVICE_PATH_TYPE,
@@ -69,6 +72,155 @@ HII_VENDOR_DEVICE_PATH mFrontPageHiiVendorDevicePath0 = {
     }
   }
 };
+
+EFI_STATUS
+RemoveAcpiFromConfigTable
+(
+ VOID
+)
+{
+    EFI_STATUS Status;
+    UINTN Index, NewIndex = 0;
+    UINTN TableCount = gST->NumberOfTableEntries;
+    EFI_CONFIGURATION_TABLE *NewTable;
+
+    Status = gBS->AllocatePool(EfiBootServicesData, TableCount * sizeof(EFI_CONFIGURATION_TABLE), (VOID **)&NewTable);
+    if (EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR, "Failed to allocate memory for new config table: %r\n", Status));
+        return Status;
+    }
+
+    for (Index = 0; Index < TableCount; Index++) {
+        EFI_CONFIGURATION_TABLE *CurrentTable = &gST->ConfigurationTable[Index];
+
+        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpiTableGuid)) {
+            SavedAcpiTable = CurrentTable->VendorTable;
+            continue;
+        }
+
+        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpi20TableGuid)) {
+            SavedAcpi20Table = CurrentTable->VendorTable;
+            continue;
+        }
+
+        NewTable[NewIndex++] = *CurrentTable;
+    }
+
+    gST->NumberOfTableEntries = NewIndex;
+    gST->ConfigurationTable = NewTable;
+    return EFI_SUCCESS;
+}
+
+EFI_STATUS
+InstallDtb
+(
+ VOID
+)
+{
+    EFI_RISCV_FIRMWARE_CONTEXT  *FirmwareContext;
+    VOID                        *DtbAddress;
+    EFI_STATUS                  Status;
+
+    FirmwareContext = NULL;
+    GetFirmwareContextPointer (&FirmwareContext);
+
+    if (FirmwareContext == NULL) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Firmware Context is NULL\n",
+      __func__
+      ));
+    return EFI_UNSUPPORTED;
+    }
+
+    DtbAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
+    Status = gBS->InstallConfigurationTable(&gEfiLinuxDtbTableGuid, DtbAddress);
+    if (EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR, "Failed to install DTB: %r\n", Status));
+        return Status;
+    }
+    return EFI_SUCCESS;
+}
+
+EFI_STATUS
+RestoreAcpiTables
+(
+ VOID
+)
+{
+    EFI_STATUS Status;
+
+    if (SavedAcpiTable != NULL) {
+        Status = gBS->InstallConfigurationTable(&gEfiAcpiTableGuid, SavedAcpiTable);
+        if (EFI_ERROR(Status)) {
+            DEBUG((DEBUG_ERROR, "Failed to restore ACPI Table: %r\n", Status));
+            return Status;
+        }
+    }
+
+    if (SavedAcpi20Table != NULL) {
+        Status = gBS->InstallConfigurationTable(&gEfiAcpi20TableGuid, SavedAcpi20Table);
+        if (EFI_ERROR(Status)) {
+            DEBUG((DEBUG_ERROR, "Failed to restore ACPI 2.0 Table: %r\n", Status));
+            return Status;
+        }
+    }
+
+    return EFI_SUCCESS;
+}
+
+EFI_STATUS
+UnloadAcpiTables
+(
+ VOID
+)
+{
+    EFI_CONFIGURATION_TABLE *ConfigTable;
+    UINTN Index, RemovedCount = 0;
+    EFI_STATUS Status;
+    for (Index = 0; Index < gST->NumberOfTableEntries; Index++) {
+        ConfigTable = &gST->ConfigurationTable[Index];
+
+        if (CompareGuid(&ConfigTable->VendorGuid, &gEfiAcpiTableGuid)) {
+            Status = gBS->InstallConfigurationTable(&gEfiAcpiTableGuid, NULL);
+            if (EFI_ERROR(Status)) {
+                DEBUG((DEBUG_ERROR, "Failed to remove ACPI Table %d: %r\n", Index, Status));
+                return Status;
+            }
+
+            RemovedCount++;
+        }
+        if (CompareGuid(&ConfigTable->VendorGuid, &gEfiAcpi20TableGuid)) {
+            Status = gBS->InstallConfigurationTable(&gEfiAcpi20TableGuid, NULL);
+            if (EFI_ERROR(Status)) {
+                DEBUG((DEBUG_ERROR, "Failed to remove ACPI Table %d: %r\n", Index, Status));
+                return Status;
+            }
+
+            RemovedCount++;
+        }
+    }
+
+    if (RemovedCount == 0) {
+      DEBUG((DEBUG_INFO, "No ACPI Tables found.\n"));
+    }
+    Status = RemoveAcpiFromConfigTable();
+    if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_ERROR, "[Error] Failed to remove ACPI Tables: %r\n", Status));
+      return Status;
+    }
+    Status = InstallDtb();
+    if (EFI_ERROR(Status)) {
+      DEBUG((DEBUG_ERROR, "[Error] Failed to install DTB: %r\n", Status));
+      EFI_STATUS RestoreStatus = RestoreAcpiTables();
+      if (EFI_ERROR(RestoreStatus)) {
+        DEBUG((DEBUG_ERROR, "[Critical] Failed to restore ACPI Tables: %r\n", RestoreStatus));
+        return RestoreStatus;
+      }
+      return Status;
+    }
+    return EFI_SUCCESS;
+}
 
 BOOLEAN
 ConfirmResetDefaults (
@@ -180,6 +332,7 @@ FrontPageCallback (
 {
   EFI_STATUS Status;
   CHAR16     *ConfirmResetPrompt = NULL;
+  EFI_INPUT_KEY Key;
 
   if (Action == EFI_BROWSER_ACTION_CHANGED) {
     if (QuestionId == RESTORE_DEFAULTS_QUESTION_ID) {
@@ -201,6 +354,25 @@ FrontPageCallback (
         DEBUG ((DEBUG_ERROR, "Failed to restore factory defaults: %r\n", Status));
         return Status;
       }
+    }
+    if (QuestionId == ACPI_DISABLE_QUESTION_ID) {
+        Status = UnloadAcpiTables();
+        if (EFI_ERROR(Status)) {
+            DEBUG((DEBUG_ERROR, "Failed to unload ACPI Tables: %r\n", Status));
+            return Status;
+        }
+        CHAR16 *AcpiDisableMsg[] = {
+            L"ACPI Disabled Successfully",
+            L"Press ENTER to continue..."
+        };
+        CreatePopUp(EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE, NULL, AcpiDisableMsg[0], AcpiDisableMsg[1], NULL);
+        while (TRUE) {
+            Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
+            if (!EFI_ERROR(Status) && (Key.UnicodeChar == CHAR_CARRIAGE_RETURN)) {
+                break;
+            }
+        }
+        *ActionRequest = EFI_BROWSER_ACTION_REQUEST_FORM_APPLY;
     }
   }
 

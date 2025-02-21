@@ -84,3 +84,5 @@
 #string STR_SYSTEM_SETTING_TITLE     #language en-US "System Setting"
 #string STR_GOTO_BMC                 #language en-US "BMC Config"
 #string STR_GOTO_BMC_HELP            #language en-US "BMC configuration settings."
+#string STR_ACPI_PROMPT              #language en-US "ACPI Disable"
+#string STR_ACPI_HELP                #language en-US "Choose to whether use ACPI to boot kernel"

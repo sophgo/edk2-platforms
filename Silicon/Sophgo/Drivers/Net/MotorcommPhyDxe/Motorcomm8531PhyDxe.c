@@ -251,7 +251,7 @@ YtPhyRgmiiClkDelayConfigWithLock (
 
   RxReg = YtPhyGetDelayRegValue (PhyDev, YtPhyRgmiiDelays, TbSize,
                                            &RxcDelayEnable,
-                                           YT8521_RC1R_RGMII_1_950_NS,
+                                           YT8521_RC1R_RGMII_2_100_NS,
 					   PhyDev->RxInternalDelayPs);
   TxReg = YtPhyGetDelayRegValue (PhyDev, YtPhyRgmiiDelays, TbSize, NULL,
                                            YT8521_RC1R_RGMII_1_950_NS,

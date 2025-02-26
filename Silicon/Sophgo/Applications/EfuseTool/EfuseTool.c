@@ -397,14 +397,17 @@ PrintReadEfuseValue (
                            EfuseOp->Offset,
                            EfuseOp->ReadSize,
                            ReadBuffer);
-  if (EFI_ERROR (Status))
+  if (EFI_ERROR (Status)) {
+    FreePool (ReadBuffer);
     return SHELL_ABORTED;
+  }
 
   PrintWithOffset (EfuseOp->EfuseIndex,
                    (UINT8 *)ReadBuffer,
                    EfuseOp->Offset,
                    EfuseOp->ReadSize);
 
+  FreePool (ReadBuffer);
   return EFI_SUCCESS;
 }
 

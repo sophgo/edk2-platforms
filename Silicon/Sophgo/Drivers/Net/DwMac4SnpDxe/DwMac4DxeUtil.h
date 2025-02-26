@@ -514,9 +514,7 @@
 //
 // Default operating mode of the MAC
 //
-#define GMAC_CORE_INIT (GMAC_CONFIG_JD | GMAC_CONFIG_PS | \
-			GMAC_CONFIG_BE | GMAC_CONFIG_DCRS | \
-			GMAC_CONFIG_JE)
+#define GMAC_CORE_INIT GMAC_CONFIG_IPC
 
 //
 // To dump the core regs excluding  the Address Registers
@@ -850,13 +848,12 @@
 #define MMC_RX_OVERSIZE_G         0x700 + 0xa8
 #define MMC_RX_UNICAST_G          0x700 + 0xc4
 
-#define TX_DESC_NUM               4
-#define RX_DESC_NUM               4
-//#define ETH_BUFFER_SIZE           2048 // 2KiB
-#define ETH_BUFFER_SIZE           1600 // 2KiB
+#define TX_DESC_NUM               256
+#define RX_DESC_NUM               256
+#define ETH_BUFFER_SIZE           2048
 #define TX_TOTAL_BUFFER_SIZE      (TX_DESC_NUM * ETH_BUFFER_SIZE)
 #define RX_TOTAL_BUFFER_SIZE      (RX_DESC_NUM * ETH_BUFFER_SIZE)
-#define RX_MAX_PACKET             1600 // ALIGN(1568, 64)
+#define RX_MAX_PACKET             ETH_BUFFER_SIZE
 
 /* Normal transmit descriptor defines (without split feature) */
 
@@ -1025,16 +1022,10 @@ typedef struct {
 } MAP_INFO;
 
 typedef struct {
-  //DMA_DESCRIPTOR              *TxDescRing[TX_DESC_NUM];
-  //DMA_DESCRIPTOR              *RxDescRing[RX_DESC_NUM];
   DMA_DESCRIPTOR              *TxDescRing;
   DMA_DESCRIPTOR              *RxDescRing;
-  //EFI_PHYSICAL_ADDRESS        RxBuffer;
   UINT8                       *TxBuffer;
   UINT8                       *RxBuffer;
-
-  // CHAR8                       TxBuffer[TX_TOTAL_BUFFER_SIZE];
-  // CHAR8                       RxBuffer[RX_TOTAL_BUFFER_SIZE];
   MAP_INFO                    TxDescRingMap[TX_DESC_NUM];
   MAP_INFO                    RxDescRingMap[RX_DESC_NUM];
   MAP_INFO                    TxBufNum[TX_DESC_NUM];
@@ -1073,9 +1064,6 @@ typedef struct {
 
   // Current number of recycled buffer pointers in RecycledTxBuf
   UINT32                                 RecycledTxBufCount;
-
-  // For TX buffer DmaUnmap
-  VOID                                   *MappingTxbuf;
 } SOPHGO_SIMPLE_NETWORK_DRIVER;
 
 #define SNP_DRIVER_SIGNATURE             SIGNATURE_32('A', 'S', 'N', 'P')
@@ -1247,6 +1235,12 @@ StmmacMacFlowControl (
 EFI_STATUS
 EFIAPI
 PhyLinkAdjustGmacConfig (
+  IN  SOPHGO_SIMPLE_NETWORK_DRIVER  *DwMac4Driver
+  );
+
+EFI_STATUS
+EFIAPI
+StmmacAllocDesc (
   IN  SOPHGO_SIMPLE_NETWORK_DRIVER  *DwMac4Driver
   );
 #endif // STMMAC_DXE_UTIL_H__

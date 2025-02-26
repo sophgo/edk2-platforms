@@ -73,10 +73,38 @@ HII_VENDOR_DEVICE_PATH mFrontPageHiiVendorDevicePath0 = {
   }
 };
 
+BOOLEAN
+FindAcpiTable
+(
+  IN EFI_GUID *TableGuid
+)
+{
+    UINTN TableCount = gST->NumberOfTableEntries;
+
+    if (TableCount == 0 || gST->ConfigurationTable == NULL) {
+        DEBUG((DEBUG_ERROR, "ConfigurationTable is NULL or TableCount is 0\n"));
+        return FALSE;
+    }
+
+    for (UINTN Index = 0; Index < TableCount; Index++) {
+        EFI_CONFIGURATION_TABLE *CurrentTable = &gST->ConfigurationTable[Index];
+
+        if (CurrentTable == NULL) {
+            DEBUG((DEBUG_ERROR, "Current ConfigurationTable entry is NULL at Index %u\n", Index));
+            continue;
+        }
+        if (CompareGuid(&CurrentTable->VendorGuid, TableGuid)) {
+            return TRUE;
+        }
+    }
+
+    return FALSE;
+}
+
 EFI_STATUS
 RemoveAcpiFromConfigTable
 (
- VOID
+  VOID
 )
 {
     EFI_STATUS Status;
@@ -93,21 +121,24 @@ RemoveAcpiFromConfigTable
     for (Index = 0; Index < TableCount; Index++) {
         EFI_CONFIGURATION_TABLE *CurrentTable = &gST->ConfigurationTable[Index];
 
-        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpiTableGuid)) {
+        if (CurrentTable == NULL) {
+            DEBUG((DEBUG_ERROR, "Current ConfigurationTable entry is NULL at Index %u\n", Index));
+            continue;
+        }
+        if (FindAcpiTable(&gEfiAcpiTableGuid)) {
             SavedAcpiTable = CurrentTable->VendorTable;
             continue;
         }
 
-        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpi20TableGuid)) {
+        if (FindAcpiTable(&gEfiAcpi20TableGuid)) {
             SavedAcpi20Table = CurrentTable->VendorTable;
             continue;
         }
-
         NewTable[NewIndex++] = *CurrentTable;
     }
-
     gST->NumberOfTableEntries = NewIndex;
     gST->ConfigurationTable = NewTable;
+
     return EFI_SUCCESS;
 }
 
@@ -134,6 +165,10 @@ InstallDtb
     }
 
     DtbAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
+    if (DtbAddress == NULL) {
+      DEBUG((DEBUG_ERROR, "DtbAddress is NULL!\n"));
+      return EFI_INVALID_PARAMETER;
+    }
     Status = gBS->InstallConfigurationTable(&gEfiLinuxDtbTableGuid, DtbAddress);
     if (EFI_ERROR(Status)) {
         DEBUG((DEBUG_ERROR, "Failed to install DTB: %r\n", Status));
@@ -372,7 +407,6 @@ FrontPageCallback (
                 break;
             }
         }
-        *ActionRequest = EFI_BROWSER_ACTION_REQUEST_FORM_APPLY;
     }
   }
 
@@ -430,6 +464,7 @@ InitializePasswordToggleVariable (
       PassWordToggleData.IsFirst = 0;
       PassWordToggleData.UserPriv = 0;
       PassWordToggleData.IsEvb = 0;
+      PassWordToggleData.DefaultAcpi = 0;
       Status = gRT->SetVariable (
 		      EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
 		      &gEfiSophgoGlobalVariableGuid,
@@ -1420,6 +1455,9 @@ InitializeUserInterface (
 
   InitializeStringSupport ();
   InitializePasswordToggleVariable ();
+  PassWordToggleData.DefaultAcpi =
+     (FindAcpiTable(&gEfiAcpiTableGuid) || FindAcpiTable(&gEfiAcpi20TableGuid))
+     ? 0 : 1;
   PassWordToggleData.IsEvb = IsServerBoard ? 0 : 1;
   Status = gRT->SetVariable (
 		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,

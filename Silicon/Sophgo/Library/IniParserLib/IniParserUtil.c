@@ -14,10 +14,6 @@ https://github.com/benhoyt/inih
 #define _CRT_SECURE_NO_WARNINGS
 #endif
 
-#include <stdio.h>
-#include <ctype.h>
-#include <string.h>
-
 #include "IniParserUtil.h"
 
 #if !INI_USE_STACK
@@ -384,17 +380,56 @@ IniParseStream (
   return Error;
 }
 
+STATIC
+CHAR8 *
+IniFileRead (
+  IN OUT CHAR8         *Buffer,
+  IN     UINT32        MaxLen,
+  IN     INI_FILE      File
+  )
+{
+  UINTN     BufferSize;
+  EFI_STATUS Status;
+  CHAR8     *Ptr;
+  CHAR8     Char;
+
+  if (Buffer == NULL || MaxLen == 0 || File == NULL) {
+    return NULL;
+  }
+
+  Ptr = Buffer;
+  BufferSize = 1;
+
+  while (--MaxLen > 0) {
+    Status = File->Read (File, &BufferSize, &Char);
+    if (EFI_ERROR (Status) || BufferSize == 0) {
+      if (Ptr == Buffer) {
+        return NULL;
+      }
+      break;
+    }
+
+    *Ptr++ = Char;
+    if (Char == '\n') {
+      break;
+    }
+  }
+
+  *Ptr = '\0';
+  return Buffer;
+}
+
 /**
    See documentation in header file.
 **/
 INT32
 IniParseFile (
-  IN FILE        *File,
+  IN INI_FILE    File,
   IN INI_HANDLER Handler,
   IN VOID        *User
   )
 {
-  return IniParseStream ((INI_READER)fgets, File, Handler, User);
+  return IniParseStream ((INI_READER)IniFileRead, File, Handler, User);
 }
 
 /**
@@ -407,16 +442,42 @@ IniParse (
   IN VOID         *User
   )
 {
-  FILE  *File;
-  INT32 Error;
+  EFI_STATUS                      Status;
+  EFI_FILE_HANDLE                 Root;
+  EFI_FILE_HANDLE                 File;
+  EFI_SIMPLE_FILE_SYSTEM_PROTOCOL *SimpleFs;
+  INT32                           Error;
 
-  File = fopen (FileName, "r");
-  if (!File) {
+  Status = gBS->LocateProtocol (
+                  &gEfiSimpleFileSystemProtocolGuid,
+                  NULL,
+                  (VOID**)&SimpleFs
+                  );
+  if (EFI_ERROR (Status)) {
+    return -1;
+  }
+
+  Status = SimpleFs->OpenVolume (SimpleFs, &Root);
+  if (EFI_ERROR (Status)) {
+    return -1;
+  }
+
+  Status = Root->Open (
+                   Root,
+                   &File,
+                   (CHAR16*)FileName,
+                   EFI_FILE_MODE_READ,
+                   0
+                   );
+  if (EFI_ERROR (Status)) {
+    Root->Close (Root);
     return -1;
   }
 
   Error = IniParseFile (File, Handler, User);
-  fclose (File);
+
+  File->Close (File);
+  Root->Close (Root);
 
   return Error;
 }

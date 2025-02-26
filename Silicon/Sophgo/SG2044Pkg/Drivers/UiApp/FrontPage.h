@@ -8,7 +8,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #define _FRONT_PAGE_H_
 
 #include <Uefi.h>
-#include <stdio.h>
 
 #include <Protocol/BootLogo.h>
 #include <Protocol/SimpleFileSystem.h>

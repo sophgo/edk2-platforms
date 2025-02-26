@@ -10,7 +10,6 @@
 #define __MOTORCOMM_PHY_DXE_H__
 #include <Include/Phy.h>
 #include <Uefi.h>
-#include <stdio.h>
 
 #define GENMASK(end, start)  (((1ULL << ((end) - (start) + 1)) - 1) << (start))
 #define __ffs(x) (__builtin_ffs(x) - 1)

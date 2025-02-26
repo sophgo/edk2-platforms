@@ -13,8 +13,12 @@ https://github.com/benhoyt/inih
 
 #ifndef INI_H
 #define INI_H
-#include <stdio.h>
+
+#include <Uefi.h>
 #include <Library/BaseLib.h>
+#include <Library/FileHandleLib.h>
+#include <Protocol/SimpleFileSystem.h>
+#include <Library/UefiBootServicesTableLib.h>
 
 /* Make this header file easier to include in C++ code */
 #ifdef __cplusplus
@@ -27,6 +31,8 @@ extern "C" {
 #ifndef INI_HANDLER_LINENO
 #define INI_HANDLER_LINENO 0
 #endif
+
+typedef EFI_FILE_HANDLE INI_FILE;
 
 /* Visibility symbols, required for Windows DLLs */
 #ifndef INI_API
@@ -106,7 +112,7 @@ IniParse (
 INI_API
 INT32
 IniParseFile (
-  FILE         *File,
+  INI_FILE     File,
   INI_HANDLER  Handler,
   VOID         *User
   );

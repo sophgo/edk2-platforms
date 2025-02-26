@@ -33,6 +33,11 @@
   MemoryAllocationLib
   PcdLib
   UefiLib
+  UefiBootServicesTableLib
+  FileHandleLib
+
+[Protocols]
+  gEfiSimpleFileSystemProtocolGuid
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress

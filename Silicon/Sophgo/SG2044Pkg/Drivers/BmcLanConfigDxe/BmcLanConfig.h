@@ -8,7 +8,6 @@ Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
 #define _BMC_LAN_CONFIG_H_
 
 #include <Uefi.h>
-#include <string.h>
 
 #include <Protocol/HiiConfigRouting.h>
 #include <Protocol/HiiConfigAccess.h>

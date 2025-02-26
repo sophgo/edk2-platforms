@@ -41,6 +41,7 @@ typedef struct {
   UINT8 IsFirst;
   UINT8 UserPriv;
   UINT8 IsEvb;
+  UINT8 DefaultAcpi;
 } PASSWORD_TOGGLE_DATA;
 #pragma pack()
 #endif

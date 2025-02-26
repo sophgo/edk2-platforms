@@ -9,20 +9,17 @@ UpdateSmbiosFromEfuse (
   )
 {
   EFI_STATUS Status;
-  UINT8 *Buffer = NULL;
 
   if (Count == 0) {
     DEBUG((DEBUG_ERROR, "Invalid Count: %u\n", Count));
     return -1;
   }
 
-   Buffer = AllocateZeroPool(Count);
-   if (Buffer == NULL || Size == NULL) {
+   if (Size == NULL) {
     return -1;
   }
-  Status = EfuseReadBytes(BusNum, Offset, Count, Buffer);
+  Status = EfuseReadBytes(BusNum, Offset, Count, Size);
   if (EFI_ERROR(Status)) {
-    FreePool(Buffer);
     DEBUG((DEBUG_ERROR, "Failed to read from eFuse: %r\n", Status));
     return -1;
   }

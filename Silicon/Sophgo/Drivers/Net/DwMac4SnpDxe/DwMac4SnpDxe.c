@@ -247,12 +247,7 @@ SnpInitialize (
   //
   Status = StmmacInitDmaEngine (DwMac4Driver);
   if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a(): DMA initialization failed (Status=%r)\n",
-      __func__,
-      Status
-      ));
+    DEBUG (( DEBUG_ERROR, "%a(): DMA initialization failed (Status=%r)\n",  __func__, Status));
     return Status;
   }
 
@@ -982,10 +977,7 @@ SnpGetStatus (
   } else {
     DwMac4Driver->SnpMode.MediaPresent = TRUE;
   }
-#if 1
-  //
-  // TxBuff
-  //
+
   if (TxBuff != NULL) {
     //
     // Get a recycled buf from DwMac4Driver->RecycledTxBuf
@@ -997,7 +989,6 @@ SnpGetStatus (
       *TxBuff = (VOID *)(UINTN) DwMac4Driver->RecycledTxBuf[DwMac4Driver->RecycledTxBufCount];
     }
   }
-#endif
 
   return EFI_SUCCESS;
 }
@@ -1072,15 +1063,15 @@ SnpTransmit (
   SOPHGO_SIMPLE_NETWORK_DRIVER      *DwMac4Driver;
   UINT32                            TxDescIndex;
   DMA_DESCRIPTOR                    *TxDescriptor;
-  DMA_DESCRIPTOR                    *TxDescriptorMap;
   UINT8                             *EthernetPacket;
+  UINT8                             *TxBuffer;
+  VOID                              *MappingTxbuf;
   UINT64                            *Tmp;
   EFI_STATUS                        Status;
-  EFI_PHYSICAL_ADDRESS              TxBufferPhysAddress;
-  UINT32                            Index;
   UINTN                             DmaNumberOfBytes;
   UINT32                            Retries;
 
+  MappingTxbuf = NULL;
   //
   // Setup DMA descriptor
   //
@@ -1190,7 +1181,7 @@ SnpTransmit (
   TxDescIndex = DwMac4Driver->MacDriver.TxCurrentDescriptorNum;
 
   TxDescriptor = DwMac4Driver->MacDriver.TxDescRing + TxDescIndex;
-  TxDescriptorMap = (VOID *)(UINTN)DwMac4Driver->MacDriver.TxDescRingMap[TxDescIndex].PhysAddress;
+  TxBuffer = DwMac4Driver->MacDriver.TxBuffer + TxDescIndex * ETH_BUFFER_SIZE;
 
   if (HeadSize) {
     EthernetPacket[0] = DstAddr->Addr[0];
@@ -1213,26 +1204,22 @@ SnpTransmit (
 
   DmaNumberOfBytes = BufferSize;
   DEBUG ((DEBUG_VERBOSE, "%a(): Packet=0x%p, Length=0x%x\n", __func__, EthernetPacket, BufferSize));
+  CopyMem ((VOID *)(UINTN)TxBuffer, EthernetPacket, BufferSize);
   Status = DmaMap (
-                  MapOperationBusMasterRead,
-                  (VOID *)(UINTN)EthernetPacket,
-                  &DmaNumberOfBytes,
-                  &TxBufferPhysAddress,
-                  &DwMac4Driver->MappingTxbuf
-                  );
+    MapOperationBusMasterRead,
+    (VOID *)(UINTN)TxBuffer,
+    &DmaNumberOfBytes,
+    &DwMac4Driver->MacDriver.TxBufNum[TxDescIndex].PhysAddress,
+    &DwMac4Driver->MacDriver.TxBufNum[TxDescIndex].Mapping
+  );
   if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a() for Txbuffer: %r\n",
-      __func__,
-      Status
-    ));
-
+    DEBUG ((DEBUG_ERROR, "%a() for Txbuffer: %r\n", __func__, Status));
     goto ReleaseLock;
   }
+  MappingTxbuf = DwMac4Driver->MacDriver.TxBufNum[TxDescIndex].Mapping;
 
-  TxDescriptor->Des0 = LOWER_32_BITS(TxBufferPhysAddress);
-  TxDescriptor->Des1 = UPPER_32_BITS(TxBufferPhysAddress);
+  TxDescriptor->Des0 = LOWER_32_BITS(DwMac4Driver->MacDriver.TxBufNum[TxDescIndex].PhysAddress);
+  TxDescriptor->Des1 = UPPER_32_BITS(DwMac4Driver->MacDriver.TxBufNum[TxDescIndex].PhysAddress);
   TxDescriptor->Des2 = BufferSize;
   MemoryFence();
 
@@ -1240,54 +1227,39 @@ SnpTransmit (
   // Make sure that if HW sees the _OWN write below, it will see all the
   // writes to the rest of the Descriptor too.
   //
-  TxDescriptor->Des3 = TDES3_OWN |
-                       TDES3_FIRST_DESCRIPTOR |
-                       TDES3_LAST_DESCRIPTOR |
-                       BufferSize;
+  TxDescriptor->Des3 |= (TDES3_OWN | TDES3_FIRST_DESCRIPTOR | TDES3_LAST_DESCRIPTOR);
   //
   // Increase Descriptor number
   //
   TxDescIndex++;
   TxDescIndex %= TX_DESC_NUM;
   DwMac4Driver->MacDriver.TxNextDescriptorNum = TxDescIndex;
-  StmmacSetTxTailPtr (DwMac4Driver,
-                      (UINTN)DwMac4Driver->MacDriver.TxDescRingMap[TxDescIndex].PhysAddress,
-                      0);
 
+  Status = EFI_SUCCESS;
   if (DwMac4Driver->RecycledTxBufCount < DwMac4Driver->MaxRecycledTxBuf) {
     DwMac4Driver->RecycledTxBuf[DwMac4Driver->RecycledTxBufCount] = (UINT64)(UINTN)Data;
     DwMac4Driver->RecycledTxBufCount ++;
   } else {
-    Tmp = AllocatePool (sizeof (UINT64) * (DwMac4Driver->MaxRecycledTxBuf + TX_DESC_NUM));
+    Tmp = AllocatePool (sizeof (UINT64) * (DwMac4Driver->MaxRecycledTxBuf + SNP_TX_BUFFER_INCREASE));
     if (Tmp == NULL) {
       Status = EFI_DEVICE_ERROR;
-      goto ReleaseLock;
+    } else {
+      CopyMem (Tmp, DwMac4Driver->RecycledTxBuf, sizeof (UINT64) * DwMac4Driver->RecycledTxBufCount);
+      FreePool (DwMac4Driver->RecycledTxBuf);
+      DwMac4Driver->RecycledTxBuf = Tmp;
+      DwMac4Driver->MaxRecycledTxBuf += SNP_TX_BUFFER_INCREASE;
     }
-
-    CopyMem (Tmp, DwMac4Driver->RecycledTxBuf, sizeof (UINT64) * DwMac4Driver->RecycledTxBufCount);
-    FreePool (DwMac4Driver->RecycledTxBuf);
-    DwMac4Driver->RecycledTxBuf = Tmp;
-    DwMac4Driver->MaxRecycledTxBuf += SNP_TX_BUFFER_INCREASE;
   }
 
-  for (Index = 0; Index < 1000000; Index++) {
-    if (!(MmioRead32 ((UINTN)&TxDescriptor->Des3) & TDES3_OWN)) {
-      Status = EFI_SUCCESS;
-      goto ReleaseLock;
-    }
-    gBS->Stall(1);
+  StmmacSetTxTailPtr (
+    DwMac4Driver,
+    (UINTN)DwMac4Driver->MacDriver.TxDescRingMap[TX_DESC_NUM - 1].PhysAddress,
+    0
+  );
+
+  if (MappingTxbuf != NULL) {
+    DmaUnmap (MappingTxbuf);
   }
-
-  StmmacDebug (DwMac4Driver);
-  DEBUG ((
-    DEBUG_ERROR,
-    "%a(): TX timeout\n",
-    __func__
-  ));
-
-  Status = EFI_TIMEOUT;
-
-  DmaUnmap (DwMac4Driver->MappingTxbuf);
 
 ReleaseLock:
   EfiReleaseLock (&DwMac4Driver->Lock);
@@ -1364,7 +1336,6 @@ SnpReceive (
   UINT8                             *RawData;
   UINT32                            RxDescIndex;
   DMA_DESCRIPTOR                    *RxDescriptor;
-  DMA_DESCRIPTOR                    *RxDescriptorMap;
   UINTN                             BufferSizeBuf;
   UINTN                             *RxBufferAddr;
   EFI_STATUS                        Status;
@@ -1375,11 +1346,7 @@ SnpReceive (
   // Check preliminaries
   //
   if ((This == NULL) || (Data == NULL)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a(): Invalid parameter (missing handle or buffer)\n",
-      __func__
-      ));
+    DEBUG ((DEBUG_ERROR, "%a(): Invalid parameter (missing handle or buffer)\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -1394,12 +1361,7 @@ SnpReceive (
 
   Status = EfiAcquireLockOrFail (&DwMac4Driver->Lock);
   if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a(): Couldn't get lock: %r\n",
-      __func__,
-      Status
-      ));
+    DEBUG ((DEBUG_ERROR, "%a(): Couldn't get lock: %r\n", __func__, Status));
     return EFI_ACCESS_DENIED;
   }
 
@@ -1411,7 +1373,6 @@ SnpReceive (
   RxDescriptor = DwMac4Driver->MacDriver.RxDescRing + RxDescIndex;
 
   RxBufferAddr = (UINTN *)(DwMac4Driver->MacDriver.RxBuffer + RxDescIndex * BufferSizeBuf);
-  RxDescriptorMap = (VOID *)(UINTN)DwMac4Driver->MacDriver.RxDescRingMap[RxDescIndex].PhysAddress;
 
   RawData = (UINT8 *) Data;
 
@@ -1420,65 +1381,38 @@ SnpReceive (
   //
   RxDescriptorStatus = RxDescriptor->Des3;
   if (RxDescriptorStatus & RDES3_OWN) {
-    DEBUG ((
-      DEBUG_VERBOSE,
-      "%a(): RX packet not available!\n",
-      __func__
-      ));
+    DEBUG ((DEBUG_VERBOSE, "%a(): RX packet not available!\n", __func__));
     Status = EFI_NOT_READY;
     goto ReleaseLock;
   }
+
 
   if (RxDescriptorStatus & RDES3_ERROR_SUMMARY) {
     //
     // Check for errors
     //
     if (RxDescriptorStatus & RDES3_CRC_ERROR) {
-      DEBUG ((
-       DEBUG_WARN,
-       "%a(): Rx decritpor Status Error: CRC Error\n",
-       __func__
-       ));
+      DEBUG ((DEBUG_WARN, "%a(): Rx decritpor Status Error: CRC Error\n", __func__));
     }
 
     if (RxDescriptorStatus & RDES3_DRIBBLE_ERROR) {
-      DEBUG ((
-       DEBUG_WARN,
-       "%a(): Rx decritpor Status Error: Dribble Bit Error\n",
-       __func__
-       ));
+      DEBUG ((DEBUG_WARN, "%a(): Rx decritpor Status Error: Dribble Bit Error\n", __func__));
     }
 
     if (RxDescriptorStatus & RDES3_RECEIVE_ERROR) {
-      DEBUG ((
-        DEBUG_WARN,
-        "%a(): Rx decritpor Status Error: Receive Error\n",
-        __func__
-        ));
+      DEBUG ((DEBUG_WARN, "%a(): Rx decritpor Status Error: Receive Error\n", __func__));
     }
 
     if (RxDescriptorStatus & RDES3_RECEIVE_WATCHDOG) {
-      DEBUG ((
-        DEBUG_WARN,
-        "%a(): Rx decritpor Status Error: Watchdog Timeout\n",
-        __func__
-        ));
+      DEBUG ((DEBUG_WARN, "%a(): Rx decritpor Status Error: Watchdog Timeout\n", __func__));
     }
 
     if (RxDescriptorStatus & RDES3_OVERFLOW_ERROR) {
-      DEBUG ((
-        DEBUG_WARN,
-        "%a(): Rx decritpor Status Error: Overflow Error\n",
-        __func__
-        ));
+      DEBUG ((DEBUG_WARN, "%a(): Rx decritpor Status Error: Overflow Error\n", __func__));
     }
 
     if (RxDescriptorStatus & RDES3_GIANT_PACKET) {
-      DEBUG ((
-        DEBUG_WARN,
-        "%a(): Rx decritpor Status Error: Giant Packet\n",
-        __func__
-        ));
+      DEBUG ((DEBUG_WARN, "%a(): Rx decritpor Status Error: Giant Packet\n",  __func__));
     }
 
     Status = EFI_DEVICE_ERROR;
@@ -1486,19 +1420,9 @@ SnpReceive (
   }
 
   Length = RxDescriptorStatus & RDES3_PACKET_SIZE_MASK;
-  DEBUG ((
-    DEBUG_VERBOSE,
-    "%a(): RxBufferAddr=0x%lx, Length = %d\n",
-    __func__,
-    RxBufferAddr,
-    Length
-    ));
+  DEBUG ((DEBUG_VERBOSE, "%a(): RxBufferAddr=0x%lx, Length = %d\n", __func__, RxBufferAddr, Length));
   if (!Length) {
-    DEBUG ((
-      DEBUG_WARN,
-      "%a(): Error: Invalid Frame Packet length \r\n",
-      __func__
-      ));
+    DEBUG ((DEBUG_WARN, "%a(): Error: Invalid Frame Packet length\n", __func__));
     Status = EFI_NOT_READY;
     goto ReleaseLock;
   }
@@ -1518,16 +1442,21 @@ SnpReceive (
 
   *BufferSize = Length;
 
+  if (RxDescriptor->Des1 & RDES1_IP_CSUM_ERROR) {
+    DEBUG ((DEBUG_WARN, "%a(): Rx decritpor Status Error: IP Payload Error\n",  __func__));
+
+    Status = EFI_DEVICE_ERROR;
+    goto ReleaseLock;
+  }
+
   if (HeadSize != NULL) {
     *HeadSize = DwMac4Driver->SnpMode.MediaHeaderSize;
   }
-#if 1
+
   //
   // Given an RX buffer descriptor index, undo the DmaMap operation on the buffer.
   //
   DmaUnmap (DwMac4Driver->MacDriver.RxBufNum[RxDescIndex].Mapping);
-  DwMac4Driver->MacDriver.RxBufNum[RxDescIndex].Mapping = NULL;
-#endif
   CopyMem (RawData, (VOID *)RxBufferAddr, *BufferSize);
 
   if (DstAddr != NULL) {
@@ -1583,27 +1512,21 @@ SnpReceive (
   // DMA map for the current receive buffer
   //
   Status = DmaMap (
-                  MapOperationBusMasterWrite,
-                  (VOID *)RxBufferAddr,
-                  &BufferSizeBuf,
-                  &DwMac4Driver->MacDriver.RxBufNum[RxDescIndex].PhysAddress,
-                  &DwMac4Driver->MacDriver.RxBufNum[RxDescIndex].Mapping
-                  );
+    MapOperationBusMasterWrite,
+    (VOID *)RxBufferAddr,
+    &BufferSizeBuf,
+    &DwMac4Driver->MacDriver.RxBufNum[RxDescIndex].PhysAddress,
+    &DwMac4Driver->MacDriver.RxBufNum[RxDescIndex].Mapping
+  );
   if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a() for Rxbuffer: %r\n",
-      __func__,
-      Status
-      ));
+    DEBUG ((DEBUG_ERROR, "%a() for Rxbuffer: %r\n", __func__, Status));
 
     goto ReleaseLock;
   }
 
   RxDescriptor->Des0 = LOWER_32_BITS(DwMac4Driver->MacDriver.RxBufNum[RxDescIndex].PhysAddress);
   RxDescriptor->Des1 = UPPER_32_BITS(DwMac4Driver->MacDriver.RxBufNum[RxDescIndex].PhysAddress);
-  RxDescriptor->Des2 = 0;
-  RxDescriptor->Des3 = (UINT32)RDES3_OWN | RDES3_BUFFER1_VALID_ADDR;
+  RxDescriptor->Des3 |= (RDES3_OWN | RDES3_BUFFER1_VALID_ADDR);
 
   //
   // Increase descriptor number
@@ -1613,7 +1536,7 @@ SnpReceive (
   DwMac4Driver->MacDriver.RxNextDescriptorNum = RxDescIndex;
   StmmacSetRxTailPtr (
     DwMac4Driver,
-    (UINTN)DwMac4Driver->MacDriver.RxDescRingMap[RxDescIndex].PhysAddress,
+    (UINTN)DwMac4Driver->MacDriver.RxDescRingMap[RX_DESC_NUM - 1].PhysAddress,
     0
   );
 
@@ -1642,11 +1565,7 @@ DwMac4SnpDxeEntry (
   SOPHGO_SIMPLE_NETWORK_DEVICE_PATH *DevicePath;
   UINT64                            DefaultMacAddress;
   EFI_MAC_ADDRESS                   *SwapMacAddressPtr;
-  UINTN                             DescriptorSize;
-  UINTN                             BufferSize;
-  UINT32                            Index;
   EFI_HANDLE                        Handle;
-
   INT32                             Node;
   CONST VOID                        *Prop;
   FDT_CLIENT_PROTOCOL               *FdtClient;
@@ -1656,30 +1575,33 @@ DwMac4SnpDxeEntry (
   //
   // Extract reg addr from device tree
   //
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid,
-                                NULL,
-                                (VOID **) &FdtClient
-                                );
+  Status = gBS->LocateProtocol (
+    &gFdtClientProtocolGuid,
+    NULL,
+    (VOID **) &FdtClient
+  );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a(): Failed to locate FDT_CLIENT_PROTOCOL\n", __func__));
     return Status;
   }
 
-  Status = FdtClient->FindCompatibleNode (FdtClient,
-                                          "sophgo,ethernet",
-                                          &Node
-                                          );
+  Status = FdtClient->FindCompatibleNode (
+    FdtClient,
+    "sophgo,ethernet",
+    &Node
+  );
   if (Status == EFI_NOT_FOUND) {
     DEBUG ((DEBUG_ERROR, "%a(): Failed to find ethernet node\n", __func__));
     return Status;
   }
 
-  Status = FdtClient->GetNodeProperty (FdtClient,
-                                       Node,
-                                       "reg",
-                                       &Prop,
-                                       NULL
-                                       );
+  Status = FdtClient->GetNodeProperty (
+    FdtClient,
+    Node,
+    "reg",
+    &Prop,
+    NULL
+  );
   if (Status == EFI_NOT_FOUND) {
     DEBUG ((DEBUG_ERROR, "%a(): Failed to get reg's base addr\n", __func__));
     return Status;
@@ -1704,155 +1626,9 @@ DwMac4SnpDxeEntry (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  //
-  // Size for descriptor
-  //
-  DescriptorSize = sizeof (DMA_DESCRIPTOR);
-
-  //
-  // Size for transmit and receive buffer
-  //
-  BufferSize = ETH_BUFFER_SIZE;
-  DEBUG ((
-    DEBUG_VERBOSE,
-    "%a[%d] DescriptorSize=0x%lx\tRxBufferSize=0x%lx\n",
-    __func__,
-    __LINE__,
-    DescriptorSize,
-    BufferSize
-    ));
-
-  Status = DmaAllocateBuffer (EfiBootServicesData,
-                              EFI_SIZE_TO_PAGES (BufferSize * TX_DESC_NUM),
-                              (VOID *)&DwMac4Driver->MacDriver.TxBuffer
-                              );
-
+  Status = StmmacAllocDesc(DwMac4Driver);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a() for Tx Buffer: %r\n", __func__, Status));
     return Status;
-  }
-
-  Status = DmaAllocateBuffer (EfiBootServicesData,
-                              EFI_SIZE_TO_PAGES (BufferSize * RX_DESC_NUM),
-                              (VOID *)&DwMac4Driver->MacDriver.RxBuffer
-                              );
-
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a() for Rx Buffer: %r\n", __func__, Status));
-    return Status;
-  }
-
-  //
-  // DMA TxDescRing allocate buffer
-  //
-  Status = DmaAllocateBuffer (EfiBootServicesData,
-                              EFI_SIZE_TO_PAGES (DescriptorSize * TX_DESC_NUM),
-                              (VOID *)&DwMac4Driver->MacDriver.TxDescRing
-                            );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a() for TxDescRing: %r\n", __func__, Status));
-    return Status;
-  }
-
-  ZeroMem (DwMac4Driver->MacDriver.TxDescRing, DescriptorSize * TX_DESC_NUM);
-
-  //
-  // DMA RxDescRing allocte buffer
-  //
-  Status = DmaAllocateBuffer (EfiBootServicesData,
-                              EFI_SIZE_TO_PAGES (DescriptorSize * RX_DESC_NUM),
-                              (VOID *)&DwMac4Driver->MacDriver.RxDescRing
-                              );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a() for RxDescRing: %r\n", __func__, Status));
-    return Status;
-  }
-
-  ZeroMem (DwMac4Driver->MacDriver.RxDescRing, DescriptorSize * RX_DESC_NUM);
-
-  for (Index = 0; Index < TX_DESC_NUM; Index++) {
-    DEBUG ((
-      DEBUG_VERBOSE,
-      "%a[%d] TxDesc[%d], BaseAddr=0x%lx, Size=0x%lx\n\n",
-      __func__, __LINE__, Index,
-      (EFI_PHYSICAL_ADDRESS)(DwMac4Driver->MacDriver.TxDescRing + Index),
-      DescriptorSize
-      ));
-
-    Status = DmaMap (MapOperationBusMasterCommonBuffer,
-                     DwMac4Driver->MacDriver.TxDescRing + Index,
-                     &DescriptorSize,
-                     &DwMac4Driver->MacDriver.TxDescRingMap[Index].PhysAddress,
-                     &DwMac4Driver->MacDriver.TxDescRingMap[Index].Mapping
-                     );
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a() for TxDescRing: %r\n", __func__, Status));
-      return Status;
-    }
-
-    DEBUG ((
-      DEBUG_VERBOSE,
-      "%a[%d] RxDesc[%d] BaseAddr=0x%lx, Size=0x%lx\n\n",
-      __func__,
-      __LINE__,
-      Index,
-      (EFI_PHYSICAL_ADDRESS)(DwMac4Driver->MacDriver.RxDescRing + Index),
-      DescriptorSize
-      ));
-
-    Status = DmaMap (MapOperationBusMasterCommonBuffer,
-                     DwMac4Driver->MacDriver.RxDescRing + Index,
-                     &DescriptorSize,
-                     &DwMac4Driver->MacDriver.RxDescRingMap[Index].PhysAddress,
-                     &DwMac4Driver->MacDriver.RxDescRingMap[Index].Mapping
-                     );
-    if (EFI_ERROR (Status)) {
-      DEBUG ((
-        DEBUG_ERROR,
-        "%a() for RxDescRing: %r\n",
-         __func__,
-         Status
-         ));
-      return Status;
-    }
-
-    //
-    // DMA mapping for transmit buffer
-    //
-    Status = DmaMap (MapOperationBusMasterWrite,
-                     DwMac4Driver->MacDriver.TxBuffer + Index * BufferSize,
-                     &BufferSize,
-                     &DwMac4Driver->MacDriver.TxBufNum[Index].PhysAddress,
-                     &DwMac4Driver->MacDriver.TxBufNum[Index].Mapping
-                     );
-    if (EFI_ERROR (Status)) {
-      DEBUG ((
-        DEBUG_ERROR,
-        "%a() for Txbuffer: %r\n",
-        __func__,
-        Status
-        ));
-      return Status;
-    }
-
-    //
-    // DMA mapping for receive buffer
-    //
-    Status = DmaMap (MapOperationBusMasterWrite,
-                     DwMac4Driver->MacDriver.RxBuffer + Index * BufferSize,
-                     &BufferSize,
-                     &DwMac4Driver->MacDriver.RxBufNum[Index].PhysAddress,
-                     &DwMac4Driver->MacDriver.RxBufNum[Index].Mapping
-                     );
-    if (EFI_ERROR (Status)) {
-      DEBUG ((
-        DEBUG_ERROR,
-        "%a() for Rxbuffer: %r\n",
-        __func__,
-        Status
-        ));
-      return Status;
-    }
   }
 
   //
@@ -1914,19 +1690,20 @@ DwMac4SnpDxeEntry (
   //
   // Update network mode information
   //
-  SnpMode->ReceiveFilterMask = EFI_SIMPLE_NETWORK_RECEIVE_UNICAST     |
-                               EFI_SIMPLE_NETWORK_RECEIVE_MULTICAST   |
-                               EFI_SIMPLE_NETWORK_RECEIVE_BROADCAST   |
-                               EFI_SIMPLE_NETWORK_RECEIVE_PROMISCUOUS |
-                               EFI_SIMPLE_NETWORK_RECEIVE_PROMISCUOUS_MULTICAST;
+  SnpMode->ReceiveFilterMask = \
+    EFI_SIMPLE_NETWORK_RECEIVE_UNICAST     |
+    EFI_SIMPLE_NETWORK_RECEIVE_MULTICAST   |
+    EFI_SIMPLE_NETWORK_RECEIVE_BROADCAST   |
+    EFI_SIMPLE_NETWORK_RECEIVE_PROMISCUOUS |
+    EFI_SIMPLE_NETWORK_RECEIVE_PROMISCUOUS_MULTICAST;
 
   //
   // We do not intend to receive anything for the time being.
   //
-  //SnpMode->ReceiveFilterSetting = 0;
-  SnpMode->ReceiveFilterSetting = EFI_SIMPLE_NETWORK_RECEIVE_UNICAST     |
-                                  EFI_SIMPLE_NETWORK_RECEIVE_MULTICAST   |
-                                  EFI_SIMPLE_NETWORK_RECEIVE_BROADCAST;
+  SnpMode->ReceiveFilterSetting = \
+    EFI_SIMPLE_NETWORK_RECEIVE_UNICAST   |
+    EFI_SIMPLE_NETWORK_RECEIVE_MULTICAST |
+    EFI_SIMPLE_NETWORK_RECEIVE_BROADCAST;
 
   //
   // GMAC has 64bit hash table, can filter 64 MCast MAC Addresses
@@ -1969,11 +1746,7 @@ DwMac4SnpDxeEntry (
     MacAddrIniParser ();
     DefaultMacAddress = MacConfig.Mac0Addr;
   } else {
-    DEBUG ((
-      DEBUG_WARN,
-      "%a() Warning: using driver-default MAC address\n",
-      __func__
-      ));
+    DEBUG ((DEBUG_WARN, "%a() Warning: using driver-default MAC address\n", __func__));
     DefaultMacAddress = FixedPcdGet64 (PcdDwMac4DefaultMacAddress);
   }
 
@@ -1997,21 +1770,17 @@ DwMac4SnpDxeEntry (
   DevicePath->MacAddrDP.IfType = Snp->Mode->IfType;
 
   Status = gBS->InstallMultipleProtocolInterfaces (
-                  &Handle,
-                  &gEfiSimpleNetworkProtocolGuid,
-                  Snp,
-                  &gEfiDevicePathProtocolGuid,
-                  DevicePath,
-                  NULL
-                  );
+    &Handle,
+    &gEfiSimpleNetworkProtocolGuid,
+    Snp,
+    &gEfiDevicePathProtocolGuid,
+    DevicePath,
+    NULL
+  );
 
   if (EFI_ERROR(Status)) {
     FreePages (DwMac4Driver, EFI_SIZE_TO_PAGES (sizeof (SOPHGO_SIMPLE_NETWORK_DRIVER)));
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a(): Install SIMPLE_NETWORK_PROTOCOL failed!\n",
-      __func__
-      ));
+    DEBUG ((DEBUG_ERROR, "%a(): Install SIMPLE_NETWORK_PROTOCOL failed!\n", __func__));
   }
 
   return Status;

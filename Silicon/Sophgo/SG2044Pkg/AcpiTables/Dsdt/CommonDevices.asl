@@ -208,6 +208,10 @@ Scope(_SB)
     Name(_CID, "HISI0181")
     Name(_UID, 0)
 
+    Method(_STA) {
+      Return (0x0)
+    }
+
     Name (_CRS, ResourceTemplate ()  {
       QWordMemory (
         ResourceConsumer,

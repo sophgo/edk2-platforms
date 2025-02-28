@@ -14,6 +14,10 @@ Scope(_SB)
   Device (I2C0) {
     Name(_HID, "SOPH0003")
     Name(_UID, 0)
+    Method (_STA)
+    {
+      Return (0xF)
+    }
 
     Name (_CRS, ResourceTemplate ()  {
       QWordMemory (
@@ -38,6 +42,10 @@ Scope(_SB)
   Device (I2C1) {
     Name(_HID, "SOPH0003")
     Name(_UID, 1)
+    Method (_STA)
+    {
+      Return (0xF)
+    }
 
     Name (_CRS, ResourceTemplate ()  {
       QWordMemory (
@@ -62,6 +70,10 @@ Scope(_SB)
   Device (I2C2) {
     Name(_HID, "SOPH0003")
     Name(_UID, 2)
+    Method (_STA)
+    {
+      Return (0xF)
+    }
 
     Name (_CRS, ResourceTemplate ()  {
       QWordMemory (
@@ -86,6 +98,10 @@ Scope(_SB)
   Device (I2C3) {
     Name(_HID, "SOPH0003")
     Name(_UID, 3)
+    Method (_STA)
+    {
+      Return (0xF)
+    }
 
     Name (_CRS, ResourceTemplate ()  {
       QWordMemory (
@@ -113,7 +129,7 @@ Scope(_SB)
     Name (_UID, 0)
     Method (_STA)
     {
-      Return (0xf)
+      Return (0xF)
     }
 
     Name (_CRS, ResourceTemplate () {
@@ -145,7 +161,7 @@ Scope(_SB)
 
     Method (_STA)
     {
-      Return (0xf)
+      Return (0xF)
     }
 
     Name (_CRS, ResourceTemplate () {
@@ -178,7 +194,7 @@ Scope(_SB)
 
     Method (_STA)
     {
-      Return (0xf)
+      Return (0xF)
     }
 
     Name(_DSD, Package () {
@@ -209,7 +225,7 @@ Scope(_SB)
     Name(_UID, 0)
 
     Method(_STA) {
-      Return (0x0)
+      Return (0xF)
     }
 
     Name (_CRS, ResourceTemplate ()  {
@@ -248,6 +264,10 @@ Scope(_SB)
     Name(_CID, "HISI0181")
     Name(_UID, 1)
 
+    Method(_STA) {
+      Return (0xF)
+    }
+
     Name (_CRS, ResourceTemplate ()  {
       QWordMemory (
         ResourceConsumer,
@@ -285,7 +305,7 @@ Scope(_SB)
     Name(_UID, 2)
 
     Method(_STA) {
-      Return (0x0)
+      Return (0xF)
     }
 
     Name (_CRS, ResourceTemplate ()  {

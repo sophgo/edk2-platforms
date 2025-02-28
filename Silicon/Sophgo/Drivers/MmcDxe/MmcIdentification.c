@@ -343,7 +343,9 @@ MmcFillDeviceInfo (
 
       CardSize = ((UINT64)MmcCsd.C_SIZEHigh10 << 2U) |
         (UINT64)MmcCsd.C_SIZELow2;
-      ASSERT(CardSize != 0xFFFU);
+
+      if (CardSize == 0xFFFU)
+        return EFI_DEVICE_ERROR;
 
       MmcDevInfo.DeviceSize = (CardSize + 1U) *
                 BIT_64(MmcCsd.C_SIZE_MULT + 2U) *
@@ -354,7 +356,8 @@ MmcFillDeviceInfo (
     case MMC_IS_SD_HC:
         MmcHostInstance->CardInfo.CardType = SD_CARD_2_HIGH;
 
-      ASSERT (MmcCsd.CSD_STRUCTURE == 1U);
+      if (MmcCsd.CSD_STRUCTURE != 1U)
+        return EFI_DEVICE_ERROR;
 
       MmcDevInfo.BlockSize = MMC_BLOCK_SIZE;
 
@@ -378,7 +381,8 @@ MmcFillDeviceInfo (
   SpeedIdx = (MmcCsd.TRAN_SPEED & CSD_TRAN_SPEED_MULT_MASK) >>
         CSD_TRAN_SPEED_MULT_SHIFT;
 
-  ASSERT (SpeedIdx > 0U);
+  if (SpeedIdx <= 0U)
+    return EFI_DEVICE_ERROR;
 
   if (MmcDevInfo.MmcDevType == MMC_IS_EMMC) {
     MmcDevInfo.MaxBusFreq = TranSpeedBase[SpeedIdx];
@@ -414,10 +418,10 @@ SdSendOpCond (
   )
 {
   EFI_STATUS Status;
-  INT32      I;
+  INT32      Index;
   UINT32     Response[4];
 
-  for (I = 0; I < SEND_OP_COND_MAX_RETRIES; I++) {
+  for (Index = 0; Index < SEND_OP_COND_MAX_RETRIES; ++Index) {
     // CMD55: Application Specific Command
     Status = MmcHostInstance->MmcHost->SendCommand (MmcHostInstance->MmcHost, MMC_CMD55, 0, MMC_RESPONSE_R1, NULL);
     if (EFI_ERROR (Status)) {
@@ -497,7 +501,7 @@ MmcSendOpCond (
   IN MMC_HOST_INSTANCE     *MmcHostInstance
   )
 {
-  INT32       I;
+  INT32       Index;
   EFI_STATUS  Status;
   UINT32      Response[4];
 
@@ -506,7 +510,7 @@ MmcSendOpCond (
     return Status;
   }
 
-  for (I = 0; I < SEND_OP_COND_MAX_RETRIES; I++) {
+  for (Index = 0; Index < SEND_OP_COND_MAX_RETRIES; ++Index) {
     Status = MmcHostInstance->MmcHost->SendCommand (MmcHostInstance->MmcHost, MMC_CMD1, OCR_SECTOR_MODE |
             OCR_VDD_MIN_2V7 | OCR_VDD_MIN_1V7,
             MMC_RESPONSE_R3, Response);
@@ -560,7 +564,7 @@ MmcEnumerte (
   } else {
     // CMD8: Send Interface Condition Command
     Status = MmcHostInstance->MmcHost->SendCommand (MmcHostInstance->MmcHost, MMC_CMD8, VHS_2_7_3_6_V | CMD8_CHECK_PATTERN,
-            MMC_RESPONSE_R5, Response);
+            MMC_RESPONSE_R7, Response);
 
     if ((Status == EFI_SUCCESS) && ((Response[0] & 0xffU) == CMD8_CHECK_PATTERN)) {
       Status = SdSendOpCond (MmcHostInstance);

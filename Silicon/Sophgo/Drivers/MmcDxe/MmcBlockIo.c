@@ -76,6 +76,8 @@ ValidateWrittenBlockCount (
 
   MmcHost = MmcHostInstance->MmcHost;
 
+  MmcHost->Prepare (MmcHost, 0, 4, (UINTN)Data);
+
   Status  = MmcHost->SendCommand (MmcHost, MMC_CMD55,
                       MmcHostInstance->CardInfo.RCA << 16, MMC_RESPONSE_R1, Response);
   if (EFI_ERROR (Status)) {

@@ -520,7 +520,7 @@ MmcDxeInitialize (
 
   Status = gBS->SetTimer (gCheckCardsEvent,
                   TimerPeriodic,
-                  (UINT64)(10 * 1000 * 200)); // 200 ms
+                  EFI_TIMER_PERIOD_MILLISECONDS (200)); // 200 ms
   ASSERT_EFI_ERROR (Status);
 
   return Status;

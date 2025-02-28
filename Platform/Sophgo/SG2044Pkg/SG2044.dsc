@@ -871,7 +871,7 @@
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
   MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  Silicon/Sophgo/SG2044Pkg/AcpiTables/SG2044EvbAcpiTables.inf
+  Silicon/Sophgo/SG2044Pkg/AcpiTables/SG2044AcpiTables.inf
   Silicon/Sophgo/SG2044Pkg/Pptt/Pptt.inf
   MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf {
     <LibraryClasses>

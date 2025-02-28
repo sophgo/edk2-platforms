@@ -21,7 +21,7 @@
   Mcfg.aslc
   Madt.aslc
   Rhct.aslc
-  Dsdt/SG2044EvbDsdt.asl
+  Dsdt/SG2044Dsdt.asl
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec

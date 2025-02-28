@@ -36,6 +36,7 @@
   UefiDriverEntryPoint
   IniParserLib
   AcpiLib
+  SmbiosInformationLib
 
 [Protocols]
   gEfiAcpiTableProtocolGuid                                 ## CONSUMES

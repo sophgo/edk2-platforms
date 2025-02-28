@@ -1,5 +1,5 @@
 /** @file
-  Sample ACPI Platform Driver
+  ACPI Platform Driver for SOPHGO SG2044 platform
 
   Copyright (c) 2008 - 2011, Intel Corporation. All rights reserved.<BR>
   Copyright (c) 2024, SOPHGO Inc. All rights reserved.
@@ -19,70 +19,83 @@
 #include <Library/IniParserLib.h>
 #include <Library/AcpiLib.h>
 #include <Library/PrintLib.h>
+#include <Library/SmbiosInformationLib.h>
 
 #include <IndustryStandard/Acpi.h>
+#include <Guid/Acpi.h>
 
-#define EFI_ACPI_MAX_NUM_TABLES         20
-#define DSDT_SIGNATURE                  0x54445344
-#define TPU_NUM		1
-#define PCIE_NUM	10
+//
+// Constants and definitions
+//
+#define EFI_ACPI_MAX_NUM_TABLES  20
+#define DSDT_SIGNATURE           0x54445344  // 'DSDT'
+#define TPU_NUM                  1
+#define PCIE_NUM                 10
 
+//
+// Resource descriptor structures
+//
 #pragma pack(1)
-struct word_address_space_desc {
-	UINT8 desc;
-	UINT8 length_low;
-	UINT8 length_high;
-	UINT8 type;
-	UINT8 flags;
-	UINT8 type_flags;
-	UINT8 granularity0;
-	UINT8 granularity1;
-	UINT8 min0;
-	UINT8 min1;
-	UINT8 max0;
-	UINT8 max1;
-	UINT8 transl0;
-	UINT8 transl1;
-	UINT8 length0;
-	UINT8 length1;
-};
+typedef struct {
+  UINT8   Desc;
+  UINT8   LengthLow;
+  UINT8   LengthHigh;
+  UINT8   Type;
+  UINT8   Flags;
+  UINT8   TypeFlags;
+  UINT8   Granularity0;
+  UINT8   Granularity1;
+  UINT8   Min0;
+  UINT8   Min1;
+  UINT8   Max0;
+  UINT8   Max1;
+  UINT8   Translation0;
+  UINT8   Translation1;
+  UINT8   Length0;
+  UINT8   Length1;
+} WORD_ADDRESS_SPACE_DESCRIPTOR;
 
-struct qword_address_space_desc {
-	UINT8 desc;
-	UINT8 length_low;
-	UINT8 length_high;
-	UINT8 type;
-	UINT8 flags;
-	UINT8 type_flags;
-	UINT64 granularity;
-	UINT64 min;
-	UINT64 max;
-	UINT64 transl;
-	UINT64 length;
-};
+typedef struct {
+  UINT8   Desc;
+  UINT8   LengthLow;
+  UINT8   LengthHigh;
+  UINT8   Type;
+  UINT8   Flags;
+  UINT8   TypeFlags;
+  UINT64  Granularity;
+  UINT64  Minimum;
+  UINT64  Maximum;
+  UINT64  Translation;
+  UINT64  Length;
+} QWORD_ADDRESS_SPACE_DESCRIPTOR;
 #pragma pack()
 
-static const char *ini_node_name[] = {
-      "pmem32-addr",
-      "pmem32-transl",
-      "pmem32-length",
-
-      "mem32-addr",
-      "mem32-transl",
-      "mem32-length",
-
-      "pmem64-addr",
-      "pmem64-transl",
-      "pmem64-length",
-
-      "mem64-addr",
-      "mem64-transl",
-      "mem64-length",
-
-      "io-addr",
-      "io-transl",
-      "io-length",
+//
+// INI configuration node names
+//
+STATIC CONST CHAR8 *mIniNodeNames[] = {
+  "pmem32-addr",
+  "pmem32-transl",
+  "pmem32-length",
+  "mem32-addr",
+  "mem32-transl",
+  "mem32-length",
+  "pmem64-addr",
+  "pmem64-transl",
+  "pmem64-length",
+  "mem64-addr",
+  "mem64-transl",
+  "mem64-length",
+  "io-addr",
+  "io-transl",
+  "io-length",
 };
+
+typedef struct {
+  CHAR8   *Path;
+  UINT8   ServerStatus;
+  UINT8   NonServerStatus;
+} DEVICE_STATUS_MAP;
 
 /**
   Locate the first instance of a protocol.  If the protocol requested is an
@@ -270,184 +283,270 @@ UpdateStatusMethodObject (
   return Status;
 }
 
-void debug_qword_resource(struct qword_address_space_desc *tmp)
-{
-	DEBUG ((DEBUG_VERBOSE, "min: %lx\n", tmp->min));
-	DEBUG ((DEBUG_VERBOSE, "max: %lx\n", tmp->max));
-	DEBUG ((DEBUG_VERBOSE, "transl: %lx\n", tmp->transl));
-	DEBUG ((DEBUG_VERBOSE, "length: %lx\n", tmp->length));
-}
+/**
+  Debug helper function to print QWORD resource descriptor details.
 
-STATIC EFI_STATUS
-AcpiPatchPCIe(
-  EFI_ACPI_SDT_PROTOCOL  *AcpiSdtProtocol,
-  EFI_ACPI_HANDLE        TableHandle
+  @param[in] Resource    Pointer to QWORD_ADDRESS_SPACE_DESCRIPTOR structure
+
+**/
+STATIC
+VOID
+DebugPrintQwordResource (
+  IN CONST QWORD_ADDRESS_SPACE_DESCRIPTOR  *Resource
   )
 {
-  struct qword_address_space_desc *pmem32;
-  struct qword_address_space_desc *mem32;
-  struct qword_address_space_desc *pmem64;
-  struct qword_address_space_desc *mem64;
-  struct qword_address_space_desc *io;
-  EFI_STATUS          Status = 0;
-  EFI_ACPI_HANDLE     ObjectHandle;
-  EFI_ACPI_DATA_TYPE  DataType;
-  CHAR8               *Buffer;
-  UINTN               DataSize;
-  EFI_ACPI_HANDLE     CrsHandle;
-  EFI_ACPI_HANDLE     StaHandle;
-  CHAR8		      NodePath[256];
-  CHAR8		      SegName[64];
-  CHAR8		      value[128];
-  CHAR8		      *End;
-  UINTN		      val;
-  INT16		      Index;
-  INT16		      loop;
+  DEBUG ((
+    DEBUG_VERBOSE,
+    "Resource: Min=0x%lx, Max=0x%lx, Trans=0x%lx, Len=0x%lx\n",
+    Resource->Minimum,
+    Resource->Maximum,
+    Resource->Translation,
+    Resource->Length
+    ));
+}
+
+/**
+  Update PCIe resource allocation in ACPI table.
+
+  @param[in]  AcpiSdtProtocol  Pointer to ACPI SDT protocol
+  @param[in]  TableHandle      Handle to ACPI table
+
+**/
+STATIC
+EFI_STATUS
+AcpiPatchPCIe (
+  IN EFI_ACPI_SDT_PROTOCOL  *AcpiSdtProtocol,
+  IN EFI_ACPI_HANDLE        TableHandle
+  )
+{
+  EFI_STATUS                     Status;
+  EFI_ACPI_HANDLE                ObjectHandle;
+  EFI_ACPI_DATA_TYPE             DataType;
+  CHAR8                          *Buffer;
+  UINTN                          DataSize;
+  EFI_ACPI_HANDLE                CrsHandle;
+  EFI_ACPI_HANDLE                StaHandle;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR *Pmem32;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR *Mem32;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR *Pmem64;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR *Mem64;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR *Io;
+  CHAR8                          NodePath[256];
+  CHAR8                          SegName[64];
+  CHAR8                          Value[64];
+  CHAR8                          *End;
+  UINT64                         Val;
+  UINTN                          Index;
+  UINTN                          Loop;
 
   for (Index = 0; Index < PCIE_NUM; Index++) {
     AsciiSPrint (NodePath, sizeof (NodePath), "\\_SB.PCI%1X", Index);
     Status = AcpiSdtProtocol->FindPath (TableHandle, NodePath, &ObjectHandle);
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_INFO, "can not found PCIe %d node in DSDT table\n", Index));
-      Status = EFI_NOT_FOUND;
       continue;
     }
 
     Status = AcpiSdtProtocol->FindPath (ObjectHandle, "_CRS", &CrsHandle);
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_INFO, "can not found PCIe _CRS node in DSDT table\n"));
-      Status = EFI_NOT_FOUND;
       continue;
     }
 
     Status = AcpiSdtProtocol->GetOption (CrsHandle, 0, &DataType, (VOID *)&Buffer, &DataSize);
-    if (EFI_ERROR (Status) ||  (Buffer == NULL)) {
+    if (EFI_ERROR (Status) || (Buffer == NULL)) {
       DEBUG ((DEBUG_INFO, "can not get PCIe _CRS node in DSDT table\n"));
       continue;
     }
-    pmem32 = (struct qword_address_space_desc *)(Buffer + 10 + sizeof(struct word_address_space_desc));
-    mem32 = (struct qword_address_space_desc *)(Buffer + 10 + sizeof(struct word_address_space_desc)
-						            + (sizeof(struct qword_address_space_desc) * 1));
-    pmem64 = (struct qword_address_space_desc *)(Buffer + 10 + sizeof(struct word_address_space_desc)
-							     + (sizeof(struct qword_address_space_desc) * 2));
-    mem64 = (struct qword_address_space_desc *)(Buffer + 10 + sizeof(struct word_address_space_desc)
-						            + (sizeof(struct qword_address_space_desc) * 3));
-    io = (struct qword_address_space_desc *)(Buffer + 10 + sizeof(struct word_address_space_desc)
-						           + (sizeof(struct qword_address_space_desc) * 4));
+
+    Pmem32 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR));
+    Mem32 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
+                                             sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR));
+    Pmem64 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
+                                              (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 2));
+    Mem64 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
+                                             (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 3));
+    Io = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
+                                          (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 4));
 
     AsciiSPrint (SegName, sizeof (SegName), "pcie%1X", Index);
-    for (loop = 0; loop < sizeof(ini_node_name) / sizeof(ini_node_name[0]); loop++) {
-      if (IniGetValueBySectionAndName (SegName, ini_node_name[loop], value) == 0) {
-        Status = AsciiStrHexToUint64S(value, &End, &val);
-	switch (loop)
-	{
-	case 0:
-		pmem32->min = val;
-		break;
-	case 1:
-		pmem32->transl = 0;
-		break;
-	case 2:
-		pmem32->length = val;
-		pmem32->max = pmem32->min + val - 1;
+    for (Loop = 0; Loop < sizeof(mIniNodeNames) / sizeof(mIniNodeNames[0]); Loop++) {
+      if (IniGetValueBySectionAndName (SegName, mIniNodeNames[Loop], Value) == 0) {
+        Status = AsciiStrHexToUint64S (Value, &End, &Val);
+        if (EFI_ERROR (Status)) {
+          continue;
+        }
 
-		debug_qword_resource(pmem32);
-		break;
-	case 3:
-		mem32->min = val;
-		break;
-	case 4:
-		mem32->transl = 0;
-		break;
-	case 5:
-		mem32->length = val;
-		mem32->max = mem32->min + val - 1;
-
-		debug_qword_resource(mem32);
-		break;
-	case 6:
-		pmem64->min = val;
-		break;
-	case 7:
-		pmem64->transl = 0;
-		break;
-	case 8:
-		pmem64->length = val;
-		pmem64->max = pmem64->min + val - 1;
-
-		debug_qword_resource(pmem64);
-		break;
-	case 9:
-		mem64->min = val;
-		break;
-	case 10:
-		mem64->transl = 0;
-		break;
-	case 11:
-		mem64->length = val;
-		mem64->max = mem64->min + val - 1;
-
-		debug_qword_resource(mem64);
-		break;
-	case 12:
-		io->transl = val;
-		break;
-	case 13:
-		io->min = val;
-		break;
-	case 14:
-		io->length = val;
-		io->max = io->min + val - 1;
-
-		debug_qword_resource(io);
-		break;
-	}
-
+        switch (Loop) {
+        case 0:
+          Pmem32->Minimum = Val;
+          break;
+        case 1:
+          Pmem32->Translation = 0;
+          break;
+        case 2:
+          Pmem32->Length = Val;
+          Pmem32->Maximum = Pmem32->Minimum + Val - 1;
+          DebugPrintQwordResource (Pmem32);
+          break;
+        case 3:
+          Mem32->Minimum = Val;
+          break;
+        case 4:
+          Mem32->Translation = 0;
+          break;
+        case 5:
+          Mem32->Length = Val;
+          Mem32->Maximum = Mem32->Minimum + Val - 1;
+          DebugPrintQwordResource (Mem32);
+          break;
+        case 6:
+          Pmem64->Minimum = Val;
+          break;
+        case 7:
+          Pmem64->Translation = 0;
+          break;
+        case 8:
+          Pmem64->Length = Val;
+          Pmem64->Maximum = Pmem64->Minimum + Val - 1;
+          DebugPrintQwordResource (Pmem64);
+          break;
+        case 9:
+          Mem64->Minimum = Val;
+          break;
+        case 10:
+          Mem64->Translation = 0;
+          break;
+        case 11:
+          Mem64->Length = Val;
+          Mem64->Maximum = Mem64->Minimum + Val - 1;
+          DebugPrintQwordResource (Mem64);
+          break;
+        case 12:
+          Io->Translation = Val;
+          break;
+        case 13:
+          Io->Minimum = Val;
+          break;
+        case 14:
+          Io->Length = Val;
+          Io->Maximum = Io->Minimum + Val - 1;
+          DebugPrintQwordResource (Io);
+          break;
+        }
       } else {
         Status = AcpiSdtProtocol->FindPath (ObjectHandle, "_STA", &StaHandle);
         if (EFI_ERROR (Status)) {
           DEBUG ((DEBUG_INFO, "can not found PCIe _STA node in DSDT table\n"));
-          Status = EFI_NOT_FOUND;
-	  break;
+          break;
         }
 
-	if (Index <= 4)
-	  continue;
+        if (Index <= 4) {
+          continue;
+        }
 
         Status = AcpiSdtProtocol->GetOption (StaHandle, 2, &DataType, (VOID *)&Buffer, &DataSize);
         if (!EFI_ERROR (Status)) {
           Buffer[3] = 0;
-          DEBUG ((DEBUG_INFO, "disable %s\n", SegName));
-	  break;
+          DEBUG ((DEBUG_INFO, "Disable %a\n", SegName));
+          break;
         }
       }
     }
   }
+
   return Status;
 }
 
-STATIC VOID
+/**
+  Update TPU status in ACPI table based on configuration.
+
+  @param[in]  AcpiSdtProtocol  Pointer to ACPI SDT protocol
+  @param[in]  TableHandle      Handle to ACPI table
+
+**/
+STATIC
+VOID
 AcpiPatchTpu (
-  EFI_ACPI_SDT_PROTOCOL  *AcpiSdtProtocol,
-  EFI_ACPI_HANDLE        TableHandle
+  IN EFI_ACPI_SDT_PROTOCOL  *AcpiSdtProtocol,
+  IN EFI_ACPI_HANDLE        TableHandle
   )
 {
   CHAR8  NodePath[256];
-  CHAR8  value[128];
+  CHAR8  Value[64];
   INT16  Index;
-  CHAR8  soc_mode = 0;
+  CHAR8  SocMode = 0;
 
-  if (IniGetValueBySectionAndName ("sophgo-config", "work-mode", value) == 0) {
-    if (!AsciiStrCmp(value, "soc"))
-      soc_mode = 0x1;
+  if (IniGetValueBySectionAndName ("sophgo-config", "work-mode", Value) == 0) {
+    if (!AsciiStrCmp(Value, "soc"))
+      SocMode = 0x1;
   }
 
   for (Index = 0; Index < TPU_NUM; Index++) {
-    AsciiSPrint (NodePath, sizeof (NodePath), "\\_SB.TPU%1X._STA", Index);
-    if (soc_mode)
-      UpdateStatusMethodObject (AcpiSdtProtocol, TableHandle, NodePath, 0xf);
-    else
-      UpdateStatusMethodObject (AcpiSdtProtocol, TableHandle, NodePath, 0x0);
+    AsciiSPrint (
+      NodePath,
+      sizeof (NodePath),
+      "\\_SB.TPU%1X._STA",
+      Index
+      );
+
+    UpdateStatusMethodObject (
+      AcpiSdtProtocol,
+      TableHandle,
+      NodePath,
+      SocMode ? 0xF : 0x0
+      );
+  }
+}
+
+/**
+  Update device status in ACPI DSDT table based on product type.
+
+  @param[in]  AcpiSdtProtocol  Pointer to ACPI SDT protocol
+  @param[in]  TableHandle      Handle to ACPI table
+**/
+STATIC
+VOID
+AcpiPatchDeviceStatus (
+  IN EFI_ACPI_SDT_PROTOCOL  *AcpiSdtProtocol,
+  IN EFI_ACPI_HANDLE        TableHandle
+  )
+{
+  STATIC CONST DEVICE_STATUS_MAP DeviceMap[] = {
+    // Power button devices: enabled(0x0B) for server, disabled(0x00) for non-server
+    {"\\_SB.PWRB._STA", 0x0B, 0x00},
+    {"\\_SB.RSTB._STA", 0x0B, 0x00},
+
+    // Thermal and fan devices: disabled(0x00) for server, enabled(0x0F) for non-server
+    {"\\_SB.I2C1.FAN0._STA", 0x00, 0x0F},
+    {"\\_SB.I2C1.FAN1._STA", 0x00, 0x0F},
+    {"\\_SB.I2C1.TZ00._STA", 0x00, 0x0F},
+    {"\\_SB.I2C1.TZ01._STA", 0x00, 0x0F},
+
+    // Network device: disabled(0x00) for server, enabled(0x0F) for non-server
+    {"\\_SB.ETH0._STA", 0x00, 0x0F},
+
+    // GPIO devices: disabled(0x00) for server, enabled(0x0F) for non-server
+    {"\\_SB.GPI0._STA", 0x00, 0x0F},
+    {"\\_SB.GPI1._STA", 0x00, 0x0F},
+    {"\\_SB.GPI2._STA", 0x00, 0x0F}
+  };
+
+  BOOLEAN IsServer;
+  UINTN   Index;
+  UINT8   Status;
+
+  IsServer = IsServerProduct();
+
+  for (Index = 0; Index < sizeof(DeviceMap) / sizeof(DeviceMap[0]); Index++) {
+    Status = IsServer ? DeviceMap[Index].ServerStatus : DeviceMap[Index].NonServerStatus;
+
+    UpdateStatusMethodObject (AcpiSdtProtocol, TableHandle, DeviceMap[Index].Path, Status);
+
+    DEBUG ((DEBUG_INFO, "%a device %a: status = 0x%x\n",
+            Status ? "Enable" : "Disable",
+            DeviceMap[Index].Path,
+            Status));
   }
 }
 
@@ -462,15 +561,16 @@ UpdateAcpiDsdtTable (
   EFI_ACPI_TABLE_VERSION  TableVersion;
   UINTN                   TableKey;
   EFI_ACPI_HANDLE         TableHandle;
-  UINTN                   i;
+  UINTN                   Index;
 
-  DEBUG ((DEBUG_ERROR, "Updating TPU and PCIe node in ACPI DSDT table\n"));
+  DEBUG ((DEBUG_INFO, "Updating device node status in ACPI DSDT table\n"));
 
   //
   // Find the AcpiTable protocol
-  Status = gBS->LocateProtocol(&gEfiAcpiSdtProtocolGuid, NULL, (VOID**) &AcpiTableProtocol);
+  //
+  Status = gBS->LocateProtocol (&gEfiAcpiSdtProtocolGuid, NULL, (VOID**) &AcpiTableProtocol);
   if (EFI_ERROR(Status)) {
-    //DEBUG("Unable to locate ACPI table protocol\n");
+    DEBUG ((DEBUG_ERROR, "Unable to locate ACPI table protocol!\n"));
     return EFI_SUCCESS;
   }
 
@@ -482,23 +582,31 @@ UpdateAcpiDsdtTable (
 
   //
   // Search for DSDT Table
-  for (i = 0; i < EFI_ACPI_MAX_NUM_TABLES; i++) {
-    Status = AcpiTableProtocol->GetAcpiTable(i, &Table, &TableVersion, &TableKey);
-    if (EFI_ERROR(Status))
+  //
+  for (Index = 0; Index < EFI_ACPI_MAX_NUM_TABLES; Index ++) {
+    Status = AcpiTableProtocol->GetAcpiTable (Index, &Table, &TableVersion, &TableKey);
+    if (EFI_ERROR (Status)) {
       break;
+    }
 
-    if (Table->Signature != DSDT_SIGNATURE)
+    if (Table->Signature != DSDT_SIGNATURE) {
       continue;
+    }
 
-    Status = AcpiTableProtocol->OpenSdt(TableKey, &TableHandle);
-    if (EFI_ERROR(Status)) {
+    Status = AcpiTableProtocol->OpenSdt (TableKey, &TableHandle);
+    if (EFI_ERROR (Status)) {
       break;
     }
 
     AcpiPatchTpu (AcpiTableProtocol, TableHandle);
-    AcpiPatchPCIe(AcpiTableProtocol, TableHandle);
+    Status = AcpiPatchPCIe (AcpiTableProtocol, TableHandle);
+    if (EFI_ERROR (Status)) {
+      break;
+    }
 
-    AcpiTableProtocol->Close(TableHandle);
+    AcpiPatchDeviceStatus (AcpiTableProtocol, TableHandle);
+
+    AcpiTableProtocol->Close (TableHandle);
     AcpiCheckSum (Table);
   }
 
@@ -506,15 +614,14 @@ UpdateAcpiDsdtTable (
 }
 
 /**
-  Entrypoint of Acpi Platform driver.
+  Entry point of the ACPI platform driver.
 
-  @param  ImageHandle
-  @param  SystemTable
+  @param[in] ImageHandle    Image handle of this driver.
+  @param[in] SystemTable    Global system service table.
 
-  @return EFI_SUCCESS
-  @return EFI_LOAD_ERROR
-  @return EFI_OUT_OF_RESOURCES
-
+  @retval EFI_SUCCESS           The function completed successfully.
+  @retval EFI_ABORTED          The function failed to complete.
+  @retval EFI_OUT_OF_RESOURCES Failed to allocate memory for tables.
 **/
 EFI_STATUS
 EFIAPI
@@ -542,12 +649,13 @@ AcpiPlatformDxeEntryPoint (
   // Find the AcpiTable protocol
   //
   Status = gBS->LocateProtocol (
-    &gEfiAcpiTableProtocolGuid,
-    NULL,
-    (VOID**)&AcpiTable
-    );
+                  &gEfiAcpiTableProtocolGuid,
+                  NULL,
+                  (VOID**)&AcpiTable
+                  );
   if (EFI_ERROR (Status)) {
-    return EFI_ABORTED;
+    DEBUG ((DEBUG_ERROR, "Failed to locate ACPI table protocol. %r\n", Status));
+    return Status;
   }
 
   //
@@ -555,11 +663,12 @@ AcpiPlatformDxeEntryPoint (
   //
   Status = LocateFvInstanceWithTables (&FwVol);
   if (EFI_ERROR (Status)) {
-    return EFI_ABORTED;
+    DEBUG ((DEBUG_ERROR, "Failed to locate firmware volume with ACPI tables. %r\n", Status));
+    return Status;
   }
 
   //
-  // Read tables from the storage file.
+  // Read and install all ACPI tables from the storage file
   //
   while (Status == EFI_SUCCESS) {
     Status = FwVol->ReadSection (
@@ -598,6 +707,7 @@ AcpiPlatformDxeEntryPoint (
                             TableSize,
                             &TableHandle
                             );
+
       //
       // Free memory allocated by ReadSection
       //

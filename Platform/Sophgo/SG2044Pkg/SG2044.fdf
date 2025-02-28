@@ -252,7 +252,7 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/ReserveMemoryDxe/ReserveMemoryDxe.inf
   INF Silicon/Sophgo/SG2044Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
   INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
   INF MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
-  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SG2044EvbAcpiTables.inf
+  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SG2044AcpiTables.inf
   INF Silicon/Sophgo/SG2044Pkg/Pptt/Pptt.inf
 !endif
 

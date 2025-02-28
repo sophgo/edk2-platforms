@@ -253,7 +253,6 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
       }
       Method (_TMP, 0, Serialized)
       {
-          Local0 = 0
           Store (0, EN)
           Store (0x63, CON)
           Store (0x17, TAR)
@@ -313,7 +312,6 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
       }
       Method (_TMP, 0, Serialized)
       {
-          Local0 = 0
           Store (0, EN)
           Store (0x63, CON)
           Store (0x17, TAR)

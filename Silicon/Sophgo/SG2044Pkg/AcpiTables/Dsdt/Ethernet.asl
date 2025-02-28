@@ -30,7 +30,7 @@ Scope(_SB)
       TDIV, 32
     }
 
-    Method (_CLK, 1, NotSerialized)
+    Method (SCLK, 1, NotSerialized)
     {
       Divide(2000000000, Arg0,, Local0)
       ShiftLeft(Local0, 0x10, Local0)

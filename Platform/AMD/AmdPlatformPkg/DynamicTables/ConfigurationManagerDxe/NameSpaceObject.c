@@ -1,7 +1,7 @@
 /** @file
   This file implements the Get/Set function for the Configuration Manager.
 
-  Copyright (C) 2024 Advanced Micro Devices, Inc. All rights reserved.
+  Copyright (C) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
@@ -176,7 +176,6 @@ GetStandardNameSpaceObject (
 {
   EFI_STATUS                      Status;
   EDKII_PLATFORM_REPOSITORY_INFO  *PlatformRepo;
-  UINT32                          AcpiTableCount;
 
   if ((This == NULL) || (CmObject == NULL)) {
     ASSERT (This != NULL);
@@ -184,9 +183,8 @@ GetStandardNameSpaceObject (
     return EFI_INVALID_PARAMETER;
   }
 
-  Status         = EFI_NOT_FOUND;
-  PlatformRepo   = This->PlatRepoInfo;
-  AcpiTableCount = ARRAY_SIZE (PlatformRepo->CmAcpiTableList);
+  Status       = EFI_NOT_FOUND;
+  PlatformRepo = This->PlatRepoInfo;
 
   switch (GET_CM_OBJECT_ID (CmObjectId)) {
     case EStdObjCfgMgrInfo:
@@ -202,8 +200,8 @@ GetStandardNameSpaceObject (
       Status = HandleCmObject (
                  CmObjectId,
                  &PlatformRepo->CmAcpiTableList,
-                 sizeof (PlatformRepo->CmAcpiTableList),
-                 AcpiTableCount,
+                 sizeof (CM_STD_OBJ_ACPI_TABLE_INFO) * PlatformRepo->CurrentAcpiTableCount,
+                 PlatformRepo->CurrentAcpiTableCount,
                  CmObject
                  );
       break;
@@ -306,6 +304,75 @@ GetArchNameSpaceObject (
                  CmObject
                  );
       break;
+    case EArchCommonObjMemoryAffinityInfo:
+      Status = HandleCmObject (
+                 CmObjectId,
+                 PlatformRepo->MemoryAffinityInfo,
+                 sizeof (*(PlatformRepo->MemoryAffinityInfo)) * PlatformRepo->MemoryAffinityInfoCount,
+                 PlatformRepo->MemoryAffinityInfoCount,
+                 CmObject
+                 );
+      break;
+    default:
+    {
+      Status = EFI_NOT_FOUND;
+      DEBUG ((
+        DEBUG_ERROR,
+        "ERROR: Object 0x%x. Status = %r\n",
+        CmObjectId,
+        Status
+        ));
+      break;
+    }
+  }
+
+  return Status;
+}
+
+/** Set the data for standard namespace object.
+
+  @param [in]        This        Pointer to the Configuration Manager Protocol.
+  @param [in]        CmObjectId  The Configuration Manager Object ID.
+  @param [in]        Token       An optional token identifying the object. If
+                                 unused this must be CM_NULL_TOKEN.
+  @param [in]        CmObject    Pointer to the Configuration Manager Object
+                                 descriptor describing the requested Object.
+
+  @retval EFI_SUCCESS            Success.
+  @retval EFI_INVALID_PARAMETER  A parameter is invalid.
+  @retval EFI_NOT_FOUND          The required object information is not found.
+**/
+EFI_STATUS
+EFIAPI
+SetStandardNameSpaceObject (
+  IN  CONST EDKII_CONFIGURATION_MANAGER_PROTOCOL  *CONST  This,
+  IN  CONST CM_OBJECT_ID                                  CmObjectId,
+  IN  CONST CM_OBJECT_TOKEN                               Token OPTIONAL,
+  IN        CM_OBJ_DESCRIPTOR                     *CONST  CmObject
+  )
+{
+  EFI_STATUS                      Status;
+  EDKII_PLATFORM_REPOSITORY_INFO  *PlatformRepo;
+
+  if ((This == NULL) || (CmObject == NULL)) {
+    ASSERT (This != NULL);
+    ASSERT (CmObject != NULL);
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status       = EFI_NOT_FOUND;
+  PlatformRepo = This->PlatRepoInfo;
+
+  switch (GET_CM_OBJECT_ID (CmObjectId)) {
+    case EStdObjAcpiTableList:
+      Status = SetHandleCmObject (
+                 CmObjectId,
+                 &PlatformRepo->CmAcpiTableList,
+                 sizeof (CM_STD_OBJ_ACPI_TABLE_INFO) * PlatformRepo->CurrentAcpiTableCount,
+                 PlatformRepo->CurrentAcpiTableCount,
+                 CmObject
+                 );
+      break;
     default:
     {
       Status = EFI_NOT_FOUND;
@@ -392,6 +459,15 @@ SetArchNameSpaceObject (
                  (VOID **)&PlatformRepo->PciConfigSpaceInfo,
                  sizeof (*(PlatformRepo->PciConfigSpaceInfo)) * PlatformRepo->PciConfigSpaceInfoCount,
                  (VOID *)&PlatformRepo->PciConfigSpaceInfoCount,
+                 CmObject
+                 );
+      break;
+    case EArchCommonObjMemoryAffinityInfo:
+      Status = SetHandleCmObjectBuffer (
+                 CmObjectId,
+                 (VOID **)&PlatformRepo->MemoryAffinityInfo,
+                 sizeof (*(PlatformRepo->MemoryAffinityInfo)) * PlatformRepo->MemoryAffinityInfoCount,
+                 (VOID *)&PlatformRepo->MemoryAffinityInfoCount,
                  CmObject
                  );
       break;
@@ -590,6 +666,24 @@ GetX64NameSpaceObject (
                  CmObject
                  );
       break;
+    case EX64ObjFacsInfo:
+      Status = HandleCmObject (
+                 CmObjectId,
+                 &PlatformRepo->FacsInfo,
+                 sizeof (PlatformRepo->FacsInfo),
+                 1,
+                 CmObject
+                 );
+      break;
+    case EX64ObjLocalApicX2ApicAffinityInfo:
+      Status = HandleCmObject (
+                 CmObjectId,
+                 PlatformRepo->LocalApicX2ApicAffinityInfo,
+                 sizeof (*PlatformRepo->LocalApicX2ApicAffinityInfo) * PlatformRepo->LocalApicX2ApicAffinityInfoCount,
+                 PlatformRepo->LocalApicX2ApicAffinityInfoCount,
+                 CmObject
+                 );
+      break;
     default:
     {
       Status = EFI_NOT_FOUND;
@@ -637,6 +731,15 @@ SetX64NameSpaceObject (
   PlatformRepo = This->PlatRepoInfo;
 
   switch (GET_CM_OBJECT_ID (CmObjectId)) {
+    case EX64ObjFacsInfo:
+      Status = SetHandleCmObject (
+                 CmObjectId,
+                 &PlatformRepo->FacsInfo,
+                 sizeof (PlatformRepo->FacsInfo),
+                 1,
+                 CmObject
+                 );
+      break;
     case EX64ObjFadtSciInterrupt:
       Status = SetHandleCmObject (
                  CmObjectId,
@@ -781,6 +884,15 @@ SetX64NameSpaceObject (
                  CmObject
                  );
       break;
+    case EX64ObjLocalApicX2ApicAffinityInfo:
+      Status = SetHandleCmObjectBuffer (
+                 CmObjectId,
+                 (VOID **)&PlatformRepo->LocalApicX2ApicAffinityInfo,
+                 sizeof (*PlatformRepo->LocalApicX2ApicAffinityInfo) * PlatformRepo->LocalApicX2ApicAffinityInfoCount,
+                 (VOID *)&PlatformRepo->LocalApicX2ApicAffinityInfoCount,
+                 CmObject
+                 );
+      break;
     default:
       Status = EFI_NOT_FOUND;
       DEBUG ((
@@ -887,6 +999,10 @@ AmdPlatformSetObject (
   }
 
   switch (GET_CM_NAMESPACE_ID (CmObjectId)) {
+    case EObjNameSpaceStandard:
+      Status = SetStandardNameSpaceObject (This, CmObjectId, Token, CmObject);
+      break;
+
     case EObjNameSpaceArchCommon:
       Status = SetArchNameSpaceObject (This, CmObjectId, Token, CmObject);
       break;

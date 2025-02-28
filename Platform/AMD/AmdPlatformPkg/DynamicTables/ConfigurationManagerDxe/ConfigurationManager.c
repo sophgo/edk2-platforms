@@ -4,7 +4,7 @@
   The Configuration Manager Protocol is used to provide the Configuration
   Objects to the Configuration Manager.
 
-  Copyright (C) 2024 Advanced Micro Devices, Inc. All rights reserved.
+  Copyright (C) 2024 - 2025 Advanced Micro Devices, Inc. All rights reserved.
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
@@ -29,6 +29,13 @@ EDKII_PLATFORM_REPOSITORY_INFO  mAmdPlatformRepositoryInfo = {
   },
   /// ACPI Table List
   {
+    /// FACS Table
+    {
+      EFI_ACPI_6_5_FIRMWARE_ACPI_CONTROL_STRUCTURE_SIGNATURE,
+      EFI_ACPI_6_5_FIRMWARE_ACPI_CONTROL_STRUCTURE_VERSION,
+      CREATE_STD_ACPI_TABLE_GEN_ID (EStdAcpiTableIdFacs),
+      NULL
+    },
     /// FADT Table
     {
       EFI_ACPI_6_3_FIXED_ACPI_DESCRIPTION_TABLE_SIGNATURE,
@@ -77,7 +84,23 @@ EDKII_PLATFORM_REPOSITORY_INFO  mAmdPlatformRepositoryInfo = {
       EFI_ACPI_6_5_MULTIPLE_APIC_DESCRIPTION_TABLE_REVISION,
       CREATE_STD_ACPI_TABLE_GEN_ID (EStdAcpiTableIdMadt),
       NULL
+    },
+    /// SRAT Table
+    {
+      EFI_ACPI_6_5_SYSTEM_RESOURCE_AFFINITY_TABLE_SIGNATURE,
+      EFI_ACPI_6_5_SYSTEM_RESOURCE_AFFINITY_TABLE_REVISION,
+      CREATE_STD_ACPI_TABLE_GEN_ID (EStdAcpiTableIdSrat),
+      NULL
     }
+  },
+  /// Current ACPI Table Count
+  PLAT_ACPI_TABLE_COUNT,
+  /// FACS info
+  {
+    0,
+    0,
+    0,
+    0
   },
   /// PmProfile
   {
@@ -223,12 +246,18 @@ ConfigurationManagerDxeInitialize (
   }
 
   /// set the OemTableId and OemRevision for the CmACpiTableList
-  for (Index = 0; Index < ARRAY_SIZE (mAmdPlatformRepositoryInfo.CmAcpiTableList); Index++) {
+  for (Index = 0; Index < mAmdPlatformRepositoryInfo.CurrentAcpiTableCount; Index++) {
     mAmdPlatformRepositoryInfo.CmAcpiTableList[Index].OemTableId  = PcdGet64 (PcdAcpiDefaultOemTableId);
     mAmdPlatformRepositoryInfo.CmAcpiTableList[Index].OemRevision = PcdGet32 (PcdAcpiDefaultOemRevision);
   }
 
   UpdateMadtTable (&mAmdPlatformRepositoryInfo);
+  Status = UpdateHpetTableInfo (&mAmdPlatformRepositoryInfo);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "ERROR: Failed to update HPET table info. Status = %r\n", Status));
+    return Status;
+  }
+
   Status = gBS->InstallProtocolInterface (
                   &ImageHandle,
                   &gEdkiiConfigurationManagerProtocolGuid,

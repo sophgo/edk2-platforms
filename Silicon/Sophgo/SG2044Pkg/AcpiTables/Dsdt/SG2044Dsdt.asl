@@ -43,7 +43,7 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
       }
       Method (_STA)
       {
-        Return (0xf)
+        Return (0xF)
       }
       Method (_FIF, 0, NotSerialized)
       {
@@ -147,7 +147,7 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
       }
       Method (_STA)
       {
-        Return (0xf)
+        Return (0xF)
       }
       Method (_FIF, 0, NotSerialized)
       {
@@ -249,7 +249,7 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
       }
       Method (_STA)
       {
-        Return (0xf)
+        Return (0xF)
       }
       Method (_TMP, 0, Serialized)
       {
@@ -269,14 +269,16 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
           Store (0x300, DATA)
 
           Store (DATA, Local1)
-          Return (((Local1 & 0xff) * 10) + 2731)
+          Local1 = (Local1 & 0xff)
+          if (Local1 & 0x80) {
+            Local1 = Local1 - 0x100
+          }
+          Return (((Local1) * 10) + 2732)
       }
-      Method(_AC0) { Return ( 3431 ) }
-      Method(_AC1) { Return ( 3331 ) }
-      Method(_AC2) { Return ( 3231 ) }
-      Method(_AC3) { Return ( 3131 ) }
-      Method(_AC4) { Return ( 3031 ) }
-      Method(_CRT) { Return ( 3531 ) }
+      Method(_AC0) { Return ( 3432 ) }
+      Method(_AC1) { Return ( 3332 ) }
+      Method(_AC2) { Return ( 3232 ) }
+      Method(_CRT) { Return ( 3732 ) }
       Name(_AL0, Package(){FAN0})
       Name(_AL1, Package(){FAN0})
       Name(_AL2, Package(){FAN0})
@@ -308,7 +310,7 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
       }
       Method (_STA)
       {
-        Return (0xf)
+        Return (0xF)
       }
       Method (_TMP, 0, Serialized)
       {
@@ -328,14 +330,15 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
           Store (0x300, DATA)
 
           Store (DATA, Local1)
-          Return (((Local1 & 0xff) * 10) + 2731)
+          Local1 = (Local1 & 0xff)
+          if (Local1 & 0x80) {
+            Local1 = Local1 - 0x100
+          }
+          Return (((Local1) * 10) + 2732)
       }
-      Method(_AC0) { Return ( 3431 ) }
-      Method(_AC1) { Return ( 3331 ) }
-      Method(_AC2) { Return ( 3231 ) }
-      Method(_AC3) { Return ( 3131 ) }
-      Method(_AC4) { Return ( 3031 ) }
-      Method(_CRT) { Return ( 3541 ) }
+      Method(_AC0) { Return ( 3432 ) }
+      Method(_AC1) { Return ( 3332 ) }
+      Method(_AC2) { Return ( 3232 ) }
       Name(_AL0, Package(){FAN1})
       Name(_AL1, Package(){FAN1})
       Name(_AL2, Package(){FAN1})

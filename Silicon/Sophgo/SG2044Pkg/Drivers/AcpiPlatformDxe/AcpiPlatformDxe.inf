@@ -38,6 +38,9 @@
   AcpiLib
   SmbiosInformationLib
 
+[Guids]
+gEfiSophgoGlobalVariableGuid                                ## CONSUMES ## GUID
+
 [Protocols]
   gEfiAcpiTableProtocolGuid                                 ## CONSUMES
   gFdtClientProtocolGuid                                    ## CONSUMES

@@ -23,6 +23,8 @@
 
 #include <IndustryStandard/Acpi.h>
 #include <Guid/Acpi.h>
+#include <Guid/VendorGlobalVariables.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 
 //
 // Constants and definitions
@@ -472,14 +474,25 @@ AcpiPatchTpu (
   IN EFI_ACPI_HANDLE        TableHandle
   )
 {
-  CHAR8  NodePath[256];
-  CHAR8  Value[64];
-  INT16  Index;
-  CHAR8  SocMode = 0;
+  CHAR8       NodePath[256];
+  INT16       Index;
+  BOOLEAN     SocMode = FALSE;
+  UINTN       VarSize;
+  UINT32      ReservedMemData;
+  EFI_STATUS  Status;
 
-  if (IniGetValueBySectionAndName ("sophgo-config", "work-mode", Value) == 0) {
-    if (!AsciiStrCmp(Value, "soc"))
-      SocMode = 0x1;
+  VarSize = sizeof (ReservedMemData);
+
+  Status = gRT->GetVariable (
+    EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME,
+    &gEfiSophgoGlobalVariableGuid,
+    NULL,
+    &VarSize,
+    &ReservedMemData
+    );
+
+  if ( Status == EFI_SUCCESS && ReservedMemData != 0) {
+    SocMode = TRUE;
   }
 
   for (Index = 0; Index < TPU_NUM; Index++) {

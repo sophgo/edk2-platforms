@@ -35,6 +35,7 @@
 #define SPIFMC_CTRL_LSBF                      BIT20
 #define SPIFMC_CTRL_SRST                      BIT21
 #define SPIFMC_CTRL_SCK_DIV_SHIFT             0
+#define SPIFMC_CTRL_SCK_DIV_SHIFT_MASK        0x7FF
 #define SPIFMC_CTRL_FRAME_LEN_SHIFT           16
 
 #define SPIFMC_CE_CTRL                     0x04

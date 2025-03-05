@@ -48,9 +48,12 @@ SpifmcInitReg (
            | SPIFMC_TRAN_CSR_BUS_WIDTH_2_BIT
            | SPIFMC_TRAN_CSR_BUS_WIDTH_4_BIT
            | SPIFMC_TRAN_CSR_DMA_EN
+           | SPIFMC_TRAN_CSR_MISO_LEVEL
            | SPIFMC_TRAN_CSR_ADDR_BYTES_MASK
            | SPIFMC_TRAN_CSR_WITH_CMD
-           | SPIFMC_TRAN_CSR_FIFO_TRG_LVL_MASK);
+           | SPIFMC_TRAN_CSR_FIFO_TRG_LVL_MASK
+           | SPIFMC_TRAN_CSR_ADDR4B
+           | SPIFMC_TRAN_CSR_CMD4B);
 
   return Register;
 }
@@ -449,7 +452,12 @@ SpifmcInit (
   //
   // Soft reset
   //
-  MmioWrite32 (SpiBase + SPIFMC_CTRL, MmioRead32 ((UINTN)(SpiBase + SPIFMC_CTRL)) | SPIFMC_CTRL_SRST | 0x3);
+  Register = MmioRead32 ((UINTN)(SpiBase + SPIFMC_CTRL));
+  Register &= ~SPIFMC_CTRL_SCK_DIV_SHIFT_MASK;
+  Register |= SPIFMC_CTRL_SRST;
+  // SCK frequency = HCLK frequency / (2 * (SckDiv + 1))
+  Register |= 0x3;
+  MmioWrite32 (SpiBase + SPIFMC_CTRL, Register);
 
   //
   // Hardware CE contrl, soft reset cannot change the register

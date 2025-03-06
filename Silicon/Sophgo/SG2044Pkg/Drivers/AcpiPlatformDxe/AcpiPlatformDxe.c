@@ -526,9 +526,12 @@ AcpiPatchDeviceStatus (
   )
 {
   STATIC CONST DEVICE_STATUS_MAP DeviceMap[] = {
-    // Power button devices: enabled(0x0B) for server, disabled(0x00) for non-server
+    // Power button device: enabled(0x0B) for server, disabled(0x00) for non-server
+    // Generic event device: enabled(0x0F) for server, disabled(0x00) for non-server
     {"\\_SB.PWRB._STA", 0x0B, 0x00},
-    {"\\_SB.RSTB._STA", 0x0B, 0x00},
+    {"\\_SB.GED0._STA", 0x0F, 0x00},
+    {"\\_SB.PWRB._STA", 0x0B, 0x00},
+    {"\\_SB.GED1._STA", 0x0F, 0x00},
 
     // Thermal and fan devices: disabled(0x00) for server, enabled(0x0F) for non-server
     {"\\_SB.I2C1.FAN0._STA", 0x00, 0x0F},

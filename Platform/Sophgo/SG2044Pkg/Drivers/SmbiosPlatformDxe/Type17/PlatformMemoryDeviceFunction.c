@@ -17,6 +17,10 @@
 
 #include "SmbiosPlatformDxe.h"
 
+#define MAX_SIZE 0x7FFF
+#define DEFAULT_DDR_SIZE 0x10000
+#define EFUSE_DDR_OFFSET 352
+
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
   EFI_STATUS           Status;
   STR_TOKEN_INFO       *InputStrToken;
@@ -65,7 +69,9 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
           }
           InputData->Attributes = Uint;
       }
-      if (UpdateSmbiosFromEfuse(1, 352, 4, &Size) == 0) {
+      InputData->Size = MAX_SIZE;
+      InputData->ExtendedSize = DEFAULT_DDR_SIZE;
+      if (UpdateSmbiosFromEfuse(1, EFUSE_DDR_OFFSET, 4, &Size) == 0) {
         if (((Size >> 13) & 0x1) ^ ((Size >> 12) & 0x1)) {
           UINT32 capacityBits = (Size >> 2) & 0x3;
           UINT32 dramCapacityMB;
@@ -82,12 +88,10 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
             break;
           }
           if (dramCapacityMB == 0) {
-            InputData->ExtendedSize = 0x4000000;
+            InputData->ExtendedSize = DEFAULT_DDR_SIZE;
           } else {
             InputData->ExtendedSize = dramCapacityMB;
           }
-        } else {
-            InputData->ExtendedSize = 0x4000000;
         }
       }
       SmbiosPlatformDxeCreateTable (

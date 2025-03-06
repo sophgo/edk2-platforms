@@ -10,6 +10,8 @@
 
 #include <Library/SmbiosInformationLib.h>
 
+#define TYPE07_LENGTH 0x18
+
 EFI_STATUS
 ExtractString(
   IN  CHAR8   *OptionalStrStart,
@@ -133,17 +135,14 @@ AllocSmbiosData (
       case SMBIOS_TYPE_CACHE_INFORMATION: {
         SMBIOS_TABLE_TYPE7 *Type7 = (SMBIOS_TABLE_TYPE7 *)Record;
         UINT8 RawLevel = (UINT8)(Type7->CacheConfiguration & 0x7);
-        UINT64 CacheSizeInKB = 0;
+        UINT32 CacheSizeInKB = 0;
 
-        if (Record->Length >= 0x18 && Type7->InstalledSize2 != 0) {
+        if (Record->Length >= TYPE07_LENGTH && Type7->InstalledSize2 != 0) {
           UINT32 InstalledSizeInBytes = Type7->InstalledSize2;
-          CacheSizeInKB = InstalledSizeInBytes / 1024;
-        } else {
-          UINT16 RawSize = Type7->InstalledSize;
-          if (RawSize & 0x8000) {
-            CacheSizeInKB = ((RawSize & 0x7FFF) * 64ULL);
+          if (InstalledSizeInBytes & SIZE_2GB) {
+            CacheSizeInKB = ((InstalledSizeInBytes & 0x7FFFFFFF) << 6);
           } else {
-            CacheSizeInKB = (RawSize & 0x7FFF);
+            CacheSizeInKB = InstalledSizeInBytes;
           }
         }
         CHAR16 *LevelStr;
@@ -166,17 +165,17 @@ AllocSmbiosData (
 
         if (RawLevel == 0) {
           if (CacheType == CacheTypeInstruction) {
-            ParsedData->L1ICacheSize = (UINT16)CacheSizeInKB;
+            ParsedData->L1ICacheSize = CacheSizeInKB;
           } else if (CacheType == CacheTypeData) {
-            ParsedData->L1DCacheSize = (UINT16)CacheSizeInKB;
+            ParsedData->L1DCacheSize = CacheSizeInKB;
           } else if (CacheType == CacheTypeUnified) {
-            ParsedData->L1ICacheSize = (UINT16)CacheSizeInKB;
-            ParsedData->L1DCacheSize = (UINT16)CacheSizeInKB;
+            ParsedData->L1ICacheSize = CacheSizeInKB;
+            ParsedData->L1DCacheSize = CacheSizeInKB;
           }
         } else if (RawLevel == 1) {
-          ParsedData->L2CacheSize = (UINT16)CacheSizeInKB;
+          ParsedData->L2CacheSize = CacheSizeInKB;
         } else if (RawLevel == 2) {
-          ParsedData->L3CacheSize = (UINT32)CacheSizeInKB;
+          ParsedData->L3CacheSize = CacheSizeInKB;
         }
         break;
       }

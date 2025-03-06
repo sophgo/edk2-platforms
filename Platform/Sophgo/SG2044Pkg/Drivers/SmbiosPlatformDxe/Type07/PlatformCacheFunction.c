@@ -17,6 +17,12 @@
 #include <Library/IniParserLib.h>
 
 #include "SmbiosPlatformDxe.h"
+
+#define MAX_INSTALLEDSIZE_1k 0x7FFF
+#define MAX_INSTALLEDSIZE_64K 0x1FFC00
+#define INSTALLEDSIZE_GRANULARITY_BIT 15
+#define INSTALLEDSIZE2_GRANULARITY_BIT 31
+
 EFI_STATUS
 UpdateCacheSize(
   IN CHAR16          *UnicodeStr,
@@ -29,7 +35,9 @@ UpdateCacheSize(
   CHAR8      *End;
   UINT64     Uint;
   UINT16     InstalledSizeValue;
-  UINT64     Bytes;
+  UINT32     InstalledSizeValue2;
+  UINT32     Bytes;
+  UINT16     Bytes16;
   UINT32     Bytes32;
 
   if (IniGetValueBySectionAndName("CPU", IniField, value) == 0) {
@@ -39,26 +47,37 @@ UpdateCacheSize(
     }
 
     Bytes = Uint / 1024;
-    Bytes32 = (Uint > MAX_UINT32) ? MAX_UINT32 : (UINT32)Uint;
-    if (Bytes <= 0x7FFF) {
-      InstalledSizeValue = (UINT16)Bytes;
+    Bytes32 = Bytes / 64;
+    InstalledSizeValue2 = Bytes32;
+
+    if (Bytes <= MAX_INSTALLEDSIZE_1k) {
+      Bytes16 = Bytes;
+      InstalledSizeValue = Bytes16;
+      InputData->InstalledSize = InstalledSizeValue;
+      InputData->MaximumCacheSize = InstalledSizeValue;
+      InputData->MaximumCacheSize2 = InstalledSizeValue;
+      InputData->InstalledSize2 = InstalledSizeValue;
+    } else if (Bytes < MAX_INSTALLEDSIZE_64K) {
+      Bytes16 = (UINT16)Bytes32;
+      InstalledSizeValue = Bytes16;
+      InstalledSizeValue |= (1 << INSTALLEDSIZE_GRANULARITY_BIT);
+      InstalledSizeValue2 |= (1 << INSTALLEDSIZE2_GRANULARITY_BIT);
+      InputData->InstalledSize = InstalledSizeValue;
+      InputData->MaximumCacheSize = InstalledSizeValue;
+      InputData->MaximumCacheSize2 = InstalledSizeValue2;
+      InputData->InstalledSize2 = InstalledSizeValue2;
     } else {
-      UINT64 Increments = Bytes / 64;
-      if (Increments > 0x7FFF) {
-        Increments = 0x7FFF;
-      }
-      InstalledSizeValue = (UINT16)(0x8000 | (UINT16)Increments);
-    }
+      InputData->InstalledSize = 0xFFFF;
+      InputData->MaximumCacheSize = 0xFFFF;
+      InstalledSizeValue2 |= (1 << INSTALLEDSIZE2_GRANULARITY_BIT);
+      InputData->InstalledSize2  = InstalledSizeValue2;
+      InputData->MaximumCacheSize2 = InstalledSizeValue2;
+   }
 
-    InputData->MaximumCacheSize  = InstalledSizeValue;
-    InputData->InstalledSize     = InstalledSizeValue;
-    InputData->MaximumCacheSize2 = Bytes32;
-    InputData->InstalledSize2    = Bytes32;
+   return EFI_SUCCESS;
+ }
 
-    return EFI_SUCCESS;
-  }
-
-  return EFI_NOT_FOUND;
+ return EFI_NOT_FOUND;
 }
 
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformCache) {

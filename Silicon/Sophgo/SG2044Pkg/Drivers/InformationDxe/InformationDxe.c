@@ -171,7 +171,7 @@ FillInformationData (
   StrCpyS(InformationData->MemoryType, MAX_LENGTH, ParsedData->MemoryType);
   InformationData->ExtendedSpeed = ParsedData->ExtendedSpeed;
   InformationData->MemoryRank = ParsedData->MemoryRank;
-  InformationData->ExtendSize = ParsedData->ExtendSize / (1024 * 1024);
+  InformationData->ExtendSize = ParsedData->ExtendSize / 1024;
   StrCpyS(InformationData->BoardProductName, MAX_LENGTH, ParsedData->BaseboardProductName);
   StrCpyS(InformationData->BoardVersion, MAX_LENGTH, ParsedData->BaseboardManufacturer);
   StrCpyS(InformationData->ProductName, MAX_LENGTH, ParsedData->SystemProductName);

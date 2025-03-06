@@ -35,9 +35,9 @@ typedef struct {
   UINT16 ProcessorCurrentSpeed;
   UINT8  ProcessorCoreCount;
   UINT8  ProcessorThreadCount;
-  UINT16 L1ICacheSize;
-  UINT16 L1DCacheSize;
-  UINT16 L2CacheSize;
+  UINT32 L1ICacheSize;
+  UINT32 L1DCacheSize;
+  UINT32 L2CacheSize;
   UINT32 L3CacheSize;
   UINT8 InstallableLanguages;
   UINT8 BiosLanguageFlags;

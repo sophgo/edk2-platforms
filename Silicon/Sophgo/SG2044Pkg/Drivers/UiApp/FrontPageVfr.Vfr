@@ -41,12 +41,15 @@ formset
    endif;
     label LABEL_MANAGER;
     label LABEL_END;
-   suppressif ideqval PASSWORD_TOGGLE_DATA.DefaultAcpi == 1;
-    text
-           help  = STRING_TOKEN(STR_ACPI_HELP),
-           text  = STRING_TOKEN(STR_ACPI_PROMPT),
-           flags = INTERACTIVE,
-           key   = ACPI_DISABLE_QUESTION_ID;
+   grayoutif ideqval PASSWORD_TOGGLE_DATA.DefaultAcpi == 0;
+     oneof varid  = PASSWORD_TOGGLE_DATA.DefaultAcpi,
+          questionid = ACPI_DISABLE_QUESTION_ID,
+          prompt = STRING_TOKEN(STR_ACPI_PROMPT),
+          help   = STRING_TOKEN(STR_ACPI_HELP),
+          flags  = INTERACTIVE,
+          option text = STRING_TOKEN(STR_DISABLE), value = 0x0, flags = 0;
+          option text = STRING_TOKEN(STR_ENABLE), value = 0x1, flags = DEFAULT;
+     endoneof;
    endif;
   endform;
   form formid = SYSTEM_INFORMATION_ID,

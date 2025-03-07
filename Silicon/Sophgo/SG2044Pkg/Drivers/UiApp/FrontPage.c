@@ -32,8 +32,8 @@ UINT32   mSetupTextModeRow          = 0;
 UINT32   mSetupHorizontalResolution = 0;
 UINT32   mSetupVerticalResolution   = 0;
 SMBIOS_PARSED_DATA *ParsedData      = NULL;
-VOID *SavedAcpiTable = NULL;
-VOID *SavedAcpi20Table = NULL;
+VOID *AcpiTable = NULL;
+VOID *Acpi20Table = NULL;
 
 STATIC RESTORE_PROTOCOL gPassWordToggleRestoreProtocol = {
   PassWordToggleRestore
@@ -74,9 +74,9 @@ HII_VENDOR_DEVICE_PATH mFrontPageHiiVendorDevicePath0 = {
 };
 
 BOOLEAN
-FindAcpiTable
+GetAcpiTable
 (
-  IN EFI_GUID *TableGuid
+ VOID
 )
 {
     UINTN TableCount = gST->NumberOfTableEntries;
@@ -90,10 +90,17 @@ FindAcpiTable
         EFI_CONFIGURATION_TABLE *CurrentTable = &gST->ConfigurationTable[Index];
 
         if (CurrentTable == NULL) {
-            DEBUG((DEBUG_ERROR, "Current ConfigurationTable entry is NULL at Index %u\n", Index));
+            DEBUG((DEBUG_ERROR, "ConfigurationTable entry is NULL at Index %u\n", Index));
             continue;
         }
-        if (CompareGuid(&CurrentTable->VendorGuid, TableGuid)) {
+
+        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpiTableGuid)) {
+            AcpiTable = CurrentTable->VendorTable;
+            return TRUE;
+        }
+
+        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpi20TableGuid)) {
+            Acpi20Table = CurrentTable->VendorTable;
             return TRUE;
         }
     }
@@ -102,43 +109,50 @@ FindAcpiTable
 }
 
 EFI_STATUS
+EFIAPI
 RemoveAcpiFromConfigTable
 (
-  VOID
+    VOID
 )
 {
-    EFI_STATUS Status;
     UINTN Index, NewIndex = 0;
     UINTN TableCount = gST->NumberOfTableEntries;
-    EFI_CONFIGURATION_TABLE *NewTable;
-
-    Status = gBS->AllocatePool(EfiBootServicesData, TableCount * sizeof(EFI_CONFIGURATION_TABLE), (VOID **)&NewTable);
-    if (EFI_ERROR(Status)) {
-        DEBUG((DEBUG_ERROR, "Failed to allocate memory for new config table: %r\n", Status));
-        return Status;
-    }
+    EFI_CONFIGURATION_TABLE *CurrentTable;
+    EFI_STATUS Status;
 
     for (Index = 0; Index < TableCount; Index++) {
-        EFI_CONFIGURATION_TABLE *CurrentTable = &gST->ConfigurationTable[Index];
-
+        CurrentTable = &gST->ConfigurationTable[Index];
         if (CurrentTable == NULL) {
             DEBUG((DEBUG_ERROR, "Current ConfigurationTable entry is NULL at Index %u\n", Index));
             continue;
         }
-        if (FindAcpiTable(&gEfiAcpiTableGuid)) {
-            SavedAcpiTable = CurrentTable->VendorTable;
-            continue;
+
+         if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpiTableGuid)) {
+            Status = gBS->InstallConfigurationTable(&gEfiAcpiTableGuid, NULL);
+            if (EFI_ERROR(Status)) {
+                DEBUG((DEBUG_ERROR, "Failed to remove ACPI 20 table from EFI System Table\n"));
+            }
+           continue;
         }
 
-        if (FindAcpiTable(&gEfiAcpi20TableGuid)) {
-            SavedAcpi20Table = CurrentTable->VendorTable;
-            continue;
+        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpi20TableGuid)) {
+            Status = gBS->InstallConfigurationTable(&gEfiAcpi20TableGuid, NULL);
+            if (EFI_ERROR(Status)) {
+               DEBUG((DEBUG_ERROR, "Failed to remove ACPI table from EFI System Table\n"));
+            }
+           continue;
         }
-        NewTable[NewIndex++] = *CurrentTable;
+
+        gST->ConfigurationTable[NewIndex++] = *CurrentTable;
     }
-    gST->NumberOfTableEntries = NewIndex;
-    gST->ConfigurationTable = NewTable;
 
+    if (NewIndex != TableCount) {
+        for (Index = NewIndex; Index < TableCount; Index++) {
+            ZeroMem(&gST->ConfigurationTable[Index], sizeof(EFI_CONFIGURATION_TABLE));
+        }
+    }
+
+    gST->NumberOfTableEntries = NewIndex;
     return EFI_SUCCESS;
 }
 
@@ -161,7 +175,7 @@ InstallDtb
       "%a: Firmware Context is NULL\n",
       __func__
       ));
-    return EFI_UNSUPPORTED;
+      return EFI_UNSUPPORTED;
     }
 
     DtbAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
@@ -178,23 +192,25 @@ InstallDtb
 }
 
 EFI_STATUS
-RestoreAcpiTables
+InstallAcpiTables
 (
  VOID
 )
 {
     EFI_STATUS Status;
-
-    if (SavedAcpiTable != NULL) {
-        Status = gBS->InstallConfigurationTable(&gEfiAcpiTableGuid, SavedAcpiTable);
+    if (AcpiTable == NULL && Acpi20Table == NULL) {
+       return EFI_NOT_FOUND;
+    }
+    if (AcpiTable != NULL) {
+        Status = gBS->InstallConfigurationTable(&gEfiAcpiTableGuid, AcpiTable);
         if (EFI_ERROR(Status)) {
             DEBUG((DEBUG_ERROR, "Failed to restore ACPI Table: %r\n", Status));
             return Status;
         }
     }
 
-    if (SavedAcpi20Table != NULL) {
-        Status = gBS->InstallConfigurationTable(&gEfiAcpi20TableGuid, SavedAcpi20Table);
+    if (Acpi20Table != NULL) {
+        Status = gBS->InstallConfigurationTable(&gEfiAcpi20TableGuid, Acpi20Table);
         if (EFI_ERROR(Status)) {
             DEBUG((DEBUG_ERROR, "Failed to restore ACPI 2.0 Table: %r\n", Status));
             return Status;
@@ -210,35 +226,7 @@ UnloadAcpiTables
  VOID
 )
 {
-    EFI_CONFIGURATION_TABLE *ConfigTable;
-    UINTN Index, RemovedCount = 0;
     EFI_STATUS Status;
-    for (Index = 0; Index < gST->NumberOfTableEntries; Index++) {
-        ConfigTable = &gST->ConfigurationTable[Index];
-
-        if (CompareGuid(&ConfigTable->VendorGuid, &gEfiAcpiTableGuid)) {
-            Status = gBS->InstallConfigurationTable(&gEfiAcpiTableGuid, NULL);
-            if (EFI_ERROR(Status)) {
-                DEBUG((DEBUG_ERROR, "Failed to remove ACPI Table %d: %r\n", Index, Status));
-                return Status;
-            }
-
-            RemovedCount++;
-        }
-        if (CompareGuid(&ConfigTable->VendorGuid, &gEfiAcpi20TableGuid)) {
-            Status = gBS->InstallConfigurationTable(&gEfiAcpi20TableGuid, NULL);
-            if (EFI_ERROR(Status)) {
-                DEBUG((DEBUG_ERROR, "Failed to remove ACPI Table %d: %r\n", Index, Status));
-                return Status;
-            }
-
-            RemovedCount++;
-        }
-    }
-
-    if (RemovedCount == 0) {
-      DEBUG((DEBUG_INFO, "No ACPI Tables found.\n"));
-    }
     Status = RemoveAcpiFromConfigTable();
     if (EFI_ERROR(Status)) {
       DEBUG((DEBUG_ERROR, "[Error] Failed to remove ACPI Tables: %r\n", Status));
@@ -246,14 +234,15 @@ UnloadAcpiTables
     }
     Status = InstallDtb();
     if (EFI_ERROR(Status)) {
-      DEBUG((DEBUG_ERROR, "[Error] Failed to install DTB: %r\n", Status));
-      EFI_STATUS RestoreStatus = RestoreAcpiTables();
-      if (EFI_ERROR(RestoreStatus)) {
-        DEBUG((DEBUG_ERROR, "[Critical] Failed to restore ACPI Tables: %r\n", RestoreStatus));
-        return RestoreStatus;
-      }
-      return Status;
+       Status = InstallAcpiTables();
+       if (EFI_ERROR(Status)) {
+        DEBUG((DEBUG_ERROR, "Can not install dtb and acpi table\n"));
+        return Status;
+       }
+       DEBUG((DEBUG_ERROR, "Can not install dtb, so reinstalled acpi\n"));
+       return Status;
     }
+
     return EFI_SUCCESS;
 }
 
@@ -391,6 +380,7 @@ FrontPageCallback (
       }
     }
     if (QuestionId == ACPI_DISABLE_QUESTION_ID) {
+      if(Value->u8 == 0x0) {
         Status = UnloadAcpiTables();
         if (EFI_ERROR(Status)) {
             DEBUG((DEBUG_ERROR, "Failed to unload ACPI Tables: %r\n", Status));
@@ -407,6 +397,25 @@ FrontPageCallback (
                 break;
             }
         }
+      }
+      if(Value->u8 == 0x1) {
+        Status = InstallAcpiTables();
+        if (EFI_ERROR(Status)) {
+            DEBUG((DEBUG_ERROR, "Failed to load ACPI Tables: %r\n", Status));
+            return Status;
+        }
+        CHAR16 *AcpiDisableMsg[] = {
+            L"ACPI enabled Successfully",
+            L"Press ENTER to continue..."
+        };
+        CreatePopUp(EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE, NULL, AcpiDisableMsg[0], AcpiDisableMsg[1], NULL);
+        while (TRUE) {
+            Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
+            if (!EFI_ERROR(Status) && (Key.UnicodeChar == CHAR_CARRIAGE_RETURN)) {
+                break;
+            }
+        }
+      }
     }
   }
 
@@ -1455,9 +1464,7 @@ InitializeUserInterface (
 
   InitializeStringSupport ();
   InitializePasswordToggleVariable ();
-  PassWordToggleData.DefaultAcpi =
-     (FindAcpiTable(&gEfiAcpiTableGuid) || FindAcpiTable(&gEfiAcpi20TableGuid))
-     ? 0 : 1;
+  PassWordToggleData.DefaultAcpi = GetAcpiTable() ? 1 : 0;
   PassWordToggleData.IsEvb = IsServerBoard ? 0 : 1;
   Status = gRT->SetVariable (
 		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,

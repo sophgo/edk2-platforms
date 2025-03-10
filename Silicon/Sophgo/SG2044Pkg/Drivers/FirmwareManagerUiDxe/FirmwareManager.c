@@ -320,8 +320,13 @@ UpdateFirmware (
   VariableSize = PcdGet32 (PcdFlashNvStorageVariableSize);
 
   BlockSize = Nor->Info->SectorSize;
-  TempBuffer = NULL;
   TempBuffer = AllocatePool (BlockSize);
+
+  if (TempBuffer == NULL) {
+    DEBUG ((DEBUG_ERROR, "Allocate temp buffer failed\n"));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
   Status = EFI_SUCCESS;
   Count  = (Size / BlockSize);
   StringLen = StrLen (Space);
@@ -391,18 +396,16 @@ UpdateFirmware (
       }
     }
 
-    if (TempBuffer) {
-      NorFlashProtocol->ReadData (
-		      Nor,
-		      Address + Index * BlockSize,
-		      BlockSize,
-		      TempBuffer
-		      );
-      if (CompareMem (TempBuffer, Buffer + Index * BlockSize, BlockSize) == 0) {
-        gST->ConOut->SetCursorPosition (gST->ConOut, Columns, Rows);
-        Print (L"%s %02d%%%", String, ((Index + 1) * 100) / Count);
-        continue;
-      }
+    NorFlashProtocol->ReadData (
+        Nor,
+        Address + Index * BlockSize,
+        BlockSize,
+        TempBuffer
+        );
+    if (CompareMem (TempBuffer, Buffer + Index * BlockSize, BlockSize) == 0) {
+      gST->ConOut->SetCursorPosition (gST->ConOut, Columns, Rows);
+      Print (L"%s %02d%%%", String, ((Index + 1) * 100) / Count);
+      continue;
     }
 
     Status = NorFlashProtocol->Erase (
@@ -422,6 +425,17 @@ UpdateFirmware (
 		    Buffer + Index * BlockSize
 		    );
     if (EFI_ERROR (Status)) {
+      Print (L"\r%s Fail!\n", String);
+      goto ProExit;
+    }
+
+    NorFlashProtocol->ReadData (
+        Nor,
+        Address + Index * BlockSize,
+        BlockSize,
+        TempBuffer
+        );
+    if (CompareMem (TempBuffer, Buffer + Index * BlockSize, BlockSize) != 0) {
       Print (L"\r%s Fail!\n", String);
       goto ProExit;
     }

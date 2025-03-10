@@ -2,7 +2,7 @@
   ACPI Platform Driver for SOPHGO SG2044 platform
 
   Copyright (c) 2008 - 2011, Intel Corporation. All rights reserved.<BR>
-  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+  Copyright (c) 2024, Sophgo Technologies Ltd. All rights reserved.<BR>
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 
@@ -20,11 +20,11 @@
 #include <Library/AcpiLib.h>
 #include <Library/PrintLib.h>
 #include <Library/SmbiosInformationLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 
 #include <IndustryStandard/Acpi.h>
 #include <Guid/Acpi.h>
 #include <Guid/VendorGlobalVariables.h>
-#include <Library/UefiRuntimeServicesTableLib.h>
 
 //
 // Constants and definitions
@@ -566,6 +566,11 @@ AcpiPatchDeviceStatus (
   }
 }
 
+/**
+  Update ACPI DSDT table
+
+  @return EFI_SUCCESS if ACPI DSDT table is updated successfully
+*/
 EFI_STATUS
 UpdateAcpiDsdtTable (
   VOID
@@ -630,12 +635,98 @@ UpdateAcpiDsdtTable (
 }
 
 /**
+  Unload ACPI tables if ACPI is disabled.
+
+  @retval EFI_SUCCESS           Operation completed
+  @retval EFI_INVALID_PARAMETER Invalid system state
+  @retval Others                Error during operation
+**/
+EFI_STATUS
+EFIAPI
+UnloadAcpiTables (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  VOID        *AcpiTable;
+  VOID        *Acpi10Table;
+
+  //
+  // Save current ACPI tables before removing them
+  //
+  Status = EfiGetSystemConfigurationTable (&gEfiAcpiTableGuid, &AcpiTable);
+  if (!EFI_ERROR (Status) && AcpiTable != NULL) {
+    DEBUG ((DEBUG_INFO, "Found ACPI 2.0+ table at 0x%lx\n", (UINT64)(UINTN)AcpiTable));
+    // Remove ACPI 2.0 table
+    Status = gBS->InstallConfigurationTable (&gEfiAcpiTableGuid, NULL);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "Failed to remove ACPI 2.0+ table: %r\n", Status));
+    }
+  }
+
+  Status = EfiGetSystemConfigurationTable (&gEfiAcpi10TableGuid, &Acpi10Table);
+  if (!EFI_ERROR (Status) && Acpi10Table != NULL) {
+    DEBUG ((DEBUG_INFO, "Found ACPI 1.0 table at 0x%lx\n", (UINT64)(UINTN)Acpi10Table));
+    // Remove ACPI 1.0 table
+    Status = gBS->InstallConfigurationTable (&gEfiAcpi10TableGuid, NULL);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "Failed to remove ACPI 1.0 table: %r\n", Status));
+    }
+  }
+
+  DEBUG ((DEBUG_INFO, "Successfully removed ACPI tables\n"));
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Finalize ACPI/DTS configuration before exiting boot services.
+
+  @param[in]  Event     ExitBootServices event
+  @param[in]  Context   Unused context pointer
+**/
+VOID
+EFIAPI
+UpdateAcpiOnExitBootServices (
+  IN EFI_EVENT  Event,
+  IN VOID       *Context
+  )
+{
+  UINTN       VarSize;
+  EFI_STATUS  Status;
+  BOOLEAN     AcpiEnabled;
+
+  //
+  // Get current ACPI status from variable
+  //
+  VarSize = sizeof (BOOLEAN);
+  Status = gRT->GetVariable (
+                  EFI_ACPI_ENABLE_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
+                  NULL,
+                  &VarSize,
+                  &AcpiEnabled
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "[ACPI] Failed to get ACPI state: %r\n", Status));
+    return;
+  }
+
+  if (!AcpiEnabled) {
+    DEBUG ((DEBUG_INFO, "[ACPI] Disabled, finalizing DTB setup...\n"));
+    Status = UnloadAcpiTables ();
+    DEBUG ((Status == EFI_SUCCESS ? DEBUG_INFO : DEBUG_ERROR,
+           "[ACPI] UnloadAcpiTables status: %r\n", Status));
+  }
+}
+
+/**
   Entry point of the ACPI platform driver.
 
   @param[in] ImageHandle    Image handle of this driver.
   @param[in] SystemTable    Global system service table.
 
-  @retval EFI_SUCCESS           The function completed successfully.
+  @retval EFI_SUCCESS          The function completed successfully.
   @retval EFI_ABORTED          The function failed to complete.
   @retval EFI_OUT_OF_RESOURCES Failed to allocate memory for tables.
 **/
@@ -656,10 +747,39 @@ AcpiPlatformDxeEntryPoint (
   UINTN                          TableSize;
   UINTN                          Size;
   EFI_ACPI_DESCRIPTION_HEADER    *TableHeader;
+  BOOLEAN                        AcpiEnabled;
+  EFI_EVENT                      ExitBootServicesEvent;
 
   Instance     = 0;
   CurrentTable = NULL;
   TableHandle  = 0;
+
+  //
+  // Create event for ExitBootServices
+  //
+  Status = gBS->CreateEvent (
+                  EVT_SIGNAL_EXIT_BOOT_SERVICES,
+                  TPL_NOTIFY,
+                  UpdateAcpiOnExitBootServices,
+                  NULL,
+                  &ExitBootServicesEvent
+                  );
+  ASSERT_EFI_ERROR (Status);
+
+  //
+  // Set initial ACPI enabled state
+  //
+  AcpiEnabled = TRUE;
+  Status = gRT->SetVariable (
+                  EFI_ACPI_ENABLE_VARIABLE_NAME,
+                  &gEfiSophgoGlobalVariableGuid,
+                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+                  sizeof (BOOLEAN),
+                  &AcpiEnabled
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to set initial ACPI state: %r\n", Status));
+  }
 
   //
   // Find the AcpiTable protocol
@@ -699,53 +819,44 @@ AcpiPlatformDxeEntryPoint (
 
     if (EFI_ERROR (Status)) {
       break;
-    } else {
-      //
-      // Add the table
-      //
-      TableHeader = (EFI_ACPI_DESCRIPTION_HEADER*) (CurrentTable);
-      TableHandle = 0;
-
-      TableSize = ((EFI_ACPI_DESCRIPTION_HEADER *) CurrentTable)->Length;
-      ASSERT (Size >= TableSize);
-
-      //
-      // Checksum ACPI table
-      //
-      AcpiPlatformChecksum ((UINT8*)CurrentTable, TableSize);
-
-      //
-      // Install ACPI table
-      //
-      Status = AcpiTable->InstallAcpiTable (
-                            AcpiTable,
-                            CurrentTable,
-                            TableSize,
-                            &TableHandle
-                            );
-
-      //
-      // Free memory allocated by ReadSection
-      //
-      gBS->FreePool (CurrentTable);
-
-      if (EFI_ERROR(Status)) {
-        return EFI_ABORTED;
-      }
-
-      //
-      // Increment the instance
-      //
-      Instance++;
-      CurrentTable = NULL;
     }
+
+    TableHeader = (EFI_ACPI_DESCRIPTION_HEADER*) CurrentTable;
+    TableSize = TableHeader->Length;
+    ASSERT (Size >= TableSize);
+
+    //
+    // Checksum ACPI table
+    //
+    AcpiPlatformChecksum ((UINT8*)CurrentTable, TableSize);
+
+    //
+    // Install ACPI table
+    //
+    Status = AcpiTable->InstallAcpiTable (
+                          AcpiTable,
+                          CurrentTable,
+                          TableSize,
+                          &TableHandle
+                          );
+
+    //
+    // Free memory allocated by ReadSection
+    //
+    gBS->FreePool (CurrentTable);
+
+    if (EFI_ERROR(Status)) {
+      return EFI_ABORTED;
+    }
+
+    Instance++;
+    CurrentTable = NULL;
   }
 
   Status = UpdateAcpiDsdtTable ();
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, " UpdateAcpiDsdtTable Failed, Status = %r\n", Status));
+    DEBUG ((DEBUG_ERROR, "UpdateAcpiDsdtTable Failed, Status = %r\n", Status));
   }
 
   return EFI_SUCCESS;
 }
-

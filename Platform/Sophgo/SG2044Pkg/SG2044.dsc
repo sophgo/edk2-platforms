@@ -567,13 +567,6 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x0
 !endif
 
-[PcdsDynamicHii]
-!if $(ACPI_ENABLE) == TRUE
-  gUefiOvmfPkgTokenSpaceGuid.PcdForceNoAcpi|L"ForceNoAcpi"|gOvmfVariableGuid|0x0|FALSE|NV,BS
-!else
-  gUefiOvmfPkgTokenSpaceGuid.PcdForceNoAcpi|L"ForceNoAcpi"|gOvmfVariableGuid|0x0|TRUE|NV,BS
-!endif
-
 ################################################################################
 #
 # Components Section - list of all EDK II Modules needed by this Platform.

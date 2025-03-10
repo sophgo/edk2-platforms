@@ -1,7 +1,9 @@
 /** @file
-Head file for front page.
-Copyright (c) 2024, Sophgo. All rights reserved.<BR>
-SPDX-License-Identifier: BSD-2-Clause-Patent
+ Front page header file.
+
+ Copyright (c) 2024, Sophgo Technologies Ltd. All rights reserved.<BR>
+
+ SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 
 #ifndef _FRONT_PAGE_H_
@@ -44,15 +46,16 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 #include "String.h"
 #include "Ui.h"
 
-#define PRINTABLE_LANGUAGE_NAME_STRING_ID  0x0001
+#define QF_DATE_STORAGE_TIME                0x10
+#define PRINTABLE_LANGUAGE_NAME_STRING_ID   0x0001
 #define FRONT_PAGE_CALLBACK_DATA_SIGNATURE  SIGNATURE_32 ('F', 'P', 'C', 'B')
+
 #define EFI_FP_CALLBACK_DATA_FROM_THIS(a) \
   CR (a, \
       FRONT_PAGE_CALLBACK_DATA, \
       ConfigAccess, \
       FRONT_PAGE_CALLBACK_DATA_SIGNATURE \
       )
-#define     QF_DATE_STORAGE_TIME    0x10
 
 extern UINT8                       FrontPageVfrBin[];
 extern EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
@@ -206,7 +209,7 @@ UiEntry (
 **/
 CHAR16 *
 ExtractDevicePathFromHiiHandle (
-  IN      EFI_HII_HANDLE  Handle
+  IN EFI_HII_HANDLE  Handle
   );
 
 EFI_STATUS
@@ -216,12 +219,12 @@ UpdateFrontPageForm (
 
 EFI_STATUS
 UpdateBootRegion (
-  EFI_HII_HANDLE HiiHandle
+  IN EFI_HII_HANDLE  HiiHandle
   );
 
 EFI_STATUS
 UpdateTimeRegion (
-  EFI_HII_HANDLE HiiHandle
+  IN EFI_HII_HANDLE  HiiHandle
   );
 
 VOID

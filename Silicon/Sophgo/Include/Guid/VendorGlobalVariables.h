@@ -92,4 +92,11 @@ extern EFI_GUID  gEfiSophgoGlobalVariableGuid;
 //
 #define FORCE_UIAPP_VARIABLE_NAME  L"ForceUiApp"
 
+//
+// This variable is used to inidicate the ACPI enable status.
+//   0: Disable ACPI
+//   1: Enable ACPI
+//
+#define EFI_ACPI_ENABLE_VARIABLE_NAME  L"AcpiEnable"
+
 #endif //__GLOBAL_VARIABLE_GUID_H__

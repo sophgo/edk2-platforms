@@ -1,45 +1,54 @@
 /** @file
-
   FrontPage routines to handle the callbacks and browser calls
 
-  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.
+  Copyright (c) 2024, Sophgo Technologies Ltd. All rights reserved.
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
+
 #include "FrontPage.h"
 #include "FrontPageCustomizedUi.h"
 
-#define MAX_STRING_LEN             500
-#define PASSWORD_CONFIG_ATTRIBUTES (EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS)
+#define MAX_STRING_LEN              500
+#define PASSWORD_CONFIG_ATTRIBUTES  (EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS)
 
+//
+// Global variables
 extern EFI_HII_HANDLE       gStringPackHandle;
 EFI_FORM_BROWSER2_PROTOCOL  *gFormBrowser2;
 PASSWORD_TOGGLE_DATA        PassWordToggleData;
 CHAR8                       *mLanguageString;
 VOID                        *ProtocolPtr;
 
-EFI_GUID mFrontPageGuid             = FORMSET_GUID;
-EFI_GUID gEfiAcpiTableGuid          = ACPI_TABLE_GUID;
-EFI_GUID gEfiLinuxDtbTableGuid      = LINUX_EFI_DT_TABLE_GUID;
-BOOLEAN  mResetRequired             = FALSE;
-BOOLEAN  mModeInitialized           = FALSE;
-UINT32   mBootHorizontalResolution  = 0;
-UINT32   mBootVerticalResolution    = 0;
-UINT32   mBootTextModeColumn        = 0;
-UINT32   mBootTextModeRow           = 0;
-UINT32   mSetupTextModeColumn       = 0;
-UINT32   mSetupTextModeRow          = 0;
-UINT32   mSetupHorizontalResolution = 0;
-UINT32   mSetupVerticalResolution   = 0;
-SMBIOS_PARSED_DATA *ParsedData      = NULL;
-VOID *AcpiTable = NULL;
-VOID *Acpi20Table = NULL;
+//
+// Protocol GUIDs
+//
+EFI_GUID  mFrontPageGuid             = FORMSET_GUID;
 
-STATIC RESTORE_PROTOCOL gPassWordToggleRestoreProtocol = {
+//
+// Global state variables
+BOOLEAN   mResetRequired             = FALSE;
+BOOLEAN   mModeInitialized           = FALSE;
+UINT32    mBootHorizontalResolution  = 0;
+UINT32    mBootVerticalResolution    = 0;
+UINT32    mBootTextModeColumn        = 0;
+UINT32    mBootTextModeRow           = 0;
+UINT32    mSetupTextModeColumn       = 0;
+UINT32    mSetupTextModeRow          = 0;
+UINT32    mSetupHorizontalResolution = 0;
+UINT32    mSetupVerticalResolution   = 0;
+SMBIOS_PARSED_DATA  *ParsedData      = NULL;
+
+//
+// Protocol instances
+//
+STATIC RESTORE_PROTOCOL  gPassWordToggleRestoreProtocol = {
   PassWordToggleRestore
 };
 
-FRONT_PAGE_CALLBACK_DATA gFrontPagePrivate = {
+//
+// Front page callback data
+FRONT_PAGE_CALLBACK_DATA  gFrontPagePrivate = {
   FRONT_PAGE_CALLBACK_DATA_SIGNATURE,
   NULL,
   NULL,
@@ -51,7 +60,10 @@ FRONT_PAGE_CALLBACK_DATA gFrontPagePrivate = {
   }
 };
 
-HII_VENDOR_DEVICE_PATH mFrontPageHiiVendorDevicePath0 = {
+//
+// Device path for HII
+//
+HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath0 = {
   {
     {
       HARDWARE_DEVICE_PATH,
@@ -74,176 +86,62 @@ HII_VENDOR_DEVICE_PATH mFrontPageHiiVendorDevicePath0 = {
 };
 
 BOOLEAN
-GetAcpiTable
-(
- VOID
-)
+GetAcpiTable (
+  VOID
+  )
 {
-    UINTN TableCount = gST->NumberOfTableEntries;
+  EFI_STATUS                                    Status;
+  EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER  *Rsdp;
 
-    if (TableCount == 0 || gST->ConfigurationTable == NULL) {
-        DEBUG((DEBUG_ERROR, "ConfigurationTable is NULL or TableCount is 0\n"));
-        return FALSE;
-    }
+  //
+  // Get the ACPI table from the system table.
+  //
+  Status = EfiGetSystemConfigurationTable (&gEfiAcpiTableGuid, (VOID **)&Rsdp);
+  if (EFI_ERROR (Status)) {
+    Status = EfiGetSystemConfigurationTable (&gEfiAcpi10TableGuid, (VOID **)&Rsdp);
+  }
 
-    for (UINTN Index = 0; Index < TableCount; Index++) {
-        EFI_CONFIGURATION_TABLE *CurrentTable = &gST->ConfigurationTable[Index];
+  if (!EFI_ERROR (Status) &&
+      (Rsdp != NULL) &&
+      (Rsdp->Revision >= EFI_ACPI_6_5_ROOT_SYSTEM_DESCRIPTION_POINTER_REVISION) &&
+      (Rsdp->RsdtAddress != 0))
+  {
+    return TRUE;
+  }
 
-        if (CurrentTable == NULL) {
-            DEBUG((DEBUG_ERROR, "ConfigurationTable entry is NULL at Index %u\n", Index));
-            continue;
-        }
-
-        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpiTableGuid)) {
-            AcpiTable = CurrentTable->VendorTable;
-            return TRUE;
-        }
-
-        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpi20TableGuid)) {
-            Acpi20Table = CurrentTable->VendorTable;
-            return TRUE;
-        }
-    }
-
-    return FALSE;
+  return FALSE;
 }
 
 EFI_STATUS
-EFIAPI
-RemoveAcpiFromConfigTable
-(
-    VOID
-)
+InstallFdt (
+  VOID
+  )
 {
-    UINTN Index, NewIndex = 0;
-    UINTN TableCount = gST->NumberOfTableEntries;
-    EFI_CONFIGURATION_TABLE *CurrentTable;
-    EFI_STATUS Status;
+  EFI_RISCV_FIRMWARE_CONTEXT  *FirmwareContext;
+  VOID                        *FdtAddress;
+  EFI_STATUS                  Status;
 
-    for (Index = 0; Index < TableCount; Index++) {
-        CurrentTable = &gST->ConfigurationTable[Index];
-        if (CurrentTable == NULL) {
-            DEBUG((DEBUG_ERROR, "Current ConfigurationTable entry is NULL at Index %u\n", Index));
-            continue;
-        }
+  FirmwareContext = NULL;
+  GetFirmwareContextPointer (&FirmwareContext);
 
-         if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpiTableGuid)) {
-            Status = gBS->InstallConfigurationTable(&gEfiAcpiTableGuid, NULL);
-            if (EFI_ERROR(Status)) {
-                DEBUG((DEBUG_ERROR, "Failed to remove ACPI 20 table from EFI System Table\n"));
-            }
-           continue;
-        }
+  if (FirmwareContext == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a: Firmware Context is NULL\n", __func__));
+    return EFI_UNSUPPORTED;
+  }
 
-        if (CompareGuid(&CurrentTable->VendorGuid, &gEfiAcpi20TableGuid)) {
-            Status = gBS->InstallConfigurationTable(&gEfiAcpi20TableGuid, NULL);
-            if (EFI_ERROR(Status)) {
-               DEBUG((DEBUG_ERROR, "Failed to remove ACPI table from EFI System Table\n"));
-            }
-           continue;
-        }
+  FdtAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
+  if (FdtAddress == NULL) {
+    DEBUG ((DEBUG_ERROR, "FdtAddress is NULL!\n"));
+    return EFI_INVALID_PARAMETER;
+  }
 
-        gST->ConfigurationTable[NewIndex++] = *CurrentTable;
-    }
+  Status = gBS->InstallConfigurationTable (&gFdtTableGuid, FdtAddress);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to install FDT: %r\n", Status));
+    return Status;
+  }
 
-    if (NewIndex != TableCount) {
-        for (Index = NewIndex; Index < TableCount; Index++) {
-            ZeroMem(&gST->ConfigurationTable[Index], sizeof(EFI_CONFIGURATION_TABLE));
-        }
-    }
-
-    gST->NumberOfTableEntries = NewIndex;
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS
-InstallDtb
-(
- VOID
-)
-{
-    EFI_RISCV_FIRMWARE_CONTEXT  *FirmwareContext;
-    VOID                        *DtbAddress;
-    EFI_STATUS                  Status;
-
-    FirmwareContext = NULL;
-    GetFirmwareContextPointer (&FirmwareContext);
-
-    if (FirmwareContext == NULL) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a: Firmware Context is NULL\n",
-      __func__
-      ));
-      return EFI_UNSUPPORTED;
-    }
-
-    DtbAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
-    if (DtbAddress == NULL) {
-      DEBUG((DEBUG_ERROR, "DtbAddress is NULL!\n"));
-      return EFI_INVALID_PARAMETER;
-    }
-    Status = gBS->InstallConfigurationTable(&gEfiLinuxDtbTableGuid, DtbAddress);
-    if (EFI_ERROR(Status)) {
-        DEBUG((DEBUG_ERROR, "Failed to install DTB: %r\n", Status));
-        return Status;
-    }
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS
-InstallAcpiTables
-(
- VOID
-)
-{
-    EFI_STATUS Status;
-    if (AcpiTable == NULL && Acpi20Table == NULL) {
-       return EFI_NOT_FOUND;
-    }
-    if (AcpiTable != NULL) {
-        Status = gBS->InstallConfigurationTable(&gEfiAcpiTableGuid, AcpiTable);
-        if (EFI_ERROR(Status)) {
-            DEBUG((DEBUG_ERROR, "Failed to restore ACPI Table: %r\n", Status));
-            return Status;
-        }
-    }
-
-    if (Acpi20Table != NULL) {
-        Status = gBS->InstallConfigurationTable(&gEfiAcpi20TableGuid, Acpi20Table);
-        if (EFI_ERROR(Status)) {
-            DEBUG((DEBUG_ERROR, "Failed to restore ACPI 2.0 Table: %r\n", Status));
-            return Status;
-        }
-    }
-
-    return EFI_SUCCESS;
-}
-
-EFI_STATUS
-UnloadAcpiTables
-(
- VOID
-)
-{
-    EFI_STATUS Status;
-    Status = RemoveAcpiFromConfigTable();
-    if (EFI_ERROR(Status)) {
-      DEBUG((DEBUG_ERROR, "[Error] Failed to remove ACPI Tables: %r\n", Status));
-      return Status;
-    }
-    Status = InstallDtb();
-    if (EFI_ERROR(Status)) {
-       Status = InstallAcpiTables();
-       if (EFI_ERROR(Status)) {
-        DEBUG((DEBUG_ERROR, "Can not install dtb and acpi table\n"));
-        return Status;
-       }
-       DEBUG((DEBUG_ERROR, "Can not install dtb, so reinstalled acpi\n"));
-       return Status;
-    }
-
-    return EFI_SUCCESS;
+  return EFI_SUCCESS;
 }
 
 BOOLEAN
@@ -346,17 +244,22 @@ RestoreFactoryDefaults (
 EFI_STATUS
 EFIAPI
 FrontPageCallback (
-  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL *This,
-  IN  EFI_BROWSER_ACTION                   Action,
-  IN  EFI_QUESTION_ID                      QuestionId,
-  IN  UINT8                                Type,
-  IN  EFI_IFR_TYPE_VALUE                   *Value,
-  OUT EFI_BROWSER_ACTION_REQUEST           *ActionRequest
+  IN  CONST EFI_HII_CONFIG_ACCESS_PROTOCOL  *This,
+  IN  EFI_BROWSER_ACTION                    Action,
+  IN  EFI_QUESTION_ID                       QuestionId,
+  IN  UINT8                                 Type,
+  IN  EFI_IFR_TYPE_VALUE                    *Value,
+  OUT EFI_BROWSER_ACTION_REQUEST            *ActionRequest
   )
 {
-  EFI_STATUS Status;
-  CHAR16     *ConfirmResetPrompt = NULL;
-  EFI_INPUT_KEY Key;
+  EFI_STATUS    Status;
+  BOOLEAN       AcpiEnabled;
+  CHAR16        *ConfirmResetPrompt = NULL;
+
+  if ((This == NULL) || (ActionRequest == NULL)) {
+    DEBUG ((DEBUG_ERROR, "FrontPageCallback: Invalid parameters\n"));
+    return EFI_INVALID_PARAMETER;
+  }
 
   if (Action == EFI_BROWSER_ACTION_CHANGED) {
     if (QuestionId == RESTORE_DEFAULTS_QUESTION_ID) {
@@ -379,47 +282,48 @@ FrontPageCallback (
         return Status;
       }
     }
-    if (QuestionId == ACPI_DISABLE_QUESTION_ID) {
-      if(Value->u8 == 0x0) {
-        Status = UnloadAcpiTables();
-        if (EFI_ERROR(Status)) {
-            DEBUG((DEBUG_ERROR, "Failed to unload ACPI Tables: %r\n", Status));
+  }
+
+  if (Action == EFI_BROWSER_ACTION_CHANGING) {
+    switch (QuestionId) {
+      case ACPI_DISABLE_QUESTION_ID:
+        // Convert Value->u8 to boolean (0 = disabled, 1 = enabled)
+        AcpiEnabled = (Value->u8 != 0);
+
+        // Save ACPI state to variable
+        Status = gRT->SetVariable (
+                       EFI_ACPI_ENABLE_VARIABLE_NAME,
+                       &gEfiSophgoGlobalVariableGuid,
+                       EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
+                       sizeof (BOOLEAN),
+                       &AcpiEnabled
+                       );
+        if (EFI_ERROR (Status)) {
+          DEBUG ((DEBUG_ERROR, "Failed to save ACPI state: %r\n", Status));
+          return Status;
+        }
+
+        if (!AcpiEnabled) {
+          // If ACPI is being disabled, remove ACPI tables now
+          Status = InstallFdt ();
+          if (EFI_ERROR (Status)) {
+            DEBUG ((DEBUG_ERROR, "Failed to install FDT\n"));
             return Status;
+          }
         }
-        CHAR16 *AcpiDisableMsg[] = {
-            L"ACPI Disabled Successfully",
-            L"Press ENTER to continue..."
-        };
-        CreatePopUp(EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE, NULL, AcpiDisableMsg[0], AcpiDisableMsg[1], NULL);
-        while (TRUE) {
-            Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
-            if (!EFI_ERROR(Status) && (Key.UnicodeChar == CHAR_CARRIAGE_RETURN)) {
-                break;
-            }
-        }
-      }
-      if(Value->u8 == 0x1) {
-        Status = InstallAcpiTables();
-        if (EFI_ERROR(Status)) {
-            DEBUG((DEBUG_ERROR, "Failed to load ACPI Tables: %r\n", Status));
-            return Status;
-        }
-        CHAR16 *AcpiDisableMsg[] = {
-            L"ACPI enabled Successfully",
-            L"Press ENTER to continue..."
-        };
-        CreatePopUp(EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE, NULL, AcpiDisableMsg[0], AcpiDisableMsg[1], NULL);
-        while (TRUE) {
-            Status = gST->ConIn->ReadKeyStroke(gST->ConIn, &Key);
-            if (!EFI_ERROR(Status) && (Key.UnicodeChar == CHAR_CARRIAGE_RETURN)) {
-                break;
-            }
-        }
-      }
+
+        break;
     }
   }
 
-  return UiFrontPageCallbackHandler (gFrontPagePrivate.HiiHandle, Action, QuestionId, Type, Value, ActionRequest);
+  return UiFrontPageCallbackHandler (
+           gFrontPagePrivate.HiiHandle,
+           Action,
+           QuestionId,
+           Type,
+           Value,
+           ActionRequest
+           );
 }
 
 EFI_STATUS
@@ -831,7 +735,6 @@ ConvertMemorySizeToString (
   @param    String            The string that is extracted
 
   @retval   EFI_SUCCESS       The function returns EFI_SUCCESS always.
-
 **/
 EFI_STATUS
 GetOptionalStringByIndex (
@@ -1198,9 +1101,9 @@ UpdateTimeRegion (
   StartGuidLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
   StartGuidLabel->Number = LABEL_TIME_START;
   EndGuidLabel = (EFI_IFR_GUID_LABEL *)HiiCreateGuidOpCode (
-		  EndOpCodeHandle,
-		  &gEfiIfrTianoGuid,
-		  NULL,
+                  EndOpCodeHandle,
+                  &gEfiIfrTianoGuid,
+                  NULL,
                   sizeof (EFI_IFR_GUID_LABEL)
                   );
   EndGuidLabel->ExtendOpCode = EFI_IFR_EXTEND_OP_LABEL;
@@ -1464,7 +1367,14 @@ InitializeUserInterface (
 
   InitializeStringSupport ();
   InitializePasswordToggleVariable ();
-  PassWordToggleData.DefaultAcpi = GetAcpiTable() ? 1 : 0;
+  PassWordToggleData.DefaultAcpi = GetAcpiTable () ? 1 : 0;
+  if (PassWordToggleData.DefaultAcpi == 0) {
+    Status = InstallFdt ();
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "Failed to install FDT\n"));
+      return Status;
+    }
+  }
   PassWordToggleData.IsEvb = IsServerBoard ? 0 : 1;
   Status = gRT->SetVariable (
 		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,

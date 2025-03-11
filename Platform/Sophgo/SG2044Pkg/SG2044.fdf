@@ -185,6 +185,12 @@ INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 INF  Drivers/ASpeed/ASpeedGopBinPkg/ASpeedAst2500GopDxe.inf
 
 #
+# iPXE Application
+#
+INF  Silicon/Sophgo/SG2044/iPXE/iPXE.inf
+INF  MdeModulePkg/Universal/LoadFileOnFv2/LoadFileOnFv2.inf
+
+#
 # Multiple Console IO support
 #
 INF  MdeModulePkg/Universal/Console/ConPlatformDxe/ConPlatformDxe.inf
@@ -212,13 +218,6 @@ INF  MdeModulePkg/Universal/Disk/DiskIoDxe/DiskIoDxe.inf
 INF  MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
 INF  MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
 INF  MdeModulePkg/Universal/Disk/UdfDxe/UdfDxe.inf
-
-#
-# Update Firmware in Nor Flash (whole chip)
-#
-!if $(FLASH_ENABLE) == TRUE
-INF  Silicon/Sophgo/Applications/FirmwareUpdate/FirmwareUpdate.inf
-!endif
 
 #
 # UEFI application (Shell Embedded Boot Loader)

@@ -43,7 +43,7 @@
   DEFINE NETWORK_ISCSI_ENABLE     = FALSE
 
   DEFINE FLASH_ENABLE             = TRUE
-  DEFINE ETH_ENABLE               = TRUE
+  DEFINE ETH_ENABLE               = FALSE
   DEFINE ACPI_ENABLE              = TRUE
 
   #
@@ -752,6 +752,12 @@
   Drivers/ASpeed/ASpeedGopBinPkg/ASpeedAst2500GopDxe.inf
 
   #
+  # iPXE Application
+  #
+  Silicon/Sophgo/SG2044/iPXE/iPXE.inf
+  MdeModulePkg/Universal/LoadFileOnFv2/LoadFileOnFv2.inf
+
+  #
   # ipmi ssif smbus driver
   #
   Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
@@ -767,13 +773,6 @@
   MdeModulePkg/Universal/Disk/PartitionDxe/PartitionDxe.inf
   MdeModulePkg/Universal/Disk/UnicodeCollation/EnglishDxe/EnglishDxe.inf
   MdeModulePkg/Universal/Disk/UdfDxe/UdfDxe.inf
-
-  #
-  # Update Firmware in Nor Flash (whole chip)
-  #
-!if $(FLASH_ENABLE) == TRUE
-  Silicon/Sophgo/Applications/FirmwareUpdate/FirmwareUpdate.inf
-!endif
 
   #
   # UEFI Application (Shell Embedded Boot Loader)

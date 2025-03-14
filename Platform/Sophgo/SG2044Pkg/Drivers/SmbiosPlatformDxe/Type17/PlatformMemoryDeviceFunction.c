@@ -78,10 +78,10 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
 
           switch (capacityBits) {
           case 0:
-            dramCapacityMB = 128 * 1024 * 1024;
+            dramCapacityMB = 128 * 1024;
             break;
           case 1:
-            dramCapacityMB = 64 * 1024 * 1024;
+            dramCapacityMB = 64 * 1024;
             break;
           default:
             dramCapacityMB = 0;
@@ -94,6 +94,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
           }
         }
       }
+
       SmbiosPlatformDxeCreateTable (
         (VOID *)&Type17Record,
         (VOID *)&InputData,

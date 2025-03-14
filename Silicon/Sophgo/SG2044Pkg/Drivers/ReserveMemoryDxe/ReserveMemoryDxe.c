@@ -123,7 +123,7 @@ IsValidReservedMemorySize (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  MemoryDeviceSize = ParsedData->ExtendSize; // KB
+  MemoryDeviceSize = ParsedData->ExtendSize; // MB
 
   ErrorString = HiiGetString (
 		  gReserveMemoryHandle,
@@ -137,7 +137,7 @@ IsValidReservedMemorySize (
     goto Exit;
   } else {
     if (ReservedMemorySize < 8
-        || ReservedMemorySize > (MemoryDeviceSize / 1024 / 1024)) {
+        || ReservedMemorySize > (MemoryDeviceSize / 1024)) {
       CreatePopUp (
         EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
         NULL,

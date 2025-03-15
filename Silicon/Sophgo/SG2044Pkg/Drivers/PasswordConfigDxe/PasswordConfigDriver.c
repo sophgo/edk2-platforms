@@ -1,9 +1,9 @@
 /** @file
-The module entry point for password configuration module.
+  The module entry point for password configuration module.
 
-Copyright (c) 2024, Phytium Sophgo. All rights reserved.
+  Copyright (c) 2024, Sophgo Technologies Ltd. All rights reserved.
 
-SPDX-License-Identifier: BSD-2-Clause-Patent
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 #include "PasswordConfigDxe.h"
 

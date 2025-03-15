@@ -1,9 +1,9 @@
 /** @file
-HII Config Access protocol implementation of password configuration module.
+  HII Config Access protocol implementation of password configuration module.
 
-Copyright (c) 2024, Sophgo. All rights reserved.
+  Copyright (c) 2024, Sophgo Technologies Ltd. All rights reserved.
 
-SPDX-License-Identifier: BSD-2-Clause-Patent
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 #include "PasswordConfigDxe.h"
 
@@ -510,7 +510,7 @@ RecordPassword (
   @param[in]  QuestionId    A unique value which is sent to the original exporting driver
                             so that it can identify the type of data to expect.
   @param[in]  Value         A pointer to the data being sent to the original exporting driver.
-EFI_NOT_READY
+
   @retval     EFI_SUCCESS                   Success.
   @retval     EFI_ALREADY_STARTED           Old password exist.
   @retval     EFI_NOT_READY                 Typed in old password incorrect.
@@ -571,6 +571,201 @@ CleanUserPasswordConfigData (
 }
 
 /**
+  Display a centered popup message on the screen.
+
+  @param[in]  Message    The message to display
+  @param[out] Key       Pointer to receive the key pressed by user
+
+  @retval EFI_SUCCESS   The message was displayed successfully
+**/
+STATIC
+EFI_STATUS
+ShowCenteredPopup (
+  IN  CONST CHAR16    *Message,
+  OUT EFI_INPUT_KEY   *Key
+  )
+{
+  UINTN     Columns;
+  UINTN     Rows;
+  UINTN     MaxLineLength;
+  UINTN     StartCol;
+  UINTN     StartRow;
+  UINTN     LineCount;
+  CHAR16    *CurrentChar;
+  CHAR16    *LineStart;
+  UINTN     CurrentLineLength;
+
+  //
+  // Get current screen size
+  //
+  gST->ConOut->QueryMode (
+                 gST->ConOut,
+                 gST->ConOut->Mode->Mode,
+                 &Columns,
+                 &Rows
+                 );
+
+  //
+  // Set background color
+  //
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE);
+
+  //
+  // Count lines and find maximum line length
+  //
+  LineCount = 1;
+  MaxLineLength = 0;
+  CurrentLineLength = 0;
+  CurrentChar = (CHAR16*)Message;
+  LineStart = CurrentChar;
+
+  while (*CurrentChar != L'\0') {
+    if (*CurrentChar == L'\n') {
+      LineCount++;
+      if (CurrentLineLength > MaxLineLength) {
+        MaxLineLength = CurrentLineLength;
+      }
+      CurrentLineLength = 0;
+      LineStart = CurrentChar + 1;
+    } else {
+      CurrentLineLength++;
+    }
+    CurrentChar++;
+  }
+
+  //
+  // Check last line length
+  //
+  if (CurrentLineLength > MaxLineLength) {
+    MaxLineLength = CurrentLineLength;
+  }
+
+  //
+  // Calculate starting position
+  //
+  StartCol = (Columns - MaxLineLength) / 2;
+  StartRow = (Rows - LineCount) / 2;
+
+  //
+  // Set cursor position for first line
+  //
+  gST->ConOut->SetCursorPosition (gST->ConOut, StartCol, StartRow);
+
+  //
+  // Create popup with proper spacing
+  //
+  CreatePopUp (
+    EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+    Key,
+    Message,
+    NULL
+    );
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Check if the password meets format requirements.
+  Password must be 8-20 characters and contain at least two of:
+  special characters, uppercase letters, lowercase letters, and digits.
+
+  @param[in]  Password    The password string to check
+  @param[in]  Private     Pointer to private data structure for HII message
+
+  @retval EFI_SUCCESS           Password format is valid
+  @retval EFI_INVALID_PARAMETER Password format is invalid
+**/
+STATIC
+EFI_STATUS
+ValidatePasswordFormat (
+  IN CONST CHAR16                    *Password,
+  IN PASSWORD_CONFIG_PRIVATE_DATA    *Private
+  )
+{
+  UINTN     Length;
+  UINTN     Index;
+  BOOLEAN   HasUpper;
+  BOOLEAN   HasLower;
+  BOOLEAN   HasDigit;
+  BOOLEAN   HasSpecial;
+  UINT8     TypeCount;
+  EFI_INPUT_KEY Key;
+
+  if (Password == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Check length (8-20 characters)
+  //
+  Length = StrLen(Password);
+  if (Length < 8 || Length > 20) {
+    ShowCenteredPopup(
+      L"Password must be 8-20 characters long!",
+      &Key
+    );
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Check character types
+  //
+  HasUpper = FALSE;
+  HasLower = FALSE;
+  HasDigit = FALSE;
+  HasSpecial = FALSE;
+
+  for (Index = 0; Index < Length; Index++) {
+    if (Password[Index] >= L'A' && Password[Index] <= L'Z') {
+      HasUpper = TRUE;
+    } else if (Password[Index] >= L'a' && Password[Index] <= L'z') {
+      HasLower = TRUE;
+    } else if (Password[Index] >= L'0' && Password[Index] <= L'9') {
+      HasDigit = TRUE;
+    } else if (Password[Index] == L'!' || Password[Index] == L'@' ||
+               Password[Index] == L'#' || Password[Index] == L'$' ||
+               Password[Index] == L'%' || Password[Index] == L'^' ||
+               Password[Index] == L'&' || Password[Index] == L'*' ||
+               Password[Index] == L'(' || Password[Index] == L')' ||
+               Password[Index] == L'-' || Password[Index] == L'_' ||
+               Password[Index] == L'+' || Password[Index] == L'=' ||
+               Password[Index] == L'[' || Password[Index] == L']' ||
+               Password[Index] == L'{' || Password[Index] == L'}' ||
+               Password[Index] == L';' || Password[Index] == L':' ||
+               Password[Index] == L',' || Password[Index] == L'.' ||
+               Password[Index] == L'<' || Password[Index] == L'>' ||
+               Password[Index] == L'?' || Password[Index] == L'/') {
+      HasSpecial = TRUE;
+    } else {
+      ShowCenteredPopup(
+        L"Password contains invalid character!",
+        &Key
+      );
+      return EFI_INVALID_PARAMETER;
+    }
+  }
+
+  //
+  // Count how many types of characters are present
+  //
+  TypeCount = 0;
+  if (HasUpper) TypeCount++;
+  if (HasLower) TypeCount++;
+  if (HasDigit) TypeCount++;
+  if (HasSpecial) TypeCount++;
+
+  if (TypeCount < 2) {
+    ShowCenteredPopup (
+      L"Password requires at least two of: A-Z, a-z, 0-9, or special characters!",
+      &Key
+    );
+    return EFI_INVALID_PARAMETER;
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
   Process callback function PasswordCheck().
   Get Password configuration data from variable and set browser data.
 
@@ -590,58 +785,196 @@ ProcessPasswordConfigData (
   IN  EFI_IFR_TYPE_VALUE            *Value
   )
 {
-  CHAR16 *TempPassword;
-  EFI_STATUS Status;
-  UINTN VarSize;
-  UINTN Length;
-  PASSWORD_CONFIG_DATA PasswordConfigData;
+  CHAR16                         *TempPassword;
+  CHAR16                         *OldPassword;
+  EFI_STATUS                     Status;
+  UINTN                          VarSize;
+  UINTN                          Length;
+  UINT8                          PasswordExist;
+  PASSWORD_CONFIG_DATA           PasswordConfigData;
+  EFI_INPUT_KEY                  Key;
+  CHAR16                        *ConfirmPasswdString;
+  #if ADMIN_USER_CLEAN_TOGETHER
+  CHAR16                        *CleanUserPasswdWarning;
+  #endif
+  CHAR16                        *UserAndAdminPasswdSameString;
+  CHAR16                        *AdminAndUserPasswdSameString;
+  CHAR16                        *ReInputPasswdString;
 
-  VarSize = sizeof(PASSWORD_CONFIG_DATA);
-  Length = sizeof(CHAR16) * PASSWD_MAXLEN;
-  TempPassword = AllocateZeroPool(Length);
+  VarSize = sizeof (PASSWORD_CONFIG_DATA);
+  Length = sizeof (CHAR16) * PASSWD_MAXLEN;
+  TempPassword = AllocateZeroPool (Length);
+  OldPassword = AllocateZeroPool (Length);
 
-  if (TempPassword == NULL) {
-    return EFI_OUT_OF_RESOURCES;
+  if (TempPassword == NULL || OldPassword == NULL) {
+    Status = EFI_OUT_OF_RESOURCES;
+    goto ProcExit;
   }
 
-  Status = RecordPassword(Private, Value->string, TempPassword, PASSWD_MAXLEN);
-  if (EFI_ERROR(Status)) {
-    DEBUG((DEBUG_ERROR, "Error: Failed to input password!\n"));
-    FreePool(TempPassword);
-    return Status;
+  PasswordExist = 0;
+  //
+  // Use a NULL password to test whether old password is required
+  //
+  Status = RecordPassword (Private, Value->string, TempPassword, PASSWD_MAXLEN);
+  if (EFI_ERROR (Status)) {
+    mCheckFlag = 0;
+    DEBUG ((DEBUG_ERROR, "Error: Failed to input password!"));
+    goto ProcExit;
   }
 
-  Status = gRT->GetVariable(
+  //
+  // 1st,check Old password exist
+  //
+  Status = gRT->GetVariable (
     EFI_PASSWORD_CONFIG_VARIABLE_NAME,
     &gEfiSophgoGlobalVariableGuid,
     NULL,
     &VarSize,
     &PasswordConfigData
-  );
-
-  if (!EFI_ERROR(Status)) {
-    if (QuestionId == FORM_ADMIN_PASSWD_OPEN) {
-      CopyMem(Private->PasswordConfigData.AdminPassword, TempPassword, Length);
-    } else if (QuestionId == FORM_USER_PASSWD_OPEN) {
-      CopyMem(Private->PasswordConfigData.UserPassword, TempPassword, Length);
-      Private->PasswordConfigData.UserPasswordEnable = (StrLen(TempPassword) > 0);
-    }
-
-    Status = gRT->SetVariable(
-      EFI_PASSWORD_CONFIG_VARIABLE_NAME,
-      &gEfiSophgoGlobalVariableGuid,
-      PLATFORM_SETUP_VARIABLE_FLAG,
-      sizeof(PASSWORD_CONFIG_DATA),
-      &Private->PasswordConfigData
     );
-    if (EFI_ERROR(Status)) {
-        DEBUG((DEBUG_ERROR, "SetVariable(%s) failed: %r\n", EFI_PASSWORD_CONFIG_VARIABLE_NAME, Status));
-        return Status;
-    }
-    GetPasswordConfigData(Private);
+
+  if (QuestionId == FORM_USER_PASSWD_OPEN && StrLen (PasswordConfigData.UserPassword) > 0) {
+    PasswordExist = 1;
+    CopyMem (OldPassword, PasswordConfigData.UserPassword, Length);
+  } else if (QuestionId == FORM_ADMIN_PASSWD_OPEN && StrLen (PasswordConfigData.AdminPassword) > 0) {
+    PasswordExist = 1;
+    CopyMem (OldPassword, PasswordConfigData.AdminPassword, Length);
   }
 
-  FreePool(TempPassword);
+  if (StrLen(TempPassword) == 0) {
+    if (PasswordExist == 1) {
+      //
+      // Old password exist
+      //
+      mCheckFlag = 0;
+      Status = EFI_ALREADY_STARTED;
+    } else {
+      //
+      // Old password not exist
+      //
+      mCheckFlag = 1;
+      Status = EFI_SUCCESS;
+    }
+  } else if (StrLen(TempPassword) > 0 && mCheckFlag == 0) {
+    //
+    // 2nd Check user input old password
+    //
+    if (StrCmp (OldPassword, TempPassword) == 0) {
+      //
+      // Typed in old password correct
+      //
+      mCheckFlag = 1;
+      Status = EFI_SUCCESS;
+    } else {
+      //
+      // Typed in old password incorrect
+      //
+      Status = EFI_NOT_READY;
+    }
+  } else if (StrLen(TempPassword) > 0 && mCheckFlag == 1) {
+    //
+    // 3rd,Save new password
+    //
+    if (QuestionId == FORM_USER_PASSWD_OPEN) {
+      if ((StrCmp (TempPassword, Private->PasswordConfigData.AdminPassword) == 0) && StrLen (TempPassword) > 0) {
+        do {
+          UserAndAdminPasswdSameString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_USER_ADMIN_SAME), NULL);
+          ReInputPasswdString          = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_REINPUT_PASSWD), NULL);
+          CreatePopUp (EFI_WHITE | EFI_BACKGROUND_BLUE, &Key, L" ", UserAndAdminPasswdSameString, ReInputPasswdString,NULL);
+        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+        mCheckFlag = 0;
+        goto ProcExit;
+      }
+      //
+      // Validate password format
+      //
+      Status = ValidatePasswordFormat(TempPassword, Private);
+      if (EFI_ERROR (Status)) {
+        mCheckFlag = 0;
+        goto ProcExit;
+      }
+      CopyMem (Private->PasswordConfigData.UserPassword, TempPassword, Length);
+      if (StrLen (TempPassword) > 0) {
+        Private->PasswordConfigData.UserPasswordEnable = 1;
+      } else {
+        Private->PasswordConfigData.UserPasswordEnable = 0;
+      }
+    } else if (QuestionId == FORM_ADMIN_PASSWD_OPEN) {
+      if (StrCmp (TempPassword, Private->PasswordConfigData.UserPassword) == 0 && StrLen (TempPassword) > 0) {
+        do {
+          AdminAndUserPasswdSameString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_ADMIN_USER_SAME), NULL);
+          ReInputPasswdString          = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_REINPUT_PASSWD), NULL);
+          CreatePopUp (EFI_WHITE | EFI_BACKGROUND_BLUE, &Key, L" ", AdminAndUserPasswdSameString, ReInputPasswdString,NULL);
+        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
+        mCheckFlag = 0;
+        goto ProcExit;
+      }
+      //
+      // Validate password format
+      //
+      Status = ValidatePasswordFormat (TempPassword, Private);
+      if (EFI_ERROR(Status)) {
+        mCheckFlag = 0;
+        goto ProcExit;
+      }
+      CopyMem (Private->PasswordConfigData.AdminPassword, TempPassword, Length);
+      if (StrLen (TempPassword) > 0) {
+        Private->PasswordConfigData.AdminPasswordEnable = 1;
+      } else {
+        Private->PasswordConfigData.AdminPasswordEnable = 0;
+      }
+    }
+
+    do {
+      #if ADMIN_USER_CLEAN_TOGETHER
+      if(Private->PasswordConfigData.AdminPasswordEnable == 0) {
+         ConfirmPasswdString     = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_CONFIRM_PASSWD), NULL);
+         CleanUserPasswdWarning  = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_CLEAN_USER_PASSWORD_WARNING), NULL);
+         CreatePopUp (EFI_WHITE | EFI_BACKGROUND_BLUE, &Key, CleanUserPasswdWarning, ConfirmPasswdString, L" ",NULL);
+      } else
+      #endif
+      {
+         ConfirmPasswdString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_CONFIRM_PASSWD), NULL);
+         CreatePopUp (EFI_WHITE | EFI_BACKGROUND_BLUE, &Key, L" ", ConfirmPasswdString, L" ",NULL);
+      }
+    } while ((Key.ScanCode != SCAN_ESC) && (Key.UnicodeChar != CHAR_CARRIAGE_RETURN));
+
+    if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
+      #if ADMIN_USER_CLEAN_TOGETHER
+      if(Private->PasswordConfigData.AdminPasswordEnable == 0) {
+          SetMem (&Private->PasswordConfigData.UserPassword, (sizeof (CHAR16) * PASSWD_MAXLEN), 0x00);
+          Private->PasswordConfigData.UserPasswordEnable = 0;
+      }
+      #endif
+
+      Status = gRT->SetVariable (
+          EFI_PASSWORD_CONFIG_VARIABLE_NAME,
+          &gEfiSophgoGlobalVariableGuid,
+          PLATFORM_SETUP_VARIABLE_FLAG,
+          sizeof (PASSWORD_CONFIG_DATA),
+          &Private->PasswordConfigData
+          );
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "SetVariable failed: %r\n", Status));
+        goto ProcExit;
+      }
+      Status = GetPasswordConfigData (Private);
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_ERROR, "GetPasswordConfigData failed: %r\n", Status));
+        goto ProcExit;
+      }
+    }
+    Status = EFI_SUCCESS;
+    mCheckFlag = 0;
+  }
+
+ProcExit:
+  if (TempPassword != NULL) {
+    FreePool (TempPassword);
+  }
+  if (OldPassword != NULL) {
+    FreePool (OldPassword);
+  }
   return Status;
 }
 

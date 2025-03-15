@@ -1,9 +1,10 @@
 /** @file
-The header file of HII Config Access protocol implementation of password configuration module.
+  The header file of HII Config Access protocol implementation of
+  password configuration module.
 
-Copyright (c) 2024, Sophgo. All rights reserved.
+  Copyright (c) 2024, Sophgo Technologies Ltd. All rights reserved.
 
-SPDX-License-Identifier: BSD-2-Clause-Patent
+  SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 #ifndef  PASSWORD_CONFIG_H_
 #define  PASSWORD_CONFIG_H_

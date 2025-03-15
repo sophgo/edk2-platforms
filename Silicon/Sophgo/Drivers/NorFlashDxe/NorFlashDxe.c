@@ -402,8 +402,6 @@ SpiNorErase (
     return EFI_INVALID_PARAMETER;
   }
 
-  Address = FlashOffset;
-
   if (Nor->Info->Flags & NOR_FLASH_ERASE_4K) {
     EraseSize = SIZE_4KB;
   } else {
@@ -432,7 +430,7 @@ SpiNorErase (
     EraseSize
     ));
   for (Index = 0; Index < ErasedSectors; Index++) {
-    Address += Index * EraseSize;
+    Address = FlashOffset + Index * EraseSize;
     //
     // Write enable
     //

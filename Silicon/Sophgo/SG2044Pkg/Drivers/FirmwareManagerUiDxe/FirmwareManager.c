@@ -436,7 +436,8 @@ UpdateFirmware (
         TempBuffer
         );
     if (CompareMem (TempBuffer, Buffer + Index * BlockSize, BlockSize) != 0) {
-      Print (L"\r%s Fail!\n", String);
+      Status = EFI_DEVICE_ERROR;
+      Print (L"\r%s Fail! Data compare error\n", String);
       goto ProExit;
     }
 
@@ -565,6 +566,25 @@ PressKeytoReset (
 
   ResetCold ();
 }
+/**
+  Press Enter to reboot.
+**/
+VOID
+PressKeytoContinue (
+  EFI_STRING_ID    TokenToUpdate
+  )
+{
+  CHAR16           Str1[64];
+  CHAR16           *UpdateSuccString;
+
+  UpdateSuccString = HiiGetString (gFirmwareUpdateHandle, TokenToUpdate, NULL);
+
+  PopupInformation (Str1, UpdateSuccString);
+
+  DEBUG ((DEBUG_VERBOSE, "The ENTER key is pressed, continue\n"));
+
+  ClearScreen();
+}
 
 /**
   Probe and initialize nor flash.
@@ -635,6 +655,7 @@ UpdateFromFile (
   BOOLEAN          PromptSkipVariable;
   EFI_STRING_ID    TokenToUpdate1;
   EFI_STRING_ID    TokenToUpdate2;
+  EFI_STRING_ID    TokenToUpdate3;
 
   //
   // Locate SPI Master protocol
@@ -666,11 +687,13 @@ UpdateFromFile (
     SelectedFlashNumber = 0;
     TokenToUpdate1 = STRING_TOKEN (STR_UPDATING_FIRMWARE);
     TokenToUpdate2 = STRING_TOKEN (STR_FIRMWARE_UPDATE_SUCC);
+    TokenToUpdate3 = STRING_TOKEN (STR_FIRMWARE_UPDATE_FAIL);
     PromptSkipVariable = TRUE;
   } else if (QuestionId == UPDATE_INI_KEY) {
     SelectedFlashNumber = 1;
     TokenToUpdate1 = STRING_TOKEN (STR_UPDATING_INI);
     TokenToUpdate2 = STRING_TOKEN (STR_INI_UPDATE_SUCC);
+    TokenToUpdate3 = STRING_TOKEN (STR_INI_UPDATE_FAIL);
     PromptSkipVariable = FALSE;
   }
 
@@ -712,7 +735,11 @@ UpdateFromFile (
 		    PromptSkipVariable
 		    );
 
-    PressKeytoReset (TokenToUpdate2);
+    if (EFI_ERROR(Status)) {
+      PressKeytoContinue (TokenToUpdate3);
+    } else {
+      PressKeytoReset (TokenToUpdate2);
+    }
   }
 
   FreePool (FileBuffer);

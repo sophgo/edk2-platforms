@@ -79,22 +79,25 @@ SpiNorWaitTillReady (
   )
 {
   UINT32 WaitTime;
+  /* Unit is us */
+  CONST UINT32 CHECK_INTERVAL = 100;
+  /*
+   * Maximum 4K sector erase time of GD25LB512ME is 700ms, in -40 ~ 125 celsius.
+   * Set 2 seconds for safe and compatibility.
+   */
+  CONST UINT32 MAX_WAIT_TIME = 2000000;
 
-  WaitTime = 0;
-
-  while (1) {
-    MicroSecondDelay (100);
+  for (WaitTime = 0; WaitTime <= MAX_WAIT_TIME / CHECK_INTERVAL; ++WaitTime) {
+    MicroSecondDelay (CHECK_INTERVAL);
 
     //
     // Query the Status Register to see if the flash is ready for new commands.
     //
     SpiNorReadStatus (Nor, Nor->BounceBuf);
 
-    if (!(Nor->BounceBuf[0] & SR_WIP) || WaitTime > 600) {
+    if (!(Nor->BounceBuf[0] & SR_WIP)) {
       return EFI_SUCCESS;
     }
-
-    WaitTime ++;
   }
 
   return EFI_TIMEOUT;

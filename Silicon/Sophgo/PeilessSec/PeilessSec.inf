@@ -57,7 +57,8 @@
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                       ## CONSUMES
 
 [Guids]
-  gFdtHobGuid      ## PRODUCES
+  gFdtHobGuid                           ## PRODUCES
+  gEfiFirmwarePerformanceGuid           ## PRODUCES
 
 [BuildOptions]
   GCC:*_*_*_PP_FLAGS = -D__ASSEMBLY__

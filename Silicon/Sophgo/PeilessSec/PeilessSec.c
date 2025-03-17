@@ -26,10 +26,19 @@ SecInitializePlatform (
   )
 {
   EFI_STATUS  Status;
+  FIRMWARE_SEC_PERFORMANCE      Performance;
+  UINT64                        StartTimeStamp;
 
   MemoryPeimInitialization ();
 
   CpuPeimInitialization ();
+
+  // Store timer value logged at the beginning of firmware image execution
+  StartTimeStamp = GetPerformanceCounter();
+  Performance.ResetEnd = GetTimeInNanoSecond (StartTimeStamp);
+
+  // Build SEC Performance Data Hob
+  BuildGuidDataHob (&gEfiFirmwarePerformanceGuid, &Performance, sizeof (Performance));
 
   // Set the Boot Mode
   SetBootMode (BOOT_WITH_FULL_CONFIGURATION);

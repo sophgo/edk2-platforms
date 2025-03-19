@@ -446,6 +446,17 @@ UpdateFirmware (
     Print (L"%s %02d%%%", String, ((Index + 1) * 100) / Count);
   }
 
+  Status = NorFlashProtocol->SoftReset (Nor);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Soft Reset - %r\n",
+      __func__,
+      Status
+      ));
+    goto ProExit;
+  }
+
 ProExit:
   if (Nor) {
     SpiMasterProtocol->FreeDevice (Nor);

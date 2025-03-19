@@ -98,7 +98,13 @@ SpiNorErase (
 EFI_STATUS
 EFIAPI
 SpiNorGetFlashVariableOffset (
-  IN SPI_NOR   *Nor
+  IN SPI_NOR     *Nor
+  );
+
+EFI_STATUS
+EFIAPI
+SpiNorSoftReset (
+  IN SPI_NOR     *Nor
   );
 
 EFI_STATUS

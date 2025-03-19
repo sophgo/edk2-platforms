@@ -32,6 +32,9 @@
 #define SPINOR_OP_RDID          0x9f    /* Read JEDEC ID */
 #define SPINOR_OP_RDCR          0x35    /* Read configuration register */
 
+#define SPINOR_SRSTEN_OP        0x66    /* Soft reset enable */
+#define SPINOR_SRST_OP          0x99    /* Soft reset */
+
 //
 // 4-byte address opcodes.
 //
@@ -121,6 +124,12 @@ EFI_STATUS
   IN SPI_NOR                         *Nor
   );
 
+typedef
+EFI_STATUS
+(EFIAPI *SG_NOR_FLASH_PROTOCOL_SOFT_RESET)(
+  IN SPI_NOR                          *Nor
+  );
+
 struct _SOPHGO_NOR_FLASH_PROTOCOL {
   SG_NOR_FLASH_PROTOCOL_GET_FLASH_ID                GetFlashid;
   SG_NOR_FLASH_PROTOCOL_READ_DATA                   ReadData;
@@ -131,6 +140,7 @@ struct _SOPHGO_NOR_FLASH_PROTOCOL {
   SG_NOR_FLASH_PROTOCOL_ERASE_CHIP                  EraseChip;
   SG_NOR_FLASH_PROTOCOL_INIT                        Init;
   SG_NOR_FLASH_PROTOCOL_GET_FLASH_VARIABLE_OFFSET   GetFlashVariableOffset;
+  SG_NOR_FLASH_PROTOCOL_SOFT_RESET                  SoftReset;
 };
 
 typedef struct {

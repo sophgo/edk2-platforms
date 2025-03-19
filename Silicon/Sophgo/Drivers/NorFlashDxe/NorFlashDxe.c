@@ -632,6 +632,46 @@ Error:
 
 EFI_STATUS
 EFIAPI
+SpiNorSoftReset (
+  IN SPI_NOR     *Nor
+  )
+{
+  EFI_STATUS Status;
+
+  Status = SpiMasterProtocol->WriteRegister (Nor, SPINOR_SRSTEN_OP, NULL, 0);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Enable Soft Reset - %r\n",
+      __func__,
+      Status
+      ));
+    return Status;
+  }
+
+  Status = SpiMasterProtocol->WriteRegister (Nor, SPINOR_SRST_OP, NULL, 0);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Soft Reset - %r\n",
+      __func__,
+      Status
+      ));
+    return Status;
+  }
+
+  //
+  // Software Reset is not instant, and the delay varies from flash to
+  // flash. Looking at a few flashes, most range somewhere below 100
+  // microseconds.
+  //
+  MicroSecondDelay (200);
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
 SpiNorInit (
   IN SOPHGO_NOR_FLASH_PROTOCOL *This,
   IN SPI_NOR                   *Nor
@@ -771,7 +811,7 @@ SpiNorEntryPoint (
     mNorFlashInstance->NorFlashProtocol.Erase                   = SpiNorErase;
     mNorFlashInstance->NorFlashProtocol.EraseChip               = SpiNorEraseChip;
     mNorFlashInstance->NorFlashProtocol.GetFlashVariableOffset  = SpiNorGetFlashVariableOffset;
-
+    mNorFlashInstance->NorFlashProtocol.SoftReset               = SpiNorSoftReset;
     mNorFlashInstance->Signature = NOR_FLASH_SIGNATURE;
 
     Status = gBS->InstallMultipleProtocolInterfaces (

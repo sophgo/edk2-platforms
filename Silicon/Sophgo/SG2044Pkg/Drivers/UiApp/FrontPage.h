@@ -40,6 +40,7 @@
 #include <Library/PrintLib.h>
 #include <Library/CustomizedDisplayLib/Colors.h>
 #include <Library/BaseRiscVSbiLib.h>
+#include <Library/HashPasswordLib.h>
 
 #include "FrontPageNVDataStruc.h"
 #include "FrontPageCustomizedUiSupport.h"

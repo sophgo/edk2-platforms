@@ -428,6 +428,7 @@ FrontPagePasswordCheck (
   )
 {
   CHAR16                  TempStr[PASSWD_MAXLEN];
+  UINT8                   *TempStrHash;
   CHAR16                  UsernameStr[PASSWD_MAXLEN];
   CHAR16                  ChanceStr[30];
   PASSWORD_CONFIG_DATA    PasswordConfigData;
@@ -445,6 +446,7 @@ FrontPagePasswordCheck (
   ZeroMem (TempStr,      sizeof(TempStr));
   ZeroMem (UsernameStr,  sizeof(UsernameStr));
   ZeroMem (&PasswordConfigData, sizeof (PasswordConfigData));
+  TempStrHash= AllocateZeroPool (sizeof(TempStr));
   VarSize = sizeof (PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable (
 		  EFI_PASSWORD_CONFIG_VARIABLE_NAME,
@@ -499,12 +501,14 @@ FrontPagePasswordCheck (
   while (Chance > 0) {
     EnterPasswordString = HiiGetString (gStringPackHandle, STRING_TOKEN (STR_ENTER_PASSWORD), NULL);
     ReadString (EnterPasswordString, TempStr);
+    HashPassword(TempStr, TempStrHash);
+
     if ((PasswordConfigData.UserPriv == 1) &&
-        (StrCmp (TempStr, PasswordConfigData.AdminPassword) == 0)) {
+        (StrCmp ((CHAR16 *)TempStrHash, PasswordConfigData.AdminPassword) == 0)) {
       break;
     } else if (
         (PasswordConfigData.UserPriv == 0) &&
-        (StrCmp (TempStr, PasswordConfigData.UserPassword) == 0)
+        (StrCmp ((CHAR16 *)TempStrHash, PasswordConfigData.UserPassword) == 0)
       ) {
       break;
     } else {
@@ -512,6 +516,7 @@ FrontPagePasswordCheck (
       gST->ConOut->ClearScreen (gST->ConOut);
       Chance--;
       if (Chance == 0) {
+        FreePool (TempStrHash);
         DEBUG ((DEBUG_ERROR, "Maximum attempts reached. System resetting...\n"));
         gRT->ResetSystem (EfiResetCold, EFI_SUCCESS, 0, NULL);
       } else {
@@ -526,7 +531,9 @@ FrontPagePasswordCheck (
       }
     }
     ZeroMem (TempStr, sizeof (TempStr));
+    ZeroMem (TempStrHash, sizeof (TempStr));
   }
+  FreePool (TempStrHash);
 
   Status = gRT->SetVariable (
 		  EFI_PASSWORD_CONFIG_VARIABLE_NAME,

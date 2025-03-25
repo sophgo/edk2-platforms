@@ -63,14 +63,36 @@ PasswordRestore (
   VOID
   )
 {
-  EFI_STATUS Status;
+  EFI_STATUS            Status;
   PASSWORD_CONFIG_DATA  PasswordConfigData;
+  UINT8                 *UserPasswordHash;
+  UINT8                 *AdminPasswordHash;
+  UINTN                 Length;
+
+  Length = sizeof (CHAR16) * PASSWD_MAXLEN;
+  UserPasswordHash = AllocateZeroPool (Length);
+  AdminPasswordHash = AllocateZeroPool (Length);
 
   PasswordConfigData.UserPriv = 0;
   PasswordConfigData.UserPasswordEnable = 1;
   PasswordConfigData.AdminPasswordEnable = 1;
-  StrCpyS(PasswordConfigData.UserPassword, PASSWD_MAXLEN, L"user1234");
-  StrCpyS(PasswordConfigData.AdminPassword, PASSWD_MAXLEN, L"admin1234");
+
+  // Hash the default user password
+  Status = HashPassword(L"user1234", UserPasswordHash);
+  if (EFI_ERROR(Status)) {
+    goto PasswordRestoreExit;
+  }
+
+  // Hash the default admin password
+  Status = HashPassword(L"admin1234", AdminPasswordHash);
+  if (EFI_ERROR(Status)) {
+    goto PasswordRestoreExit;
+  }
+
+  // Copy hashed passwords to the configuration data
+  CopyMem(PasswordConfigData.UserPassword, UserPasswordHash, Length);
+  CopyMem(PasswordConfigData.AdminPassword, AdminPasswordHash, Length);
+
   Status = gRT->SetVariable(
               EFI_PASSWORD_CONFIG_VARIABLE_NAME,
               &gEfiSophgoGlobalVariableGuid,
@@ -82,6 +104,11 @@ PasswordRestore (
       return Status;
    }
   return EFI_SUCCESS;
+
+PasswordRestoreExit:
+  FreePool (UserPasswordHash);
+  FreePool (AdminPasswordHash);
+  return Status;
 }
 
 /**
@@ -95,10 +122,39 @@ PasswordConfigDefault (
   IN OUT PASSWORD_CONFIG_DATA  *PasswordConfigData
   )
 {
+  EFI_STATUS  Status;
+  UINT8       *HasUserPassword;
+  UINT8       *HasAdminPassword;
+  UINTN       Length;
+
+  Length = sizeof (CHAR16) * PASSWD_MAXLEN;
+  HasUserPassword = AllocateZeroPool (Length);
+  HasAdminPassword = AllocateZeroPool (Length);
+
+  // Set default enable flags
   PasswordConfigData->UserPasswordEnable = 1;
   PasswordConfigData->AdminPasswordEnable = 1;
-  StrCpyS(PasswordConfigData->UserPassword, PASSWD_MAXLEN, L"user1234");
-  StrCpyS(PasswordConfigData->AdminPassword, PASSWD_MAXLEN, L"admin1234");
+
+  // Hash the default user password
+  Status = HashPassword(L"user1234", HasUserPassword);
+  if (EFI_ERROR(Status)) {
+    goto PasswordConfigDefaultExit;
+  }
+
+  // Hash the default admin password
+  Status = HashPassword(L"admin1234", HasAdminPassword);
+  if (EFI_ERROR(Status)) {
+    goto PasswordConfigDefaultExit;
+  }
+
+  // Copy hashed passwords to the configuration data
+  CopyMem(PasswordConfigData->UserPassword, HasUserPassword, Length);
+  CopyMem(PasswordConfigData->AdminPassword, HasAdminPassword, Length);
+
+PasswordConfigDefaultExit:
+  FreePool (HasUserPassword);
+  FreePool (HasAdminPassword);
+  return;
 }
 
 /**
@@ -800,11 +856,13 @@ ProcessPasswordConfigData (
   CHAR16                        *UserAndAdminPasswdSameString;
   CHAR16                        *AdminAndUserPasswdSameString;
   CHAR16                        *ReInputPasswdString;
+  UINT8                         *HashTempPasswd;
 
   VarSize = sizeof (PASSWORD_CONFIG_DATA);
   Length = sizeof (CHAR16) * PASSWD_MAXLEN;
   TempPassword = AllocateZeroPool (Length);
   OldPassword = AllocateZeroPool (Length);
+  HashTempPasswd = AllocateZeroPool (Length);
 
   if (TempPassword == NULL || OldPassword == NULL) {
     Status = EFI_OUT_OF_RESOURCES;
@@ -819,6 +877,12 @@ ProcessPasswordConfigData (
   if (EFI_ERROR (Status)) {
     mCheckFlag = 0;
     DEBUG ((DEBUG_ERROR, "Error: Failed to input password!"));
+    goto ProcExit;
+  }
+
+  // Hash the TempPassword
+  Status = HashPassword(TempPassword, HashTempPasswd);
+  if (EFI_ERROR (Status)) {
     goto ProcExit;
   }
 
@@ -859,7 +923,7 @@ ProcessPasswordConfigData (
     //
     // 2nd Check user input old password
     //
-    if (StrCmp (OldPassword, TempPassword) == 0) {
+    if (StrCmp (OldPassword, (CHAR16 *)HashTempPasswd) == 0) {
       //
       // Typed in old password correct
       //
@@ -876,7 +940,7 @@ ProcessPasswordConfigData (
     // 3rd,Save new password
     //
     if (QuestionId == FORM_USER_PASSWD_OPEN) {
-      if ((StrCmp (TempPassword, Private->PasswordConfigData.AdminPassword) == 0) && StrLen (TempPassword) > 0) {
+      if ((StrCmp ((CHAR16 *)HashTempPasswd, Private->PasswordConfigData.AdminPassword) == 0) && StrLen (TempPassword) > 0) {
         do {
           UserAndAdminPasswdSameString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_USER_ADMIN_SAME), NULL);
           ReInputPasswdString          = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_REINPUT_PASSWD), NULL);
@@ -893,14 +957,14 @@ ProcessPasswordConfigData (
         mCheckFlag = 0;
         goto ProcExit;
       }
-      CopyMem (Private->PasswordConfigData.UserPassword, TempPassword, Length);
+      CopyMem (Private->PasswordConfigData.UserPassword, HashTempPasswd, Length);
       if (StrLen (TempPassword) > 0) {
         Private->PasswordConfigData.UserPasswordEnable = 1;
       } else {
         Private->PasswordConfigData.UserPasswordEnable = 0;
       }
     } else if (QuestionId == FORM_ADMIN_PASSWD_OPEN) {
-      if (StrCmp (TempPassword, Private->PasswordConfigData.UserPassword) == 0 && StrLen (TempPassword) > 0) {
+      if (StrCmp ((CHAR16 *)HashTempPasswd, Private->PasswordConfigData.UserPassword) == 0 && StrLen (TempPassword) > 0) {
         do {
           AdminAndUserPasswdSameString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_ADMIN_USER_SAME), NULL);
           ReInputPasswdString          = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_REINPUT_PASSWD), NULL);
@@ -917,7 +981,7 @@ ProcessPasswordConfigData (
         mCheckFlag = 0;
         goto ProcExit;
       }
-      CopyMem (Private->PasswordConfigData.AdminPassword, TempPassword, Length);
+      CopyMem (Private->PasswordConfigData.AdminPassword, HashTempPasswd, Length);
       if (StrLen (TempPassword) > 0) {
         Private->PasswordConfigData.AdminPasswordEnable = 1;
       } else {
@@ -974,6 +1038,9 @@ ProcExit:
   }
   if (OldPassword != NULL) {
     FreePool (OldPassword);
+  }
+  if (HashTempPasswd != NULL) {
+    FreePool (HashTempPasswd);
   }
   return Status;
 }

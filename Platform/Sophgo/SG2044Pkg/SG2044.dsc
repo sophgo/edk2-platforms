@@ -277,6 +277,9 @@
   # Nor Flash Library
   NorFlashInfoLib|EmbeddedPkg/Library/NorFlashInfoLib/NorFlashInfoLib.inf
 
+  # Hash Password
+  HashPasswordLib|Silicon/Sophgo/Library/HashPasswordLib/HashPasswordLib.inf
+
   # Ds1307 RTC Library
   RealTimeClockLib|Silicon/Sophgo/Library/Ds1307RealTimeClockLib/Ds1307RealTimeClockLib.inf
 

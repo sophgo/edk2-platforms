@@ -52,6 +52,7 @@
   UefiBootManagerLib
   SmbiosInformationLib
   ResetSystemLib
+  HashPasswordLib
 
 [Guids]
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)

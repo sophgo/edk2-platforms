@@ -30,6 +30,7 @@
 #include <Library/UefiHiiServicesLib.h>
 #include <Library/PasswordConfigData.h>
 #include <Library/RestoreDefaults.h>
+#include <Include/HashPasswdLib.h>
 
 #include "PasswordConfigFormGuid.h"
 typedef UINT16  STRING_REF;

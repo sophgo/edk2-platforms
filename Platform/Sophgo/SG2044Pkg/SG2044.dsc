@@ -274,6 +274,9 @@
   PciSegmentLib|Silicon/Sophgo/SG2044Pkg/Library/PciSegmentLib/PciSegmentLib.inf
   PciPlatformLib|Silicon/Sophgo/SG2044Pkg/Library/PciPlatformLib/PciPlatformLib.inf
 
+  # Hash Passwd
+  HashPasswdLib|Silicon/Sophgo/SG2044Pkg/Library/HashPasswdLib/HashPasswdLib.inf
+
   # Nor Flash Library
   NorFlashInfoLib|EmbeddedPkg/Library/NorFlashInfoLib/NorFlashInfoLib.inf
 

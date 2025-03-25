@@ -583,6 +583,7 @@ UpdateAcpiDsdtTable (
   UINTN                   TableKey;
   EFI_ACPI_HANDLE         TableHandle;
   UINTN                   Index;
+  BOOLEAN                 IniValid;
 
   DEBUG ((DEBUG_INFO, "Updating device node status in ACPI DSDT table\n"));
 
@@ -596,10 +597,8 @@ UpdateAcpiDsdtTable (
   }
 
   Status = IniConfIniParse (NULL);
-  if (EFI_ERROR(Status)) {
-    DEBUG ((DEBUG_ERROR, "Config INI parse fail. %r\n", Status));
-    return EFI_NOT_FOUND;
-  }
+
+  IniValid = EFI_ERROR(Status) ? FALSE : TRUE;
 
   //
   // Search for DSDT Table
@@ -620,9 +619,11 @@ UpdateAcpiDsdtTable (
     }
 
     AcpiPatchTpu (AcpiTableProtocol, TableHandle);
-    Status = AcpiPatchPCIe (AcpiTableProtocol, TableHandle);
-    if (EFI_ERROR (Status)) {
-      break;
+    if (IniValid) {
+      Status = AcpiPatchPCIe (AcpiTableProtocol, TableHandle);
+      if (EFI_ERROR (Status)) {
+        break;
+      }
     }
 
     AcpiPatchDeviceStatus (AcpiTableProtocol, TableHandle);

@@ -304,6 +304,16 @@ FindOneRtcSlave (
       if (!EFI_ERROR (Status)) {
         mI2cBusNum = I2cBusNums[BusIndex];
         mSlaveAddr = mRtcSlaveAddrs[SlaveIndex];
+        //
+        // Enable the oscillator (CH bit = 0) in the initial state
+        //
+        if (Data & DS1307_SEC_BIT_CH) {
+          Data &= ~DS1307_SEC_BIT_CH;
+          Status = mI2cMasterProtocol->WriteByte (mI2cMasterProtocol,
+                                                  mI2cBusNum,
+                                                  mSlaveAddr,
+                                                  0, Data);
+        }
         return Status;
       }
     }

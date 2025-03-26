@@ -23,12 +23,14 @@
   FirmwareManagerVfr.vfr
   FirmwareManagerStrings.uni
   FirmwareManagerUiDxe.c
+  FirmwareVerify.c
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   Silicon/Sophgo/Sophgo.dec
+  CryptoPkg/CryptoPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -43,10 +45,13 @@
   UefiDriverEntryPoint
   UefiLib
   ResetSystemLib
+  BaseCryptLib
+  UefiRuntimeServicesTableLib
 
 [Guids]
   gEfiHiiPlatformSetupFormsetGuid
   gEfiIfrFrontPageGuid                        ## CONSUMES ## GUID
+  gEfiGlobalVariableGuid                      ## CONSUMES ## GUID
 
 [Protocols]
   gEfiDevicePathProtocolGuid                  ## CONSUMES

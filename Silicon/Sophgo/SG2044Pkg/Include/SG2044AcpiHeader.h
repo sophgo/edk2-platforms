@@ -561,13 +561,13 @@ typedef struct {
     @param [in] Domain              The dependency domain number to which this
                                     P-state entry belongs.
 **/
-#define PSD_INIT(Domain)                                                       \
+#define PSD_INIT(Domain, Processors)                                           \
   {                                                                            \
     5,              /* Entries */                                              \
     0,              /* Revision */                                             \
     Domain,         /* Domain */                                               \
     0xFD,           /* Coord Type- SW_ANY */                                   \
-    1               /* Processors */                                           \
+    Processors      /* Processors */                                           \
   }
 
 #endif /* __SG2044_ACPI_HEADER__ */

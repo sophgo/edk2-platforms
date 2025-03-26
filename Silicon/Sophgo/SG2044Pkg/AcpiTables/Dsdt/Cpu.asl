@@ -81,12 +81,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -110,12 +110,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -139,12 +139,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -168,12 +168,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -205,12 +205,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -234,12 +234,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -263,12 +263,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -292,12 +292,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -329,12 +329,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -358,12 +358,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -387,12 +387,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -416,12 +416,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -453,12 +453,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -482,12 +482,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -511,12 +511,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -540,12 +540,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -577,12 +577,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -606,12 +606,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -635,12 +635,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -664,12 +664,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -701,12 +701,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -730,12 +730,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -759,12 +759,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -788,12 +788,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -825,12 +825,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -854,12 +854,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -883,12 +883,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -912,12 +912,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -949,12 +949,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -978,12 +978,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1007,12 +1007,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1036,12 +1036,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1073,12 +1073,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1102,12 +1102,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1131,12 +1131,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1160,12 +1160,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1197,12 +1197,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1226,12 +1226,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1255,12 +1255,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1284,12 +1284,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1321,12 +1321,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1350,12 +1350,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1379,12 +1379,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1408,12 +1408,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1445,12 +1445,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1474,12 +1474,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1503,12 +1503,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1532,12 +1532,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1569,12 +1569,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1598,12 +1598,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1627,12 +1627,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1656,12 +1656,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1693,12 +1693,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1722,12 +1722,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1751,12 +1751,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1780,12 +1780,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1818,12 +1818,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1847,12 +1847,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1876,12 +1876,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1905,12 +1905,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1942,12 +1942,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -1971,12 +1971,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -2000,12 +2000,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {
@@ -2029,12 +2029,12 @@ Scope(_SB)
       })
 
       Name (_CPC, Package()
-        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 20, 6, 5, 2, 1, 20)
+        CPPC_PACKAGE_INIT (0x1000000000000005, 0x100000000000000D, 25, 104, 104, 40, 40, 0)
       )
 
       Name (_PSD, Package () {
         Package ()
-          PSD_INIT (0)
+          PSD_INIT (0, 64)
       })
 
       Method (_LPI, 0, NotSerialized) {

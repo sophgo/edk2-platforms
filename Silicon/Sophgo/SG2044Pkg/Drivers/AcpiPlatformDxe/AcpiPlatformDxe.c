@@ -11,6 +11,7 @@
 
 #include <Protocol/AcpiTable.h>
 #include <Protocol/FirmwareVolume2.h>
+#include <Protocol/FdtClient.h>
 
 #include <Library/BaseLib.h>
 #include <Library/UefiBootServicesTableLib.h>
@@ -33,6 +34,19 @@
 #define DSDT_SIGNATURE           0x54445344  // 'DSDT'
 #define TPU_NUM                  1
 #define PCIE_NUM                 10
+#define CLUSTER_NUM		 16
+#define CPU_NUM_PER_CLUSTER	 4
+#define HIGHEST_PERF_OFFSET	 14
+#define NOMINAL_PERF_OFFSET	 16
+#define LOWEST_NONLINEAR_PERF_OFFSET	 18
+#define LOWEST_PERF_OFFSET	 20
+#define LOWEST_FREQ_OFFSET_L	 317
+#define LOWEST_FREQ_OFFSET_H	 318
+#define NOMINAL_FREQ_OFFSET_L	 320
+#define NOMINAL_FREQ_OFFSET_H	 321
+
+#define KHz(f)	(f * 1000ULL)
+#define MHz(f)	(KHz(f) * 1000)
 
 //
 // Resource descriptor structures
@@ -461,6 +475,129 @@ AcpiPatchPCIe (
 }
 
 /**
+  Get resource in fdt by name.
+
+  @param[in]  FdtClient     Handle to device tree parsing client
+  @param[in]  Node          Handle to node
+  @param[in]  ResourceName  Pointer to the resource name
+  @param[in]  Data          Pointer to the resource
+
+**/
+STATIC
+RETURN_STATUS
+FdtGetResourceByName (
+    IN  FDT_CLIENT_PROTOCOL *FdtClient,
+    IN  INT32               Node,
+    IN  CONST CHAR8         *ResourceName,
+    OUT UINTN               *Data
+    )
+{
+  EFI_STATUS  Status;
+  CONST VOID  *ResourceProp;
+  UINT32      ResourcePropSize;
+
+  Status = FdtClient->GetNodeProperty(FdtClient, Node, ResourceName, &ResourceProp, &ResourcePropSize);
+
+  if (Status != EFI_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "No resource name property\n"));
+    return EFI_NOT_FOUND;
+  }
+
+  if (Data != NULL)
+    *Data = SwapBytes64(*(UINT64 *)ResourceProp);
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Update CPU status in ACPI table based on configuration.
+
+  @param[in]  AcpiSdtProtocol  Pointer to ACPI SDT protocol
+  @param[in]  TableHandle      Handle to ACPI table
+
+**/
+STATIC
+VOID
+AcpiPatchCpu (
+  IN EFI_ACPI_SDT_PROTOCOL  *AcpiSdtProtocol,
+  IN EFI_ACPI_HANDLE        TableHandle
+  )
+{
+  EFI_STATUS            Status;
+  RETURN_STATUS         FindNodeStatus;
+  EFI_ACPI_HANDLE       ObjectHandle;
+  EFI_ACPI_DATA_TYPE    DataType;
+  FDT_CLIENT_PROTOCOL	*FdtClient;
+  CONST CHAR8           *Compatible = "sophgo,sg2044-cppc";
+  INT32                 Node;
+  CHAR8                 *Buffer;
+  UINTN                 DataSize;
+  CHAR8                 CpcPath[256];
+  UINT8			ClusterIndex;
+  UINT8			CpuIndex;
+  UINT8			MaxCpuIndex;
+  UINT64		MaxFrequency;
+  UINT64		MinFrequency;
+  UINT32		HighestPerf;
+  UINT32		LowestPerf;
+  UINT64		Step;
+
+  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
+
+  if (Status) {
+    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+    return;
+  }
+
+  FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, Compatible, &Node);
+
+  if (FindNodeStatus != EFI_SUCCESS) {
+      DEBUG ((DEBUG_ERROR, "Cannot find device %s\n", Compatible));
+      return;
+  }
+
+  FdtGetResourceByName (FdtClient, Node, "min-frequency", &MinFrequency);
+  FdtGetResourceByName (FdtClient, Node, "max-frequency", &MaxFrequency);
+  FdtGetResourceByName (FdtClient, Node, "step", &Step);
+
+  HighestPerf = MaxFrequency / Step;
+  LowestPerf = MinFrequency / Step;
+  Step = Step / MHz(1);
+
+  for (ClusterIndex = 0; ClusterIndex < CLUSTER_NUM; ClusterIndex++) {
+    MaxCpuIndex = ClusterIndex * CPU_NUM_PER_CLUSTER + CPU_NUM_PER_CLUSTER;
+    for (CpuIndex = ClusterIndex * CPU_NUM_PER_CLUSTER; CpuIndex < MaxCpuIndex; CpuIndex++) {
+      AsciiSPrint (CpcPath, sizeof (CpcPath), "\\_SB.CL%02d.CP%02d._CPC", ClusterIndex, CpuIndex);
+
+      Status = AcpiSdtProtocol->FindPath (TableHandle, CpcPath, &ObjectHandle);
+
+      if (EFI_ERROR (Status)) {
+        DEBUG ((DEBUG_INFO, "can not found _CPC node in DSDT table\n"));
+	break;
+      }
+
+      Status = AcpiSdtProtocol->GetOption (ObjectHandle, 0, &DataType, (VOID *)&Buffer, &DataSize);
+
+      if (EFI_ERROR (Status) || (Buffer == NULL)) {
+        DEBUG ((DEBUG_INFO, "can not get _CPC data in DSDT table\n"));
+        continue;
+      }
+
+      *(Buffer + HIGHEST_PERF_OFFSET) = HighestPerf;
+      *(Buffer + NOMINAL_PERF_OFFSET) = HighestPerf;
+      *(Buffer + LOWEST_NONLINEAR_PERF_OFFSET) = LowestPerf;
+      *(Buffer + LOWEST_PERF_OFFSET) = LowestPerf;
+      *(Buffer + LOWEST_FREQ_OFFSET_L) = (LowestPerf * Step) & 0xff;
+      *(Buffer + LOWEST_FREQ_OFFSET_H) = ((LowestPerf * Step) >> 8) & 0xff;
+      *(Buffer + NOMINAL_FREQ_OFFSET_L) = (HighestPerf * Step) & 0xff;
+      *(Buffer + NOMINAL_FREQ_OFFSET_H) = ((HighestPerf * Step) >> 8) & 0xff;
+    }
+  }
+
+  return;
+}
+
+/**
   Update TPU status in ACPI table based on configuration.
 
   @param[in]  AcpiSdtProtocol  Pointer to ACPI SDT protocol
@@ -618,6 +755,7 @@ UpdateAcpiDsdtTable (
       break;
     }
 
+    AcpiPatchCpu (AcpiTableProtocol, TableHandle);
     AcpiPatchTpu (AcpiTableProtocol, TableHandle);
     if (IniValid) {
       Status = AcpiPatchPCIe (AcpiTableProtocol, TableHandle);

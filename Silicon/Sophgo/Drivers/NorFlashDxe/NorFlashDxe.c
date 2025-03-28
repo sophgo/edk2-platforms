@@ -8,7 +8,11 @@
 
 #include "NorFlashDxe.h"
 
+#include <Library/IoLib.h>
 #include <Library/TimerLib.h>
+
+#define SPIFMC_CTRL                0x00
+#define SPIFMC_CTRL_WP_OL          BIT15
 
 STATIC NOR_FLASH_INSTANCE         *mNorFlashInstance;
 STATIC SOPHGO_SPI_MASTER_PROTOCOL *SpiMasterProtocol;
@@ -117,9 +121,17 @@ SpiNorWriteEnable (
       "%a: SpiNor error while write enable\n",
       __func__
       ));
+    return Status;
   }
 
-  SpiNorReadStatus (Nor, Nor->BounceBuf);
+  Status = SpiNorReadStatus (Nor, Nor->BounceBuf);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR,
+      "%a: SpiNor read status error while write enable\n",
+      __func__
+      ));
+    return Status;
+  }
 
   if (!(Nor->BounceBuf[0] & SR_WEL)) {
     DEBUG ((
@@ -128,6 +140,7 @@ SpiNorWriteEnable (
       __func__,
       Nor->BounceBuf[0]
       ));
+    Status = EFI_DEVICE_ERROR;
   }
 
   return Status;
@@ -147,6 +160,27 @@ SpiNorWriteDisable (
       "%a: SpiNor error while write disable\n",
       __func__
       ));
+
+    return Status;
+  }
+
+  Status = SpiNorReadStatus (Nor, Nor->BounceBuf);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR,
+      "%a: SpiNor read status error while write disable\n",
+      __func__
+      ));
+    return Status;
+  }
+
+  if ((Nor->BounceBuf[0] & SR_WEL)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Write Disable failed, get status: 0x%x\n",
+      __func__,
+      Nor->BounceBuf[0]
+      ));
+    Status = EFI_DEVICE_ERROR;
   }
 
   return Status;
@@ -672,6 +706,122 @@ SpiNorSoftReset (
 
 EFI_STATUS
 EFIAPI
+SpiNorSetProtectAll (
+  IN SPI_NOR     *Nor,
+  IN BOOLEAN     IsProtectAll
+  )
+{
+  EFI_STATUS Status;
+  UINTN      SpiBase;
+  UINT32     Register;
+  UINT8      NorStatusReg;
+  UINT8      Tmp;
+
+  //
+  // Set Wp pin level to 1 to unlock Status Register.
+  //
+  SpiBase = Nor->SpiBase;
+  Register = MmioRead32 ((UINTN)(SpiBase + SPIFMC_CTRL));
+  Register |= SPIFMC_CTRL_WP_OL;
+  MmioWrite32 ((UINTN)(SpiBase + SPIFMC_CTRL), Register);
+
+  NorStatusReg = 0;
+  Status = SpiNorReadStatus (Nor, &NorStatusReg);
+  if (EFI_ERROR (Status)) {
+    DEBUG((DEBUG_ERROR, "%a: Read status register - %r\n",
+           __func__, Status));
+    return Status;
+  }
+
+  if (IsProtectAll) {
+    if ((NorStatusReg & (SR_BP2 | SR_BP3 | SR_SRP0)) != (SR_BP2 | SR_BP3 | SR_SRP0)) {
+      //
+      // Set BP2 and BP3 to 1 to protect all blocks.
+      // Set SRP0 to 1 to enable hardware protection for status registers.
+      //
+      Tmp = NorStatusReg | SR_BP2 | SR_BP3 | SR_SRP0;
+      Status = SpiNorWriteStatus (Nor, &Tmp, 1);
+      if (EFI_ERROR (Status)) {
+        DEBUG((DEBUG_ERROR, "%a: Write status register - %r\n",
+              __func__, Status));
+        return Status;
+      }
+
+      NorStatusReg = 0;
+      Status = SpiNorReadStatus (Nor, &NorStatusReg);
+      if (EFI_ERROR (Status)) {
+        DEBUG((DEBUG_ERROR, "%a: Read status register - %r\n",
+              __func__, Status));
+        return Status;
+      }
+      if (NorStatusReg != Tmp) {
+        DEBUG ((DEBUG_ERROR, "Write status register fail!\n"));
+        return EFI_DEVICE_ERROR;
+      }
+    }
+
+    //
+    // Set Wp pin level to 0.
+    // The Status Register locked and cannot be written to
+    // when SRP0 and Wp are set to 1 and 0, respectively.
+    //
+    Register = MmioRead32 ((UINTN)(SpiBase + SPIFMC_CTRL));
+    Register &= ~SPIFMC_CTRL_WP_OL;
+    MmioWrite32 ((UINTN)(SpiBase + SPIFMC_CTRL), Register);
+
+    //
+    // Test whether the status register is locked
+    //
+    Tmp = NorStatusReg & (~(SR_BP2 | SR_BP3 | SR_SRP0));
+    Status = SpiNorWriteStatus (Nor, &Tmp, 1);
+    if (EFI_ERROR (Status)) {
+      DEBUG((DEBUG_ERROR, "%a: Write status register - %r\n",
+             __func__, Status));
+      return Status;
+    }
+    Tmp = 0;
+    Status = SpiNorReadStatus (Nor, &Tmp);
+    if (EFI_ERROR (Status)) {
+      DEBUG((DEBUG_ERROR, "%a: Read status register - %r\n",
+             __func__, Status));
+      return Status;
+    }
+    if (Tmp != NorStatusReg) {
+      DEBUG ((DEBUG_ERROR, "Test status register lock fail!\n"));
+      DEBUG ((DEBUG_ERROR, "Status register can be change from 0x%x to 0x%x!\n",
+              NorStatusReg, Tmp));
+      return EFI_DEVICE_ERROR;
+    }
+  } else {
+    if ((NorStatusReg & (SR_BP2 | SR_BP3 | SR_SRP0)) != 0) {
+      //
+      // Clear BP2, BP3 and SRP0
+      //
+      Tmp = NorStatusReg & (~(SR_BP2 | SR_BP3 | SR_SRP0));
+      Status = SpiNorWriteStatus (Nor, &Tmp, 1);
+      if (EFI_ERROR (Status)) {
+        DEBUG((DEBUG_ERROR, "%a: Write status register - %r\n",
+              __func__, Status));
+        return Status;
+      }
+      Status = SpiNorReadStatus (Nor, &NorStatusReg);
+      if (EFI_ERROR (Status)) {
+        DEBUG((DEBUG_ERROR, "%a: Read status register - %r\n",
+              __func__, Status));
+        return Status;
+      }
+      if (Tmp != NorStatusReg) {
+        DEBUG ((DEBUG_ERROR, "Status register clear fail!\n"));
+        return EFI_DEVICE_ERROR;
+      }
+    }
+  }
+
+  return EFI_SUCCESS;
+}
+
+EFI_STATUS
+EFIAPI
 SpiNorInit (
   IN SOPHGO_NOR_FLASH_PROTOCOL *This,
   IN SPI_NOR                   *Nor
@@ -732,6 +882,20 @@ SpiNorInit (
     return Status;
   }
 
+  //
+  // Write disable
+  //
+  Status = SpiNorWriteDisable (Nor);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Write Disable - %r\n",
+      __func__,
+      Status
+      ));
+    return Status;
+  }
+
   return EFI_SUCCESS;
 }
 
@@ -754,6 +918,8 @@ SpiNorVirtualNotifyEvent (
   EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.EraseChip);
   EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.Init);
   EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.GetFlashVariableOffset);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.SoftReset);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance->NorFlashProtocol.SetProtectAll);
   EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance);
 }
 
@@ -812,6 +978,7 @@ SpiNorEntryPoint (
     mNorFlashInstance->NorFlashProtocol.EraseChip               = SpiNorEraseChip;
     mNorFlashInstance->NorFlashProtocol.GetFlashVariableOffset  = SpiNorGetFlashVariableOffset;
     mNorFlashInstance->NorFlashProtocol.SoftReset               = SpiNorSoftReset;
+    mNorFlashInstance->NorFlashProtocol.SetProtectAll           = SpiNorSetProtectAll;
     mNorFlashInstance->Signature = NOR_FLASH_SIGNATURE;
 
     Status = gBS->InstallMultipleProtocolInterfaces (

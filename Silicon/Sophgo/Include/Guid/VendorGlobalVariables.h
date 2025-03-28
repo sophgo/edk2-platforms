@@ -7,8 +7,8 @@
   @par Revision Reference:
 **/
 
-#ifndef __GLOBAL_VARIABLE_GUID_H__
-#define __GLOBAL_VARIABLE_GUID_H__
+#ifndef __VENDOR_GLOBAL_VARIABLE_GUID_H__
+#define __VENDOR_GLOBAL_VARIABLE_GUID_H__
 
 #define EFI_SOPHGO_VARSTORE_VENDOR_GUID { 0x570cf83d, 0x5a8d, 0x4f79, { 0x91, 0xa9, 0xba, 0x82, 0x8f, 0x05, 0x79, 0xf6 } }
 
@@ -98,5 +98,14 @@ extern EFI_GUID  gEfiSophgoGlobalVariableGuid;
 //   1: Enable ACPI
 //
 #define EFI_ACPI_ENABLE_VARIABLE_NAME  L"AcpiEnable"
+
+//
+// This variable is used to inidicate the Root Key which is used to verify PK.
+//
+#define EFI_RK_VARIABLE_NAME  L"RK"
+
+//
+//This variable is used to inidicate the PK signature.
+#define EFI_PK_SIG_VARIABLE_NAME  L"PKSig"
 
 #endif //__GLOBAL_VARIABLE_GUID_H__

@@ -114,4 +114,11 @@ SpiNorInit (
   IN SPI_NOR                   *Nor
   );
 
+EFI_STATUS
+EFIAPI
+SpiNorSetProtectAll (
+  IN SPI_NOR     *Nor,
+  IN BOOLEAN     IsProtectAll
+  );
+
 #endif // __NOR_FLASH_DXE_H__

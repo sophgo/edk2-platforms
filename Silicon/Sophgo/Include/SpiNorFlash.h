@@ -51,6 +51,9 @@
 //
 #define SR_WIP                  BIT0  /* Write in progress */
 #define SR_WEL                  BIT1  /* Write enable latch */
+#define SR_BP2                  BIT4  /* Block Protect Bits */
+#define SR_BP3                  BIT5  /* Block Protect Bits */
+#define SR_SRP0                 BIT7  /* Status Register Protection */
 
 
 extern EFI_GUID  gSophgoNorFlashProtocolGuid;
@@ -130,6 +133,13 @@ EFI_STATUS
   IN SPI_NOR                          *Nor
   );
 
+typedef
+EFI_STATUS
+(EFIAPI *SG_NOR_FLASH_PROTOCOL_SET_PROTECT_ALL)(
+  IN SPI_NOR                          *Nor,
+  IN BOOLEAN                           IsProtectAll
+  );
+
 struct _SOPHGO_NOR_FLASH_PROTOCOL {
   SG_NOR_FLASH_PROTOCOL_GET_FLASH_ID                GetFlashid;
   SG_NOR_FLASH_PROTOCOL_READ_DATA                   ReadData;
@@ -141,6 +151,7 @@ struct _SOPHGO_NOR_FLASH_PROTOCOL {
   SG_NOR_FLASH_PROTOCOL_INIT                        Init;
   SG_NOR_FLASH_PROTOCOL_GET_FLASH_VARIABLE_OFFSET   GetFlashVariableOffset;
   SG_NOR_FLASH_PROTOCOL_SOFT_RESET                  SoftReset;
+  SG_NOR_FLASH_PROTOCOL_SET_PROTECT_ALL             SetProtectAll;
 };
 
 typedef struct {

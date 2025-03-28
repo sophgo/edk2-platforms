@@ -33,6 +33,7 @@
   UefiDriverEntryPoint
   UefiLib
   UefiRuntimeLib
+  IoLib
 
 [Guids]
   gEfiEventVirtualAddressChangeGuid

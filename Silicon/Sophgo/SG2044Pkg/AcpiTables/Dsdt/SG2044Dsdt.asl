@@ -20,6 +20,7 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
   include ("Intc.asl")
   include ("Pci.asl")
   include ("PowerButton.asl")
+  include ("Video.asl")
 
   Scope (\_SB_.I2C1)
   {

@@ -1162,8 +1162,7 @@ FlashFvbConfigureFlashInstance (
   //
   FlashInstance->Nor = FlashInstance->SpiMasterProtocol->SetupDevice (
                   FlashInstance->SpiMasterProtocol,
-                  FlashInstance->Nor,
-		  0
+                  0
                   );
 
   if (FlashInstance->Nor == NULL) {

@@ -168,14 +168,7 @@ SPI_NOR *
 EFIAPI
 SpiMasterSetupSlave (
   IN SOPHGO_SPI_MASTER_PROTOCOL *This,
-  IN SPI_NOR                    *Nor,
   IN UINT8                      SelectedFlashNumber
-  );
-
-EFI_STATUS
-EFIAPI
-SpiMasterFreeSlave (
-  IN SPI_NOR *Nor
   );
 
 EFI_STATUS

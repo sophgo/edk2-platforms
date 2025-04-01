@@ -13,6 +13,8 @@
 
 SPI_MASTER                  *mSpiMasterInstance;
 STATIC EFI_EVENT            mNorFlashVirtualAddrChangeEvent;
+STATIC SPI_NOR              *mNorFlashInstance;
+STATIC UINT8                mSpiControllerNum;
 
 STATIC
 EFI_STATUS
@@ -476,92 +478,13 @@ SPI_NOR *
 EFIAPI
 SpiMasterSetupSlave (
   IN SOPHGO_SPI_MASTER_PROTOCOL *This,
-  IN SPI_NOR                    *Nor,
   IN UINT8                      SelectedFlashNumber
   )
 {
-  EFI_STATUS            Status;
-
-  if (!Nor) {
-    Nor = AllocateRuntimeZeroPool (sizeof(SPI_NOR));
-    if (!Nor) {
-      DEBUG ((
-        DEBUG_ERROR,
-        "%a: Cannot allocate memory\n",
-        __func__
-        ));
-      return NULL;
-    }
-  }
-
-  if (SelectedFlashNumber == 0) {
-    Nor->SpiBase = FixedPcdGet64 (PcdSPIFMC0Base);
-  } else if (SelectedFlashNumber == 1) {
-    Nor->SpiBase = FixedPcdGet64 (PcdSPIFMC1Base);
-  }
-
-  Status = gDS->AddMemorySpace (
-      EfiGcdMemoryTypeMemoryMappedIo,
-		  Nor->SpiBase,
-		  SIZE_64MB,
-      EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
-      );
-  if (Status == EFI_ACCESS_DENIED) {
-    goto init;
-  }
-
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "[%a:%d] Add memory space failed: %r\n",
-          __func__, __LINE__, Status));
+  if (SelectedFlashNumber >= mSpiControllerNum)
     return NULL;
-  }
 
-init:
-  Status = gDS->SetMemorySpaceAttributes (
-		  Nor->SpiBase,
-		  SIZE_64MB,
-      EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
-      );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a: Failed to set memory attributes\n",
-      __func__
-      ));
-
-    return NULL;
-  }
-
-  Nor->BounceBufSize = SIZE_4KB;
-  Nor->BounceBuf = AllocateRuntimeZeroPool (Nor->BounceBufSize);
-  if (!Nor->BounceBuf) {
-    return NULL;
-  }
-
-  SpifmcInit (Nor);
-
-  DEBUG ((
-    DEBUG_VERBOSE,
-    "%a[%d] SPI Base Address = 0x%llx\n",
-    __func__,
-    __LINE__,
-    Nor->SpiBase
-    ));
-
-  return Nor;
-}
-
-EFI_STATUS
-EFIAPI
-SpiMasterFreeSlave (
-  IN SPI_NOR *Nor
-  )
-{
-  FreePool (Nor);
-
-  // FreePool (Nor->BounceBuf);
-
-  return EFI_SUCCESS;
+  return &(mNorFlashInstance[SelectedFlashNumber]);
 }
 
 STATIC
@@ -578,6 +501,50 @@ SpiNorVirtualNotifyEvent (
   EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance->SpiMasterProtocol.Write);
   EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance->SpiMasterProtocol.Erase);
   EfiConvertPointer (0x0, (VOID**)&mSpiMasterInstance);
+  EfiConvertPointer (0x0, (VOID**)&mNorFlashInstance);
+}
+
+STATIC
+EFI_STATUS
+SetMemory (
+  VOID
+  )
+{
+  EFI_STATUS  Status;
+  SPI_NOR     *Nor;
+  INT32       Index;
+
+  Nor = mNorFlashInstance;
+  for (Index = 0; Index < mSpiControllerNum; ++Index, ++Nor) {
+    Status = gDS->AddMemorySpace (
+                    EfiGcdMemoryTypeMemoryMappedIo,
+                    Nor->SpiBase,
+                    SIZE_64MB,
+                    EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
+                    );
+    if (Status == EFI_ACCESS_DENIED) {
+      goto init;
+    }
+
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "[%a:%d] Add memory space failed: %r\n",
+            __func__, __LINE__, Status));
+      return Status;
+    }
+
+  init:
+    Status = gDS->SetMemorySpaceAttributes (
+                    Nor->SpiBase,
+                    SIZE_64MB,
+                    EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
+                    );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a: Failed to set memory attributes\n", __func__));
+      return Status;
+    }
+  }
+
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -588,6 +555,8 @@ SpifmcEntryPoint (
   )
 {
   EFI_STATUS  Status;
+  INT32       Index, Loop;
+  SPI_NOR     *Nor;
 
   mSpiMasterInstance = AllocateRuntimeZeroPool (sizeof (SPI_MASTER));
   if (mSpiMasterInstance == NULL) {
@@ -601,7 +570,6 @@ SpifmcEntryPoint (
   mSpiMasterInstance->SpiMasterProtocol.Write          = SpifmcWrite;
   mSpiMasterInstance->SpiMasterProtocol.Erase          = SpifmcErase;
   mSpiMasterInstance->SpiMasterProtocol.SetupDevice    = SpiMasterSetupSlave;
-  mSpiMasterInstance->SpiMasterProtocol.FreeDevice     = SpiMasterFreeSlave;
 
   if (FixedPcdGetBool (PcdSpifmcDmmrEnable)) {
     mSpiMasterInstance->SpiMasterProtocol.Read           = SpifmcDmmrRead;
@@ -622,6 +590,39 @@ SpifmcEntryPoint (
     return EFI_DEVICE_ERROR;
   }
 
+  mSpiControllerNum = 2;
+  mNorFlashInstance = AllocateRuntimeZeroPool (mSpiControllerNum * sizeof(SPI_NOR));
+  if (mNorFlashInstance == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a: Cannot allocate memory\n", __func__));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  mNorFlashInstance[0].SpiBase = FixedPcdGet64 (PcdSPIFMC0Base);
+  mNorFlashInstance[1].SpiBase = FixedPcdGet64 (PcdSPIFMC1Base);
+
+  Status = SetMemory ();
+  if (EFI_ERROR (Status)) {
+    FreePool (mNorFlashInstance);
+    return Status;
+  }
+
+  Nor = mNorFlashInstance;
+  for (Index = 0; Index < mSpiControllerNum; ++Index, ++Nor) {
+    Nor->BounceBufSize = SIZE_4KB;
+    Nor->BounceBuf = AllocateRuntimeZeroPool (Nor->BounceBufSize);
+    if (Nor->BounceBuf == NULL) {
+      for (Loop = 0; Loop < Index; ++Loop) {
+        FreePool (mNorFlashInstance[Loop].BounceBuf);
+      }
+      FreePool (mNorFlashInstance);
+      return EFI_OUT_OF_RESOURCES;
+    }
+
+    SpifmcInit (Nor);
+    DEBUG ((DEBUG_VERBOSE, "%a[%d] SPI Base Address = 0x%llx\n",
+            __func__, __LINE__, Nor->SpiBase));
+  }
+
   Status = gBS->CreateEventEx (
                   EVT_NOTIFY_SIGNAL,
                   TPL_NOTIFY,
@@ -637,6 +638,7 @@ SpifmcEntryPoint (
       ));
     goto ErrorCreateEvent;
   }
+
   return EFI_SUCCESS;
 
 ErrorCreateEvent:
@@ -645,6 +647,11 @@ ErrorCreateEvent:
         &gSophgoSpiMasterProtocolGuid,
         NULL
         );
+
+  for (Index = 0; Index < mSpiControllerNum; ++Index) {
+    FreePool (mNorFlashInstance[Index].BounceBuf);
+  }
+  FreePool (mNorFlashInstance);
 
   return Status;
 }

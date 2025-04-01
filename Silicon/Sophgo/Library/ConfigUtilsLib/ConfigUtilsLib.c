@@ -73,7 +73,6 @@ ReadVersionAndDateFromFlash (
 
   Nor = SpiMasterProtocol->SetupDevice(
     SpiMasterProtocol,
-    NULL,
     0
   );
   if(Nor == NULL) {
@@ -105,7 +104,6 @@ ReadVersionAndDateFromFlash (
   CopyMem(Date, Buffer + DATE_OFFSET, DATE_SIZE);
   Date[DATE_SIZE] = '\0';
 
-  SpiMasterProtocol->FreeDevice(Nor);
   FreePool(Buffer);
 
   return 0;

@@ -568,8 +568,7 @@ FirmwareUpdateEntry (
   //
   Nor = SpiMasterProtocol->SetupDevice (
                   SpiMasterProtocol,
-                  Nor,
-		  0
+                  0
                   );
 
   if (Nor == NULL) {
@@ -634,10 +633,6 @@ FirmwareUpdateEntry (
 Error:
   if (FirmwareData) {
     FreePages (FirmwareData, EFI_SIZE_TO_PAGES (FirmwareSize));
-  }
-
-  if (Nor) {
-    SpiMasterProtocol->FreeDevice (Nor);
   }
 
   Attribute = EFI_LIGHTGRAY | EFI_BACKGROUND_BLACK;

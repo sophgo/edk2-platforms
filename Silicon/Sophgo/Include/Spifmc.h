@@ -89,14 +89,7 @@ typedef
 SPI_NOR *
 (EFIAPI *SG_SPI_MASTER_PROTOCOL_SETUP_DEVICE) (
   IN SOPHGO_SPI_MASTER_PROTOCOL              *This,
-  IN SPI_NOR                                 *Nor,
   IN UINT8                                   SelectedFlashNumber
-  );
-
-typedef
-EFI_STATUS
-(EFIAPI *SG_SPI_MASTER_PROTOCOL_FREE_DEVICE)(
-  IN SPI_NOR                                 *Nor
   );
 
 struct _SOPHGO_SPI_MASTER_PROTOCOL {
@@ -106,7 +99,6 @@ struct _SOPHGO_SPI_MASTER_PROTOCOL {
   SG_SPI_MASTER_PROTOCOL_WRITE               Write;
   SG_SPI_MASTER_PROTOCOL_ERASE               Erase;
   SG_SPI_MASTER_PROTOCOL_SETUP_DEVICE        SetupDevice;
-  SG_SPI_MASTER_PROTOCOL_FREE_DEVICE         FreeDevice;
 };
 
 #endif // __SPI_FLASH_MASTER_CONTROLLER_H__

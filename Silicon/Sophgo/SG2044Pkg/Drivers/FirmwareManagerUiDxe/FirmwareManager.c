@@ -629,10 +629,6 @@ ProExit:
   gST->ConOut->SetAttribute (gST->ConOut, SavedConsoleMode.Attribute);
   ClearPopUp (EFI_BACKGROUND_LIGHTGRAY, StrLen (WarningString), 2);
 
-  if (Nor) {
-    SpiMasterProtocol->FreeDevice (Nor);
-  }
-
   if (TempBuffer != NULL) {
     FreePool (TempBuffer);
   }
@@ -793,8 +789,7 @@ UpdateFromFile (
   //
   Nor = SpiMasterProtocol->SetupDevice (
                   SpiMasterProtocol,
-                  Nor,
-		  SelectedFlashNumber
+                  SelectedFlashNumber
                   );
 
   if (Nor == NULL) {

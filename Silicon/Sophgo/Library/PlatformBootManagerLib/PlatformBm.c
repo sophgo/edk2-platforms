@@ -691,11 +691,14 @@ RemoveDuplicateBootOptions (
     EFI_STATUS                     Status;
     EFI_BOOT_MANAGER_LOAD_OPTION   *BootOptions;
     UINTN                          BootOptionCount;
-    UINTN                          i, j;
     UINT16                         *BootOrder;
+    UINT16                         BootOrderTemp;
     UINTN                          BootOrderSize;
+    UINTN                          i, j;
     EFI_GUID                       *GuidI;
+    EFI_GUID                       *GuidITemp;
     EFI_GUID                       *GuidJ;
+    EFI_GUID                       *GuidJTemp;
     BOOLEAN                        IsDuplicate;
 
     IsDuplicate = FALSE;
@@ -704,65 +707,106 @@ RemoveDuplicateBootOptions (
         return EFI_NOT_FOUND;
     }
 
-    Status = GetEfiGlobalVariable2(L"BootOrder", (VOID **)&BootOrder, &BootOrderSize);
-    if (EFI_ERROR(Status)) {
-        EfiBootManagerFreeLoadOptions(BootOptions, BootOptionCount);
-        return Status;
-    }
     for (i = 0; i < BootOptionCount; i++) {
-        GuidI = ExtractGuidFromDevicePathString(BootOptions[i].FilePath);
-        for (j = i + 1; j < BootOptionCount; j++) {
-            GuidJ = ExtractGuidFromDevicePathString(BootOptions[j].FilePath);
-            if(GuidI ==NULL || GuidJ == NULL) {
-	        continue;
-	    }
-            if (CompareGuid(GuidI, GuidJ)) {
-                IsDuplicate = TRUE;
-            } else if (StrCmp(BootOptions[i].Description, BootOptions[j].Description) == 0 &&
-                CompareMem(BootOptions[i].FilePath, BootOptions[j].FilePath, sizeof(EFI_DEVICE_PATH_PROTOCOL)) == 0) {
-                IsDuplicate = TRUE;
-            }
+      GuidITemp = ExtractGuidFromDevicePathString(BootOptions[i].FilePath);
+      GuidI= AllocatePool(sizeof(EFI_GUID));
+      CopyMem(GuidI, GuidITemp, sizeof(EFI_GUID));
+      for (j = i + 1; j < BootOptionCount; j++) {
+        IsDuplicate = FALSE;
+        GuidJTemp = ExtractGuidFromDevicePathString(BootOptions[j].FilePath);
+        GuidJ= AllocatePool(sizeof(EFI_GUID));
+        CopyMem(GuidJ, GuidJTemp, sizeof(EFI_GUID));
 
-            if (IsDuplicate) {
-                Status = EfiBootManagerDeleteLoadOptionVariable(BootOptions[j].OptionNumber, LoadOptionTypeBoot);
-                if (EFI_ERROR(Status)) {
-                    DEBUG((DEBUG_ERROR, "Failed to delete duplicate BootOption %d: %r\n", BootOptions[j].OptionNumber, Status));
-                    continue;
-                }
-
-                for (UINTN k = 0; k < BootOrderSize / sizeof(UINT16); k++) {
-                    if (BootOrder[k] == BootOptions[j].OptionNumber) {
-                        for (UINTN m = k; m < (BootOrderSize / sizeof(UINT16)) - 1; m++) {
-                            BootOrder[m] = BootOrder[m + 1];
-                        }
-                        BootOrderSize -= sizeof(UINT16);
-                        break;
-                    }
-                }
-
-                for (UINTN k = j; k < BootOptionCount - 1; k++) {
-                    BootOptions[k] = BootOptions[k + 1];
-                }
-                BootOptionCount--;
-                j--;
-            }
+        if(GuidI ==NULL || GuidJ == NULL) {
+          if (GuidJ != NULL) {
+            FreePool (GuidJ);
+          }
+          continue;
         }
+
+        if (CompareGuid(GuidI, GuidJ)) {
+          IsDuplicate = TRUE;
+        } else if (StrCmp(BootOptions[i].Description, BootOptions[j].Description) == 0 &&
+          CompareMem(BootOptions[i].FilePath, BootOptions[j].FilePath, sizeof(EFI_DEVICE_PATH_PROTOCOL)) == 0) {
+          IsDuplicate = TRUE;
+        }
+
+        if (IsDuplicate) {
+          UINTN DeleteOptionNumberPosition, ReplaceOptionNumberPosition, TempOptionNumber;
+
+          GetEfiGlobalVariable2(L"BootOrder", (VOID **)&BootOrder, &BootOrderSize);
+          TempOptionNumber = BootOptions[j].OptionNumber;
+          for (UINTN k = 0; k < BootOrderSize / sizeof(UINT16); k++) {
+            if (BootOrder[k] == BootOptions[i].OptionNumber) {
+              DeleteOptionNumberPosition = k;
+              break;
+            }
+          }
+
+          if (BootOrder != NULL) {
+            FreePool (BootOrder);
+          }
+
+          EfiBootManagerDeleteLoadOptionVariable(BootOptions[i].OptionNumber, LoadOptionTypeBoot);
+          EfiBootManagerFreeLoadOptions(BootOptions, BootOptionCount-1);
+          BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
+          GetEfiGlobalVariable2(L"BootOrder", (VOID **)&BootOrder, &BootOrderSize);
+          for (UINTN k = 0; k < BootOrderSize / sizeof(UINT16); k++) {
+            if (BootOrder[k] == TempOptionNumber) {
+              ReplaceOptionNumberPosition = k;
+              break;
+            }
+          }
+
+          BootOrderTemp = BootOrder[ReplaceOptionNumberPosition];
+          if (DeleteOptionNumberPosition == BootOrderSize / sizeof(UINT16)) {
+            BootOrder[ReplaceOptionNumberPosition] = BootOrder[BootOrderSize / sizeof(UINT16) - 1];
+            BootOrder[BootOrderSize / sizeof(UINT16) - 1] = BootOrderTemp;
+          } else if (ReplaceOptionNumberPosition > DeleteOptionNumberPosition) {
+            for (UINTN k = ReplaceOptionNumberPosition; k > DeleteOptionNumberPosition; k--) {
+              BootOrder[k] = BootOrder[k - 1];
+            }
+          } else if (ReplaceOptionNumberPosition < DeleteOptionNumberPosition) {
+            for (UINTN k = ReplaceOptionNumberPosition; k < DeleteOptionNumberPosition - 1; k++) {
+              BootOrder[k] = BootOrder[k + 1];
+            }
+          }
+          BootOrder[DeleteOptionNumberPosition] = BootOrderTemp;
+
+          Status = gRT->SetVariable(
+            L"BootOrder",
+            &gEfiGlobalVariableGuid,
+            EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+            BootOrderSize,
+            BootOrder
+          );
+
+          if (EFI_ERROR(Status)) {
+            DEBUG((DEBUG_ERROR, "Failed to update BootOrder variable: %r\n", Status));
+          }
+
+          if (BootOrder != NULL) {
+            FreePool (BootOrder);
+          }
+          i--;
+
+          if (GuidJ != NULL) {
+            FreePool (GuidJ);
+          }
+          break;
+        } else {
+          if (GuidJ != NULL) {
+            FreePool (GuidJ);
+          }
+        }
+      }
+
+      if (GuidI != NULL) {
+        FreePool (GuidI);
+      }
     }
 
-    Status = gRT->SetVariable(
-        L"BootOrder",
-        &gEfiGlobalVariableGuid,
-        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-        BootOrderSize,
-        BootOrder
-    );
-   if (EFI_ERROR(Status)) {
-        DEBUG((DEBUG_ERROR, "Failed to update BootOrder variable: %r\n", Status));
-    }
-
-    FreePool(BootOrder);
     EfiBootManagerFreeLoadOptions(BootOptions, BootOptionCount);
-
     return EFI_SUCCESS;
 }
 

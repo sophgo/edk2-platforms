@@ -21,7 +21,7 @@ Scope(_SB)
   // Generic Event Device (ACPI0013)
   Device (GED0) {
     Name (_HID, "ACPI0013")
-    Name (_UID, One)
+    Name (_UID, Zero)
     Method(_STA) {
       Return (0xF)
     }

@@ -1,6 +1,6 @@
 /** @file
 *
-*  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+*  Copyright (c) 2024, Sophgo Technologies Ltd. All rights reserved.
 *  Copyright (c) 2018 - 2022, Arm Limited. All rights reserved.
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -18,8 +18,8 @@
 #define EFI_ACPI_RISCV_OEM_ID           'S','O','P','H','G','O'
 #define EFI_ACPI_RISCV_OEM_TABLE_ID     SIGNATURE_64 ('2','0','4','4',' ',' ',' ',' ')
 #define EFI_ACPI_RISCV_OEM_REVISION     0x01
-#define EFI_ACPI_RISCV_CREATOR_ID       SIGNATURE_32('2','0','4','4')
-#define EFI_ACPI_RISCV_CREATOR_REVISION 0x00000099
+#define EFI_ACPI_RISCV_CREATOR_ID       SIGNATURE_32('S','O','P','H')
+#define EFI_ACPI_RISCV_CREATOR_REVISION 0x20241212
 
 // A macro to initialise the common header part of EFI ACPI tables as defined by
 // EFI_ACPI_DESCRIPTION_HEADER structure.

@@ -1,0 +1,56 @@
+## @file
+#  Component description file for SOPHGO APEI (Advanced Platform Error Interface) driver.
+#
+#  This driver implements APEI initialization for SOPHGO platform, including
+#  BERT and HEST support.
+#
+#  Copyright (C) 2025, Sophgo Technologies Ltd. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = SophgoApeiDxe
+  FILE_GUID                      = 1550AC96-4A6A-414E-9A7F-9ABAC2152AEC
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = ApeiDriverEntryPoint
+
+[Sources]
+  ApeiDxe.c
+  Bert.c
+  Bert.h
+  Hest.c
+  Hest.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IoLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+  UefiRuntimeServicesTableLib
+  DxeServicesTableLib
+
+[Protocols]
+  gEfiAcpiTableProtocolGuid                   ## CONSUMES
+  gEfiAcpiSdtProtocolGuid                     ## CONSUMES
+  gFdtClientProtocolGuid                      ## CONSUMES
+
+[Pcd]
+
+[Depex]
+  gEfiAcpiTableProtocolGuid AND
+  gEfiAcpiSdtProtocolGuid

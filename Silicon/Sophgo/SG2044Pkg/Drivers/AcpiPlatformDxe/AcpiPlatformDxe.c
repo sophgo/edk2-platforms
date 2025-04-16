@@ -86,27 +86,6 @@ typedef struct {
 } QWORD_ADDRESS_SPACE_DESCRIPTOR;
 #pragma pack()
 
-//
-// INI configuration node names
-//
-STATIC CONST CHAR8 *mIniNodeNames[] = {
-  "pmem32-addr",
-  "pmem32-transl",
-  "pmem32-length",
-  "mem32-addr",
-  "mem32-transl",
-  "mem32-length",
-  "pmem64-addr",
-  "pmem64-transl",
-  "pmem64-length",
-  "mem64-addr",
-  "mem64-transl",
-  "mem64-length",
-  "io-addr",
-  "io-transl",
-  "io-length",
-};
-
 typedef struct {
   CHAR8   *Path;
   UINT8   ServerStatus;
@@ -321,6 +300,169 @@ DebugPrintQwordResource (
     ));
 }
 
+#define FDT_PCI_PARENT_ADDRESS_CELLS  2
+#define FDT_PCI_PARENT_SIZE_CELLS     2
+#define FDT_PCI_ADDRESS_CELLS         3
+#define FDT_PCI_SIZE_CELLS            2
+#define FDT_PCI_RANGE_SIZE            \
+  ((FDT_PCI_PARENT_ADDRESS_CELLS + FDT_PCI_ADDRESS_CELLS + FDT_PCI_SIZE_CELLS) * 4)
+
+#define FDT_PCI_MEM_TYPE_SHIFT  (24)
+#define FDT_PCI_MEM_TYPE_MASK   (0x03 << FDT_PCI_MEM_TYPE_SHIFT)
+#define FDT_PCI_MEM_TYPE_IO     (1 << FDT_PCI_MEM_TYPE_SHIFT)
+#define FDT_PCI_MEM_TYPE_MEM32  (2 << FDT_PCI_MEM_TYPE_SHIFT)
+#define FDT_PCI_MEM_TYPE_MEM64  (3 << FDT_PCI_MEM_TYPE_SHIFT)
+
+#define FDT_PCI_MEM_PREFETCH_SHIFT    (30)
+#define FDT_PCI_MEM_PREFETCH_MASK     (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
+#define FDT_PCI_MEM_PREFETCH          (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
+
+typedef struct {
+  UINT32    Flag;
+  UINT64    PciAddr;
+  UINT64    CpuAddr;
+  UINT64    Size;
+} FDT_PCI_RANGE;
+
+/* Include Start and End */
+typedef struct {
+  UINT32    Start;
+  UINT32    End;
+} FDT_PCI_BUS_RANGE;
+
+typedef struct {
+  FDT_PCI_RANGE     Io;
+  FDT_PCI_RANGE     Mem32;
+  FDT_PCI_RANGE     PMem32;
+  FDT_PCI_RANGE     Mem64;
+  FDT_PCI_RANGE     PMem64;
+  FDT_PCI_BUS_RANGE BusRange;
+  UINT32            Segment;
+} PCI_INFO;
+
+STATIC
+VOID
+ShowFdtPciRange(
+    IN  CHAR8         *Name,
+    IN  FDT_PCI_RANGE *Range
+    )
+{
+  DEBUG ((DEBUG_INFO, "%a: [0x%010lx : 0x%010lx : 0x%010lx]\n",
+        Name, Range->PciAddr, Range->CpuAddr, Range->Size));
+}
+
+STATIC
+VOID
+ShowPciRoot(
+    IN  PCI_INFO          *PciRoot
+    )
+{
+  DEBUG ((DEBUG_INFO, "Segment %u [%u - %u]\n",
+        PciRoot->Segment, PciRoot->BusRange.Start, PciRoot->BusRange.End));
+  DEBUG ((DEBUG_INFO, "Outbound:\n"));
+  ShowFdtPciRange("IO", &PciRoot->Io);
+  ShowFdtPciRange("Mem32", &PciRoot->Mem32);
+  ShowFdtPciRange("PMem32", &PciRoot->PMem32);
+  ShowFdtPciRange("Mem64", &PciRoot->Mem64);
+  ShowFdtPciRange("PMem64", &PciRoot->PMem64);
+}
+
+STATIC
+VOID
+GetPciRootInfoFromFdt(
+    IN  FDT_CLIENT_PROTOCOL *FdtClient,
+    IN  INT32               Node,
+    OUT PCI_INFO           *PciRoot
+    )
+{
+  CONST VOID                *Prop;
+  UINT32                    PropSize;
+  EFI_STATUS                Status;
+  FDT_PCI_RANGE             Range[5];
+  UINT32                    RangeIndex;
+  FDT_PCI_RANGE             *Aperture;
+
+  /* get segment */
+  Status = FdtClient->GetNodeProperty (FdtClient, Node, "linux,pci-domain", &Prop, &PropSize);
+  if (Status != EFI_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "No segment property\n"));
+    ASSERT(FALSE);
+  }
+
+  PciRoot->Segment = SwapBytes32 (*(UINT32 *)Prop);
+
+  /* parse bus range */
+  Status = FdtClient->GetNodeProperty (FdtClient, Node, "bus-range", &Prop, &PropSize);
+  if (Status != EFI_SUCCESS)
+    DEBUG ((DEBUG_WARN, "Cannot found ranges from dt, assume 0-255\n"));
+
+  /* bus number always 0 for root port */
+  PciRoot->BusRange.Start   = 0;
+  PciRoot->BusRange.End     = 255;
+
+  Status = FdtClient->GetNodeProperty (FdtClient, Node, "ranges", &Prop, &PropSize);
+
+  if (Status != EFI_SUCCESS) {
+    DEBUG ((DEBUG_ERROR, "Cannot found ranges from dt\n"));
+    return;
+  }
+
+  if (PropSize > ARRAY_SIZE (Range) * FDT_PCI_RANGE_SIZE) {
+    DEBUG ((DEBUG_WARN, "Too many range in dt, maybe a wrong config\n"));
+    DEBUG ((DEBUG_WARN, "Only range[0] - range[%d] effect on\n", ARRAY_SIZE (Range)));
+    PropSize = sizeof (Range);
+  }
+
+  /* get flag */
+  for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex, Prop += FDT_PCI_RANGE_SIZE) {
+    Range[RangeIndex].Flag = SwapBytes32 (*(UINT32 *)Prop);
+    /* platform must support unaligned access */
+    Range[RangeIndex].PciAddr =
+      SwapBytes64 (*(UINT64 *)(Prop + 4));
+    Range[RangeIndex].CpuAddr =
+      SwapBytes64 (*(UINT64 *)(Prop + FDT_PCI_ADDRESS_CELLS * 4));
+    Range[RangeIndex].Size =
+      SwapBytes64 (*(UINT64 *)(Prop +  (FDT_PCI_ADDRESS_CELLS + FDT_PCI_PARENT_ADDRESS_CELLS) * 4));
+  }
+
+  for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex) {
+    switch (Range[RangeIndex].Flag & (FDT_PCI_MEM_TYPE_MASK | FDT_PCI_MEM_PREFETCH_MASK)) {
+      case FDT_PCI_MEM_TYPE_IO:
+        Aperture = &PciRoot->Io;
+        break;
+      case FDT_PCI_MEM_TYPE_MEM32:
+        Aperture = &PciRoot->Mem32;
+        break;
+      case FDT_PCI_MEM_TYPE_MEM32 | FDT_PCI_MEM_PREFETCH:
+        Aperture = &PciRoot->PMem32;
+        break;
+      case FDT_PCI_MEM_TYPE_MEM64:
+        Aperture = &PciRoot->Mem64;
+        break;
+      case FDT_PCI_MEM_TYPE_MEM64 | FDT_PCI_MEM_PREFETCH:
+        Aperture = &PciRoot->PMem64;
+        break;
+      default:
+        DEBUG ((DEBUG_ERROR, "Undefined PCI memory type\n"));
+        continue;
+    }
+    CopyMem(Aperture, &Range[RangeIndex], sizeof(*Aperture));
+  }
+}
+
+STATIC
+VOID
+SetDsdtPcieCrs (
+    OUT QWORD_ADDRESS_SPACE_DESCRIPTOR  *Mem,
+    IN  FDT_PCI_RANGE                   *FdtRegion
+    )
+{
+  Mem->Minimum = FdtRegion->PciAddr;
+  Mem->Length = FdtRegion->Size;
+  Mem->Maximum = FdtRegion->PciAddr + FdtRegion->Size - 1;
+  Mem->Translation = FdtRegion->PciAddr - FdtRegion->CpuAddr;
+}
+
 /**
   Update PCIe resource allocation in ACPI table.
 
@@ -335,139 +477,113 @@ AcpiPatchPCIe (
   IN EFI_ACPI_HANDLE        TableHandle
   )
 {
-  EFI_STATUS                     Status;
-  EFI_ACPI_HANDLE                ObjectHandle;
-  EFI_ACPI_DATA_TYPE             DataType;
-  CHAR8                          *Buffer;
-  UINTN                          DataSize;
-  EFI_ACPI_HANDLE                CrsHandle;
-  EFI_ACPI_HANDLE                StaHandle;
-  QWORD_ADDRESS_SPACE_DESCRIPTOR *Pmem32;
-  QWORD_ADDRESS_SPACE_DESCRIPTOR *Mem32;
-  QWORD_ADDRESS_SPACE_DESCRIPTOR *Pmem64;
-  QWORD_ADDRESS_SPACE_DESCRIPTOR *Mem64;
-  QWORD_ADDRESS_SPACE_DESCRIPTOR *Io;
-  CHAR8                          NodePath[256];
-  CHAR8                          SegName[64];
-  CHAR8                          Value[64];
-  CHAR8                          *End;
-  UINT64                         Val;
-  UINTN                          Index;
-  UINTN                          Loop;
+  RETURN_STATUS                 Status;
+  UINT32                        Index;
+  CHAR8                         NodePath[256];
+  EFI_ACPI_HANDLE               ObjectHandle;
+  EFI_ACPI_HANDLE               StaHandle;
+  EFI_ACPI_HANDLE               CrsHandle;
+  EFI_ACPI_DATA_TYPE            DataType;
+  CHAR8                         *Buffer;
+  UINTN                         DataSize;
+  FDT_CLIENT_PROTOCOL           *FdtClient;
+  RETURN_STATUS                 FindNodeStatus;
+  PCI_INFO                      PciRoot;
+  INT32                         Node;
+  CONST CHAR8                   *Compatible = "sophgo,sg2044-pcie-host";
+  QWORD_ADDRESS_SPACE_DESCRIPTOR  *PMem32;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR  *Mem32;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR  *PMem64;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR  *Mem64;
+  QWORD_ADDRESS_SPACE_DESCRIPTOR  *Io;
 
+  /* Init all PCIe nodes to disabled */
   for (Index = 0; Index < PCIE_NUM; Index++) {
     AsciiSPrint (NodePath, sizeof (NodePath), "\\_SB.PCI%1X", Index);
     Status = AcpiSdtProtocol->FindPath (TableHandle, NodePath, &ObjectHandle);
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_INFO, "can not found PCIe %d node in DSDT table\n", Index));
+      DEBUG ((DEBUG_INFO, "Can not found PCIe %d node in DSDT table\n", Index));
+      continue;
+    }
+
+    Status = AcpiSdtProtocol->FindPath (ObjectHandle, "_STA", &StaHandle);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_INFO, "can not found PCIe _STA node in DSDT table\n"));
+      break;
+    }
+
+    Status = AcpiSdtProtocol->GetOption (StaHandle, 2, &DataType, (VOID *)&Buffer, &DataSize);
+    if (!EFI_ERROR (Status)) {
+      Buffer[3] = 0;
+      DEBUG ((DEBUG_VERBOSE, "Disable PCIe%u\n", Index));
+    }
+  }
+
+  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
+
+  if (Status) {
+    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+    DEBUG ((DEBUG_ERROR, "Cannot init PCIe controllers\n"));
+    return EFI_SUCCESS;
+  }
+
+  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, Compatible, &Node);
+      FindNodeStatus == EFI_SUCCESS;
+      FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, Compatible, Node, &Node)) {
+
+    GetPciRootInfoFromFdt(FdtClient, Node, &PciRoot);
+    ShowPciRoot(&PciRoot);
+
+    AsciiSPrint (NodePath, sizeof (NodePath), "\\_SB.PCI%1X", PciRoot.Segment);
+    Status = AcpiSdtProtocol->FindPath (TableHandle, NodePath, &ObjectHandle);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "can not found PCIe %d node in DSDT table\n", PciRoot.Segment));
       continue;
     }
 
     Status = AcpiSdtProtocol->FindPath (ObjectHandle, "_CRS", &CrsHandle);
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_INFO, "can not found PCIe _CRS node in DSDT table\n"));
+      DEBUG ((DEBUG_ERROR, "can not found PCIe _CRS node in DSDT table\n"));
       continue;
     }
 
     Status = AcpiSdtProtocol->GetOption (CrsHandle, 0, &DataType, (VOID *)&Buffer, &DataSize);
     if (EFI_ERROR (Status) || (Buffer == NULL)) {
-      DEBUG ((DEBUG_INFO, "can not get PCIe _CRS node in DSDT table\n"));
+      DEBUG ((DEBUG_ERROR, "can not get PCIe _CRS node in DSDT table\n"));
       continue;
     }
 
-    Pmem32 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR));
+    PMem32 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR));
     Mem32 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
-                                             sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR));
-    Pmem64 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
-                                              (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 2));
+        sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR));
+    PMem64 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
+        (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 2));
     Mem64 = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
-                                             (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 3));
+        (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 3));
     Io = (QWORD_ADDRESS_SPACE_DESCRIPTOR *)(Buffer + 10 + sizeof(WORD_ADDRESS_SPACE_DESCRIPTOR) +
-                                          (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 4));
+        (sizeof(QWORD_ADDRESS_SPACE_DESCRIPTOR) * 4));
+    /* change outbound windows */
+    SetDsdtPcieCrs (Mem32, &PciRoot.Mem32);
+    SetDsdtPcieCrs (PMem32, &PciRoot.PMem32);
+    SetDsdtPcieCrs (Mem64, &PciRoot.Mem64);
+    SetDsdtPcieCrs (PMem64, &PciRoot.PMem64);
+    SetDsdtPcieCrs (Io, &PciRoot.Io);
+    DebugPrintQwordResource(Mem32);
+    DebugPrintQwordResource(PMem32);
+    DebugPrintQwordResource(Mem64);
+    DebugPrintQwordResource(PMem64);
+    DebugPrintQwordResource(Io);
 
-    AsciiSPrint (SegName, sizeof (SegName), "pcie%1X", Index);
-    for (Loop = 0; Loop < sizeof(mIniNodeNames) / sizeof(mIniNodeNames[0]); Loop++) {
-      if (IniGetValueBySectionAndName (SegName, mIniNodeNames[Loop], Value) == 0) {
-        Status = AsciiStrHexToUint64S (Value, &End, &Val);
-        if (EFI_ERROR (Status)) {
-          continue;
-        }
+    Status = AcpiSdtProtocol->FindPath (ObjectHandle, "_STA", &StaHandle);
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "can not found PCIe _STA node in DSDT table\n"));
+      break;
+    }
 
-        switch (Loop) {
-        case 0:
-          Pmem32->Minimum = Val;
-          break;
-        case 1:
-          Pmem32->Translation = 0;
-          break;
-        case 2:
-          Pmem32->Length = Val;
-          Pmem32->Maximum = Pmem32->Minimum + Val - 1;
-          DebugPrintQwordResource (Pmem32);
-          break;
-        case 3:
-          Mem32->Minimum = Val;
-          break;
-        case 4:
-          Mem32->Translation = 0;
-          break;
-        case 5:
-          Mem32->Length = Val;
-          Mem32->Maximum = Mem32->Minimum + Val - 1;
-          DebugPrintQwordResource (Mem32);
-          break;
-        case 6:
-          Pmem64->Minimum = Val;
-          break;
-        case 7:
-          Pmem64->Translation = 0;
-          break;
-        case 8:
-          Pmem64->Length = Val;
-          Pmem64->Maximum = Pmem64->Minimum + Val - 1;
-          DebugPrintQwordResource (Pmem64);
-          break;
-        case 9:
-          Mem64->Minimum = Val;
-          break;
-        case 10:
-          Mem64->Translation = 0;
-          break;
-        case 11:
-          Mem64->Length = Val;
-          Mem64->Maximum = Mem64->Minimum + Val - 1;
-          DebugPrintQwordResource (Mem64);
-          break;
-        case 12:
-          Io->Translation = Val;
-          break;
-        case 13:
-          Io->Minimum = Val;
-          break;
-        case 14:
-          Io->Length = Val;
-          Io->Maximum = Io->Minimum + Val - 1;
-          DebugPrintQwordResource (Io);
-          break;
-        }
-      } else {
-        Status = AcpiSdtProtocol->FindPath (ObjectHandle, "_STA", &StaHandle);
-        if (EFI_ERROR (Status)) {
-          DEBUG ((DEBUG_INFO, "can not found PCIe _STA node in DSDT table\n"));
-          break;
-        }
-
-        if (Index <= 4) {
-          continue;
-        }
-
-        Status = AcpiSdtProtocol->GetOption (StaHandle, 2, &DataType, (VOID *)&Buffer, &DataSize);
-        if (!EFI_ERROR (Status)) {
-          Buffer[3] = 0;
-          DEBUG ((DEBUG_INFO, "Disable %a\n", SegName));
-          break;
-        }
-      }
+    Status = AcpiSdtProtocol->GetOption (StaHandle, 2, &DataType, (VOID *)&Buffer, &DataSize);
+    if (!EFI_ERROR (Status)) {
+      Buffer[3] = 0xf;
+      DEBUG ((DEBUG_VERBOSE, "Enable PCIe%d\n", PciRoot.Segment));
     }
   }
 
@@ -552,7 +668,7 @@ AcpiPatchCpu (
   FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, Compatible, &Node);
 
   if (FindNodeStatus != EFI_SUCCESS) {
-      DEBUG ((DEBUG_ERROR, "Cannot find device %s\n", Compatible));
+      DEBUG ((DEBUG_ERROR, "Cannot find device %a\n", Compatible));
       return;
   }
 
@@ -720,7 +836,6 @@ UpdateAcpiDsdtTable (
   UINTN                   TableKey;
   EFI_ACPI_HANDLE         TableHandle;
   UINTN                   Index;
-  BOOLEAN                 IniValid;
 
   DEBUG ((DEBUG_INFO, "Updating device node status in ACPI DSDT table\n"));
 
@@ -732,10 +847,6 @@ UpdateAcpiDsdtTable (
     DEBUG ((DEBUG_ERROR, "Unable to locate ACPI table protocol!\n"));
     return EFI_SUCCESS;
   }
-
-  Status = IniConfIniParse (NULL);
-
-  IniValid = EFI_ERROR(Status) ? FALSE : TRUE;
 
   //
   // Search for DSDT Table
@@ -757,13 +868,7 @@ UpdateAcpiDsdtTable (
 
     AcpiPatchCpu (AcpiTableProtocol, TableHandle);
     AcpiPatchTpu (AcpiTableProtocol, TableHandle);
-    if (IniValid) {
-      Status = AcpiPatchPCIe (AcpiTableProtocol, TableHandle);
-      if (EFI_ERROR (Status)) {
-        break;
-      }
-    }
-
+    AcpiPatchPCIe (AcpiTableProtocol, TableHandle);
     AcpiPatchDeviceStatus (AcpiTableProtocol, TableHandle);
 
     AcpiTableProtocol->Close (TableHandle);

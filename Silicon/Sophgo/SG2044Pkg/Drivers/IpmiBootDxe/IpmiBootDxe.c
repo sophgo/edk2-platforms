@@ -525,8 +525,6 @@ HandleIpmiBootOption (
     goto Exit;
   }
 
-  DEBUG ((DEBUG_INFO, "IPMI Boot Type %d, Persistent %d\n", BootType, IsPersistent));
-
   NewBootOrder = BuildBootOrder (BootType, CurrBootOrder, CurrBootOrderSize);
 
   if (NewBootOrder != NULL) {
@@ -742,7 +740,6 @@ RestoreBootOrderOnReadytoBoot (
   )
 {
   EFI_STATUS  Status;
-
   //
   // Restore BootOrder variable in normal condition.
   //

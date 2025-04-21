@@ -8,7 +8,7 @@ Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
 #define _BMC_LAN_CONFIG_H_
 
 #include <Uefi.h>
-
+#include <Uefi/UefiInternalFormRepresentation.h>
 #include <Protocol/HiiConfigRouting.h>
 #include <Protocol/HiiConfigAccess.h>
 #include <Protocol/HiiString.h>
@@ -41,12 +41,13 @@ Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
 #include <Library/FileHandleLib.h>
 #include <Library/UefiHiiServicesLib.h>
 
-#include "BmcLanConfigNv.h"
-#include "BmcLanConfigIpmi.h"
+#include "BmcConfigNv.h"
+
+
 /**
  * Extern declarations for .vfr and .uni data.
  */
-extern UINT8  BmcLanConfigVfrBin[];
+extern UINT8  BmcConfigVfrBin[];
 extern UINT8  BMCStrings[];
 
 /**
@@ -77,5 +78,10 @@ typedef struct {
   EFI_DEVICE_PATH_PROTOCOL       End;
 } HII_VENDOR_DEVICE_PATH;
 
+EFI_STATUS
+EFIAPI
+UpdateBmcVarStore(
+    IN  BMC_DATA             *BmcData
+  );
 
 #endif //_BMC_LAN_CONFIG_H_

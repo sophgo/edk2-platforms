@@ -1,0 +1,122 @@
+/** @file
+  UNI file for BmcLanConfig driver.
+  This file defines the string information
+  used for bmc lan configuration.
+
+  Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
+**/
+#langdef   en-US "English"
+
+#string STR_BMC_CONFIG_TITLE                  #language en-US "BMC Network Configuration"
+#string STR_BMC_CONFIG_HELP                   #language en-US "Configure the BMC IP Address, Subnet Mask, and Gateway."
+#string STR_BMC_FORM_TITLE                    #language en-US "BMC Management"
+
+#string STR_DHCP_PROMPT                       #language en-US "BMC IP Source    :"
+#string STR_DHCP_HELP                         #language en-US "DHCP or Static."
+
+#string STR_NETWORK_SET_PROMPT                #language en-US "BMC Network Management"
+#string STR_NETWORK_SET_HELP                  #language en-US "Manage the BMC's IP Address, Subnet Mask, and Gateway manually."
+
+#string STR_NETWORK_GET_PROMPT                #language en-US "Get BMC Network Configuration"
+#string STR_NETWORK_GET_HELP                  #language en-US "View the current BMC's IP Address, Subnet Mask, and Gateway."
+
+#string STR_BMC_SET_FORM_TITLE                #language en-US "BMC Network Configuration Form"
+
+#string STR_IP_HELP                           #language en-US "Enter the BMC IP Address (e.g., 192.168.0.1)."
+#string STR_IP_INVALID                        #language en-US "Invalid IP Address format!"
+#string STR_EXPECTED_IP                       #language en-US "192.168.0.1"
+
+#string STR_SUBNET_HELP                       #language en-US "Enter the Subnet Mask (e.g., 255.255.255.0)."
+#string STR_SUBNET_INVALID                    #language en-US "Invalid Subnet Mask format!"
+#string STR_EXPECTED_SUBNET                   #language en-US "255.255.255.0"
+
+#string STR_GATEWAY_HELP                      #language en-US "Enter the Gateway address (e.g., 192.168.0.254)."
+#string STR_GATEWAY_INVALID                   #language en-US "Invalid Gateway Address format!"
+#string STR_EXPECTED_GATEWAY                  #language en-US "192.168.0.254"
+
+#string STR_BMC_GET_FORM_TITLE                #language en-US "View BMC Network Configuration"
+#string STR_IP_PROMPT                         #language en-US "BMC IP Address   :"
+#string STR_SUBNET_PROMPT                     #language en-US "Subnet Mask      :"
+#string STR_GATEWAY_PROMPT                    #language en-US "Gateway          :"
+#string STR_DHCP_ENABLED                      #language en-US "DHCP"
+#string STR_DHCP_DISABLED                     #language en-US "Static"
+#string STR_REFRESH_PROMPT                    #language en-US "Refresh"
+#string STR_REFRESH_HELP                      #language en-US "Resfresh to show new information"
+#string STR_IP_INVALID_PROMPT                 #language en-US "Invalid IP Address. Please enter a valid IP."
+#string STR_SUBNET_INVALID_PROMPT             #language en-US "Invalid Subnet Mask. Please enter a valid one."
+#string STR_GATEWAY_INVALID_PROMPT            #language en-US "Invalid Gateway. Please enter a valid one."
+#string STR_ERROR_TITLE                       #language en-US "Error"
+#string STR_IP_INVALID                        #language en-US "Invalid IP Address. Please enter a valid IP."
+#string STR_SUBNET_INVALID                    #language en-US "Invalid SUBNET Address. Please enter a valid SUBNET."
+#string STR_GATEWAY_INVALID                   #language en-US "Invalid GATEWAY Address. Please enter a valid GATEWAY."
+#string STR_EXPECTED_IP                       #language en-US "192.168.1.1"
+#string STR_EXPECTED_SUBNET                   #language en-US "255.255.255.0"
+#string STR_EXPECTED_GAETWAY                  #language en-US "192.168.0.264"
+
+#string STR_BMC_BASIC_INFO_PROMPT             #language en-US "BMC Basic information"
+#string STR_BMC_BASIC_INFO_HELP               #language en-US "View the BMC's basic info and Set password."
+#string STR_BMC_BASIC_INFO_TITLE              #language en-US "BMC Basic information"
+
+#string STR_VERSION_PROMPT                    #language en-US "BMC Firmware Version  :"
+#string STR_VERSION_HELP                      #language en-US "FirmwareVersion"
+#string STR_IPMI_VERSION_PROMPT               #language en-US "BMC IPMI Version      :"
+#string STR_IPMI_VERSION_HELP                 #language en-US "BmcIpmiVersion"
+#string STR_IPMIINF_PROMPT                    #language en-US "IPMI Interface Type   :"
+#string STR_IPMIINF_HELP                      #language en-US "SSIF"
+
+#string STR_BOOT1_PROMPT                      #language en-US "BOOT1                 :"
+#string STR_BOOT1_HELP                        #language en-US "BootDeviceSelector"
+#string STR_BOOT2_PROMPT                      #language en-US "BOOT2                 :"
+#string STR_BOOT2_HELP                        #language en-US "BootInitiator"
+#string STR_BOOT3_PROMPT                      #language en-US "BOOT3                  :"
+#string STR_BOOT3_HELP                        #language en-US "BootIsPersistent"
+
+#string STR_MAC_SET_PROMPT                    #language en-US "BMC MAC Management"
+#string STR_MAC_SET_HELP                      #language en-US "Manage BMC's MAC Address."
+#string STR_MAC_SET_TITLE                     #language en-US "BMC MAC Address Configuration"
+#string STR_MAC_PROMPT                        #language en-US "BMC MAC Address :"
+#string STR_SET_MAC_PROMPT                    #language en-US "BMC MAC Address :"
+#string STR_SET_MAC_HELP                      #language en-US "Enter the BMC MAC Address (e.g., 12:34:56:78:90:ab)."
+#string STR_MAC_SHOW_HELP                     #language en-US "Show BMC Mac."
+
+
+
+#string STR_MAC_USER_MANAGER_PROMPT           #language en-US "BMC User Management"
+#string STR_MAC_USER_MANAGER_HELP             #language en-US " "
+#string STR_USER_NAME_PROMPT                  #language en-US "User Name         :"
+#string STR_USERNAME_HELP                     #language en-US "UserName"
+#string STR_PASSWORD_PROMPT                   #language en-US "Password"
+#string STR_PASSWORD_HELP                     #language en-US "Enter password (min 8 chars, mix uppercase, lowercase, number, symbol)"
+#string STR_PASSWORD_INVALID                  #language en-US  "Error: Password must contain 8+ chars with uppercase, lowercase, number, and symbol."
+
+#string STR_SET_USER_PASS_HELP                #language en-US " "
+#string STR_SET_USER_PASS_PROMPT              #language en-US "SetUserPass"
+
+
+#string STR_EMPTY                             #language en-US " "
+#string STR_BMC_USER_HELP                     #language en-US "Manage system access credentials. Use arrow keys to navigate, ENTER to edit."
+#string STR_BMC_USER_PROMPT                   #language en-US "BMC User Management"
+#string STR_BMC_USER_CONFIG_TITLE             #language en-US "BMC User Management"
+#string STR_BMC_USER_TOTAL_NUM                 #language en-US "BMC Users List"
+#string STR_BMC_ACCOUNT                       #language en-US "BMC Account"
+#string STR_BMC_EMPTY                         #language en-US " "
+#string STR_BMC_ADMIN_NAME                    #language en-US "Admin Name: "
+#string STR_BMC_ADMIN_PASSWORD                #language en-US "Admin Password:            [************]"
+#string STR_BMC_USER_NAME                     #language en-US "User Name: "
+#string STR_BMC_USER_PASSWORD                 #language en-US "User Password:             [************]"
+#string STR_BMC_USER_NAME_VAL_0               #language en-US "    Admin1"
+#string STR_BMC_USER_NAME_VAL_1               #language en-US "     USER1"
+#string STR_BMC_USER_NAME_VAL_2               #language en-US "     User2 "
+#string STR_BMC_USER_NAME_VAL_3               #language en-US "     User3 "
+#string STR_BMC_USER_NAME_VAL_4               #language en-US "     User4 "
+#string STR_BMC_USER_NAME_VAL_5               #language en-US "     User5 "
+#string STR_BMC_USER_NAME_VAL_6               #language en-US "     User6 "
+#string STR_BMC_USER_NAME_VAL_7               #language en-US "     User7 "
+#string STR_BMC_USER_NAME_VAL_8               #language en-US "     User8 "
+#string STR_BMC_USER_NAME_VAL_9               #language en-US "     User9"
+#string STR_BMC_USER_NAME_VAL_10              #language en-US "     User10 "
+#string STR_BMC_USER_NAME_VAL_11              #language en-US "     User11 "
+#string STR_BMC_USER_NAME_VAL_12              #language en-US "     User12 "
+#string STR_BMC_USER_NAME_VAL_13              #language en-US "     User13 "
+#string STR_BMC_USER_NAME_VAL_14              #language en-US "     User14 "
+#string STR_BMC_USER_NAME_VAL_15              #language en-US "     User15 "

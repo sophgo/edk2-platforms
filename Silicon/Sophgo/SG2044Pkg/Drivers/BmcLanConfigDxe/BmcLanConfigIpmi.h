@@ -57,7 +57,7 @@ GetBmcLanInfo (
   @retval Others               Error occurred
 **/
 EFI_STATUS
-SetIpPram (
+SetIpParam (
   IN     UINT8          Channel,
   IN     UINT8          LanParameter,
   IN OUT UINT8          *IpAddress

@@ -490,6 +490,11 @@ HandleIpmiBootOption (
   DeviceSelector = 0xFF;
   IsPersistent   = FALSE;
 
+  DEBUG ((DEBUG_INFO,
+   "%a: =================++++++++++++++++====================0000000000000\n",
+    __func__
+    ));
+
   GetEfiGlobalVariable2 (EFI_BOOT_ORDER_VARIABLE_NAME, (VOID **)&CurrBootOrder, &CurrBootOrderSize);
   if (CurrBootOrder == NULL) {
     DEBUG ((DEBUG_ERROR, "%a: BootOrder not found\n", __func__));
@@ -742,6 +747,11 @@ RestoreBootOrderOnReadytoBoot (
   )
 {
   EFI_STATUS  Status;
+
+  DEBUG ((DEBUG_INFO,
+   "%a: =================++++++++++++++++====================010101010101010101\n",
+    __func__
+    ));
 
   //
   // Restore BootOrder variable in normal condition.

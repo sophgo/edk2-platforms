@@ -12,6 +12,8 @@
 #define Hide  0x109
 #define Default 0x0
 
+extern EFI_GUID gSophgoEventAfterConsoleGuid;
+
 EFI_GUID  mUiApp = {
   0x462CAA21, 0x7614, 0x4503, { 0x83, 0x6E, 0x8A, 0xB6, 0xF4, 0x66, 0x23, 0x31 }
 };
@@ -1041,6 +1043,23 @@ PlatformBootManagerAfterConsole (
   Key.UnicodeChar = L's';
   OptionNumber   = GetOption (L"UEFI Shell", gUefiShellFileGuid, Default);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &Key, NULL);
+
+  EFI_EVENT AfterConsoleEvent;
+	//
+	// Signal After Console event
+	//
+	Status = gBS->CreateEventEx (
+		EVT_NOTIFY_SIGNAL,
+		TPL_CALLBACK,
+		EfiEventEmptyFunction,
+		NULL,
+		&gSophgoEventAfterConsoleGuid,
+		&AfterConsoleEvent
+	);
+	if (!EFI_ERROR (Status)) {
+		gBS->SignalEvent (AfterConsoleEvent);
+		gBS->CloseEvent (AfterConsoleEvent);
+	}
 }
 /**
   This function is called each second during the boot manager waits the

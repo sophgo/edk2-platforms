@@ -206,7 +206,7 @@ GetBmcLanInfo (
 }
 
 EFI_STATUS
-SetIpPram (
+SetIpParam (
   IN     UINT8          Channel,
   IN     UINT8          LanParameter,
   IN OUT UINT8          *IpAddress
@@ -279,7 +279,7 @@ IpmiSetBmcLanIpAddr (
 {
   EFI_STATUS  Status;
 
-  Status = SetIpPram (BmcChannel, IpmiLanIpAddress, &BmcIpAddress->IpAddress[0]);
+  Status = SetIpParam (BmcChannel, IpmiLanIpAddress, &BmcIpAddress->IpAddress[0]);
 
   return Status;
 }
@@ -292,7 +292,7 @@ IpmiSetBmcLanSubnetMask (
 {
   EFI_STATUS  Status;
 
-  Status = SetIpPram (BmcChannel, IpmiLanSubnetMask, &BmcSubnetMask->IpAddress[0]);
+  Status = SetIpParam (BmcChannel, IpmiLanSubnetMask, &BmcSubnetMask->IpAddress[0]);
 
   return Status;
 }
@@ -305,7 +305,7 @@ IpmiSetBmcLanGateWay (
 {
   EFI_STATUS  Status;
 
-  Status = SetIpPram (BmcChannel, IpmiLanDefaultGateway, &BmcDefaultGateWay->IpAddress[0]);
+  Status = SetIpParam (BmcChannel, IpmiLanDefaultGateway, &BmcDefaultGateWay->IpAddress[0]);
 
   return Status;
 }
@@ -352,17 +352,17 @@ IpmiSetBmcLanInfo (
   // IP Source is Static.Set Ip Address,Subnet Mask and Gateway Ip
   //
   if ((*pAddrSrc) != 2) {
-    Status = SetIpPram (BmcChannel, IpmiLanIpAddress, &BmcIpAddress->IpAddress[0]);
+    Status = SetIpParam (BmcChannel, IpmiLanIpAddress, &BmcIpAddress->IpAddress[0]);
     if (EFI_ERROR(Status)) {
       DEBUG((DEBUG_ERROR, "Failed to set bmc ip addr: %r\n", Status));
       return Status;
     }
-    Status = SetIpPram (BmcChannel, IpmiLanSubnetMask, &BmcSubnetMask->IpAddress[0]);
+    Status = SetIpParam (BmcChannel, IpmiLanSubnetMask, &BmcSubnetMask->IpAddress[0]);
     if (EFI_ERROR(Status)) {
       DEBUG((DEBUG_ERROR, "Failed to set bmc subnetmask: %r\n", Status));
       return Status;
     }
-    Status = SetIpPram (BmcChannel, IpmiLanDefaultGateway, &BmcDefaultGateWay->IpAddress[0]);
+    Status = SetIpParam (BmcChannel, IpmiLanDefaultGateway, &BmcDefaultGateWay->IpAddress[0]);
     if (EFI_ERROR(Status)) {
       DEBUG((DEBUG_ERROR, "Failed to set bmc gateway: %r\n", Status));
       return Status;

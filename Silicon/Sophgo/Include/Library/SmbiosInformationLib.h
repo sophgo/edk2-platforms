@@ -19,7 +19,9 @@
 #include <Library/PrintLib.h>
 #include <Protocol/Smbios.h>
 
-#define MAX_STRING_LENGTH 64
+#define MAX_STRING_LENGTH                64
+#define CPU_SERIALNUM_MAX_LEN            64
+#define MEM_MANUFACTURER_MAX_LEN         32
 
 typedef struct {
   CHAR16 *BiosVendor;
@@ -70,5 +72,28 @@ BOOLEAN
 IsServerProduct(
     VOID
   );
+
+EFI_STATUS
+EFIAPI
+GetBiosFmVersion(
+  OUT CHAR16 *BiosFmVersion
+);
+
+EFI_STATUS
+EFIAPI
+GetCpuSnAndSpeed(
+  OUT CHAR16 *CpuSerialNumber,
+  OUT CHAR16 *CpuSpeed
+);
+
+EFI_STATUS
+EFIAPI
+GetMemoryInfo(
+  OUT CHAR16 *MemoryManufacturer,
+  OUT UINT8  *MemoryType,
+  OUT UINT32 *MemorySize,
+  OUT UINT8  *MemoryRank,
+  OUT UINT16 *MemorySpeed
+);
 
 #endif

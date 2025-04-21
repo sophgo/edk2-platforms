@@ -13,15 +13,20 @@
   FILE_GUID                      = b1e21fa9-fdf9-405d-af62-ce57f68924eb
   MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = BmcLanConfigEntry
-  UNLOAD_IMAGE                   = BmcLanConfigUnload
+  ENTRY_POINT                    = BmcConfigEntry
+  UNLOAD_IMAGE                   = BmcConfigUnload
 
 [Sources]
-  BmcLanConfig.c
-  BmcLanConfigIpmi.c
-  BmcLanConfigVfr.Vfr
-  BmcLanConfigStr.uni
-  BmcLanConfigNv.h
+  BmcConfig.c
+  BmcConfigIpmi.c
+  BmcConfigVfr.Vfr
+  BmcConfigDxe.uni
+  BmcConfigNv.h
+  BmcConfigLan.c
+  BmcConfigMac.c
+  BmcConfigUser.c
+  BmcConfigOem.c
+  BmcConfigBasicInfo.c
 
 [Packages]
   MdePkg/MdePkg.dec

@@ -129,6 +129,8 @@ AllocSmbiosData (
         ParsedData->ProcessorCurrentSpeed = Type4->CurrentSpeed;
         ParsedData->ProcessorCoreCount = Type4->CoreCount;
         ParsedData->ProcessorThreadCount = Type4->ThreadCount;
+        //SerialNumber Type4->SerialNumber
+        // ExtractString((CHAR8 *)((UINT8 *)Type4 + Type4->Hdr.Length), Type4->SerialNumber, &ParsedData->SerialNumber);
         break;
       }
 
@@ -352,3 +354,176 @@ IsServerProduct(
   return IsServerBoard;
 }
 
+EFI_STATUS
+EFIAPI
+GetBiosFmVersion(
+  OUT CHAR16 *BiosFmVersion
+)
+{
+  EFI_STATUS                Status;
+  EFI_SMBIOS_PROTOCOL      *Smbios;
+  EFI_SMBIOS_HANDLE         SmbiosHandle;
+  EFI_SMBIOS_TABLE_HEADER  *Record;
+  CHAR16                   *TmpBiosFmVersion;
+
+  if(BiosFmVersion == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+  TmpBiosFmVersion = NULL;
+  Status = gBS->LocateProtocol(&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to locate SMBIOS protocol: %r\n", Status));
+  } else {
+    SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+    while (TRUE) {
+      Status = Smbios->GetNext(Smbios, &SmbiosHandle, NULL, &Record, NULL);
+      if (EFI_ERROR(Status)) {
+        break;
+      }
+      if (Record->Type == SMBIOS_TYPE_BIOS_INFORMATION) {
+        SMBIOS_TABLE_TYPE0 *Type0 = (SMBIOS_TABLE_TYPE0 *)Record;
+        ExtractString((CHAR8 *)((UINT8 *)Type0 + Type0->Hdr.Length), Type0->BiosVersion, &TmpBiosFmVersion);
+        break;
+      }
+    }
+
+    if (TmpBiosFmVersion != NULL) {
+      DEBUG((DEBUG_VERBOSE, "BiosFmVersion16:%s,Len: %d\n", TmpBiosFmVersion, StrLen(TmpBiosFmVersion)));
+      CopyMem(BiosFmVersion, TmpBiosFmVersion, (StrLen(TmpBiosFmVersion) +1)*sizeof(CHAR16));
+      FreePool(TmpBiosFmVersion);
+    }
+  }
+
+  return Status;
+}
+
+EFI_STATUS
+EFIAPI
+GetCpuSnAndSpeed(
+  OUT CHAR16 *CpuSerialNumber,
+  OUT CHAR16 *CpuSpeed
+)
+{
+  EFI_STATUS                Status;
+  EFI_SMBIOS_PROTOCOL      *Smbios;
+  EFI_SMBIOS_HANDLE         SmbiosHandle;
+  EFI_SMBIOS_TABLE_HEADER  *Record;
+  CHAR16                   *TmpCpuSerialNumber;
+  UINT8                    CpuSnLen;
+
+  if(CpuSerialNumber == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+  TmpCpuSerialNumber = NULL;
+  Status = gBS->LocateProtocol(&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to locate SMBIOS protocol: %r\n", Status));
+  } else {
+    SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+    while (TRUE) {
+      Status = Smbios->GetNext(Smbios, &SmbiosHandle, NULL, &Record, NULL);
+      if (EFI_ERROR(Status)) {
+        break;
+      }
+      if (Record->Type == SMBIOS_TYPE_PROCESSOR_INFORMATION) {
+        SMBIOS_TABLE_TYPE4 *Type4 = (SMBIOS_TABLE_TYPE4 *)Record;
+        ExtractString((CHAR8 *)((UINT8 *)Type4 + Type4->Hdr.Length), Type4->SerialNumber, &TmpCpuSerialNumber);
+        *CpuSpeed = Type4->CurrentSpeed;
+        break;
+      }
+    }
+
+    if (TmpCpuSerialNumber != NULL) {
+      CpuSnLen = StrLen(TmpCpuSerialNumber);
+      if (CpuSnLen < CPU_SERIALNUM_MAX_LEN) {
+        DEBUG((DEBUG_VERBOSE, "CpuSerialNumber16:%s,Len: %d\n", TmpCpuSerialNumber, CpuSnLen));
+        CopyMem(CpuSerialNumber, TmpCpuSerialNumber, (StrLen(TmpCpuSerialNumber) +1)*sizeof(CHAR16));
+      } else {
+        Status = EFI_OUT_OF_RESOURCES;
+      }
+      FreePool(TmpCpuSerialNumber);
+    }
+  }
+
+  return Status;
+}
+
+
+EFI_STATUS
+EFIAPI
+GetMemoryInfo(
+  OUT CHAR16 *MemoryManufacturer,
+  OUT UINT8  *MemoryType,
+  OUT UINT32 *MemorySize, //MB
+  OUT UINT8  *MemoryRank,
+  OUT UINT16 *MemorySpeed
+)
+{
+  EFI_STATUS                Status;
+  EFI_SMBIOS_PROTOCOL      *Smbios;
+  EFI_SMBIOS_HANDLE         SmbiosHandle;
+  EFI_SMBIOS_TABLE_HEADER  *Record;
+  CHAR16                   *TmpMemoryManufacturer;
+  UINT8                    MemManuLen;
+
+  if(MemoryManufacturer == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+  TmpMemoryManufacturer = NULL;
+  Status = gBS->LocateProtocol(&gEfiSmbiosProtocolGuid, NULL, (VOID **)&Smbios);
+  if (EFI_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to locate SMBIOS protocol: %r\n", Status));
+  } else {
+    SmbiosHandle = SMBIOS_HANDLE_PI_RESERVED;
+    while (TRUE) {
+      Status = Smbios->GetNext(Smbios, &SmbiosHandle, NULL, &Record, NULL);
+      if (EFI_ERROR(Status)) {
+        break;
+      }
+      if (Record->Type == SMBIOS_TYPE_MEMORY_DEVICE) {
+        SMBIOS_TABLE_TYPE17 *Type17 = (SMBIOS_TABLE_TYPE17 *)Record;
+        ExtractString((CHAR8 *)((UINT8 *)Type17 + Type17->Hdr.Length), Type17->Manufacturer, &TmpMemoryManufacturer);
+        *MemoryType = Type17->MemoryType;
+
+        if (!(Type17->Size & 0x8000)) {
+          if (Type17->Size == 0x7FFF) {
+            *MemorySize = Type17->ExtendedSize;
+          } else if (Type17->Size == 0) {
+            *MemorySize = 0;
+          } else if (Type17->Size == 0xFFFF) {
+            *MemorySize = 128 * 1024;//128*1024 MB
+          } else {
+            *MemorySize = Type17->Size;//MB
+          }
+        } else {
+          if ((Type17->Size & 0x7FFF) == 0x7FFF) {
+            *MemorySize = Type17->ExtendedSize / 1024; //KB to MB
+          } else if (Type17->Size == 0xFFFF) {
+            *MemorySize = 128 * 1024;//128*1024 MB
+          } else {
+            *MemorySize = Type17->Size / 1024;//KB to MB
+          }
+        }
+        *MemoryRank  =  Type17->Attributes & 0x0F;
+        *MemorySpeed = Type17->ExtendedSpeed;
+
+        DEBUG((DEBUG_VERBOSE, "GetMemoryInfo:Type17->Size:0x%04x, Type17->ExtendedSize:0x%08x,MemorySize:0x%x,MemorySpeed:0x%x, MemoryRank:0x%x\n", Type17->Size, Type17->ExtendedSize, *MemorySize, *MemorySpeed, *MemoryRank));
+        break;
+      }
+    }
+
+    if (TmpMemoryManufacturer != NULL) {
+      MemManuLen = StrLen(TmpMemoryManufacturer);
+      if (MemManuLen < MEM_MANUFACTURER_MAX_LEN) {
+        DEBUG((DEBUG_VERBOSE, "MemoryManufacturer16:%s,Len: %d\n", TmpMemoryManufacturer, MemManuLen));
+        CopyMem(MemoryManufacturer, TmpMemoryManufacturer, (StrLen(TmpMemoryManufacturer) +1)*sizeof(CHAR16));
+      } else {
+        DEBUG((DEBUG_VERBOSE, "MemoryManufacturer16:%s,Len= %d, ERROR!\n", TmpMemoryManufacturer, MemManuLen));
+        Status = EFI_OUT_OF_RESOURCES;
+      }
+      FreePool(TmpMemoryManufacturer);
+    }
+  }
+
+  return Status;
+}

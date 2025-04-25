@@ -399,11 +399,12 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdVpdBaseAddress|0x0
 
   gEfiMdePkgTokenSpaceGuid.PcdReportStatusCodePropertyMask|0x07
-  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
 
 !if $(TARGET) == RELEASE
-  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x13
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x80000002
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2B
 !else
+  gEfiMdePkgTokenSpaceGuid.PcdDebugPrintErrorLevel|0x8000004F
   gEfiMdePkgTokenSpaceGuid.PcdDebugPropertyMask|0x2B
 !endif
 

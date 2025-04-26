@@ -139,7 +139,7 @@ FilterAndProcess (
   ASSERT (NoHandles > 0);
   for (Idx = 0; Idx < NoHandles; ++Idx) {
     CHAR16        *DevicePathText;
-    STATIC CHAR16 Fallback[] = L"<device path unavailable>";
+    CHAR16        Fallback[] = L"<device path unavailable>";
 
     //
     // The ConvertDevicePathToText () function handles NULL input transparently.
@@ -615,10 +615,9 @@ FvFilePath (
   for FvFile type device paths.
 
   @param  DevicePath   The device path from which the GUID will be extracted.
+  @param  Guid         Guid of this device path.
 
-  @retval EFI_GUID*    Pointer to the extracted GUID if successful.
-  @retval NULL         If the device path does not contain an FvFile node or
-                       if any error occurs during processing.
+  @return EFI_SUCCESS on success, otherwise return an error
 
   Note:
   - The function uses ConvertDevicePathToText to convert the device path to a
@@ -626,38 +625,36 @@ FvFilePath (
   - It assumes the GUID follows the "FvFile(" node in the string representation.
   - Only applicable for device paths containing FvFile nodes.
 **/
-EFI_GUID *
+EFI_STATUS
 ExtractGuidFromDevicePathString (
-  IN EFI_DEVICE_PATH_PROTOCOL  *DevicePath
+  IN  EFI_DEVICE_PATH_PROTOCOL  *DevicePath,
+  OUT EFI_GUID                  *Guid
   )
 {
   CHAR16        *DevicePathStr;
   CHAR16        *GuidStart;
-  STATIC EFI_GUID ExtractedGuid;
   RETURN_STATUS  Status;
 
   DevicePathStr = ConvertDevicePathToText(DevicePath, TRUE, TRUE);
   if (DevicePathStr == NULL) {
     DEBUG((DEBUG_ERROR, "Failed to convert device path to text\n"));
-    return NULL;
+    return EFI_NOT_FOUND;
   }
 
   GuidStart = StrStr(DevicePathStr, L"FvFile(");
   if (GuidStart == NULL) {
     FreePool(DevicePathStr);
-    return NULL;
+    return EFI_NOT_FOUND;
   }
 
   GuidStart += StrLen(L"FvFile(");
-  Status = StrToGuid(GuidStart, &ExtractedGuid);
+  Status = StrToGuid(GuidStart, Guid);
   if (RETURN_ERROR(Status)) {
     DEBUG((DEBUG_ERROR, "Failed to parse GUID from string: %r\n", Status));
-    FreePool(DevicePathStr);
-    return NULL;
   }
 
   FreePool(DevicePathStr);
-  return &ExtractedGuid;
+  return Status;
 }
 
 /**
@@ -690,126 +687,55 @@ RemoveDuplicateBootOptions (
   VOID
 )
 {
-    EFI_STATUS                     Status;
-    EFI_BOOT_MANAGER_LOAD_OPTION   *BootOptions;
-    UINTN                          BootOptionCount;
-    UINT16                         *BootOrder;
-    UINT16                         BootOrderTemp;
-    UINTN                          BootOrderSize;
-    UINTN                          i, j;
-    EFI_GUID                       *GuidI;
-    EFI_GUID                       *GuidITemp;
-    EFI_GUID                       *GuidJ;
-    EFI_GUID                       *GuidJTemp;
-    BOOLEAN                        IsDuplicate;
+    EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
+    UINTN                           BootOptionCount;
+    UINTN                           IndexA;
+    EFI_GUID                        GuidA;
+    UINTN                           IndexB;
+    EFI_GUID                        GuidB;
+    EFI_STATUS                      Status;
+    BOOLEAN                         Found;
 
-    IsDuplicate = FALSE;
+
     BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
+
     if (BootOptions == NULL) {
-        return EFI_NOT_FOUND;
+      return EFI_NOT_FOUND;
     }
 
-    for (i = 0; i < BootOptionCount; i++) {
-      GuidITemp = ExtractGuidFromDevicePathString(BootOptions[i].FilePath);
-      GuidI= AllocatePool(sizeof(EFI_GUID));
-      CopyMem(GuidI, GuidITemp, sizeof(EFI_GUID));
-      for (j = i + 1; j < BootOptionCount; j++) {
-        IsDuplicate = FALSE;
-        GuidJTemp = ExtractGuidFromDevicePathString(BootOptions[j].FilePath);
-        GuidJ= AllocatePool(sizeof(EFI_GUID));
-        CopyMem(GuidJ, GuidJTemp, sizeof(EFI_GUID));
+    Found = FALSE;
 
-        if(GuidI ==NULL || GuidJ == NULL) {
-          if (GuidJ != NULL) {
-            FreePool (GuidJ);
-          }
+    for (IndexA = 0; IndexA < BootOptionCount; ++IndexA) {
+
+      Status = ExtractGuidFromDevicePathString(BootOptions[IndexA].FilePath, &GuidA);
+      if (EFI_ERROR(Status)) {
+        continue;
+      }
+
+      for (IndexB = IndexA + 1; IndexB < BootOptionCount; ++IndexB) {
+
+        Status = ExtractGuidFromDevicePathString(BootOptions[IndexB].FilePath, &GuidB);
+        if (EFI_ERROR(Status)) {
           continue;
         }
 
-        if (CompareGuid(GuidI, GuidJ)) {
-          IsDuplicate = TRUE;
-        } else if (StrCmp(BootOptions[i].Description, BootOptions[j].Description) == 0 &&
-          CompareMem(BootOptions[i].FilePath, BootOptions[j].FilePath, sizeof(EFI_DEVICE_PATH_PROTOCOL)) == 0) {
-          IsDuplicate = TRUE;
-        }
-
-        if (IsDuplicate) {
-          UINTN DeleteOptionNumberPosition, ReplaceOptionNumberPosition, TempOptionNumber;
-
-          GetEfiGlobalVariable2(L"BootOrder", (VOID **)&BootOrder, &BootOrderSize);
-          TempOptionNumber = BootOptions[j].OptionNumber;
-          for (UINTN k = 0; k < BootOrderSize / sizeof(UINT16); k++) {
-            if (BootOrder[k] == BootOptions[i].OptionNumber) {
-              DeleteOptionNumberPosition = k;
-              break;
-            }
-          }
-
-          if (BootOrder != NULL) {
-            FreePool (BootOrder);
-          }
-
-          EfiBootManagerDeleteLoadOptionVariable(BootOptions[i].OptionNumber, LoadOptionTypeBoot);
-          EfiBootManagerFreeLoadOptions(BootOptions, BootOptionCount-1);
-          BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
-          GetEfiGlobalVariable2(L"BootOrder", (VOID **)&BootOrder, &BootOrderSize);
-          for (UINTN k = 0; k < BootOrderSize / sizeof(UINT16); k++) {
-            if (BootOrder[k] == TempOptionNumber) {
-              ReplaceOptionNumberPosition = k;
-              break;
-            }
-          }
-
-          BootOrderTemp = BootOrder[ReplaceOptionNumberPosition];
-          if (DeleteOptionNumberPosition == BootOrderSize / sizeof(UINT16)) {
-            BootOrder[ReplaceOptionNumberPosition] = BootOrder[BootOrderSize / sizeof(UINT16) - 1];
-            BootOrder[BootOrderSize / sizeof(UINT16) - 1] = BootOrderTemp;
-          } else if (ReplaceOptionNumberPosition > DeleteOptionNumberPosition) {
-            for (UINTN k = ReplaceOptionNumberPosition; k > DeleteOptionNumberPosition; k--) {
-              BootOrder[k] = BootOrder[k - 1];
-            }
-          } else if (ReplaceOptionNumberPosition < DeleteOptionNumberPosition) {
-            for (UINTN k = ReplaceOptionNumberPosition; k < DeleteOptionNumberPosition - 1; k++) {
-              BootOrder[k] = BootOrder[k + 1];
-            }
-          }
-          BootOrder[DeleteOptionNumberPosition] = BootOrderTemp;
-
-          Status = gRT->SetVariable(
-            L"BootOrder",
-            &gEfiGlobalVariableGuid,
-            EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-            BootOrderSize,
-            BootOrder
-          );
-
-          if (EFI_ERROR(Status)) {
-            DEBUG((DEBUG_ERROR, "Failed to update BootOrder variable: %r\n", Status));
-          }
-
-          if (BootOrder != NULL) {
-            FreePool (BootOrder);
-          }
-          i--;
-
-          if (GuidJ != NULL) {
-            FreePool (GuidJ);
-          }
+        if (CompareGuid(&GuidA, &GuidB)) {
+          Found = TRUE;
           break;
-        } else {
-          if (GuidJ != NULL) {
-            FreePool (GuidJ);
-          }
         }
       }
-
-      if (GuidI != NULL) {
-        FreePool (GuidI);
+      if (Found) {
+        break;
       }
     }
 
-    EfiBootManagerFreeLoadOptions(BootOptions, BootOptionCount);
-    return EFI_SUCCESS;
+    if (Found) {
+      /* Delete the previous one */
+      EfiBootManagerDeleteLoadOptionVariable(BootOptions[IndexA].OptionNumber, LoadOptionTypeBoot);
+    }
+
+    return Found;
+
 }
 
 /**
@@ -831,20 +757,19 @@ GetOption (
   EFI_BOOT_MANAGER_LOAD_OPTION  *BootOptions;
   UINTN                         Index;
   UINTN                         OptionNumber;
-  EFI_GUID                      *GuidFind;
-  EFI_GUID                      *GuidIn;
+  EFI_GUID                      GuidFind;
   BOOLEAN                       IsNew;
+  EFI_STATUS                    Status;
 
   IsNew = TRUE;
-  GuidIn = &Guid;
   BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
 
   for (Index = 0; Index < BootOptionCount; Index++) {
-      GuidFind = ExtractGuidFromDevicePathString(BootOptions[Index].FilePath);
-      if (GuidFind == NULL || GuidIn == NULL) {
+      Status = ExtractGuidFromDevicePathString(BootOptions[Index].FilePath, &GuidFind);
+      if (EFI_ERROR(Status)) {
           continue;
       }
-      if (CompareGuid(GuidIn, GuidFind)) {
+      if (CompareGuid(&Guid, &GuidFind)) {
          OptionNumber = BootOptions[Index].OptionNumber;
          IsNew = FALSE;
          break;
@@ -853,7 +778,7 @@ GetOption (
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 
   if (IsNew) {
-      OptionNumber = PlatformRegisterFvBootOption (GuidIn, Description, Attributes, NULL);
+      OptionNumber = PlatformRegisterFvBootOption (&Guid, Description, Attributes, NULL);
   }
   return OptionNumber;
 }
@@ -878,7 +803,9 @@ PlatformRegisterOptionsAndKeys (
   // Load platform boot options
   //
   GetPlatformOptions ();
-  RemoveDuplicateBootOptions();
+  /* Workaround, invalid boot options may be added, remove them */
+  while (RemoveDuplicateBootOptions())
+    ;
   //
   // Register ENTER as CONTINUE key
   //
@@ -1045,21 +972,21 @@ PlatformBootManagerAfterConsole (
   OptionNumber   = GetOption (L"UEFI Shell", gUefiShellFileGuid, Default);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &Key, NULL);
 
-	//
-	// Signal After Console event
-	//
-	Status = gBS->CreateEventEx (
-		EVT_NOTIFY_SIGNAL,
-		TPL_CALLBACK,
-		EfiEventEmptyFunction,
-		NULL,
-		&gSophgoEventAfterConsoleGuid,
-		&AfterConsoleEvent
-	);
-	if (!EFI_ERROR (Status)) {
-		gBS->SignalEvent (AfterConsoleEvent);
-		gBS->CloseEvent (AfterConsoleEvent);
-	}
+  //
+  // Signal After Console event
+  //
+  Status = gBS->CreateEventEx (
+      EVT_NOTIFY_SIGNAL,
+      TPL_CALLBACK,
+      EfiEventEmptyFunction,
+      NULL,
+      &gSophgoEventAfterConsoleGuid,
+      &AfterConsoleEvent
+      );
+  if (!EFI_ERROR (Status)) {
+    gBS->SignalEvent (AfterConsoleEvent);
+    gBS->CloseEvent (AfterConsoleEvent);
+  }
 }
 /**
   This function is called each second during the boot manager waits the

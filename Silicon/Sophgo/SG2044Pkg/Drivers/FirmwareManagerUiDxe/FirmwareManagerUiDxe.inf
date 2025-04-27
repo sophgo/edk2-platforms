@@ -21,9 +21,12 @@
   FirmwareManager.h
   FirmwareManagerFormGuid.h
   FirmwareManagerVfr.vfr
+  FirmwareManagerAllVfr.vfr
   FirmwareManagerStrings.uni
   FirmwareManagerUiDxe.c
   FirmwareVerify.c
+  MCUFirmwareUpdate.c
+  MCUFirmwareUpdate.h
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec
@@ -59,10 +62,12 @@
   gEfiHiiConfigRoutingProtocolGuid            ## CONSUMES
   gSophgoSpiMasterProtocolGuid                ## CONSUMES
   gSophgoNorFlashProtocolGuid                 ## CONSUMES
+  gSophgoI2cMasterProtocolGuid                ## CONSUMES
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset                     ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize     ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdMCUI2cBus                               ## CONSUMES
 
 [Depex]
   gSophgoSpiMasterProtocolGuid      AND

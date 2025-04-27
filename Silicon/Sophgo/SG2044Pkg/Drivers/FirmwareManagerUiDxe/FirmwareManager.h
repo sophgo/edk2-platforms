@@ -28,6 +28,7 @@
 
 #include <Include/Spifmc.h>
 #include <Include/SpiNorFlash.h>
+#include <Include/DwI2c.h>
 
 typedef UINT16  STRING_REF;
 

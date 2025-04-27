@@ -498,6 +498,7 @@
   gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|8192
   gSophgoTokenSpaceGuid.PcdMisa|0x00B4112F
+  gSophgoTokenSpaceGuid.PcdMCUI2cBus|1
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum0|2
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum1|3
   gSophgoTokenSpaceGuid.PcdSsifI2cBusNum|3

@@ -14,6 +14,7 @@
 #include "FirmwareManager.h"
 #include "FirmwareManagerFormGuid.h"
 #include "FirmwareVerify.h"
+#include "MCUFirmwareUpdate.h"
 
 #define STRING_BUFFER_SIZE 64
 
@@ -21,8 +22,10 @@ EFI_GUID mFirmwareManagerGuid         = FIRMWARE_MANAGER_FORMSET_GUID;
 STATIC   SPI_NOR                        *Nor;
 STATIC   SOPHGO_NOR_FLASH_PROTOCOL      *NorFlashProtocol;
 STATIC   SOPHGO_SPI_MASTER_PROTOCOL     *SpiMasterProtocol;
+STATIC   SOPHGO_I2C_MASTER_PROTOCOL     *I2cMasterProtocol;
 
 extern UINT8 FirmwareManagerVfrBin[];
+extern UINT8 FirmwareManagerAllVfrBin[];
 
 EFI_HII_HANDLE gFirmwareUpdateHandle;
 
@@ -637,6 +640,116 @@ ProExit:
 }
 
 /**
+  Update firmware in MCU flash.
+
+  @param[in]  Buffer              A pointer to update firmware data.
+  @param[in]  Size                Size of update firmware to update.
+  @param[in]  String              Start info to print.
+
+  @retval     EFI_SUCCESS         Success.
+              Other               Failed.
+**/
+EFI_STATUS
+UpdateMCUFirmware (
+  IN UINT8        *Buffer,
+  IN UINTN        Size,
+  IN CHAR16       *String
+  )
+{
+  EFI_STATUS     Status;
+  UINT32         MCUI2cBus;
+  CHAR16         Space[]  = L"                         ";
+  UINTN          Columns;
+  UINTN          Rows;
+  UINTN          StringLen;
+  CHAR16         *WarningString;
+  EFI_SIMPLE_TEXT_OUTPUT_MODE  SavedConsoleMode;
+
+  MCUI2cBus = FixedPcdGet32 (PcdMCUI2cBus);
+
+  StringLen = StrLen (Space);
+
+  WarningString = HiiGetString (
+    gFirmwareUpdateHandle,
+    STRING_TOKEN (STR_UPDATING_WARNING),
+    NULL
+    );
+
+  CreatePopUp (
+    EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
+    NULL,
+    WarningString,
+    Space,
+    NULL
+    );
+
+  CopyMem (&SavedConsoleMode, gST->ConOut->Mode, sizeof (SavedConsoleMode));
+  gST->ConOut->SetAttribute (gST->ConOut, EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE);
+  gST->ConOut->QueryMode (gST->ConOut, gST->ConOut->Mode->Mode, &Columns, &Rows);
+  Columns = (Columns - StringLen) / 2;
+  Rows = (Rows - (1 + 3)) / 2 + 3;
+  gST->ConOut->SetCursorPosition (gST->ConOut, Columns, Rows);
+
+  MCUFirmwareCursorPosition(Columns, Rows);
+
+  Status = EFI_SUCCESS;
+  Status = MCUFirmwareCheck (
+    I2cMasterProtocol,
+    MCUI2cBus,
+    Buffer,
+    Size
+    );
+  if (EFI_ERROR(Status)) {
+    Print (L"Check MCU firmware failed");
+    return Status;
+  }
+
+  gST->ConOut->SetCursorPosition (gST->ConOut, Columns, Rows);
+  Status = MCUFirmwareErase(
+    I2cMasterProtocol,
+    MCUI2cBus,
+    Size
+    );
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_ERROR, "Erase MCU flash failed\n"));
+    return Status;
+  }
+
+  gST->ConOut->SetCursorPosition (gST->ConOut, Columns, Rows);
+  Status = MCUFirmwareProgram(
+    I2cMasterProtocol,
+    MCUI2cBus,
+    Buffer,
+    Size
+    );
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_ERROR, "Program MCU flash failed\n"));
+    return Status;
+  }
+
+  gST->ConOut->SetCursorPosition (gST->ConOut, Columns, Rows);
+  Status = MCUFirmwareVerify(
+    I2cMasterProtocol,
+    MCUI2cBus,
+    Buffer,
+    Size
+    );
+  if (EFI_ERROR(Status)) {
+    Print (L"Verify MCU flash failed");
+    goto ProExit;
+  }
+
+ProExit:
+  gST->ConOut->SetCursorPosition (gST->ConOut, SavedConsoleMode.CursorColumn,
+                                  SavedConsoleMode.CursorRow);
+  gST->ConOut->SetAttribute (gST->ConOut, SavedConsoleMode.Attribute);
+  ClearPopUp (EFI_BACKGROUND_LIGHTGRAY, StrLen (WarningString), 2);
+
+  return Status;
+}
+
+
+/**
   Retrieve and format a string from HII.
 
   @param[in]      StringToken  The token for the string to retrieve.
@@ -881,6 +994,74 @@ UpdateIniFromFile (
 }
 
 /**
+  Update the MCU firmware base on the input file path info.
+
+  @param FilePath    Point to the file path.
+
+  @retval TRUE   Exit caller function.
+  @retval FALSE  Not exit caller function.
+**/
+BOOLEAN
+EFIAPI
+UpdateMCUFirmwareFromFile (
+  IN EFI_DEVICE_PATH_PROTOCOL  *FilePath
+  )
+{
+  VOID             *FileBuffer;
+  UINTN            FileSize;
+  UINT32           AuthStat;
+  EFI_STATUS       Status;
+  UINT8            *FirmwareAddress;
+  CHAR16           *UpdatingMCUFirmwareString;
+  EFI_STRING_ID    TokenToUpdate1;
+  EFI_STRING_ID    TokenToUpdate2;
+  EFI_STRING_ID    TokenToUpdate3;
+
+  //
+  // Locate I2C Master protocol
+  //
+  Status = gBS->LocateProtocol (
+                  &gSophgoI2cMasterProtocolGuid,
+                  NULL,
+                  (VOID *)&I2cMasterProtocol
+                  );
+  if (EFI_ERROR (Status)) {
+    Print (L"  Cannot locate I2C Master protocol!\n");
+    return FALSE;
+  }
+
+  TokenToUpdate1 = STRING_TOKEN (STR_UPDATING_MCU);
+  TokenToUpdate2 = STRING_TOKEN (STR_MCU_FIRMWARE_UPDATE_SUCC);
+  TokenToUpdate3 = STRING_TOKEN (STR_MCU_FIRMWARE_UPDATE_FAIL);
+
+  FileBuffer = GetFileBufferByFilePath (FALSE, FilePath, &FileSize, &AuthStat);
+
+  if (!EFI_ERROR (Status)) {
+    FirmwareAddress = FileBuffer;
+    UpdatingMCUFirmwareString = HiiGetString (
+		    gFirmwareUpdateHandle,
+		    TokenToUpdate1,
+		    NULL
+		    );
+    Status = UpdateMCUFirmware (
+		    FirmwareAddress,
+		    FileSize,
+		    UpdatingMCUFirmwareString
+		    );
+
+    if (EFI_ERROR(Status)) {
+      PressEnterToContinue (TokenToUpdate3);
+    } else {
+      PressEnterToContinue (TokenToUpdate2);
+    }
+  }
+
+  FreePool (FileBuffer);
+
+  return FALSE;
+}
+
+/**
   This function processes the results of changes in configuration.
 
 
@@ -918,6 +1099,10 @@ FirmwareManagerCallback (
 
     if (QuestionId == UPDATE_INI_KEY) {
       Status = ChooseFile (NULL, NULL, UpdateIniFromFile, &File);
+    }
+
+    if (QuestionId == UPDATE_MCU_FIRMWARE_KEY) {
+      Status = ChooseFile (NULL, NULL, UpdateMCUFirmwareFromFile, &File);
     }
   }
 
@@ -958,13 +1143,23 @@ InstallFirmwareManagerForm (
   //
   // Publish our HII data
   //
-  PrivateData->HiiHandle = HiiAddPackages (
-		  &mFirmwareManagerGuid,
-		  PrivateData->DriverHandle,
-		  FirmwareManagerVfrBin,
-		  FirmwareManagerUiDxeStrings,
-		  NULL
-		  );
+
+  if (MCUDeviceMatch() == EFI_SUCCESS)
+      PrivateData->HiiHandle = HiiAddPackages (
+		    &mFirmwareManagerGuid,
+		    PrivateData->DriverHandle,
+		    FirmwareManagerAllVfrBin,
+		    FirmwareManagerUiDxeStrings,
+		    NULL
+		    );
+  else
+      PrivateData->HiiHandle = HiiAddPackages (
+		    &mFirmwareManagerGuid,
+		    PrivateData->DriverHandle,
+		    FirmwareManagerVfrBin,
+		    FirmwareManagerUiDxeStrings,
+		    NULL
+		    );
   ASSERT (PrivateData->HiiHandle != NULL);
 
   gFirmwareUpdateHandle = PrivateData->HiiHandle;

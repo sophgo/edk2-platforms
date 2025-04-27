@@ -32,3 +32,9 @@
 #string STR_UPDATING_INI                   #language en-US "Updating conf.ini"
 #string STR_INI_UPDATE_SUCC                #language en-US "conf.ini update success"
 #string STR_INI_UPDATE_FAIL                #language en-US "conf.ini update failed"
+
+#string STR_UPDATE_MCU_TITLE               #language en-US "Update MCU Firmware"
+#string STR_UPDATE_MCU_HELP                #language en-US "Select the file to update MCU Firmware"
+#string STR_UPDATING_MCU                   #language en-US "Updating MCU Firmware"
+#string STR_MCU_FIRMWARE_UPDATE_SUCC       #language en-US "MCU Firmware update success"
+#string STR_MCU_FIRMWARE_UPDATE_FAIL       #language en-US "MCU Firmware update failed"

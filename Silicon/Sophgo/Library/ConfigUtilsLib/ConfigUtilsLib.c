@@ -28,9 +28,8 @@ UpdateSmbiosFromEfuse (
 }
 
 INT32
-ReadVersionAndDateFromFlash (
+ReadVersionFromFlash (
   CHAR8 *Version,
-  CHAR8 *Date,
   UINTN StartAddress,
   UINTN EndAddress
   )
@@ -42,7 +41,7 @@ ReadVersionAndDateFromFlash (
   UINTN RangeSize;
   UINT8 *Buffer = NULL;
 
-  if (Version == NULL || Date == NULL || StartAddress >= EndAddress) {
+  if (Version == NULL || StartAddress >= EndAddress) {
     return -1;
   }
 
@@ -101,8 +100,6 @@ ReadVersionAndDateFromFlash (
 
   CopyMem(Version, Buffer + VERSION_OFFSET, VERSION_SIZE);
   Version[VERSION_SIZE] = '\0';
-  CopyMem(Date, Buffer + DATE_OFFSET, DATE_SIZE);
-  Date[DATE_SIZE] = '\0';
 
   FreePool(Buffer);
 

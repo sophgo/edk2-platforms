@@ -137,12 +137,12 @@ IsValidReservedMemorySize (
     goto Exit;
   } else {
     if (ReservedMemorySize < 8
-        || ReservedMemorySize > (MemoryDeviceSize / 1024)) {
+        || ReservedMemorySize > (MemoryDeviceSize / 1024) - 8) {
       CreatePopUp (
         EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
         NULL,
 	ErrorString,
-        L"Input must be 0 or [8, DDR Size]",
+        L"Input must be 0 or [8, 120]",
 	NULL
 	);
       while (1) {

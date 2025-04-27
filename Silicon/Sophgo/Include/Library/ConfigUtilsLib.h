@@ -22,8 +22,6 @@
 #define MAX_ENTRIES             500
 #define VERSION_OFFSET          0x0
 #define VERSION_SIZE            7
-#define DATE_OFFSET             0x100
-#define DATE_SIZE               10
 
 typedef struct {
   CHAR8 Section[MAX_SECTION_LENGTH];
@@ -34,15 +32,13 @@ typedef struct {
   Read version and date from storage.
 
   @param[out] Version   The version string.
-  @param[out] Date      The date string.
 
   @retval EFI_SUCCESS   Successfully retrieved version and date.
   @retval Others        Error status.
 **/
 INT32
-ReadVersionAndDateFromFlash (
+ReadVersionFromFlash (
   CHAR8 *Version,
-  CHAR8 *Date,
   UINTN StartAddress,
   UINTN EndAddress
  );

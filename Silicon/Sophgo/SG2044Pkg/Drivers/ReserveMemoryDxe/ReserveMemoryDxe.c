@@ -560,6 +560,11 @@ ReserveMemoryCallback (
     		  NULL
 		  );
   }
+  else if (QuestionId == RESERVED_MEM_QUESTION_ID &&
+    Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD) {
+    // Default Reserve Memory Size
+    Value->u32 = 0;
+  }
 
   return Status;
 }

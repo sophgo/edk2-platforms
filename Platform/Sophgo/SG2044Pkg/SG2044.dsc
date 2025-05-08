@@ -554,6 +554,7 @@
   #gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
 
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|10
+  gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOutDefault|10
 
   #
   # Set video resolution for boot options and for text setup.

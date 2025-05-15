@@ -207,9 +207,9 @@ INF  EmbeddedPkg/SimpleTextInOutSerial/SimpleTextInOutSerial.inf
 INF  MdeModulePkg/Universal/Console/GraphicsConsoleDxe/GraphicsConsoleDxe.inf
 
 #
-# TianoCore Logo (splash screen)
+# Sophgo Logo (splash screen)
 #
-INF  MdeModulePkg/Logo/LogoDxe.inf
+INF  Silicon/Sophgo/Drivers/LogoDxe/LogoDxe.inf
 
 #
 # FAT filesystem + GPT/MBR partitioning + UDF filesystem

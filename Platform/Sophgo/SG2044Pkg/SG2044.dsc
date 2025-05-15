@@ -846,7 +846,7 @@
   MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
   MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
-  MdeModulePkg/Logo/LogoDxe.inf
+  Silicon/Sophgo/Drivers/LogoDxe/LogoDxe.inf
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf {
     <LibraryClasses>

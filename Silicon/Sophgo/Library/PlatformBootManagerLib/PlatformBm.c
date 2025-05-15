@@ -1013,7 +1013,7 @@ PlatformBootManagerWaitCallback (
   Status = BootLogoUpdateProgress (
              White.Pixel,
              Black.Pixel,
-             L"Press ESCAPE for boot options",
+             L"Press F2/F7 for boot options",
              White.Pixel,
              (Timeout - TimeoutRemain) * 100 / Timeout,
              0

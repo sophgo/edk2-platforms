@@ -135,7 +135,7 @@ LibGetTime (
     DEBUG ((DEBUG_ERROR, "%a: I2c smbus read error, Status: %r.\n", __func__, Status));
     return EFI_DEVICE_ERROR;
   } else if (TimeBcd[0] & DS1307_SEC_BIT_CH) {
-    DEBUG ((DEBUG_ERROR, "%a: Warning, RTC oscillator has stopped\n", __func__));
+    DEBUG ((DEBUG_ERROR, "%a: Error, RTC oscillator has stopped!\n", __func__));
     return EFI_DEVICE_ERROR;
   }
 
@@ -196,10 +196,10 @@ LibSetTime (
     DEBUG ((DEBUG_ERROR, "%a: I2c smbus read error, Status: %r.\n", __func__, Status));
     return EFI_DEVICE_ERROR;
   } else if (Second & DS1307_SEC_BIT_CH) {
-    DEBUG ((DEBUG_ERROR, "%a: Warning, RTC oscillator has stopped\n", __func__));
+    DEBUG ((DEBUG_ERROR, "%a: Error, RTC oscillator has stopped\n", __func__));
     return EFI_DEVICE_ERROR;
   } else if (Time->Year < START_YEAR || Time->Year >= END_YEAR) {
-    DEBUG ((DEBUG_ERROR, "%a: WARNING, Year should be between %d and %d!\n",
+    DEBUG ((DEBUG_ERROR, "%a: Error, Year should be between %d and %d!\n",
             __func__, START_YEAR, (END_YEAR - 1)));
     return EFI_INVALID_PARAMETER;
   }
@@ -295,8 +295,8 @@ FindOneRtcSlave (
   I2cBusNums[0] = FixedPcdGet32 (PcdRtcI2cBusNum0);
   I2cBusNums[1] = FixedPcdGet32 (PcdRtcI2cBusNum1);
 
-  for (BusIndex = 0; BusIndex < sizeof (I2cBusNums); ++BusIndex){
-    for (SlaveIndex = 0; SlaveIndex < sizeof (mRtcSlaveAddrs); ++SlaveIndex) {
+  for (BusIndex = 0; BusIndex < sizeof (I2cBusNums) / sizeof (I2cBusNums[0]); ++BusIndex){
+    for (SlaveIndex = 0; SlaveIndex < sizeof (mRtcSlaveAddrs) / sizeof (mRtcSlaveAddrs[0]); ++SlaveIndex) {
       Status = mI2cMasterProtocol->ReadByte (mI2cMasterProtocol,
                                              I2cBusNums[BusIndex],
                                              mRtcSlaveAddrs[SlaveIndex],
@@ -373,7 +373,8 @@ LibRtcInitialize (
 
   Status = FindOneRtcSlave ();
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Failed to find a RTC slave!\n"));
+    DEBUG ((DEBUG_ERROR, "Error! Unable to find a RTC slave!\n"));
+    ASSERT (FALSE);
     return Status;
   }
 

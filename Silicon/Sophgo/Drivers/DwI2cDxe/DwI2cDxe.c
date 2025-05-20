@@ -455,6 +455,11 @@ I2cXfer (
 {
   EFI_STATUS Status;
   DW_I2C     *DwI2c;
+  if (I2c >= mI2cNum) {
+    DEBUG ((DEBUG_ERROR, "Error, I2c bus number must be less than %u!\n", mI2cNum));
+    return EFI_INVALID_PARAMETER;
+  }
+
   DwI2c = (VOID *)&mI2cInfo[I2c].Dev;
 
   DwI2cEnable (DwI2c->Regs, TRUE);
@@ -764,7 +769,7 @@ GetI2cInfoByFdt (
   }
 
   for (UINT32 Index = 0; Index < I2cNum; Index++) {
-    DEBUG ((DEBUG_ERROR,
+    DEBUG ((DEBUG_VERBOSE,
       "  [I2c%d base: 0x%lx, freq: %lu, speed: %lu ]\n",
       Index,
       I2cInformation[Index].Base,

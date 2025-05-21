@@ -10,8 +10,14 @@
 [Defines]
 DEFINE BLOCK_SIZE        = 0x1000
 DEFINE FW_BASE_ADDRESS   = 0x80200000
-DEFINE FW_SIZE           = 0x00900000
-DEFINE FW_BLOCKS         = 0x900
+DEFINE FW_SIZE           = 0x00e00000
+DEFINE FW_BLOCKS         = 0xe00
+
+DEFINE EFI_MEMORY_SIZE    = 64 * 1024 * 1024
+DEFINE EFI_STACK_SIZE     = 64 * 1024
+DEFINE EFI_MEMORY_BOTTOM  = $(FW_BASE_ADDRESS) + $(FW_SIZE)
+DEFINE EFI_MEMORY_TOP     = $(EFI_MEMORY_BOTTOM) + $(EFI_MEMORY_SIZE)
+DEFINE EFI_STACK_BASE     = $(EFI_MEMORY_TOP) - $(EFI_STACK_SIZE)
 
 #
 # 0x000000-0x7FFFFF code
@@ -45,5 +51,6 @@ DEFINE VARS_FTW_SPARE_OFFSET         = $(VARS_FTW_WORKING_OFFSET) + $(VARS_FTW_W
 DEFINE VARS_FTW_SPARE_SIZE           = 0x00010000
 
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFdBlockSize               = $(BLOCK_SIZE)
-SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                  = $(CODE_BASE_ADDRESS) + $(FW_SIZE) + 0x1FF0000
-SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                  = 0x10000
+SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                  = $(EFI_STACK_BASE)
+SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                  = $(EFI_STACK_SIZE)
+SET gSophgoTokenSpaceGuid.PcdEfiMemoryBottom                                 = $(EFI_MEMORY_BOTTOM)

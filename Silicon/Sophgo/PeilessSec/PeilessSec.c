@@ -93,12 +93,30 @@ SecStartup (
 
   StackBase      = (UINT64)FixedPcdGet32 (PcdTemporaryRamBase);
   StackSize      = FixedPcdGet32 (PcdTemporaryRamSize);
-  UefiMemoryBase = StackBase + StackSize - SIZE_32MB;
+  UefiMemoryBase = FixedPcdGet64 (PcdEfiMemoryBottom);
+
+  /*
+   *  --------  --> Stack Top, EfiMemoryTop, EfiFreeMemoryTop (PcdTemporaryRamBase)
+   * |        |
+   * | Stack  |
+   * |        |
+   *  --------  --> Stack Base (PcdTemporaryRamSize)
+   * |        |
+   * |        |
+   * | EfiMem |
+   * |        |
+   * |        |
+   *  --------  --> EfiMemoryBottom, EfiFreeMemoryBottom (PcdEfiMemoryBottom)
+   * |        |
+   * |   FW   |
+   * |        |
+   *  --------  --> FW_BASE_ADDRESS, typically after opensbi
+   */
 
   // Declare the PI/UEFI memory region
   HobList = HobConstructor (
               (VOID *)UefiMemoryBase,
-              SIZE_32MB,
+              StackBase + StackSize - UefiMemoryBase,
               (VOID *)UefiMemoryBase,
               (VOID *)StackBase // The top of the UEFI Memory is reserved for the stacks
               );

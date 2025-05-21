@@ -55,6 +55,7 @@
 [FixedPcd]
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                       ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                       ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdEfiMemoryBottom                                      ## CONSUMES
 
 [Guids]
   gFdtHobGuid                           ## PRODUCES

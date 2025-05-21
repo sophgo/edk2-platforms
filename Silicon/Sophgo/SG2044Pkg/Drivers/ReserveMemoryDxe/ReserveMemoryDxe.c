@@ -111,6 +111,7 @@ IsValidReservedMemorySize (
   CHAR16             *ErrorString;
   EFI_INPUT_KEY      InputKey;
   UINTN              EventIndex;
+  CHAR16             ReserveFailStr[50];
 
   Status = EFI_SUCCESS;
   ParsedData = AllocSmbiosData ();
@@ -136,15 +137,16 @@ IsValidReservedMemorySize (
 
     goto Exit;
   } else {
+    UnicodeSPrint (ReserveFailStr, sizeof (ReserveFailStr), L"Input must be 0 or [8, %u]", (MemoryDeviceSize / 1024) - 8);
     if (ReservedMemorySize < 8
         || ReservedMemorySize > (MemoryDeviceSize / 1024) - 8) {
       CreatePopUp (
         EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
         NULL,
-	ErrorString,
-        L"Input must be 0 or [8, 120]",
-	NULL
-	);
+        ErrorString,
+        ReserveFailStr,
+        NULL
+      );
       while (1) {
         gBS->WaitForEvent (1, &gST->ConIn->WaitForKey, &EventIndex);
         gST->ConIn->ReadKeyStroke (gST->ConIn, &InputKey);

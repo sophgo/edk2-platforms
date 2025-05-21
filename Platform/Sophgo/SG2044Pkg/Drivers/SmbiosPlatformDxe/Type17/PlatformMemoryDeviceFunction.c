@@ -17,9 +17,15 @@
 
 #include "SmbiosPlatformDxe.h"
 
-#define MAX_SIZE 0x7FFF
-#define DEFAULT_DDR_SIZE 0x10000
-#define EFUSE_DDR_OFFSET 352
+#define MAX_SIZE                 0x7FFF
+#define DEFAULT_DDR_SIZE         0x10000
+#define EFUSE_DRAM_INFO_INDEX    (88)
+#define EFUSE_CELL_SIZE          (4)
+#define EFUSE_DRAM_INFO_OFFSET_0 (EFUSE_DRAM_INFO_INDEX * EFUSE_CELL_SIZE)
+#define EFUSE_DRAM_INFO_OFFSET_1 ((EFUSE_DRAM_INFO_INDEX + 1) * EFUSE_CELL_SIZE)
+#define EFUSE_MISC_INFO_INDEX    (94)
+#define EFUSE_MISC_INFO_OFFSET_0 (EFUSE_MISC_INFO_INDEX * EFUSE_CELL_SIZE)
+#define EFUSE_MISC_INFO_OFFSET_1 ((EFUSE_MISC_INFO_INDEX + 1) * EFUSE_CELL_SIZE)
 
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
   EFI_STATUS           Status;
@@ -28,9 +34,10 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
   SMBIOS_TABLE_TYPE17  *Type17Record;
   CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
   CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  UINT32               Size;
-  UINT64	       Uint;
-  CHAR8		       *End;
+  UINT32               Size, Size0, Size1;
+  BOOLEAN              IsObtainedDDRInfo;
+  UINT64               Uint;
+  CHAR8                *End;
   InputData         = (SMBIOS_TABLE_TYPE17 *)RecordData;
   InputStrToken     = (STR_TOKEN_INFO *)StrToken;
 
@@ -71,7 +78,19 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
       }
       InputData->Size = MAX_SIZE;
       InputData->ExtendedSize = DEFAULT_DDR_SIZE;
-      if (UpdateSmbiosFromEfuse(1, EFUSE_DDR_OFFSET, 4, &Size) == 0) {
+      IsObtainedDDRInfo = FALSE;
+      if ((UpdateSmbiosFromEfuse(1, EFUSE_MISC_INFO_OFFSET_0, 4, &Size0) == 0) &&
+          (UpdateSmbiosFromEfuse(1, EFUSE_MISC_INFO_OFFSET_1, 4, &Size1) == 0)) {
+        Size = Size0 | Size1;
+        if ((Size >> 14) & 1) {
+          InputData->ExtendedSize = 128 * 1024;
+          IsObtainedDDRInfo = TRUE;
+        }
+      }
+      if ((IsObtainedDDRInfo == FALSE) &&
+          (UpdateSmbiosFromEfuse(1, EFUSE_DRAM_INFO_OFFSET_0, 4, &Size0) == 0) &&
+          (UpdateSmbiosFromEfuse(1, EFUSE_DRAM_INFO_OFFSET_1, 4, &Size1) == 0)) {
+        Size = Size0 | Size1;
         if (((Size >> 13) & 0x1) ^ ((Size >> 12) & 0x1)) {
           UINT32 capacityBits = (Size >> 2) & 0x3;
           UINT32 dramCapacityMB;

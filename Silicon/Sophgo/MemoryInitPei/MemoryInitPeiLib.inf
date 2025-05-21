@@ -22,6 +22,7 @@
   MdeModulePkg/MdeModulePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
+  Silicon/Sophgo/Sophgo.dec
 
 [LibraryClasses]
   FdtLib
@@ -35,6 +36,7 @@
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvSize                         ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                       ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                       ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdEfiMemoryBottom					## CONSUMES
 
 [Guids]
   gFdtHobGuid      ## PRODUCES

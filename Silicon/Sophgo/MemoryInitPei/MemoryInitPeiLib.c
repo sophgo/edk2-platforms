@@ -265,7 +265,7 @@ MemoryPeimInitialization (
   }
 
   DeviceTreeAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
-  UefiMemoryBase = (UINT64)FixedPcdGet32 (PcdTemporaryRamBase) + FixedPcdGet32 (PcdTemporaryRamSize) - SIZE_32MB;
+  UefiMemoryBase = FixedPcdGet64 (PcdEfiMemoryBottom);
   FwMemBase      = PcdGet32 (PcdRiscVDxeFvBase);
   FwMemSize      = PcdGet32 (PcdRiscVDxeFvSize);
   LowestMemBase  = 0;

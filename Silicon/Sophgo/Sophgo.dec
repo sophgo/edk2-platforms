@@ -69,6 +69,7 @@
   gSophgoTokenSpaceGuid.PcdServerNamePrefix|L"SR"|VOID*|0x0000101B
   gSophgoTokenSpaceGuid.PcdFdOffset|0x0|UINT64|0x0000101C
   gSophgoTokenSpaceGuid.PcdMCUI2cBus|0x0|UINT32|0x0000101D
+  gSophgoTokenSpaceGuid.PcdEfiMemoryBottom|0x0|UINT64|0x0000101E
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

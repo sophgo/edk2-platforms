@@ -18,7 +18,7 @@
 #include "SmbiosPlatformDxe.h"
 
 #define MAX_SIZE                 0x7FFF
-#define DEFAULT_DDR_SIZE         0x10000
+#define DEFAULT_DDR_SIZE         0x20000
 #define EFUSE_DRAM_INFO_INDEX    (88)
 #define EFUSE_CELL_SIZE          (4)
 #define EFUSE_DRAM_INFO_OFFSET_0 (EFUSE_DRAM_INFO_INDEX * EFUSE_CELL_SIZE)
@@ -53,11 +53,11 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
       }
 
       if (IniGetValueBySectionAndName ("DDR", "type", value) == 0) {
-	if (!AsciiStrCmp(value, "LPDDR4x"))
-	  InputData->MemoryType = 0x1E; // LPDDR4
+        if (!AsciiStrCmp(value, "LPDDR4x"))
+          InputData->MemoryType = 0x1E; // LPDDR4
 
-	if (!AsciiStrCmp(value, "LPDDR5x"))
-	  InputData->MemoryType = 0x23; // LPDDR5
+        if (!AsciiStrCmp(value, "LPDDR5x"))
+          InputData->MemoryType = 0x23; // LPDDR5
       }
 
       if (IniGetValueBySectionAndName ("DDR", "data-rate", value) == 0) {

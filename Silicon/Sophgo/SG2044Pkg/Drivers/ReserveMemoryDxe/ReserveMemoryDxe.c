@@ -60,15 +60,7 @@ RestoreReservedMemoryDefaults (
 {
   RESERVE_MEMORY_DATA            ReservedMemData;
   EFI_STATUS                     Status;
-  RESERVE_MEMORY_CALLBACK_DATA   *PrivateData;
 
-  Status = gBS->AllocatePool(EfiBootServicesData, sizeof(RESERVE_MEMORY_CALLBACK_DATA), (VOID **)&PrivateData);
-  if (EFI_ERROR(Status)) {
-    DEBUG((DEBUG_ERROR, "%a: Failed to allocate memory for PrivateData: %r\n", __func__, Status));
-    return Status;
-  }
-
-  PrivateData->ReserveMemoryData.Value = 0;
   ReservedMemData.Value = 0;
 
   Status = gRT->SetVariable (
@@ -137,9 +129,9 @@ IsValidReservedMemorySize (
 
     goto Exit;
   } else {
-    UnicodeSPrint (ReserveFailStr, sizeof (ReserveFailStr), L"Input must be 0 or [8, %u]", (MemoryDeviceSize / 1024) - 8);
     if (ReservedMemorySize < 8
         || ReservedMemorySize > (MemoryDeviceSize / 1024) - 8) {
+      UnicodeSPrint (ReserveFailStr, sizeof (ReserveFailStr), L"Input must be 0 or [8, %u]", (MemoryDeviceSize / 1024) - 8);
       CreatePopUp (
         EFI_LIGHTGRAY | EFI_BACKGROUND_BLUE,
         NULL,

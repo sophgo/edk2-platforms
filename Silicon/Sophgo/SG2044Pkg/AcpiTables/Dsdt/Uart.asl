@@ -39,5 +39,32 @@ Scope(_SB)
       Return (0xF)
     }
   }
-}
 
+  Device(URT1) {
+    Name(_HID, "SOPH0002")
+    Name(_UID, 1)
+    Name(_DSD, Package () {
+      ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
+      Package () {
+        Package () { "clock-frequency", 500000000 },
+        Package () { "reg-shift", 2 },
+        Package () { "reg-io-width", 4 },
+        Package () { "current-speed", 9600 },
+      }
+    })
+    Name (_CRS, ResourceTemplate () {
+      QWordMemory (
+            ResourceConsumer, PosDecode,
+            MinFixed, MaxFixed,
+            NonCacheable, ReadWrite,
+            0x0,
+            0x7030003000,
+            0x7030003FFF,
+            0x00000000,
+            0x00001000
+          )
+      Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive) { 44 }
+    })
+    Method (_STA) { Return (0xF) }
+  }
+}

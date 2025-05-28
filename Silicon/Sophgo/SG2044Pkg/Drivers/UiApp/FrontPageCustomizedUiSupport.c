@@ -35,7 +35,6 @@ SPDX-License-Identifier: BSD-2-Clause-Patent
 
 #define FRONT_PAGE_KEY_CONTINUE  0x1000
 #define FRONT_PAGE_KEY_RESET     0x1001
-#define FRONT_PAGE_KEY_LANGUAGE  0x1002
 #define FRONT_PAGE_KEY_DRIVER    0x2000
 #define FRONT_PAGE_KEY_POWER_OFF 0x1003
 typedef struct {
@@ -183,19 +182,12 @@ UiSupportLibCallbackHandler (
 {
   if (QuestionId != FRONT_PAGE_KEY_CONTINUE &&
       QuestionId != FRONT_PAGE_KEY_RESET &&
-      QuestionId != FRONT_PAGE_KEY_POWER_OFF &&
-      QuestionId != FRONT_PAGE_KEY_LANGUAGE) {
+      QuestionId != FRONT_PAGE_KEY_POWER_OFF) {
     return FALSE;
   }
 
   if (Action == EFI_BROWSER_ACTION_RETRIEVE) {
-    if (QuestionId == FRONT_PAGE_KEY_LANGUAGE) {
-      Value->u8 = gCurrentLanguageIndex;
-      *Status   = EFI_SUCCESS;
-    } else {
-      *Status = EFI_UNSUPPORTED;
-    }
-
+    *Status = EFI_UNSUPPORTED;
     return TRUE;
   }
 
@@ -220,10 +212,6 @@ UiSupportLibCallbackHandler (
         // This is the continue - clear the screen and return an error to get out of FrontPage loop
         //
         *ActionRequest = EFI_BROWSER_ACTION_REQUEST_EXIT;
-        break;
-
-      case FRONT_PAGE_KEY_LANGUAGE:
-        *Status = LanguageChangeHandler (Value);
         break;
 
       case FRONT_PAGE_KEY_RESET:
@@ -383,18 +371,13 @@ UiCreateLanguageMenu (
 
   FreePool (Lang);
 
-  HiiCreateOneOfOpCode (
+  HiiCreateTextOpCode (
     StartOpCodeHandle,
-    FRONT_PAGE_KEY_LANGUAGE,
+    STRING_TOKEN (STR_LANGUAGE_INFO),
     0,
-    0,
-    STRING_TOKEN (STR_LANGUAGE_SELECT),
-    STRING_TOKEN (STR_LANGUAGE_SELECT_HELP),
-    EFI_IFR_FLAG_CALLBACK,
-    EFI_IFR_NUMERIC_SIZE_1,
-    OptionsOpCodeHandle,
-    NULL
+    0
     );
+
 }
 
 /**

@@ -1,0 +1,43 @@
+##
+#  @file
+#  This INF file describes the SmbiosInformationLib library, which provides
+#  functionality to parse SMBIOS tables and extract relevant system information.
+#
+#  Copyright (c) Sophgo Inc. All rights reserved.
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001000A
+  BASE_NAME                      = SmbiosInformationLib
+  FILE_GUID                      = E3371385-436E-2310-CB61-CF8B5B093DBA
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = SmbiosInformationLib
+
+[Sources]
+  SmbiosInformationLib.c
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  UefiBootServicesTableLib
+  UefiLib
+  MemoryAllocationLib
+  DevicePathLib
+
+[Protocols]
+  gEfiSmbiosProtocolGuid                         ## CONSUMES
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdServerNamePrefix
+
+[Depex]
+  TRUE
+

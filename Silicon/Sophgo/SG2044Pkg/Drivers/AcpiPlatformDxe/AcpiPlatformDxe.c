@@ -879,92 +879,6 @@ UpdateAcpiDsdtTable (
 }
 
 /**
-  Unload ACPI tables if ACPI is disabled.
-
-  @retval EFI_SUCCESS           Operation completed
-  @retval EFI_INVALID_PARAMETER Invalid system state
-  @retval Others                Error during operation
-**/
-EFI_STATUS
-EFIAPI
-UnloadAcpiTables (
-  VOID
-  )
-{
-  EFI_STATUS  Status;
-  VOID        *AcpiTable;
-  VOID        *Acpi10Table;
-
-  //
-  // Save current ACPI tables before removing them
-  //
-  Status = EfiGetSystemConfigurationTable (&gEfiAcpiTableGuid, &AcpiTable);
-  if (!EFI_ERROR (Status) && AcpiTable != NULL) {
-    DEBUG ((DEBUG_INFO, "Found ACPI 2.0+ table at 0x%lx\n", (UINT64)(UINTN)AcpiTable));
-    // Remove ACPI 2.0 table
-    Status = gBS->InstallConfigurationTable (&gEfiAcpiTableGuid, NULL);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "Failed to remove ACPI 2.0+ table: %r\n", Status));
-    }
-  }
-
-  Status = EfiGetSystemConfigurationTable (&gEfiAcpi10TableGuid, &Acpi10Table);
-  if (!EFI_ERROR (Status) && Acpi10Table != NULL) {
-    DEBUG ((DEBUG_INFO, "Found ACPI 1.0 table at 0x%lx\n", (UINT64)(UINTN)Acpi10Table));
-    // Remove ACPI 1.0 table
-    Status = gBS->InstallConfigurationTable (&gEfiAcpi10TableGuid, NULL);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "Failed to remove ACPI 1.0 table: %r\n", Status));
-    }
-  }
-
-  DEBUG ((DEBUG_INFO, "Successfully removed ACPI tables\n"));
-
-  return EFI_SUCCESS;
-}
-
-/**
-  Finalize ACPI/DTS configuration before exiting boot services.
-
-  @param[in]  Event     ExitBootServices event
-  @param[in]  Context   Unused context pointer
-**/
-VOID
-EFIAPI
-UpdateAcpiOnExitBootServices (
-  IN EFI_EVENT  Event,
-  IN VOID       *Context
-  )
-{
-  UINTN       VarSize;
-  EFI_STATUS  Status;
-  BOOLEAN     AcpiEnabled;
-
-  //
-  // Get current ACPI status from variable
-  //
-  VarSize = sizeof (BOOLEAN);
-  Status = gRT->GetVariable (
-                  EFI_ACPI_ENABLE_VARIABLE_NAME,
-                  &gEfiSophgoGlobalVariableGuid,
-                  NULL,
-                  &VarSize,
-                  &AcpiEnabled
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "[ACPI] Failed to get ACPI state: %r\n", Status));
-    return;
-  }
-
-  if (!AcpiEnabled) {
-    DEBUG ((DEBUG_INFO, "[ACPI] Disabled, finalizing DTB setup...\n"));
-    Status = UnloadAcpiTables ();
-    DEBUG ((Status == EFI_SUCCESS ? DEBUG_INFO : DEBUG_ERROR,
-           "[ACPI] UnloadAcpiTables status: %r\n", Status));
-  }
-}
-
-/**
   Entry point of the ACPI platform driver.
 
   @param[in] ImageHandle    Image handle of this driver.
@@ -991,39 +905,10 @@ AcpiPlatformDxeEntryPoint (
   UINTN                          TableSize;
   UINTN                          Size;
   EFI_ACPI_DESCRIPTION_HEADER    *TableHeader;
-  BOOLEAN                        AcpiEnabled;
-  EFI_EVENT                      ExitBootServicesEvent;
 
   Instance     = 0;
   CurrentTable = NULL;
   TableHandle  = 0;
-
-  //
-  // Create event for ExitBootServices
-  //
-  Status = gBS->CreateEvent (
-                  EVT_SIGNAL_EXIT_BOOT_SERVICES,
-                  TPL_NOTIFY,
-                  UpdateAcpiOnExitBootServices,
-                  NULL,
-                  &ExitBootServicesEvent
-                  );
-  ASSERT_EFI_ERROR (Status);
-
-  //
-  // Set initial ACPI enabled state
-  //
-  AcpiEnabled = TRUE;
-  Status = gRT->SetVariable (
-                  EFI_ACPI_ENABLE_VARIABLE_NAME,
-                  &gEfiSophgoGlobalVariableGuid,
-                  EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-                  sizeof (BOOLEAN),
-                  &AcpiEnabled
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Failed to set initial ACPI state: %r\n", Status));
-  }
 
   //
   // Find the AcpiTable protocol

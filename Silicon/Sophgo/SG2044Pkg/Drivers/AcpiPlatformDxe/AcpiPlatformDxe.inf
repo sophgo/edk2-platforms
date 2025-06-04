@@ -40,8 +40,6 @@
 
 [Guids]
   gEfiSophgoGlobalVariableGuid                              ## CONSUMES ## GUID
-  gEfiAcpiTableGuid                                         ## CONSUMES ## GUID
-  gEfiAcpi10TableGuid                                       ## CONSUMES ## GUID
 
 [Protocols]
   gEfiAcpiTableProtocolGuid                                 ## CONSUMES

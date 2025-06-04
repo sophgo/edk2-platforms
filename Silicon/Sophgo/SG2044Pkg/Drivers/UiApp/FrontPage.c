@@ -86,65 +86,6 @@ HII_VENDOR_DEVICE_PATH  mFrontPageHiiVendorDevicePath0 = {
 };
 
 BOOLEAN
-GetAcpiTable (
-  VOID
-  )
-{
-  EFI_STATUS                                    Status;
-  EFI_ACPI_3_0_ROOT_SYSTEM_DESCRIPTION_POINTER  *Rsdp;
-
-  //
-  // Get the ACPI table from the system table.
-  //
-  Status = EfiGetSystemConfigurationTable (&gEfiAcpiTableGuid, (VOID **)&Rsdp);
-  if (EFI_ERROR (Status)) {
-    Status = EfiGetSystemConfigurationTable (&gEfiAcpi10TableGuid, (VOID **)&Rsdp);
-  }
-
-  if (!EFI_ERROR (Status) &&
-      (Rsdp != NULL) &&
-      (Rsdp->Revision >= EFI_ACPI_6_5_ROOT_SYSTEM_DESCRIPTION_POINTER_REVISION) &&
-      (Rsdp->RsdtAddress != 0))
-  {
-    return TRUE;
-  }
-
-  return FALSE;
-}
-
-EFI_STATUS
-InstallFdt (
-  VOID
-  )
-{
-  EFI_RISCV_FIRMWARE_CONTEXT  *FirmwareContext;
-  VOID                        *FdtAddress;
-  EFI_STATUS                  Status;
-
-  FirmwareContext = NULL;
-  GetFirmwareContextPointer (&FirmwareContext);
-
-  if (FirmwareContext == NULL) {
-    DEBUG ((DEBUG_ERROR, "%a: Firmware Context is NULL\n", __func__));
-    return EFI_UNSUPPORTED;
-  }
-
-  FdtAddress = (VOID *)FirmwareContext->FlattenedDeviceTree;
-  if (FdtAddress == NULL) {
-    DEBUG ((DEBUG_ERROR, "FdtAddress is NULL!\n"));
-    return EFI_INVALID_PARAMETER;
-  }
-
-  Status = gBS->InstallConfigurationTable (&gFdtTableGuid, FdtAddress);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Failed to install FDT: %r\n", Status));
-    return Status;
-  }
-
-  return EFI_SUCCESS;
-}
-
-BOOLEAN
 ConfirmResetDefaults (
   CHAR16 *ConfirmPrompt
   )
@@ -253,7 +194,6 @@ FrontPageCallback (
   )
 {
   EFI_STATUS    Status;
-  BOOLEAN       AcpiEnabled;
   CHAR16        *ConfirmResetPrompt = NULL;
 
   if ((This == NULL) || (ActionRequest == NULL)) {
@@ -281,38 +221,6 @@ FrontPageCallback (
         DEBUG ((DEBUG_ERROR, "Failed to restore factory defaults: %r\n", Status));
         return Status;
       }
-    }
-  }
-
-  if (Action == EFI_BROWSER_ACTION_CHANGING) {
-    switch (QuestionId) {
-      case ACPI_DISABLE_QUESTION_ID:
-        // Convert Value->u8 to boolean (0 = disabled, 1 = enabled)
-        AcpiEnabled = (Value->u8 != 0);
-
-        // Save ACPI state to variable
-        Status = gRT->SetVariable (
-                       EFI_ACPI_ENABLE_VARIABLE_NAME,
-                       &gEfiSophgoGlobalVariableGuid,
-                       EFI_VARIABLE_NON_VOLATILE | EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS,
-                       sizeof (BOOLEAN),
-                       &AcpiEnabled
-                       );
-        if (EFI_ERROR (Status)) {
-          DEBUG ((DEBUG_ERROR, "Failed to save ACPI state: %r\n", Status));
-          return Status;
-        }
-
-        if (!AcpiEnabled) {
-          // If ACPI is being disabled, remove ACPI tables now
-          Status = InstallFdt ();
-          if (EFI_ERROR (Status)) {
-            DEBUG ((DEBUG_ERROR, "Failed to install FDT\n"));
-            return Status;
-          }
-        }
-
-        break;
     }
   }
 
@@ -377,7 +285,6 @@ InitializePasswordToggleVariable (
       PassWordToggleData.IsFirst = 0;
       PassWordToggleData.UserPriv = 0;
       PassWordToggleData.IsEvb = 0;
-      PassWordToggleData.DefaultAcpi = 0;
       Status = gRT->SetVariable (
 		      EFI_PASSWORD_TOGGLE_VARIABLE_NAME,
 		      &gEfiSophgoGlobalVariableGuid,
@@ -1374,14 +1281,6 @@ InitializeUserInterface (
 
   InitializeStringSupport ();
   InitializePasswordToggleVariable ();
-  PassWordToggleData.DefaultAcpi = GetAcpiTable () ? 1 : 0;
-  if (PassWordToggleData.DefaultAcpi == 0) {
-    Status = InstallFdt ();
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "Failed to install FDT\n"));
-      return Status;
-    }
-  }
   PassWordToggleData.IsEvb = IsServerBoard ? 0 : 1;
   Status = gRT->SetVariable (
 		  EFI_PASSWORD_TOGGLE_VARIABLE_NAME,

@@ -58,9 +58,6 @@
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
   gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID
   gEfiSophgoGlobalVariableGuid                  ## CONSUMES ## GUID
-  gFdtTableGuid                                 ## CONSUMES ## GUID
-  gEfiAcpiTableGuid                             ## CONSUMES ## GUID
-  gEfiAcpi10TableGuid                           ## CONSUMES ## GUID
 
 [Protocols]
   gEfiSmbiosProtocolGuid                        ## CONSUMES

@@ -73,7 +73,7 @@ PasswordRestore (
   UserPasswordHash = AllocateZeroPool (Length);
   AdminPasswordHash = AllocateZeroPool (Length);
 
-  PasswordConfigData.UserPriv = 0;
+  PasswordConfigData.UserPriv = 1;
   PasswordConfigData.UserPasswordEnable = 1;
   PasswordConfigData.AdminPasswordEnable = 1;
 
@@ -582,8 +582,11 @@ CleanUserPasswordConfigData (
   UINTN                 VarSize;
   PASSWORD_CONFIG_DATA  TempData;
   EFI_INPUT_KEY         Key;
+  UINTN                 Length;
   CHAR16               *ConfirmCleanPasswdString;
+  UINT8                *UserDefaultPasswordHash;
 
+  Length = sizeof (CHAR16) * PASSWD_MAXLEN;
   VarSize = sizeof(PASSWORD_CONFIG_DATA);
   Status = gRT->GetVariable(
                   EFI_PASSWORD_CONFIG_VARIABLE_NAME,
@@ -596,13 +599,20 @@ CleanUserPasswordConfigData (
     return Status;
   }
 
+  UserDefaultPasswordHash = AllocateZeroPool(Length);
+  Status = HashPassword(L"user1234", UserDefaultPasswordHash);
+  if (EFI_ERROR(Status)) {
+    FreePool(UserDefaultPasswordHash);
+    return Status;
+  }
+
   ConfirmCleanPasswdString = HiiGetString (Private->HiiHandle, STRING_TOKEN(STR_CONFIRM_CLEAN_PASSWD), NULL);
   do {
     CreatePopUp (EFI_WHITE | EFI_BACKGROUND_BLUE, &Key, L" ", ConfirmCleanPasswdString, L" ",NULL);
   } while ((Key.ScanCode != SCAN_ESC) && (Key.UnicodeChar != CHAR_CARRIAGE_RETURN));
 
   if (Key.UnicodeChar == CHAR_CARRIAGE_RETURN) {
-    StrCpyS(TempData.UserPassword, PASSWD_MAXLEN, L"user1234");
+    CopyMem(TempData.UserPassword, UserDefaultPasswordHash, Length);
     TempData.UserPasswordEnable = 1;
     Status = gRT->SetVariable (
                     EFI_PASSWORD_CONFIG_VARIABLE_NAME,
@@ -623,6 +633,7 @@ CleanUserPasswordConfigData (
     }
   }
 
+  FreePool(UserDefaultPasswordHash);
   return EFI_SUCCESS;
 }
 
@@ -853,9 +864,6 @@ ProcessPasswordConfigData (
   #if ADMIN_USER_CLEAN_TOGETHER
   CHAR16                        *CleanUserPasswdWarning;
   #endif
-  CHAR16                        *UserAndAdminPasswdSameString;
-  CHAR16                        *AdminAndUserPasswdSameString;
-  CHAR16                        *ReInputPasswdString;
   UINT8                         *HashTempPasswd;
 
   VarSize = sizeof (PASSWORD_CONFIG_DATA);
@@ -940,15 +948,6 @@ ProcessPasswordConfigData (
     // 3rd,Save new password
     //
     if (QuestionId == FORM_USER_PASSWD_OPEN) {
-      if ((StrCmp ((CHAR16 *)HashTempPasswd, Private->PasswordConfigData.AdminPassword) == 0) && StrLen (TempPassword) > 0) {
-        do {
-          UserAndAdminPasswdSameString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_USER_ADMIN_SAME), NULL);
-          ReInputPasswdString          = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_REINPUT_PASSWD), NULL);
-          CreatePopUp (EFI_WHITE | EFI_BACKGROUND_BLUE, &Key, L" ", UserAndAdminPasswdSameString, ReInputPasswdString,NULL);
-        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
-        mCheckFlag = 0;
-        goto ProcExit;
-      }
       //
       // Validate password format
       //
@@ -964,15 +963,6 @@ ProcessPasswordConfigData (
         Private->PasswordConfigData.UserPasswordEnable = 0;
       }
     } else if (QuestionId == FORM_ADMIN_PASSWD_OPEN) {
-      if (StrCmp ((CHAR16 *)HashTempPasswd, Private->PasswordConfigData.UserPassword) == 0 && StrLen (TempPassword) > 0) {
-        do {
-          AdminAndUserPasswdSameString = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_ADMIN_USER_SAME), NULL);
-          ReInputPasswdString          = HiiGetString (Private->HiiHandle, STRING_TOKEN (STR_REINPUT_PASSWD), NULL);
-          CreatePopUp (EFI_WHITE | EFI_BACKGROUND_BLUE, &Key, L" ", AdminAndUserPasswdSameString, ReInputPasswdString,NULL);
-        } while (Key.UnicodeChar != CHAR_CARRIAGE_RETURN);
-        mCheckFlag = 0;
-        goto ProcExit;
-      }
       //
       // Validate password format
       //

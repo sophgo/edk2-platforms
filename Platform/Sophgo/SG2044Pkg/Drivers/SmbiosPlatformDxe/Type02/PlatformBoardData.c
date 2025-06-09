@@ -22,7 +22,7 @@ SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE2, PlatformBoard) = {
     4,                                          // Serial
     0,                                          // Asset tag
     {1},                                        // motherboard, not replaceable
-    5,                                          // location of board
+    0,                                          // location of board
     SMBIOS_HANDLE_CHASSIS,
     BaseBoardTypeMotherBoard,
     1,

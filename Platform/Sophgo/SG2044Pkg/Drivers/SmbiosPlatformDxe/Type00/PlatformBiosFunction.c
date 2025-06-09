@@ -39,8 +39,12 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBios) {
     }
 
     if (ReadVersionFromFlash(Version, 0x0, 0x100) == 0) {
-      AsciiStrToUnicodeStrS (Version, UnicodeStrVersion, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStrVersion, NULL);
+      if (AsciiStrLen(Version) == 0) {
+        HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], L"Not set", NULL);
+      } else {
+        AsciiStrToUnicodeStrS (Version, UnicodeStrVersion, SMBIOS_UNICODE_STRING_MAX_LENGTH);
+        HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStrVersion, NULL);
+      }
     }
 
     AsciiStrToUnicodeStrS (ReleaseDate, UnicodeStrDate, SMBIOS_UNICODE_STRING_MAX_LENGTH);

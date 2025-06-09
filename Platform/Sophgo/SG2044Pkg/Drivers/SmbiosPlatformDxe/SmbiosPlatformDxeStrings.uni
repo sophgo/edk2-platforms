@@ -22,5 +22,8 @@
 #include "Type03/PlatformChassis.uni"
 #include "Type04/PlatformProcessor.uni"
 #include "Type07/PlatformCache.uni"
+#include "Type09/PlatformSystemSlot.uni"
+#include "Type11/PlatformOemString.uni"
 #include "Type13/PlatformLanguage.uni"
 #include "Type17/PlatformMemoryDevice.uni"
+#include "Type41/PlatformOnboardDevicesExtended.uni"

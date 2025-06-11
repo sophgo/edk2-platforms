@@ -23,7 +23,6 @@
 #include <Protocol/PciIo.h>
 #include <Protocol/LoadedImage.h>
 #include <Protocol/FirmwareVolume2.h>
-#include <Protocol/PlatformBootManager.h>
 #include <Protocol/NonDiscoverableDevice.h>
 #include <IndustryStandard/Pci22.h>
 #include <Guid/SerialPortLibVendor.h>

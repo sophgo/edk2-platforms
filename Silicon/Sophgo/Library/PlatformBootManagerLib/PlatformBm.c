@@ -350,82 +350,37 @@ AddOutput (
 }
 
 /**
-  Register a boot option from a file in Firmware Volume (FV),
-  optionally binding a hotkey, and return the OptionNumber.
+  remove all invalid bootoptions for current platform.
+  @param  VOID
 
-  @param[in]  FileGuid     FV file GUID.
-  @param[in]  Description  Boot option description.
-  @param[in]  Attributes   Boot option attributes
-  @param[in]  Key          Optional pointer to an EFI_INPUT_KEY to bind;
-  @retval OptionNumber       The registered boot option number.
+  @retval  VOID
 **/
-UINTN
-PlatformRegisterFvBootOption (
-  IN EFI_GUID     *FileGuid,
-  IN CHAR16       *Description,
-  IN UINT32       Attributes,
-  EFI_INPUT_KEY   *Key
+VOID
+PlatformRemoveInvalidBootOptions (
+  VOID
   )
 {
-  EFI_STATUS                   Status;
-  INTN                         OptionIndex;
-  EFI_BOOT_MANAGER_LOAD_OPTION NewOption;
-  EFI_BOOT_MANAGER_LOAD_OPTION *BootOptions;
-  UINTN                        BootOptionCount;
-  MEDIA_FW_VOL_FILEPATH_DEVICE_PATH FileNode;
-  EFI_LOADED_IMAGE_PROTOCOL    *LoadedImage;
-  EFI_DEVICE_PATH_PROTOCOL     *DevicePath;
-  UINTN                        OptionNumber;
+  EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
+  UINTN                           BootOptionCount;
+  UINTN                           BootOptionIndex;
+  EFI_HANDLE                      Handle1;
+  EFI_HANDLE                      Handle2;
+  EFI_STATUS                      Status1;
+  EFI_STATUS                      Status2;
+  EFI_DEVICE_PATH_PROTOCOL        *TempPath;
 
-  Status = gBS->HandleProtocol (
-                  gImageHandle,
-                  &gEfiLoadedImageProtocolGuid,
-                  (VOID **)&LoadedImage
-                  );
-  ASSERT_EFI_ERROR (Status);
-
-  EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
-  DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
-  ASSERT (DevicePath != NULL);
-  DevicePath = AppendDevicePathNode (
-                 DevicePath,
-                 (EFI_DEVICE_PATH_PROTOCOL *)&FileNode
-                 );
-  ASSERT (DevicePath != NULL);
-
-  Status = EfiBootManagerInitializeLoadOption (
-             &NewOption,
-             LoadOptionNumberUnassigned,
-             LoadOptionTypeBoot,
-             Attributes,
-             Description,
-             DevicePath,
-             NULL,
-             0
-             );
-  ASSERT_EFI_ERROR (Status);
-  FreePool (DevicePath);
-
-  BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
-  OptionIndex = EfiBootManagerFindLoadOption (&NewOption, BootOptions, BootOptionCount);
-  if (OptionIndex == -1) {
-    Status = EfiBootManagerAddLoadOptionVariable (&NewOption, MAX_UINTN);
-    ASSERT_EFI_ERROR (Status);
-    Status = EfiBootManagerAddKeyOptionVariable (
-               NULL,
-               (UINT16)NewOption.OptionNumber,
-               0,
-               Key,
-               NULL
-               );
-    ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
+  BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
+  for (BootOptionIndex = 0; BootOptionIndex < BootOptionCount; ++BootOptionIndex) {
+    TempPath = DuplicateDevicePath(BootOptions[BootOptionIndex].FilePath);
+    Status1 = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &TempPath, &Handle1);
+    Status2 = gBS->LocateDevicePath (&gEfiLoadFileProtocolGuid, &TempPath, &Handle2);
+    if (EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
+      EfiBootManagerDeleteLoadOptionVariable(BootOptions[BootOptionIndex].OptionNumber, LoadOptionTypeBoot);
+    }
   }
-  OptionNumber = NewOption.OptionNumber;
-  EfiBootManagerFreeLoadOption (&NewOption);
-  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
-  return OptionNumber;
-}
 
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+}
 
 /** Boot a Fv Boot Option.
 
@@ -456,10 +411,6 @@ PlatformBootFvBootOption (
                   );
   ASSERT_EFI_ERROR (Status);
 
-  //
-  // The UEFI Shell was registered in PlatformRegisterFvBootOption ()
-  // previously, thus it must still be available in this FV.
-  //
   EfiInitializeFwVolDevicepathNode (&FileNode, FileGuid);
   DevicePath = DevicePathFromHandle (LoadedImage->DeviceHandle);
   ASSERT (DevicePath != NULL);
@@ -483,106 +434,6 @@ PlatformBootFvBootOption (
   FreePool (DevicePath);
 
   EfiBootManagerBoot (&NewOption);
-}
-
-/**
-  Make a platform driver to create predefined boot options and related hot keys.
-
-  @param  VOID
-
-  @retval  VOID
-**/
-
-STATIC
-VOID
-GetPlatformOptions (
-  VOID
-  )
-{
-  EFI_STATUS                      Status;
-  EFI_BOOT_MANAGER_LOAD_OPTION    *CurrentBootOptions;
-  EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
-  EFI_INPUT_KEY                   *BootKeys;
-  PLATFORM_BOOT_MANAGER_PROTOCOL  *PlatformBootManager;
-  UINTN                           CurrentBootOptionCount;
-  UINTN                           Index;
-  UINTN                           BootCount;
-
-  Status = gBS->LocateProtocol (
-                  &gPlatformBootManagerProtocolGuid,
-                  NULL,
-                  (VOID **)&PlatformBootManager
-                  );
-  if (EFI_ERROR (Status)) {
-    return;
-  }
-
-  Status = PlatformBootManager->GetPlatformBootOptionsAndKeys (
-                                  &BootCount,
-                                  &BootOptions,
-                                  &BootKeys
-                                  );
-  if (EFI_ERROR (Status)) {
-    return;
-  }
-
-  //
-  // Fetch the existent boot options. If there are none, CurrentBootCount
-  // will be zeroed.
-  //
-  CurrentBootOptions = EfiBootManagerGetLoadOptions (
-                         &CurrentBootOptionCount,
-                         LoadOptionTypeBoot
-                         );
-  //
-  // Process the platform boot options.
-  //
-  for (Index = 0; Index < BootCount; Index++) {
-    INTN   Match;
-    UINTN  BootOptionNumber;
-
-    //
-    // If there are any preexistent boot options, and the subject platform boot
-    // option is already among them, then don't try to add it. Just get its
-    // assigned boot option number so we can associate a hotkey with it. Note
-    // that EfiBootManagerFindLoadOption() deals fine with (CurrentBootOptions
-    // == NULL) if (CurrentBootCount == 0).
-    //
-    Match = EfiBootManagerFindLoadOption (
-              &BootOptions[Index],
-              CurrentBootOptions,
-              CurrentBootOptionCount
-              );
-    if (Match >= 0) {
-      BootOptionNumber = CurrentBootOptions[Match].OptionNumber;
-    } else {
-      //
-      // Add the platform boot options as a new one, at the end of the boot
-      // order. Note that if the platform provided this boot option with an
-      // unassigned option number, then the below function call will assign a
-      // number.
-      //
-      Status = EfiBootManagerAddLoadOptionVariable (
-                 &BootOptions[Index],
-                 MAX_UINTN
-                 );
-      if (EFI_ERROR (Status)) {
-        DEBUG ((
-          DEBUG_ERROR,
-          "%a: failed to register \"%s\": %r\n",
-          __func__,
-          BootOptions[Index].Description,
-          Status
-          ));
-        continue;
-      }
-
-      BootOptionNumber = BootOptions[Index].OptionNumber;
-    }
-  }
-  EfiBootManagerFreeLoadOptions (CurrentBootOptions, CurrentBootOptionCount);
-  EfiBootManagerFreeLoadOptions (BootOptions, BootCount);
-  FreePool (BootKeys);
 }
 
 EFI_DEVICE_PATH *
@@ -658,87 +509,6 @@ ExtractGuidFromDevicePathString (
 }
 
 /**
-  Removes duplicate boot options from the BootOrder variable and associated
-  Boot#### variables. The function identifies duplicates based on matching GUIDs
-  extracted from the FvFile nodes in the device paths. If no GUID is found,
-  it falls back to comparing the Description and FilePath.
-
-  The function performs the following steps:
-  - Retrieves the current BootOrder and Boot#### variables.
-  - Iterates through the boot options, identifying duplicates by:
-    - Matching GUIDs from the device paths.
-    - Comparing the Description and FilePath if GUIDs are not present or do not match.
-  - Deletes duplicate boot options and updates the BootOrder variable.
-
-  @retval EFI_SUCCESS           Successfully removed duplicate boot options.
-  @retval EFI_NOT_FOUND         No boot options found to process.
-  @retval EFI_ERROR             If an error occurs during variable updates
-                                or boot option deletion.
-
-  Note:
-  - The function uses ExtractGuidFromDevicePathString to extract GUIDs from the
-    device paths for comparison.
-  - Duplicate entries are removed from both Boot#### variables and the BootOrder variable.
-  - Updates to BootOrder ensure a consistent boot order after removing duplicates.
-**/
-EFI_STATUS
-EFIAPI
-RemoveDuplicateBootOptions (
-  VOID
-)
-{
-    EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
-    UINTN                           BootOptionCount;
-    UINTN                           IndexA;
-    EFI_GUID                        GuidA;
-    UINTN                           IndexB;
-    EFI_GUID                        GuidB;
-    EFI_STATUS                      Status;
-    BOOLEAN                         Found;
-
-
-    BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
-
-    if (BootOptions == NULL) {
-      return EFI_NOT_FOUND;
-    }
-
-    Found = FALSE;
-
-    for (IndexA = 0; IndexA < BootOptionCount; ++IndexA) {
-
-      Status = ExtractGuidFromDevicePathString(BootOptions[IndexA].FilePath, &GuidA);
-      if (EFI_ERROR(Status)) {
-        continue;
-      }
-
-      for (IndexB = IndexA + 1; IndexB < BootOptionCount; ++IndexB) {
-
-        Status = ExtractGuidFromDevicePathString(BootOptions[IndexB].FilePath, &GuidB);
-        if (EFI_ERROR(Status)) {
-          continue;
-        }
-
-        if (CompareGuid(&GuidA, &GuidB)) {
-          Found = TRUE;
-          break;
-        }
-      }
-      if (Found) {
-        break;
-      }
-    }
-
-    if (Found) {
-      /* Delete the previous one */
-      EfiBootManagerDeleteLoadOptionVariable(BootOptions[IndexA].OptionNumber, LoadOptionTypeBoot);
-    }
-
-    return Found;
-
-}
-
-/**
   GetOption
 
   @param[in]  Description
@@ -758,10 +528,8 @@ GetOption (
   UINTN                         Index;
   UINTN                         OptionNumber;
   EFI_GUID                      GuidFind;
-  BOOLEAN                       IsNew;
   EFI_STATUS                    Status;
 
-  IsNew = TRUE;
   BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
 
   for (Index = 0; Index < BootOptionCount; Index++) {
@@ -770,27 +538,27 @@ GetOption (
           continue;
       }
       if (CompareGuid(&Guid, &GuidFind)) {
-         OptionNumber = BootOptions[Index].OptionNumber;
-         IsNew = FALSE;
-         break;
+        OptionNumber = BootOptions[Index].OptionNumber;
+        break;
       }
   }
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 
-  if (IsNew) {
-      OptionNumber = PlatformRegisterFvBootOption (&Guid, Description, Attributes, NULL);
+  if (Index >= BootOptionCount) {
+    return LoadOptionNumberUnassigned;
+  } else {
+    return OptionNumber;
   }
-  return OptionNumber;
 }
 
 /**
-  Register the boot option And Keys.
+  Register the boot Keys for current platform.
   @param  VOID
 
   @retval  VOID
 **/
 VOID
-PlatformRegisterOptionsAndKeys (
+PlatformRegisterKeys (
   VOID
   )
 {
@@ -798,14 +566,9 @@ PlatformRegisterOptionsAndKeys (
   EFI_INPUT_KEY                Enter;
   EFI_INPUT_KEY                F2;
   EFI_INPUT_KEY                F7;
-  UINTN               OptionNumber;
-  //
-  // Load platform boot options
-  //
-  GetPlatformOptions ();
-  /* Workaround, invalid boot options may be added, remove them */
-  while (RemoveDuplicateBootOptions())
-    ;
+  EFI_INPUT_KEY                Key;
+  UINTN                        OptionNumber;
+
   //
   // Register ENTER as CONTINUE key
   //
@@ -813,18 +576,27 @@ PlatformRegisterOptionsAndKeys (
   Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
   Status = EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
   ASSERT_EFI_ERROR (Status);
+
   // F7: open boot device list menu
   F7.ScanCode    = SCAN_F7;
   F7.UnicodeChar = CHAR_NULL;
   OptionNumber   = GetOption (L"UEFI BootManagerMenuApp",mBootMenuFile, Hide);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F7, NULL);
   //
-  // Map F2 and ESC to Boot Manager Menu
+  // Map F2 to Boot Manager Menu
   //
   F2.ScanCode     = SCAN_F2;
   F2.UnicodeChar  = CHAR_NULL;
   OptionNumber   = GetOption (L"UEFI UiApp",mUiApp, Hide);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F2, NULL);
+
+  //
+  // Add UEFI Shell Key "s"
+  //
+  Key.ScanCode    = SCAN_NULL;
+  Key.UnicodeChar = L's';
+  OptionNumber   = GetOption (L"UEFI Shell", gUefiShellFileGuid, Default);
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &Key, NULL);
 }
 
 //
@@ -847,7 +619,6 @@ PlatformBootManagerBeforeConsole (
   VOID
   )
 {
-  PlatformRegisterOptionsAndKeys ();
   //
   // Signal EndOfDxe PI Event
   //
@@ -944,8 +715,6 @@ PlatformBootManagerAfterConsole (
 {
   EFI_STATUS                    Status;
   UINTN                         FirmwareVerLength;
-  EFI_INPUT_KEY                 Key;
-  UINTN                         OptionNumber;
   EFI_EVENT                     AfterConsoleEvent;
 
   FirmwareVerLength = StrLen (PcdGetPtr (PcdFirmwareVersionString));
@@ -960,17 +729,16 @@ PlatformBootManagerAfterConsole (
   EfiBootManagerConnectAll ();
 
   //
-  // Enumerate all possible boot options, then filter and reorder them.
+  // remove all invalid bootoptions.
+  //
+  PlatformRemoveInvalidBootOptions();
+
+  //
+  // Enumerate all possible boot options.
   //
   EfiBootManagerRefreshAllBootOption ();
 
-  //
-  // Register UEFI Shell
-  //
-  Key.ScanCode    = SCAN_NULL;
-  Key.UnicodeChar = L's';
-  OptionNumber   = GetOption (L"UEFI Shell", gUefiShellFileGuid, Default);
-  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &Key, NULL);
+  PlatformRegisterKeys();
 
   //
   // Signal After Console event

@@ -40,7 +40,7 @@ STATIC CONST SHELL_PARAM_ITEM  mParamList[] = {
   { NULL,  TypeMax   }
 };
 
-EFUSE_OPERATION  mEfuseOp;
+EFUSE_OPERATION  gEfuseOp;
 CONST CHAR16     gShellEfuseFileName[] = L"ShellCommand";
 EFI_HANDLE       gShellEfuseHiiHandle  = NULL;
 
@@ -205,12 +205,12 @@ OpenFileAndRead (
     Print (L"Read from file error\n");
     FreePool (TempBuffer);
     ShellCloseFile (&FileHandle);
-    return EFI_ABORTED;
+    return Status;
   } else if (*BufferSize != (UINTN) FileSize) {
     Print (L"Not whole file read. Abort\n");
     FreePool (TempBuffer);
     ShellCloseFile (&FileHandle);
-    return EFI_ABORTED;
+    return RETURN_LOAD_ERROR;
   }
 
   *Buffer = TempBuffer;
@@ -267,7 +267,7 @@ WriteFileToEfuse (
 
   Status = OpenFileAndRead ((CHAR16 *)EfuseOp->FilePath, &Buffer, &BufferSize);
   if (EFI_ERROR (Status))
-    return SHELL_ABORTED;
+    return SHELL_LOAD_ERROR;
 
   Print (L"Write [%s] to device[%u] with offset[%u].\n",
          EfuseOp->FilePath,
@@ -282,7 +282,7 @@ WriteFileToEfuse (
   if (Resp == NULL) {
     Print (L"\nCatnot get response!\n");
     FreePool (Buffer);
-    return SHELL_ABORTED;
+    return SHELL_INVALID_PARAMETER;
   }
   if (EFI_ERROR (Status) || (*Resp != ShellPromptResponseYes)) {
     SHELL_FREE_NON_NULL (Resp);
@@ -298,19 +298,19 @@ WriteFileToEfuse (
   if (EFI_ERROR (Status)) {
     FreePool (Buffer);
     Print (L"Unable to set GPIO.\n");
-    return SHELL_ABORTED;
+    return SHELL_DEVICE_ERROR;
   }
 
   Status = EfuseWriteBytes (EfuseOp->EfuseIndex, EfuseOp->Offset, BufferSize, (UINT8 *)Buffer);
   if (EFI_ERROR (Status))
-    ShellStatus = SHELL_ABORTED;
+    ShellStatus = SHELL_INVALID_PARAMETER;
 
   FreePool (Buffer);
 
   Status = EfuseWriteEnable (FALSE);
   if (EFI_ERROR (Status)) {
     Print (L"Unable to set GPIO.\n");
-    return SHELL_ABORTED;
+    return SHELL_DEVICE_ERROR;
   }
 
   return ShellStatus;
@@ -326,19 +326,19 @@ WriteDataToEfuse (
   CHAR16                *Prompt;
   EFI_STATUS            Status;
   SHELL_STATUS          ShellStatus = SHELL_SUCCESS;
-  UINT8                 WriteValue = (UINT8)(mEfuseOp.WriteValue);
+  UINT8                 WriteValue = (UINT8)(EfuseOp->WriteValue);
 
   Print (L"Write value[0x%x] into device[%u] at offset[%u].\n",
         WriteValue,
-        mEfuseOp.EfuseIndex,
-        mEfuseOp.Offset);
-  PrintWithOffset (mEfuseOp.EfuseIndex, &WriteValue, mEfuseOp.Offset, 1);
+        EfuseOp->EfuseIndex,
+        EfuseOp->Offset);
+  PrintWithOffset (EfuseOp->EfuseIndex, &WriteValue, EfuseOp->Offset, 1);
 
   Prompt = L"Write the above content to the eFuse?(y/n) ";
   Status = ShellPromptForResponse (ShellPromptResponseTypeYesNo, Prompt, (VOID **)&Resp);
   if (Resp == NULL) {
     Print(L"\nCatnot get response!\n");
-    return SHELL_ABORTED;
+    return SHELL_INVALID_PARAMETER;
   }
   if (EFI_ERROR (Status) || (*Resp != ShellPromptResponseYes)) {
     SHELL_FREE_NON_NULL (Resp);
@@ -352,17 +352,17 @@ WriteDataToEfuse (
   Status = EfuseWriteEnable (TRUE);
   if (EFI_ERROR (Status)) {
     Print (L"Unable to set GPIO\n");
-    return SHELL_ABORTED;
+    return SHELL_DEVICE_ERROR;
   }
 
-  Status = EfuseWriteBytes (mEfuseOp.EfuseIndex, mEfuseOp.Offset, 1, (VOID *)(&WriteValue));
+  Status = EfuseWriteBytes (EfuseOp->EfuseIndex, EfuseOp->Offset, 1, (VOID *)(&WriteValue));
   if (EFI_ERROR (Status))
-    ShellStatus = SHELL_ABORTED;
+    ShellStatus = SHELL_INVALID_PARAMETER;
 
   Status = EfuseWriteEnable (FALSE);
   if (EFI_ERROR (Status)) {
     Print (L"Unable to set GPIO\n");
-    return SHELL_ABORTED;
+    return SHELL_DEVICE_ERROR;
   }
 
   return ShellStatus;
@@ -379,7 +379,7 @@ PrintReadEfuseValue (
 
   if (EfuseOp->ReadSize == 0) {
     Print (L"Read size cannot be 0!\n");
-    return SHELL_ABORTED;
+    return SHELL_INVALID_PARAMETER;
   }
 
   Print (L"Read device[%u] offset[%u] size[%u].\n",
@@ -390,7 +390,7 @@ PrintReadEfuseValue (
   ReadBuffer = AllocateZeroPool (EfuseOp->ReadSize);
   if (ReadBuffer == NULL) {
     Print (L"Allocate memory error!\n");
-    return SHELL_ABORTED;
+    return SHELL_OUT_OF_RESOURCES;
   }
 
   Status = EfuseReadBytes (EfuseOp->EfuseIndex,
@@ -399,7 +399,7 @@ PrintReadEfuseValue (
                            ReadBuffer);
   if (EFI_ERROR (Status)) {
     FreePool (ReadBuffer);
-    return SHELL_ABORTED;
+    return SHELL_INVALID_PARAMETER;
   }
 
   PrintWithOffset (EfuseOp->EfuseIndex,
@@ -408,7 +408,8 @@ PrintReadEfuseValue (
                    EfuseOp->ReadSize);
 
   FreePool (ReadBuffer);
-  return EFI_SUCCESS;
+
+  return SHELL_SUCCESS;
 }
 
 STATIC
@@ -453,7 +454,7 @@ ShowEfuseInfo (
 
   Status = GetEfuseInfo (EfuseIndex, &EfuseInfo, NULL);
   if (EFI_ERROR (Status))
-    return SHELL_ABORTED;
+    return SHELL_INVALID_PARAMETER;
 
   Print (L"eFuse%d:\n", EfuseIndex);
   Print (L"    Controller register address: 0x%lx\n", EfuseInfo.Regs);
@@ -475,7 +476,7 @@ ShellCommandRunEfuse (
   SHELL_STATUS ShellStatus = SHELL_SUCCESS;
   LIST_ENTRY   *CheckPackage = NULL;
 
-  ZeroMem (&mEfuseOp, sizeof (EFUSE_OPERATION));
+  ZeroMem (&gEfuseOp, sizeof (EFUSE_OPERATION));
 
   Status = ShellInitialize ();
   if (EFI_ERROR (Status)) {
@@ -485,7 +486,7 @@ ShellCommandRunEfuse (
 
   Status = CheckArguements (&CheckPackage);
   if (EFI_ERROR (Status)) {
-    ShellStatus = SHELL_ABORTED;
+    ShellStatus = SHELL_INVALID_PARAMETER;
     goto Exit;
   }
 
@@ -523,11 +524,11 @@ ShellCommandRunEfuse (
   CONST CHAR16  *EfuseIndexString;
   EfuseIndexString = ShellCommandLineGetValue (CheckPackage, L"-d");
   if (EfuseIndexString != NULL) {
-    Status = ShellConvertStringToUint64 (EfuseIndexString, &(mEfuseOp.EfuseIndex), FALSE, TRUE);
+    Status = ShellConvertStringToUint64 (EfuseIndexString, &(gEfuseOp.EfuseIndex), FALSE, TRUE);
     if (EFI_ERROR (Status)) {
       Print (L"Invalid argument[%r]\n",Status);
       PrintHelp ();
-      ShellStatus = SHELL_ABORTED;
+      ShellStatus = SHELL_INVALID_PARAMETER;
       goto Exit;
     }
   }
@@ -536,8 +537,8 @@ ShellCommandRunEfuse (
   // "-d" or  "-d <num>".
   //
   if ((ShellCommandLineGetRawCount (CheckPackage) == 2) && (ShellCommandLineGetFlag (CheckPackage, L"-d"))) {
-    Print (L"Show eFuse%d information\n", mEfuseOp.EfuseIndex);
-    ShellStatus = ShowEfuseInfo (mEfuseOp.EfuseIndex);
+    Print (L"Show eFuse%d information\n", gEfuseOp.EfuseIndex);
+    ShellStatus = ShowEfuseInfo (gEfuseOp.EfuseIndex);
     goto Exit;
   }
 
@@ -547,11 +548,11 @@ ShellCommandRunEfuse (
   CONST CHAR16  *OffsetString;
   OffsetString = ShellCommandLineGetValue (CheckPackage, L"-o");
   if (OffsetString != NULL) {
-    Status = ShellConvertStringToUint64 (OffsetString, &(mEfuseOp.Offset), FALSE, TRUE);
+    Status = ShellConvertStringToUint64 (OffsetString, &(gEfuseOp.Offset), FALSE, TRUE);
     if (EFI_ERROR (Status)) {
       Print (L"Invalid argument: %s\n", OffsetString);
       PrintHelp ();
-      ShellStatus = SHELL_ABORTED;
+      ShellStatus = SHELL_INVALID_PARAMETER;
       goto Exit;
     }
   }
@@ -561,18 +562,18 @@ ShellCommandRunEfuse (
   //
   if (ShellCommandLineGetFlag (CheckPackage, L"-r")) {
     CONST CHAR16  *ReadSizeString;
-    mEfuseOp.ReadSize = 1;
+    gEfuseOp.ReadSize = 1;
     ReadSizeString = ShellCommandLineGetValue (CheckPackage, L"-s");
     if (ReadSizeString != NULL) {
-      Status = ShellConvertStringToUint64 (ReadSizeString, &(mEfuseOp.ReadSize), FALSE, TRUE);
+      Status = ShellConvertStringToUint64 (ReadSizeString, &(gEfuseOp.ReadSize), FALSE, TRUE);
       if (EFI_ERROR (Status)) {
         Print (L"Invalid argument: %s\n", ReadSizeString);
         PrintHelp ();
-        ShellStatus = SHELL_ABORTED;
+        ShellStatus = SHELL_INVALID_PARAMETER;
         goto Exit;
       }
     }
-    ShellStatus = PrintReadEfuseValue (&mEfuseOp);
+    ShellStatus = PrintReadEfuseValue (&gEfuseOp);
     goto Exit;
   }
 
@@ -582,33 +583,33 @@ ShellCommandRunEfuse (
   CONST CHAR16  *WriteValueString;
   WriteValueString = ShellCommandLineGetValue (CheckPackage, L"-w");
   if (WriteValueString != NULL) {
-    Status = ShellConvertStringToUint64 (WriteValueString, &(mEfuseOp.WriteValue), FALSE, TRUE);
+    Status = ShellConvertStringToUint64 (WriteValueString, &(gEfuseOp.WriteValue), FALSE, TRUE);
     if (EFI_ERROR (Status)) {
       Print (L"Invalid argument: %s\n", WriteValueString);
       PrintHelp ();
-      ShellStatus = SHELL_ABORTED;
+      ShellStatus = SHELL_INVALID_PARAMETER;
       goto Exit;
     }
-    ShellStatus = WriteDataToEfuse (&mEfuseOp);
+    ShellStatus = WriteDataToEfuse (&gEfuseOp);
     goto Exit;
   } else if (ShellCommandLineGetFlag (CheckPackage, L"-w")) {
     Print (L"No write value, parameter error!\n");
     PrintHelp ();
-    ShellStatus = SHELL_ABORTED;
+    ShellStatus = SHELL_INVALID_PARAMETER;
     goto Exit;
   }
 
   //
   // command-line parameter "-f"
   //
-  mEfuseOp.FilePath = ShellCommandLineGetValue (CheckPackage, L"-f");
-  if (mEfuseOp.FilePath != NULL) {
-    ShellStatus = WriteFileToEfuse (&mEfuseOp);
+  gEfuseOp.FilePath = ShellCommandLineGetValue (CheckPackage, L"-f");
+  if (gEfuseOp.FilePath != NULL) {
+    ShellStatus = WriteFileToEfuse (&gEfuseOp);
     goto Exit;
   } else if (ShellCommandLineGetFlag (CheckPackage, L"-f")) {
     Print (L"No file path, parameter error!\n");
     PrintHelp ();
-    ShellStatus = SHELL_ABORTED;
+    ShellStatus = SHELL_INVALID_PARAMETER;
     goto Exit;
   }
 

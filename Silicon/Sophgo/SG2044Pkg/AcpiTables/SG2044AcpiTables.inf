@@ -21,6 +21,7 @@
   Mcfg.aslc
   Madt.aslc
   Rhct.aslc
+  Pptt.aslc
   Dsdt/SG2044Dsdt.asl
 
 [Packages]

@@ -26,6 +26,7 @@
 #include <IndustryStandard/Acpi.h>
 #include <Guid/Acpi.h>
 #include <Guid/VendorGlobalVariables.h>
+#include "SG2044AcpiHeader.h"
 
 //
 // Constants and definitions
@@ -878,6 +879,112 @@ UpdateAcpiDsdtTable (
   return EFI_SUCCESS;
 }
 
+STATIC
+INT64
+GetCacheSize(
+  IN CHAR8           *IniField
+  )
+{
+  EFI_STATUS Status;
+  CHAR8      value[128];
+  CHAR8      *End;
+  UINT64     Uint;
+
+  if (IniGetValueBySectionAndName("CPU", IniField, value))
+    return -1;
+
+  Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
+  if (RETURN_ERROR(Status))
+    return -1;
+
+  return Uint;
+}
+
+/**
+  Update ACPI PPTT table
+
+  @return EFI_SUCCESS if ACPI PPTT table is updated successfully
+*/
+EFI_STATUS
+UpdateAcpiPpttTable (
+  VOID
+  )
+{
+  EFI_STATUS               Status;
+  INT64                    CacheSize;
+  UINT16                   ClusterIndex, ClusterCoreIndex;
+  UINT32                   L1IcacheSize, L1DcacheSize;
+  EFI_ACPI_SDT_PROTOCOL    *AcpiTableProtocol;
+  UINTN                    Index;
+  EFI_ACPI_SDT_HEADER      *Table;
+  UINT8                    *PackageBuffer;
+  TH_PPTT_PACKAGE          *RootPackage;
+  TH_PPTT_CLUSTER          *Cluster;
+  EFI_ACPI_HANDLE          TableHandle;
+  EFI_ACPI_TABLE_VERSION   TableVersion;
+  UINTN                    TableKey;
+
+  //
+  // Find the AcpiTable protocol
+  //
+  Status = gBS->LocateProtocol (&gEfiAcpiSdtProtocolGuid, NULL, (VOID**) &AcpiTableProtocol);
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_ERROR, "Unable to locate ACPI table protocol!\n"));
+    return Status;
+  }
+
+  //
+  // Search for PPTT Table
+  //
+  for (Index = 0; Index < EFI_ACPI_MAX_NUM_TABLES; Index ++) {
+    Status = AcpiTableProtocol->GetAcpiTable (Index, &Table, &TableVersion, &TableKey);
+    if (EFI_ERROR (Status)) {
+      break;
+    }
+
+    if (Table->Signature != EFI_ACPI_6_5_PROCESSOR_PROPERTIES_TOPOLOGY_TABLE_STRUCTURE_SIGNATURE) {
+      continue;
+    }
+
+    Status = AcpiTableProtocol->OpenSdt (TableKey, &TableHandle);
+    if (EFI_ERROR (Status)) {
+      break;
+    }
+
+    PackageBuffer = (UINT8 *)Table + sizeof(EFI_ACPI_6_5_PROCESSOR_PROPERTIES_TOPOLOGY_TABLE_HEADER);
+    RootPackage   = (TH_PPTT_PACKAGE *)PackageBuffer;
+    Cluster       = (TH_PPTT_CLUSTER *)(PackageBuffer + sizeof(TH_PPTT_PACKAGE));
+
+    CacheSize = GetCacheSize("l3-cache-size");
+    if (CacheSize >= 0) {
+      RootPackage->L3Cache.Size = CacheSize;
+    }
+    L1IcacheSize = GetCacheSize("l1-i-cache-size");
+    L1DcacheSize = GetCacheSize("l1-d-cache-size");
+
+    CacheSize = GetCacheSize("l2-cache-size");
+    if (CacheSize >= 0) {
+      for (ClusterIndex = 0; ClusterIndex < CLUSTER_COUNT; ClusterIndex++) {
+        Cluster[ClusterIndex].L2Cache.Size = CacheSize;
+        for (ClusterCoreIndex = 0; ClusterCoreIndex < CORE_COUNT; ClusterCoreIndex++) {
+          if (L1IcacheSize >= 0) {
+            Cluster[ClusterIndex].Core[ClusterCoreIndex].ICache.Size = L1IcacheSize;
+          }
+
+          if (L1DcacheSize >= 0) {
+            Cluster[ClusterIndex].Core[ClusterCoreIndex].DCache.Size = L1DcacheSize;
+          }
+        }
+      }
+    }
+
+    AcpiTableProtocol->Close (TableHandle);
+    AcpiCheckSum (Table);
+  }
+
+  return EFI_SUCCESS;
+}
+
 /**
   Entry point of the ACPI platform driver.
 
@@ -982,9 +1089,18 @@ AcpiPlatformDxeEntryPoint (
     CurrentTable = NULL;
   }
 
+  if (IniConfIniParse (NULL) < 0) {
+    DEBUG ((DEBUG_ERROR, "Config INI parse fail.\n"));
+  }
+
   Status = UpdateAcpiDsdtTable ();
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "UpdateAcpiDsdtTable Failed, Status = %r\n", Status));
+  }
+
+  Status = UpdateAcpiPpttTable ();
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "UpdateAcpiPpttTable Failed, Status = %r\n", Status));
   }
 
   return EFI_SUCCESS;

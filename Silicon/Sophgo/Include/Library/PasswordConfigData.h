@@ -7,7 +7,7 @@ Copyright (c) 2024, Sophgo. All rights reserved.
 SPDX-License-Identifier: BSD-2-Clause-Patent
 **/
 #ifndef  PASSWORD_CONFIG_DATA_H_
-#define  PASSWORD_CONFIG_DATA_H
+#define  PASSWORD_CONFIG_DATA_H_
 
 #define PLATFORM_SETUP_VARIABLE_FLAG             (EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE)
 #define VAR_USR_PASSWD                           L"UsrPasswd"

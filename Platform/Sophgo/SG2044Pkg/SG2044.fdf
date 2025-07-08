@@ -97,7 +97,7 @@ INF  MdeModulePkg/Universal/FaultTolerantWriteDxe/FaultTolerantWriteDxe.inf
 INF  MdeModulePkg/Universal/Variable/RuntimeDxe/VariableRuntimeDxe.inf
 !if $(SECURE_BOOT_ENABLE) == TRUE
   INF  SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
-  INF  Silicon/Sophgo/SG2044Pkg/Drivers/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
+  INF  SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
 !endif
 
 INF  MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf
@@ -255,14 +255,6 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/ReserveMemoryDxe/ReserveMemoryDxe.inf
   INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SG2044AcpiTables.inf
 !endif
 
-#FILE FREEFORM = gEfiRootKeyFileGuid {
-#    SECTION RAW = /Path/To/RK
-#}
-
-#FILE FREEFORM = gEfiPkSinatureFileGuid {
-#    SECTION RAW = /Path/To/PKSignature
-#}
-
 #
 # ipmi ssif smbus Dxe
 #
@@ -292,7 +284,10 @@ READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 FvNameGuid         = 02CBA7CB-BDE9-4934-A182-9043BE539261
 
-INF Silicon/Sophgo/PeilessSec/PeilessSec.inf
+INF Silicon/Sophgo/Core/Sec/PeilessSec.inf
+INF Silicon/Sophgo/Core/Pei/PeiMain.inf
+INF Platform/RISC-V/PlatformPkg/Universal/Pei/PlatformPei/PlatformPei.inf 
+INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
 
 FILE FV_IMAGE = 9E21FD93-9C72-4c15-8C4B-E77F1DB2D792 {
    SECTION GUIDED EE4E5898-3914-4259-9D6E-DC7BD79403CF PROCESSING_REQUIRED = TRUE {
@@ -310,6 +305,21 @@ FILE FV_IMAGE = 9E21FD93-9C72-4c15-8C4B-E77F1DB2D792 {
     PE32     PE32    Align = Auto     $(INF_OUTPUT)/$(MODULE_NAME).efi
     UI       STRING ="$(MODULE_NAME)" Optional
     VERSION  STRING ="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.PEI_CORE]
+  FILE PEI_CORE = $(NAMED_GUID) {
+    PE32     PE32    Align=Auto     $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING ="$(MODULE_NAME)" Optional
+    VERSION  STRING ="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
+  }
+
+[Rule.Common.PEIM]
+  FILE PEIM = $(NAMED_GUID) {
+    PEI_DEPEX   PEI_DEPEX Optional        $(INF_OUTPUT)/$(MODULE_NAME).depex
+    PE32     PE32   Align=Auto     $(INF_OUTPUT)/$(MODULE_NAME).efi
+    UI       STRING="$(MODULE_NAME)" Optional
+    VERSION  STRING="$(INF_VERSION)" Optional BUILD_NUM=$(BUILD_NUMBER)
   }
 
 [Rule.Common.DXE_CORE]

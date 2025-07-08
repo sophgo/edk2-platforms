@@ -12,6 +12,27 @@
 
 #include "PeilessSec.h"
 
+EFI_PEI_FIRMWARE_VOLUME_INFO_PPI mDxeAddtionFVPpi = {
+  EFI_FIRMWARE_FILE_SYSTEM2_GUID,
+  NULL,
+  0,
+  NULL,
+  NULL
+};
+
+EFI_PEI_PPI_DESCRIPTOR mPrivateDispatchTable[] = {
+  {
+    EFI_PEI_PPI_DESCRIPTOR_PPI,
+    &gEfiPeiMemoryDiscoveredPpiGuid,
+    NULL
+  },
+  {
+    EFI_PEI_PPI_DESCRIPTOR_PPI | EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST,
+    &gEfiPeiFirmwareVolumeInfoPpiGuid,
+    &mDxeAddtionFVPpi
+  }
+};
+
 /**
   Initialize the memory and CPU, setting the boot mode, and platform
   initialization. It also builds the core information HOB.
@@ -32,7 +53,6 @@ SecInitializePlatform (
   MemoryPeimInitialization ();
 
   CpuPeimInitialization ();
-
   // Store timer value logged at the beginning of firmware image execution
   StartTimeStamp = GetPerformanceCounter();
   Performance.ResetEnd = GetTimeInNanoSecond (StartTimeStamp);
@@ -47,6 +67,37 @@ SecInitializePlatform (
   ASSERT_EFI_ERROR (Status);
 
   return EFI_SUCCESS;
+}
+
+/** Transion from SEC phase to PEI phase.
+
+  This function transits to S-mode PEI phase from M-mode SEC phase.
+
+  @param[in]  SecCoreData     SecCore Infomation transfered to PEI core.
+
+**/
+VOID
+EFIAPI
+PeiCore (
+  EFI_SEC_PEI_HAND_OFF            *SecCoreData
+  )
+{
+  EFI_PEI_CORE_ENTRY_POINT        PeiCoreEntryPoint;
+  EFI_FIRMWARE_VOLUME_HEADER      *BootFv;
+  EFI_PEI_PPI_DESCRIPTOR          *EfiPeiPpiDescriptor;
+
+  BootFv = (EFI_FIRMWARE_VOLUME_HEADER *)FixedPcdGet32 (PcdRiscVPeiFvBase);
+  LoadPeiEntryPointFromFv (&PeiCoreEntryPoint);
+
+  SecCoreData->DataSize               = sizeof (EFI_SEC_PEI_HAND_OFF);
+  SecCoreData->BootFirmwareVolumeBase = BootFv;
+  SecCoreData->BootFirmwareVolumeSize = (UINTN)BootFv->FvLength;
+
+  EfiPeiPpiDescriptor = (EFI_PEI_PPI_DESCRIPTOR *)&mPrivateDispatchTable;
+  //
+  // Transfer the control to the PEI core
+  //
+  (*PeiCoreEntryPoint)(SecCoreData, EfiPeiPpiDescriptor);
 }
 
 /**
@@ -73,16 +124,19 @@ SecStartup (
   UINT64                      UefiMemoryBase;
   UINT64                      StackBase;
   UINT32                      StackSize;
+  EFI_PEI_FV_HANDLE           VolumeHandle;
+  EFI_SEC_PEI_HAND_OFF        SecCoreData;
 
   SerialPortInitialize ();
-
   //
   // Report Status Code to indicate entering SEC core
   //
+  
   DEBUG ((
     DEBUG_INFO,
-    "%a() BootHartId: 0x%x, DeviceTreeAddress=0x%lx\n",
+    "%a() SecStartup: 0x%lx BootHartId: 0x%x, DeviceTreeAddress=0x%lx\n",
     __func__,
+    SecStartup,
     BootHartId,
     DeviceTreeAddress
     ));
@@ -135,9 +189,21 @@ SecStartup (
   Status = DecompressFirstFv ();
   ASSERT_EFI_ERROR (Status);
 
-  // Load the DXE Core and transfer control to it
-  Status = LoadDxeCoreFromFv (NULL, 0);
-  ASSERT_EFI_ERROR (Status);
+  // transfer the second FV info to PEI phase
+  GetNextVolume (1, &VolumeHandle);
+  mDxeAddtionFVPpi.FvInfo = VolumeHandle;
+  mDxeAddtionFVPpi.FvInfoSize = ((EFI_FIRMWARE_VOLUME_HEADER *)VolumeHandle)->FvLength;
+
+  //transfer the memory info from SEC to PEI phase
+  SecCoreData.StackBase = (VOID *)StackBase;
+  SecCoreData.StackSize = StackSize;
+  SecCoreData.TemporaryRamBase = (VOID *)UefiMemoryBase;
+  SecCoreData.TemporaryRamSize = (StackBase + StackSize - UefiMemoryBase) >> 1;
+  SecCoreData.PeiTemporaryRamBase = SecCoreData.TemporaryRamBase;
+  SecCoreData.PeiTemporaryRamSize = SecCoreData.TemporaryRamSize;
+
+  PeiCore (&SecCoreData);
+
   //
   // Should not come here.
   //

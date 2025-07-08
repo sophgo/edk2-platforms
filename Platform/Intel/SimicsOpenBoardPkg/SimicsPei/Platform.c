@@ -592,7 +592,7 @@ InitializePlatform (
 {
   EFI_STATUS    Status;
 
-  DEBUG ((DEBUG_ERROR, "Platform PEIM Loaded\n"));
+  DEBUG ((DEBUG_INFO, "Platform PEIM Loaded\n"));
 
   SimicsVersionCheck ();
   DebugDumpCmos ();

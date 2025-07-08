@@ -242,9 +242,9 @@
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
   TpmMeasurementLib|SecurityPkg/Library/DxeTpmMeasurementLib/DxeTpmMeasurementLib.inf
-  AuthVariableLib|Silicon/Sophgo/Library/AuthVariableLib/AuthVariableLib.inf
+  AuthVariableLib|SecurityPkg/Library/AuthVariableLib/AuthVariableLib.inf
   SecureBootVariableLib|SecurityPkg/Library/SecureBootVariableLib/SecureBootVariableLib.inf
-  SecureBootVariableProvisionLib|Silicon/Sophgo/Library/SecureBootVariableProvisionLib/SecureBootVariableProvisionLib.inf
+  SecureBootVariableProvisionLib|SecurityPkg/Library/SecureBootVariableProvisionLib/SecureBootVariableProvisionLib.inf
   PlatformPKProtectionLib|SecurityPkg/Library/PlatformPKProtectionLibVarPolicy/PlatformPKProtectionLibVarPolicy.inf
   PlatformSecureLib|OvmfPkg/Library/PlatformSecureLib/PlatformSecureLib.inf
 !else
@@ -304,9 +304,35 @@
   HobLib|EmbeddedPkg/Library/PrePiHobLib/PrePiHobLib.inf
   PrePiHobListPointerLib|OvmfPkg/RiscVVirt/Library/PrePiHobListPointerLib/PrePiHobListPointerLib.inf
   MemoryAllocationLib|EmbeddedPkg/Library/PrePiMemoryAllocationLib/PrePiMemoryAllocationLib.inf
-  MemoryInitPeiLib|Silicon/Sophgo/MemoryInitPei/MemoryInitPeiLib.inf
-  CpuPeiLib|Silicon/Sophgo/CpuPei/CpuPeiLib.inf
-  PlatformPeiLib|Silicon/Sophgo/PlatformPei/PlatformPeiLib.inf
+  MemoryInitPeiLib|Silicon/Sophgo/Modules/MemoryInitPei/MemoryInitPeiLib.inf
+  CpuPeiLib|Silicon/Sophgo/Modules/CpuPei/CpuPeiLib.inf
+  PlatformPeiLib|Silicon/Sophgo/Modules/PlatformPei/PlatformPeiLib.inf
+
+!ifdef $(SOURCE_DEBUG_ENABLE)
+  DebugAgentLib|SourceLevelDebugPkg/Library/DebugAgent/SecPeiDebugAgentLib.inf
+!endif
+
+[LibraryClasses.common.PEI_CORE]
+  PeiCoreEntryPoint|MdePkg/Library/PeiCoreEntryPoint/PeiCoreEntryPoint.inf
+  HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
+  MemoryAllocationLib|MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
+  PeiServicesTablePointerLib|MdePkg/Library/PeiServicesTablePointerLib/PeiServicesTablePointerLib.inf
+  SerialPortLib|MdePkg/Library/BaseSerialPortLibRiscVSbiLib/BaseSerialPortLibRiscVSbiLib.inf
+  ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
+
+!ifdef $(SOURCE_DEBUG_ENABLE)
+  DebugAgentLib|SourceLevelDebugPkg/Library/DebugAgent/SecPeiDebugAgentLib.inf
+!endif
+
+[LibraryClasses.common.PEIM]
+  FirmwareContextProcessorSpecificLib|Platform/RISC-V/PlatformPkg/Library/FirmwareContextProcessorSpecificLib/FirmwareContextProcessorSpecificLib.inf
+  HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
+  MemoryAllocationLib|MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
+  PeimEntryPoint|MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
+  SerialPortLib|MdePkg/Library/BaseSerialPortLibRiscVSbiLib/BaseSerialPortLibRiscVSbiLib.inf
+  ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
+  PeiServicesLib|MdePkg/Library/PeiServicesLib/PeiServicesLib.inf
+  PeiServicesTablePointerLib|MdePkg/Library/PeiServicesTablePointerLib/PeiServicesTablePointerLib.inf
 
 !ifdef $(SOURCE_DEBUG_ENABLE)
   DebugAgentLib|SourceLevelDebugPkg/Library/DebugAgent/SecPeiDebugAgentLib.inf
@@ -584,14 +610,33 @@
   #
   # SEC Phase modules
   #
-  Silicon/Sophgo/PeilessSec/PeilessSec.inf  {
+  Silicon/Sophgo/Core/Sec/PeilessSec.inf  {
     <LibraryClasses>
       ExtractGuidedSectionLib|EmbeddedPkg/Library/PrePiExtractGuidedSectionLib/PrePiExtractGuidedSectionLib.inf
       LzmaDecompressLib|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf
-      PrePiLib|EmbeddedPkg/Library/PrePiLib/PrePiLib.inf
+      PrePiLib|Silicon/Sophgo/Library/PrePiLib/PrePiLib.inf
       HobLib|EmbeddedPkg/Library/PrePiHobLib/PrePiHobLib.inf
       PrePiHobListPointerLib|OvmfPkg/RiscVVirt/Library/PrePiHobListPointerLib/PrePiHobListPointerLib.inf
       MemoryAllocationLib|EmbeddedPkg/Library/PrePiMemoryAllocationLib/PrePiMemoryAllocationLib.inf
+  }
+
+  #
+  # PEI Phase modules
+  #
+  Silicon/Sophgo/Core/Pei/PeiMain.inf  {
+    <LibraryClasses>
+    PeiServicesLib|MdePkg/Library/PeiServicesLib/PeiServicesLib.inf
+  }
+
+  MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf  {
+    <LibraryClasses>  
+    ExtractGuidedSectionLib|MdePkg/Library/PeiExtractGuidedSectionLib/PeiExtractGuidedSectionLib.inf
+  }
+
+  Platform/RISC-V/PlatformPkg/Universal/Pei/PlatformPei/PlatformPei.inf  {
+    <LibraryClasses>
+    PeiResourcePublicationLib|MdePkg/Library/PeiResourcePublicationLib/PeiResourcePublicationLib.inf
+    RiscVCoreplexInfoLib|Platform/RISC-V/PlatformPkg/Library/PeiCoreInfoHobLibNull/PeiCoreInfoHobLib.inf  
   }
 
   #
@@ -831,7 +876,7 @@
 !if $(SECURE_BOOT_ENABLE) == TRUE
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf
   SecurityPkg/EnrollFromDefaultKeysApp/EnrollFromDefaultKeysApp.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
+  SecurityPkg/VariableAuthenticated/SecureBootDefaultKeysDxe/SecureBootDefaultKeysDxe.inf
 !endif
 
   #

@@ -54,3 +54,4 @@ SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFdBlockSize               = $
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                  = $(EFI_STACK_BASE)
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                  = $(EFI_STACK_SIZE)
 SET gSophgoTokenSpaceGuid.PcdEfiMemoryBottom                                 = $(EFI_MEMORY_BOTTOM)
+SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVPeiFvBase		     = $(FW_BASE_ADDRESS)

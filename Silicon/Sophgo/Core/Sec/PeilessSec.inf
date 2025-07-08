@@ -28,12 +28,12 @@
   PeilessSec.h
 
 [Packages]
+  Silicon/Sophgo/Sophgo.dec
   EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
   Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
-  Silicon/Sophgo/Sophgo.dec
 
 [LibraryClasses]
   BaseLib
@@ -51,15 +51,21 @@
   MemoryInitPeiLib
   CpuPeiLib
   PlatformPeiLib
+  PeCoffGetEntryPointLib
 
 [FixedPcd]
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                       ## CONSUMES
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                       ## CONSUMES
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVPeiFvBase                         ## CONSUMES
   gSophgoTokenSpaceGuid.PcdEfiMemoryBottom                                      ## CONSUMES
 
 [Guids]
   gFdtHobGuid                           ## PRODUCES
   gEfiFirmwarePerformanceGuid           ## PRODUCES
+
+[Ppis]
+  gEfiPeiFirmwareVolumeInfoPpiGuid      ## PRODUCES
+  gEfiPeiMemoryDiscoveredPpiGuid        ## PRODUCES 
 
 [BuildOptions]
   GCC:*_*_*_PP_FLAGS = -D__ASSEMBLY__

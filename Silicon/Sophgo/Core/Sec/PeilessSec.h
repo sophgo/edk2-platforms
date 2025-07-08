@@ -35,6 +35,9 @@
 #include <Ppi/SecPerformance.h>
 #include <Library/TimerLib.h>
 
+#include <Guid/FirmwareFileSystem2.h>
+#include <Ppi/FirmwareVolumeInfo.h>
+
 /**
   Entry point to the C language phase of SEC. After the SEC assembly
   code has initialized some temporary memory and set up the stack,
@@ -90,6 +93,12 @@ EFI_STATUS
 EFIAPI
 CpuPeimInitialization (
   VOID
+  );
+
+VOID
+EFIAPI
+PeiCore (
+  EFI_SEC_PEI_HAND_OFF                *SecCoreData
   );
 
 #endif

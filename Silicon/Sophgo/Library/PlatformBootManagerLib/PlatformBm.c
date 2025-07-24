@@ -22,6 +22,10 @@ EFI_GUID  mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
 };
 
+EFI_GUID  mAutoCreateBootOptionGuid = {
+  0x8108ac4e, 0x9f11, 0x4d59, { 0x85, 0x0e, 0xe2, 0x1a, 0x52, 0x2c, 0x59, 0xb2 }
+};
+
 STATIC PLATFORM_SERIAL_CONSOLE mSerialConsole = {
   //
   // VENDOR_DEVICE_PATH SerialDxe
@@ -350,13 +354,36 @@ AddOutput (
 }
 
 /**
-  remove all invalid bootoptions for current platform.
-  @param  VOID
+  Return TRUE when the boot option is auto-created instead of manually added.
 
-  @retval  VOID
+  @param BootOption Pointer to the boot option to check.
+
+  @retval TRUE  The boot option is auto-created.
+  @retval FALSE The boot option is manually added.
 **/
-VOID
-PlatformRemoveInvalidBootOptions (
+BOOLEAN
+IsAutoCreateBootOption (
+  EFI_BOOT_MANAGER_LOAD_OPTION  *BootOption
+  )
+{
+  if ((BootOption->OptionalDataSize == sizeof (EFI_GUID)) &&
+      CompareGuid ((EFI_GUID *)BootOption->OptionalData, &mAutoCreateBootOptionGuid)
+      )
+  {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+/**
+  Check boot options status and cleanup if needed.
+
+  @param  VOID
+  @retval BOOLEAN   TRUE if cleanup is needed (invalid options found or no valid block device boot option)
+**/
+BOOLEAN
+CheckBootOptionsStatus (
   VOID
   )
 {
@@ -368,18 +395,92 @@ PlatformRemoveInvalidBootOptions (
   EFI_STATUS                      Status1;
   EFI_STATUS                      Status2;
   EFI_DEVICE_PATH_PROTOCOL        *TempPath;
+  BOOLEAN                         InvalidFound;
+  BOOLEAN                         HasValidAutoCreatedBlockDevice;
 
+  InvalidFound = FALSE;
+  HasValidAutoCreatedBlockDevice = FALSE;
   BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
+
   for (BootOptionIndex = 0; BootOptionIndex < BootOptionCount; ++BootOptionIndex) {
     TempPath = DuplicateDevicePath(BootOptions[BootOptionIndex].FilePath);
     Status1 = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &TempPath, &Handle1);
     Status2 = gBS->LocateDevicePath (&gEfiLoadFileProtocolGuid, &TempPath, &Handle2);
+
     if (EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
-      EfiBootManagerDeleteLoadOptionVariable(BootOptions[BootOptionIndex].OptionNumber, LoadOptionTypeBoot);
+      // Found invalid boot option
+      InvalidFound = TRUE;
+      DEBUG ((DEBUG_INFO, "Removing invalid boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
+      EfiBootManagerDeleteLoadOptionVariable(
+        BootOptions[BootOptionIndex].OptionNumber,
+        LoadOptionTypeBoot
+        );
+    } else if (!EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
+      // For valid block devices (not LoadFile devices), check if any are auto-created
+      if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex])) {
+        HasValidAutoCreatedBlockDevice = TRUE;
+      }
     }
   }
 
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+
+  // Need cleanup if either invalid options found or no valid block device boot option exists
+  return (InvalidFound || !HasValidAutoCreatedBlockDevice);
+}
+
+/**
+  Remove automatically created boot options.
+
+  @param  VOID
+  @retval VOID
+**/
+VOID
+RemoveAutoCreatedBootOptions (
+  VOID
+  )
+{
+  EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
+  UINTN                           BootOptionCount;
+  UINTN                           BootOptionIndex;
+
+  BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
+
+  for (BootOptionIndex = 0; BootOptionIndex < BootOptionCount; ++BootOptionIndex) {
+    if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex])) {
+      DEBUG ((DEBUG_INFO, "Removing auto-created boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
+      EfiBootManagerDeleteLoadOptionVariable(
+        BootOptions[BootOptionIndex].OptionNumber,
+        LoadOptionTypeBoot
+        );
+    }
+  }
+
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+}
+
+/**
+  Clean up boot options if needed:
+  1. Remove all boot options if any invalid entry is found
+  2. Remove all boot options if no valid auto created block device boot option exists
+  This ensures system can properly handle boot device changes.
+
+  @param  VOID
+  @retval VOID
+**/
+VOID
+PlatformCleanupBootOptions (
+  VOID
+  )
+{
+  BOOLEAN CleanupNeeded;
+
+  CleanupNeeded = CheckBootOptionsStatus();
+
+  if (CleanupNeeded) {
+    DEBUG ((DEBUG_INFO, "Cleanup needed: removing all auto created boot options\n"));
+    RemoveAutoCreatedBootOptions();
+  }
 }
 
 /** Boot a Fv Boot Option.
@@ -729,9 +830,9 @@ PlatformBootManagerAfterConsole (
   EfiBootManagerConnectAll ();
 
   //
-  // remove all invalid bootoptions.
+  // Clean up boot options
   //
-  PlatformRemoveInvalidBootOptions();
+  PlatformCleanupBootOptions();
 
   //
   // Enumerate all possible boot options.

@@ -23,6 +23,7 @@
   Rhct.aslc
   Pptt.aslc
   Dsdt/SG2044Dsdt.asl
+  Ssdt.asl
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec

@@ -32,6 +32,7 @@
   #
   DEFINE SECURE_BOOT_ENABLE      = TRUE
   DEFINE DEBUG_ON_SERIAL_PORT    = TRUE
+  DEFINE TPM2_ENABLE             = TRUE
 
   #
   # Network definition
@@ -232,6 +233,11 @@
   ManageabilityTransportLib|edk2-platforms/Silicon/Sophgo/Library/SophgoManageabilityTransportSerialLib/Dxe/DxeManageabilityTransportSerial.inf
   SophgoNs16550Lib|edk2-platforms/Silicon/Sophgo/Library/SophgoNs16550Lib/SophgoNs16550.inf
 
+!if $(TPM2_ENABLE) == TRUE  
+  Tpm2CommandLib|SecurityPkg/Library/Tpm2CommandLib/Tpm2CommandLib.inf
+  Tcg2PpVendorLib|SecurityPkg/Library/Tcg2PpVendorLibNull/Tcg2PpVendorLibNull.inf
+!endif
+
 [LibraryClasses.common]
   #
   # Secure Boot dependencies
@@ -297,6 +303,7 @@
 
   ResetSystemLib|OvmfPkg/RiscVVirt/Library/ResetSystemLib/BaseResetSystemLib.inf
   DmaLib|EmbeddedPkg/Library/NonCoherentDmaLib/NonCoherentDmaLib.inf
+
 [LibraryClasses.common.SEC]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
   ExtractGuidedSectionLib|MdePkg/Library/BaseExtractGuidedSectionLib/BaseExtractGuidedSectionLib.inf
@@ -325,7 +332,7 @@
 !endif
 
 [LibraryClasses.common.PEIM]
-  FirmwareContextProcessorSpecificLib|Platform/RISC-V/PlatformPkg/Library/FirmwareContextProcessorSpecificLib/FirmwareContextProcessorSpecificLib.inf
+  PcdLib|MdePkg/Library/PeiPcdLib/PeiPcdLib.inf
   HobLib|MdePkg/Library/PeiHobLib/PeiHobLib.inf
   MemoryAllocationLib|MdePkg/Library/PeiMemoryAllocationLib/PeiMemoryAllocationLib.inf
   PeimEntryPoint|MdePkg/Library/PeimEntryPoint/PeimEntryPoint.inf
@@ -555,6 +562,7 @@
   gSophgoTokenSpaceGuid.PcdPhyResetGpioPin|28
   gSophgoTokenSpaceGuid.PcdDwMac4DefaultMacAddress|0x12345678ABCD
 !endif
+
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|400000000
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|25000000
@@ -562,8 +570,22 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x7030001000
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|500000000
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate|115200
-
   gSophgoTokenSpaceGuid.PcdServerNamePrefix|L"SR"
+
+!if $(TPM2_ENABLE) == TRUE  
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmPlatformClass|0x02
+  gEfiSecurityPkgTokenSpaceGuid.PcdStatusCodeSubClassTpmDevice|0x010E0000
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2InitializationPolicy|1
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2SelfTestPolicy|1
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2ScrtmPolicy|0
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmAutoDetection|FALSE
+  gEfiMdeModulePkgTokenSpaceGuid.PcdTcgPfpMeasurementRevision|0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdImageProtectionPolicy|0x00000000
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmPhysicalPresence|TRUE
+  gSophgoTokenSpaceGuid.PcdTpm2GpioBaseAddress|0x704000b000
+  gSophgoTokenSpaceGuid.PcdTpm2SpiBaseAddress|0x7030004000
+  gSophgoTokenSpaceGuid.PcdTopBaseAddress|0x7050000000
+!endif
 
 ################################################################################
 #
@@ -600,6 +622,21 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x0
 !endif
 
+!if $(TPM2_ENABLE) == TRUE  
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmInitializationPolicy|1
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmInstanceGuid|{0x5a, 0xf2, 0x6b, 0x28, 0xc3, 0xc2, 0x8c, 0x40, 0xb3, 0xb4, 0x25, 0xe6, 0x75, 0x8b, 0x73, 0x17}
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpmBaseAddress|0xFED40000
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcgPhysicalPresenceInterfaceVer|"1.3"
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2AcpiTableRev|3
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2CurrentIrqNum|0
+  gEfiSecurityPkgTokenSpaceGuid.PcdActiveTpmInterfaceType|0x0
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2AcpiTableLaml|0
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2AcpiTableLasa|0
+  gEfiSecurityPkgTokenSpaceGuid.PcdFirmwareDebuggerInitialized|FALSE
+  gEfiSecurityPkgTokenSpaceGuid.PcdTpm2HashMask|0x00000002
+  gEfiSecurityPkgTokenSpaceGuid.PcdTcg2HashAlgorithmBitmap|3
+!endif
+
 ################################################################################
 #
 # Components Section - list of all EDK II Modules needed by this Platform.
@@ -629,15 +666,40 @@
   }
 
   MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf  {
-    <LibraryClasses>  
+    <LibraryClasses>
+    PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
     ExtractGuidedSectionLib|MdePkg/Library/PeiExtractGuidedSectionLib/PeiExtractGuidedSectionLib.inf
   }
 
   Platform/RISC-V/PlatformPkg/Universal/Pei/PlatformPei/PlatformPei.inf  {
     <LibraryClasses>
+    PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
     PeiResourcePublicationLib|MdePkg/Library/PeiResourcePublicationLib/PeiResourcePublicationLib.inf
     RiscVCoreplexInfoLib|Platform/RISC-V/PlatformPkg/Library/PeiCoreInfoHobLibNull/PeiCoreInfoHobLib.inf  
   }
+
+  MdeModulePkg/Universal/Variable/Pei/VariablePei.inf
+  MdeModulePkg/Universal/FaultTolerantWritePei/FaultTolerantWritePei.inf
+  MdeModulePkg/Universal/PCD/Pei/Pcd.inf  {
+    <LibraryClasses>
+    PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf
+  }
+
+!if $(TPM2_ENABLE) == TRUE
+  SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf  {
+    <LibraryClasses>
+    Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterPei.inf
+    NULL|Silicon/Sophgo/Library/Tpm2DeviceLibDTpm/Tpm2InstanceLibDTpmPei.inf
+    HashLib|SecurityPkg/Library/HashLibTpm2/HashLibTpm2.inf
+  }
+  Silicon/Sophgo/Drivers/Tcg2Config/Tcg2ConfigPei.inf {
+    <LibraryClasses>
+    MmUnblockMemoryLib|MdePkg/Library/MmUnblockMemoryLib/MmUnblockMemoryLibNull.inf
+    Tpm12CommandLib|SecurityPkg/Library/Tpm12CommandLib/Tpm12CommandLib.inf
+    Tpm12DeviceLib|SecurityPkg/Library/Tpm12DeviceLibDTpm/Tpm12DeviceLibDTpm.inf
+  }
+  SecurityPkg/Tcg/PhysicalPresencePei/PhysicalPresencePei.inf
+!endif
 
   #
   # DXE Phase modules
@@ -872,6 +934,24 @@
       NULL|SecurityPkg/Library/DxeTpm2MeasureBootLib/DxeTpm2MeasureBootLib.inf
 !endif
   }
+
+!if $(TPM2_ENABLE) == TRUE  
+  Silicon/Sophgo/Drivers/Tcg2Dxe/Tcg2Dxe.inf  {
+    <LibraryClasses>
+    Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
+    NULL|Silicon/Sophgo/Library/Tpm2DeviceLibDTpm/Tpm2InstanceLibDTpmDxe.inf
+    HashLib|SecurityPkg/Library/HashLibTpm2/HashLibTpm2.inf
+    PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
+    Tcg2PhysicalPresenceLib|SecurityPkg/Library/DxeTcg2PhysicalPresenceLib/DxeTcg2PhysicalPresenceLib.inf
+  }
+  Silicon/Sophgo/Drivers/Tcg2Config/Tcg2ConfigDxe.inf {
+    <LibraryClasses>
+    Tpm2DeviceLib|SecurityPkg/Library/Tpm2DeviceLibRouter/Tpm2DeviceLibRouterDxe.inf
+    NULL|Silicon/Sophgo/Library/Tpm2DeviceLibDTpm/Tpm2InstanceLibDTpmDxe.inf
+    PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
+    Tcg2PhysicalPresenceLib|SecurityPkg/Library/DxeTcg2PhysicalPresenceLib/DxeTcg2PhysicalPresenceLib.inf
+  }
+!endif
 
 !if $(SECURE_BOOT_ENABLE) == TRUE
   SecurityPkg/VariableAuthenticated/SecureBootConfigDxe/SecureBootConfigDxe.inf

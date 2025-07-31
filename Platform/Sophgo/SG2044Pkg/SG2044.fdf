@@ -263,6 +263,14 @@ INF Features/ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/IpmiBootDxe/IpmiBootDxe.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfigDxe/BmcConfig.inf
 
+#
+# TPM2 Dxe
+#
+!if $(TPM2_ENABLE) == TRUE
+  INF Silicon/Sophgo/Drivers/Tcg2Dxe/Tcg2Dxe.inf
+  INF Silicon/Sophgo/Drivers/Tcg2Config/Tcg2ConfigDxe.inf
+!endif
+
 ################################################################################
 
 [FV.FVMAIN_COMPACT]
@@ -286,8 +294,24 @@ FvNameGuid         = 02CBA7CB-BDE9-4934-A182-9043BE539261
 
 INF Silicon/Sophgo/Core/Sec/PeilessSec.inf
 INF Silicon/Sophgo/Core/Pei/PeiMain.inf
-INF Platform/RISC-V/PlatformPkg/Universal/Pei/PlatformPei/PlatformPei.inf 
+
+#
+#Pei phase modules
+#
+INF Platform/RISC-V/PlatformPkg/Universal/Pei/PlatformPei/PlatformPei.inf
+INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
+INF MdeModulePkg/Universal/Variable/Pei/VariablePei.inf
+INF MdeModulePkg/Universal/FaultTolerantWritePei/FaultTolerantWritePei.inf
 INF MdeModulePkg/Core/DxeIplPeim/DxeIpl.inf
+
+#
+#TPM2 modules
+#
+!if $(TPM2_ENABLE) == TRUE
+  INF SecurityPkg/Tcg/Tcg2Pei/Tcg2Pei.inf
+  INF Silicon/Sophgo/Drivers/Tcg2Config/Tcg2ConfigPei.inf
+  INF SecurityPkg/Tcg/PhysicalPresencePei/PhysicalPresencePei.inf
+!endif
 
 FILE FV_IMAGE = 9E21FD93-9C72-4c15-8C4B-E77F1DB2D792 {
    SECTION GUIDED EE4E5898-3914-4259-9D6E-DC7BD79403CF PROCESSING_REQUIRED = TRUE {

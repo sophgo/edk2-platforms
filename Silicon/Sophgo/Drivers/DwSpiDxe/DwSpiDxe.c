@@ -976,7 +976,7 @@ SpiHwInit (
     Dws->DfsOffset = CTRLR0_DFS_OFFSET;
   }
 
-  DEBUG ((DEBUG_ERROR,"[Spi%u base: 0x%lx, MaxFreq: %u, CS num: %u, FIFO depth/width: %u/%u, Version: %c.%c%c%c]\n",
+  DEBUG ((DEBUG_VERBOSE,"[Spi%u base: 0x%lx, MaxFreq: %u, CS num: %u, FIFO depth/width: %u/%u, Version: %c.%c%c%c]\n",
           Dws->BusNum, Dws->Regs, Dws->MaxFreq, Dws->NumCs,
           Dws->FifoLen, (Dws->DfsOffset == CTRLR0_DFS_OFFSET) ? 16 : 32,
           Dws->Version >> 24, Dws->Version >> 16,

@@ -1090,7 +1090,7 @@ AcpiPlatformDxeEntryPoint (
   }
 
   if (IniConfIniParse (NULL) < 0) {
-    DEBUG ((DEBUG_ERROR, "Config INI parse fail.\n"));
+    DEBUG ((DEBUG_VERBOSE, "Config INI parse fail.\n"));
   }
 
   Status = UpdateAcpiDsdtTable ();

@@ -110,7 +110,7 @@ IsIniFileExist (
 
   if (AsciiStrnCmp (IniHeader, MemoryData, Length)) {
     DEBUG ((
-      DEBUG_ERROR,
+      DEBUG_VERBOSE,
       "Not found conf.ini file, no header: \"%a\"\n",
       IniHeader
       ));

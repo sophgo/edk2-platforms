@@ -361,9 +361,9 @@ DwPcieEnableMaster (
 
   /* class code */
   /* program interface, bridge program interface always 0 */
-  DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET, 0);
+  DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET, PCI_IF_BRIDGE_P2P);
   /* sub class code */
-  DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET + 1, PCI_CLASS_BRIDGE_HOST);
+  DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET + 1, PCI_CLASS_BRIDGE_P2P);
   /* base class code */
   DwPcieDbiWrite8(Pcie, PCI_CLASSCODE_OFFSET + 2, PCI_CLASS_BRIDGE);
 

@@ -30,6 +30,11 @@ Scope(_SB)
 
   Device (MSI) {        // PCIe-MSI
     Name(_HID, "SOPH0001")
+
+    Name (_DEP, Package () {
+      \_SB.PLIC
+    })
+
     Name(_CRS, ResourceTemplate() {
       QWordMemory (
         ResourceProducer, PosDecode,

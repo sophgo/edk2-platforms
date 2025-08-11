@@ -16,12 +16,8 @@
 #include <Library/PcdLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/BaseMemoryLib.h>
-#include <Include/MmcHost.h>
 
 #include "SdHci.h"
-
-#define SDCARD_INIT_FREQ  (200 * 1000)
-#define SDCARD_TRAN_FREQ  (6 * 1000 * 1000)
 
 /**
   Return the clock rate of SD card.
@@ -30,11 +26,11 @@
 
 **/
 INT32
-BmGetSdClk (
+DwcGetSdClk (
   VOID
   )
 {
-  return 100*1000*1000;
+  return FixedPcdGet32(PcdSDIOSourceClockFrequency);
 }
 
 /**
@@ -58,9 +54,10 @@ SdSendCmdWithData (
   UINT32  State;
   UINT32  DmaAddr;
   UINT32  Flags;
+  UINT32  ResTypeFromFlags;
   UINT32  Timeout;
 
-  Base  = BmParams.RegBase;
+  Base  = DwcParams.RegBase;
   Mode  = 0;
   Flags = 0;
 
@@ -73,19 +70,27 @@ SdSendCmdWithData (
   switch (Cmd->CmdIdx) {
     case MMC_CMD17:
     case MMC_CMD18:
+    case MMC_ACMD22:
     case MMC_ACMD51:
       Mode = SDHCI_TRNS_BLK_CNT_EN | SDHCI_TRNS_MULTI | SDHCI_TRNS_READ;
-      if (!(BmParams.Flags & SD_USE_PIO))
+      if (!(DwcParams.Flags & SD_USE_PIO))
         Mode |= SDHCI_TRNS_DMA;
       break;
     case MMC_CMD24:
     case MMC_CMD25:
       Mode = (SDHCI_TRNS_BLK_CNT_EN | SDHCI_TRNS_MULTI) & ~SDHCI_TRNS_READ;
-      if (!(BmParams.Flags & SD_USE_PIO))
+      if (!(DwcParams.Flags & SD_USE_PIO))
         Mode |= SDHCI_TRNS_DMA;
       break;
     default:
-      ASSERT(0);
+      DEBUG ((DEBUG_MMCHOST_SD_ERROR, "EFI_INVALID_PARAMETER\n"));
+      return EFI_INVALID_PARAMETER;
+  }
+
+  // make sure dat line is clear if necessary
+  while (1) {
+    if (!(MmioRead32 (Base + SDHCI_PSTATE) & SDHCI_CMD_INHIBIT_DAT))
+      break;
   }
 
   MmioWrite16 (Base + SDHCI_TRANSFER_MODE, Mode);
@@ -112,30 +117,32 @@ SdSendCmdWithData (
 
   // check Cmd complete if necessary
   if ((MmioRead16 (Base + SDHCI_TRANSFER_MODE) & SDHCI_TRNS_RESP_INT) == 0) {
-    Timeout = 100000;
+    Timeout = TIMEOUT_CMD_COMPLETE;
     while (1) {
       State = MmioRead16 (Base + SDHCI_INT_STATUS);
       if (State & SDHCI_INT_ERROR) {
-        DEBUG ((DEBUG_ERROR, "%a: interrupt error: 0x%x 0x%x\n", __func__,  MmioRead16 (Base + SDHCI_INT_STATUS),
+        DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: interrupt error: 0x%x 0x%x\n",
+                                __func__,  MmioRead16 (Base + SDHCI_INT_STATUS),
                                 MmioRead16 (Base + SDHCI_ERR_INT_STATUS)));
         return EFI_DEVICE_ERROR;
       }
       if (State & SDHCI_INT_CMD_COMPLETE) {
-        MmioWrite16 (Base + SDHCI_INT_STATUS, State | SDHCI_INT_CMD_COMPLETE);
+        MmioWrite16 (Base + SDHCI_INT_STATUS, SDHCI_INT_CMD_COMPLETE);
         break;
       }
 
       gBS->Stall (1);
       if (!Timeout--) {
-        DEBUG ((DEBUG_ERROR, "%a: Timeout!\n", __func__));
+        DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: Timeout!\n", __func__));
         return EFI_TIMEOUT;
       }
     }
 
     // get Cmd respond
-    if (Flags != SDHCI_CMD_RESP_NONE)
+    ResTypeFromFlags = Flags & FLAG_RESPONSE_MSK;
+    if (ResTypeFromFlags != SDHCI_CMD_RESP_NONE)
       Cmd->Response[0] = MmioRead32 (Base + SDHCI_RESPONSE_01);
-    if (Flags & SDHCI_CMD_RESP_LONG) {
+    if (ResTypeFromFlags == SDHCI_CMD_RESP_LONG) {
       Cmd->Response[1] = MmioRead32 (Base + SDHCI_RESPONSE_23);
       Cmd->Response[2] = MmioRead32 (Base + SDHCI_RESPONSE_45);
       Cmd->Response[3] = MmioRead32 (Base + SDHCI_RESPONSE_67);
@@ -143,22 +150,22 @@ SdSendCmdWithData (
   }
 
   // check dma/transfer complete
-  if (!(BmParams.Flags & SD_USE_PIO)) {
+  if (!(DwcParams.Flags & SD_USE_PIO)) {
     while (1) {
       State = MmioRead16 (Base + SDHCI_INT_STATUS);
       if (State & SDHCI_INT_ERROR) {
-        DEBUG ((DEBUG_ERROR, "%a: interrupt error: 0x%x 0x%x\n", __func__,  MmioRead16 (Base + SDHCI_INT_STATUS),
+        DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: interrupt error: 0x%x 0x%x\n", __func__,  MmioRead16 (Base + SDHCI_INT_STATUS),
                                 MmioRead16 (Base + SDHCI_ERR_INT_STATUS)));
         return EFI_DEVICE_ERROR;
       }
 
       if (State & SDHCI_INT_XFER_COMPLETE) {
-        MmioWrite16 (Base + SDHCI_INT_STATUS, State);
+        MmioWrite16 (Base + SDHCI_INT_STATUS, SDHCI_INT_XFER_COMPLETE);
         break;
       }
 
       if (State & SDHCI_INT_DMA_END) {
-        MmioWrite16 (Base + SDHCI_INT_STATUS, State);
+        MmioWrite16 (Base + SDHCI_INT_STATUS, SDHCI_INT_DMA_END);
         if (MmioRead16 (Base + SDHCI_HOST_CONTROL2) & SDHCI_HOST_VER4_ENABLE) {
           DmaAddr = MmioRead32 (Base + SDHCI_ADMA_SA_LOW);
           MmioWrite32 (Base + SDHCI_ADMA_SA_LOW, DmaAddr);
@@ -195,10 +202,10 @@ SdSendCmdWithoutData (
   UINT32  State;
   UINT32  Flags;
   UINT32  Timeout;
+  UINT32  ResTypeFromFlags;
 
-  Base    = BmParams.RegBase;
+  Base    = DwcParams.RegBase;
   Flags   = 0x0;
-  Timeout = 10000;
 
   // make sure Cmd line is clear
   while (1) {
@@ -224,8 +231,14 @@ SdSendCmdWithoutData (
       Flags |= SDHCI_CMD_INDEX;
   }
 
-  // make sure dat line is clear if necessary
-  if (Flags != SDHCI_CMD_RESP_NONE) {
+  //
+  // While issuing Abort CMD using CMD12/CMD52 or reset CMD
+  // using CMD0/CMD52, CMD_TYPE field shall be set to 0x3.
+  // In case CMD0 is used for initialization set as 0x0
+  //
+  if (Cmd->CmdIdx == MMC_CMD12)
+    Flags |= SDHCI_CMD_ABORTCMD;
+  else if (Cmd->ResponseType & MMC_RESPONSE_R1B) {
     while (1) {
       if (!(MmioRead32 (Base + SDHCI_PSTATE) & SDHCI_CMD_INHIBIT_DAT))
         break;
@@ -237,30 +250,31 @@ SdSendCmdWithoutData (
   MmioWrite16 (Base + SDHCI_COMMAND, SDHCI_MAKE_CMD(Cmd->CmdIdx, Flags));
 
   // check Cmd complete
-  Timeout = 100000;
+  Timeout = TIMEOUT_CMD_COMPLETE;
   while (1) {
     State = MmioRead16 (Base + SDHCI_INT_STATUS);
     if (State & SDHCI_INT_ERROR) {
-      DEBUG ((DEBUG_ERROR, "%a: interrupt error: 0x%x 0x%x\n", __func__,  MmioRead16 (Base + SDHCI_INT_STATUS),
+      DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: interrupt error: 0x%x 0x%x\n", __func__,  MmioRead16 (Base + SDHCI_INT_STATUS),
                               MmioRead16 (Base + SDHCI_ERR_INT_STATUS)));
       return EFI_DEVICE_ERROR;
     }
     if (State & SDHCI_INT_CMD_COMPLETE) {
-      MmioWrite16 (Base + SDHCI_INT_STATUS, State | SDHCI_INT_CMD_COMPLETE);
+      MmioWrite16 (Base + SDHCI_INT_STATUS, SDHCI_INT_CMD_COMPLETE);
       break;
     }
 
     gBS->Stall (1);
     if (!Timeout--) {
-      DEBUG ((DEBUG_ERROR, "%a: Timeout!\n", __func__));
+      DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: Timeout!\n", __func__));
       return EFI_TIMEOUT;
     }
   }
 
   // get Cmd respond
-  if (!(Flags & SDHCI_CMD_RESP_NONE))
+  ResTypeFromFlags = Flags & FLAG_RESPONSE_MSK;
+  if (ResTypeFromFlags != SDHCI_CMD_RESP_NONE)
     Cmd->Response[0] = MmioRead32 (Base + SDHCI_RESPONSE_01);
-  if (Flags & SDHCI_CMD_RESP_LONG) {
+  if (ResTypeFromFlags == SDHCI_CMD_RESP_LONG) {
     Cmd->Response[1] = MmioRead32 (Base + SDHCI_RESPONSE_23);
     Cmd->Response[2] = MmioRead32 (Base + SDHCI_RESPONSE_45);
     Cmd->Response[3] = MmioRead32 (Base + SDHCI_RESPONSE_67);
@@ -284,7 +298,7 @@ SdSendCmdWithoutData (
 **/
 EFI_STATUS
 EFIAPI
-BmSdSendCmd (
+DwcSdSendCmd (
   IN  UINT32 Idx,
   IN  UINT32 Arg,
   IN  UINT32 RespType,
@@ -307,6 +321,7 @@ BmSdSendCmd (
     case MMC_CMD18:
     case MMC_CMD24:
     case MMC_CMD25:
+    case MMC_ACMD22:
     case MMC_ACMD51:
       Status = SdSendCmdWithData(&Cmd);
       break;
@@ -315,8 +330,8 @@ BmSdSendCmd (
   }
 
   if ((Status == EFI_SUCCESS) && (Response != NULL)) {
-    for (INT32 I = 0; I < 4; I++) {
-      *Response = Cmd.Response[I];
+    for (INT32 RspIndex = 0; RspIndex < MMC_RESPONSE_MAX; RspIndex++) {
+      *Response = Cmd.Response[RspIndex];
       Response++;
     }
   }
@@ -334,23 +349,23 @@ SdSetClk (
   IN INT32 Clk
   )
 {
-  INT32  I;
+  INT32  Index;
   INT32  Div;
   UINTN  Base;
 
   ASSERT (Clk > 0);
 
-  if (BmParams.ClkRate <= Clk) {
+  if (DwcParams.ClkRate <= Clk) {
     Div = 0;
   } else {
-    for (Div = 0x1; Div < 0xFF; Div++) {
-      if (BmParams.ClkRate / (2 * Div) <= Clk)
+    for (Div = 0x1; Div < 0x3FF; Div++) {
+      if (DwcParams.ClkRate / (2 * Div) <= Clk)
         break;
     }
   }
-  ASSERT (Div <= 0xFF);
+  ASSERT (Div <= 0x3FF);
 
-  Base = BmParams.RegBase;
+  Base = DwcParams.RegBase;
   if (MmioRead16 (Base + SDHCI_HOST_CONTROL2) & (1 << 15)) {
     //verbose("Use SDCLK Preset Value\n");
   } else {
@@ -358,31 +373,31 @@ SdSetClk (
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
             MmioRead16 (Base + SDHCI_CLK_CTRL) & ~0x9); // disable INTERNAL_CLK_EN and PLL_ENABLE
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
-            (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0xDF) | Div << 8); // set Clk Div
+            (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0x3F) | ((Div & 0xFF) << 8) | (((Div >> 8) & 0x3) << 6)); // set 10bits clk div
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
             MmioRead16 (Base + SDHCI_CLK_CTRL) | 0x1); // set INTERNAL_CLK_EN
 
-    for (I = 0; I <= 150000; I += 100) {
+    for (Index = 0; Index <= TIMEOUT_SET_CLK; Index += 100) {
       if (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0x2)
         break;
       gBS->Stall (100);
     }
 
-    if (I > 150000) {
-      DEBUG ((DEBUG_ERROR, "%a: SD INTERNAL_CLK_EN setting FAILED!\n", __func__));
+    if (Index > TIMEOUT_SET_CLK) {
+      DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: SD INTERNAL_CLK_EN setting FAILED!\n", __func__));
       ASSERT(0);
     }
 
     MmioWrite16 (Base + SDHCI_CLK_CTRL, MmioRead16 (Base + SDHCI_CLK_CTRL) | 0x8); // set PLL_ENABLE
 
-    for (I = 0; I <= 150000; I += 100) {
+    for (Index = 0; Index <= TIMEOUT_SET_CLK; Index += 100) {
       if (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0x2)
         return;
       gBS->Stall (100);
     }
   }
 
-  DEBUG ((DEBUG_INFO, "%a: SD PLL setting FAILED!\n", __func__));
+  DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: SD PLL setting FAILED!\n", __func__));
 }
 
 /**
@@ -396,23 +411,23 @@ SdChangeClk (
   IN INT32 Clk
   )
 {
-  INT32  I;
+  INT32  Index;
   INT32  Div;
   UINTN  Base;
 
   ASSERT (Clk > 0);
 
-  if (BmParams.ClkRate <= Clk) {
+  if (DwcParams.ClkRate <= Clk) {
     Div = 0;
   } else {
-    for (Div = 0x1; Div < 0xFF; Div++) {
-      if (BmParams.ClkRate / (2 * Div) <= Clk)
+    for (Div = 0x1; Div < 0x3FF; Div++) {
+      if (DwcParams.ClkRate / (2 * Div) <= Clk)
         break;
     }
   }
-  ASSERT (Div <= 0xFF);
+  ASSERT (Div <= 0x3FF);
 
-  Base = BmParams.RegBase;
+  Base = DwcParams.RegBase;
 
   MmioWrite16 (Base + SDHCI_CLK_CTRL,
           MmioRead16 (Base + SDHCI_CLK_CTRL) & ~(0x1 << 2)); // stop SD clock
@@ -425,7 +440,8 @@ SdChangeClk (
             MmioRead16 (Base + SDHCI_HOST_CONTROL2) & ~0x7); // clr UHS_MODE_SEL
   } else {
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
-            (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0xDF) | Div << 8); // set Clk Div
+            (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0x3F) | ((Div & 0xFF) << 8) | (((Div >> 8) & 0x3) << 6)); // set 10bits clk div
+
     MmioWrite16 (Base + SDHCI_CLK_CTRL,
             MmioRead16 (Base + SDHCI_CLK_CTRL) & ~(0x1 << 5)); // CLK_GEN_SELECT
   }
@@ -433,13 +449,13 @@ SdChangeClk (
   MmioWrite16 (Base + SDHCI_CLK_CTRL,
           MmioRead16 (Base + SDHCI_CLK_CTRL) | 0xc); // enable  PLL_ENABLE
 
-  for (I = 0; I <= 150000; I += 100) {
+  for (Index = 0; Index <= TIMEOUT_SET_CLK; Index += 100) {
     if (MmioRead16 (Base + SDHCI_CLK_CTRL) & 0x2)
       return;
     gBS->Stall (100);
   }
 
-  DEBUG ((DEBUG_INFO, "%a: SD PLL setting FAILED!\n", __func__));
+  DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: SD PLL setting FAILED!\n", __func__));
 }
 
 /**
@@ -452,17 +468,17 @@ SdChangeClk (
 
 **/
 INT32
-BmSdCardDetect (
+DwcSdCardDetect (
   VOID
   )
 {
   UINTN  Base;
   UINTN  Reg;
 
-  Base = BmParams.RegBase;
+  Base = DwcParams.RegBase;
 
-  if (BmParams.CardIn != SDCARD_STATUS_UNKNOWN)
-    return BmParams.CardIn;
+  if (DwcParams.CardIn != SDCARD_STATUS_UNKNOWN)
+    return DwcParams.CardIn;
 
   MmioWrite16 (Base + SDHCI_INT_STATUS_EN,
           MmioRead16 (Base + SDHCI_INT_STATUS_EN) | SDHCI_INT_CARD_INSERTION_EN);
@@ -470,11 +486,11 @@ BmSdCardDetect (
   Reg = MmioRead32 (Base + SDHCI_PSTATE);
 
   if (Reg & SDHCI_CARD_INSERTED)
-    BmParams.CardIn = SDCARD_STATUS_INSERTED;
+    DwcParams.CardIn = SDCARD_STATUS_INSERTED;
   else
-    BmParams.CardIn = SDCARD_STATUS_NOT_INSERTED;
+    DwcParams.CardIn = SDCARD_STATUS_NOT_INSERTED;
 
-  return BmParams.CardIn;
+  return DwcParams.CardIn;
 }
 
 /**
@@ -489,8 +505,8 @@ SdHwInit (
 {
   UINTN  Base;
 
-  Base                = BmParams.RegBase;
-  BmParams.VendorBase = Base + (MmioRead16 (Base + P_VENDOR_SPECIFIC_AREA) & ((1 << 12) - 1));
+  Base                 = DwcParams.RegBase;
+  DwcParams.VendorBase = Base + (MmioRead16 (Base + P_VENDOR_SPECIFIC_AREA) & ((1 << 12) - 1));
 
   // deasset reset of phy
   MmioWrite32 (Base + SDHCI_P_PHY_CNFG, MmioRead32 (Base + SDHCI_P_PHY_CNFG) | (1 << PHY_CNFG_PHY_RSTN));
@@ -553,24 +569,24 @@ SdHwInit (
 
 **/
 EFI_STATUS
-BmSdSetIos (
+DwcSdSetIos (
   IN UINT32 Clk,
   IN UINT32 Width
   )
 {
   switch (Width) {
     case MMC_BUS_WIDTH_1:
-      MmioWrite8 (BmParams.RegBase + SDHCI_HOST_CONTROL,
-              MmioRead8 (BmParams.RegBase + SDHCI_HOST_CONTROL) &
+      MmioWrite8 (DwcParams.RegBase + SDHCI_HOST_CONTROL,
+              MmioRead8 (DwcParams.RegBase + SDHCI_HOST_CONTROL) &
               ~SDHCI_DAT_XFER_WIDTH);
       break;
     case MMC_BUS_WIDTH_4:
-      MmioWrite8 (BmParams.RegBase + SDHCI_HOST_CONTROL,
-              MmioRead8 (BmParams.RegBase + SDHCI_HOST_CONTROL) |
+      MmioWrite8 (DwcParams.RegBase + SDHCI_HOST_CONTROL,
+              MmioRead8 (DwcParams.RegBase + SDHCI_HOST_CONTROL) |
               SDHCI_DAT_XFER_WIDTH);
       break;
     default:
-      ASSERT (0);
+      return EFI_UNSUPPORTED;
   }
 
   SdChangeClk (Clk);
@@ -591,7 +607,7 @@ BmSdSetIos (
 
 **/
 EFI_STATUS
-BmSdPrepare (
+DwcSdPrepare (
   IN INT32 Lba,
   IN UINTN Buf,
   IN UINTN Size
@@ -611,22 +627,30 @@ BmSdPrepare (
     BlockSize = MMC_BLOCK_SIZE;
     BlockCnt  = Size / MMC_BLOCK_SIZE;
   } else {
-    // ACMD51
-    ASSERT (((LoadAddr & 8) == 0) && ((Size % 8) == 0));
-    BlockSize = 8;
-    BlockCnt  = Size / 8;
+    if (Size == 4) {
+      // ACMD22
+      BlockSize = 4;
+      BlockCnt  = 1;
+    } else {
+      // ACMD51
+      if (((LoadAddr & 8) != 0) || ((Size % 8) != 0))
+        return EFI_UNSUPPORTED;
+      BlockSize = 8;
+      BlockCnt  = Size / 8;
+    }
   }
 
-  Base = BmParams.RegBase;
+  Base = DwcParams.RegBase;
 
-  if (!(BmParams.Flags & SD_USE_PIO)) {
+  if (!(DwcParams.Flags & SD_USE_PIO)) {
     if (MmioRead16 (Base + SDHCI_HOST_CONTROL2) & SDHCI_HOST_VER4_ENABLE) {
       MmioWrite32 (Base + SDHCI_ADMA_SA_LOW, LoadAddr);
       MmioWrite32 (Base + SDHCI_ADMA_SA_HIGH, (LoadAddr >> 32));
       MmioWrite32 (Base + SDHCI_DMA_ADDRESS, BlockCnt);
       MmioWrite16 (Base + SDHCI_BLOCK_COUNT, 0);
     } else {
-      ASSERT((LoadAddr >> 32) == 0);
+      if ((LoadAddr >> 32) != 0)
+        return EFI_UNSUPPORTED;
       MmioWrite32 (Base + SDHCI_DMA_ADDRESS, LoadAddr);
       MmioWrite16 (Base + SDHCI_BLOCK_COUNT, BlockCnt);
     }
@@ -647,6 +671,7 @@ BmSdPrepare (
   return EFI_SUCCESS;
 }
 
+
 /**
   SD card sends command to read data blocks.
 
@@ -659,7 +684,7 @@ BmSdPrepare (
 
 **/
 EFI_STATUS
-BmSdRead (
+DwcSdRead (
   IN INT32   Lba,
   IN UINT32* Buf,
   IN UINTN   Size
@@ -673,35 +698,36 @@ BmSdRead (
   UINT32  Status;
 
   Timeout   = 0;
-  Base      = BmParams.RegBase;
+  Base      = DwcParams.RegBase;
   Data      = Buf;
   BlockSize = 0;
   BlockCnt  = 0;
   Status    = 0;
 
-  if (BmParams.Flags & SD_USE_PIO) {
-    BlockSize = MmioRead16 (Base + SDHCI_BLOCK_SIZE);
+  if (DwcParams.Flags & SD_USE_PIO) {
+    BlockSize = MmioRead16 (Base + SDHCI_BLOCK_SIZE) & 0xfff;
     BlockCnt  = Size / BlockSize;
     BlockSize /= 4;
 
-    for (INT32 I = 0; I < BlockCnt; ) {
-      Status = MmioRead16 (Base + SDHCI_INT_STATUS);
-      if ((Status & SDHCI_INT_BUF_RD_READY) &&
-          (MmioRead32 (Base + SDHCI_PSTATE) & SDHCI_BUF_RD_ENABLE)) {
-        MmioWrite16 (Base + SDHCI_INT_STATUS, SDHCI_INT_BUF_RD_READY);
-        for (INT32 j = 0; j < BlockSize; j++) {
+    for (INT32 IndexBlock = 0; IndexBlock < BlockCnt; ) {
+      if (MmioRead32 (Base + SDHCI_PSTATE) & SDHCI_BUF_RD_ENABLE) {
+        for (INT32 IndexData = 0; IndexData < BlockSize; ++IndexData) {
           *(Data++) = MmioRead32 (Base + SDHCI_BUF_DATA_R);
         }
 
         Timeout = 0;
-        I++;
+        IndexBlock++;
       } else {
         gBS->Stall (1);
         Timeout++;
       }
 
-      if (Timeout >= 10000) {
-        DEBUG ((DEBUG_INFO, "%a: sdhci read data Timeout\n", __func__));
+      if (Timeout >= TIMEOUT_BUFFER_READ) {
+        DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a: sdhci read data Timeout, BlockCnt index: %d\n",
+                            __func__, IndexBlock));
+        DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SDHCI_INT_STATUS: %x, SDHCI_PSTATE: %x\n",
+                            MmioRead16 (Base + SDHCI_INT_STATUS),
+                            MmioRead32 (Base + SDHCI_PSTATE)));
         goto Timeout;
       }
     }
@@ -710,8 +736,7 @@ BmSdRead (
     while (1) {
       Status = MmioRead16 (Base + SDHCI_INT_STATUS);
       if (Status & SDHCI_INT_XFER_COMPLETE) {
-        MmioWrite16 (Base + SDHCI_INT_STATUS,
-                Status | SDHCI_INT_XFER_COMPLETE);
+        MmioWrite16 (Base + SDHCI_INT_STATUS, SDHCI_INT_XFER_COMPLETE);
 
         return EFI_SUCCESS;
       } else {
@@ -719,8 +744,8 @@ BmSdRead (
         Timeout++;
       }
 
-      if (Timeout >= 10000) {
-        DEBUG ((DEBUG_INFO, "%a:wait xfer complete Timeout\n", __func__));
+      if (Timeout >= TIMEOUT_BUFFER_READ) {
+        DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a:wait xfer complete Timeout\n", __func__));
         goto Timeout;
       }
     }
@@ -745,7 +770,7 @@ Timeout:
 
 **/
 EFI_STATUS
-BmSdWrite (
+DwcSdWrite (
   IN INT32   Lba,
   IN UINT32* Buf,
   IN UINTN   Size
@@ -759,40 +784,33 @@ BmSdWrite (
   UINT32  Status;
 
   Timeout   = 0;
-  Base      = BmParams.RegBase;
+  Base      = DwcParams.RegBase;
   Data      = Buf;
   BlockSize = 0;
   BlockCnt  = 0;
   Status    = 0;
 
-  if (BmParams.Flags & SD_USE_PIO) {
-    BlockSize = MmioRead16 (Base + SDHCI_BLOCK_SIZE);
+  if (DwcParams.Flags & SD_USE_PIO) {
+    BlockSize = MmioRead16 (Base + SDHCI_BLOCK_SIZE) & 0xfff;
     BlockCnt = Size / BlockSize;
     BlockSize /= 4;
 
-    for (INT32 j = 0; j < BlockSize; j++) {
-      MmioWrite32 (Base + SDHCI_BUF_DATA_R, *(Data++));
-    }
-
-    for (INT32 I = 0; I < BlockCnt-1; ) {
-      Status = MmioRead16 (Base + SDHCI_INT_STATUS);
-      if ((Status & SDHCI_INT_BUF_WR_READY) &&
-          (MmioRead32 (Base + SDHCI_PSTATE) &
-          SDHCI_BUF_WR_ENABLE)) {
-        MmioWrite16 (Base + SDHCI_INT_STATUS, SDHCI_INT_BUF_WR_READY);
-        for (INT32 j = 0; j < BlockSize; j++) {
+    for (INT32 IndexBlock = 0; IndexBlock < BlockCnt; ) {
+      if (MmioRead32 (Base + SDHCI_PSTATE) & SDHCI_BUF_WR_ENABLE) {
+        for (INT32 IndexData = 0; IndexData < BlockSize; ++IndexData) {
           MmioWrite32 (Base + SDHCI_BUF_DATA_R, *(Data++));
         }
 
         Timeout = 0;
-        I++;
+        IndexBlock++;
       } else {
         gBS->Stall (1);
         Timeout++;
       }
 
-      if (Timeout >= 10000000) {
-        DEBUG ((DEBUG_INFO, "%a:sdhci write data Timeout\n", __func__));
+      if (Timeout >= TIMEOUT_BUFFER_WRITE) {
+        DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a:sdhci write data Timeout, BlockCnt index: %d\n",
+                            __func__, IndexBlock));
         goto Timeout;
       }
     }
@@ -801,8 +819,7 @@ BmSdWrite (
     while (1) {
       Status = MmioRead16 (Base + SDHCI_INT_STATUS);
       if (Status & SDHCI_INT_XFER_COMPLETE) {
-        MmioWrite16 (Base + SDHCI_INT_STATUS,
-                Status | SDHCI_INT_XFER_COMPLETE);
+        MmioWrite16 (Base + SDHCI_INT_STATUS, SDHCI_INT_XFER_COMPLETE);
 
         return EFI_SUCCESS;
       } else {
@@ -810,8 +827,8 @@ BmSdWrite (
         Timeout++;
       }
 
-      if (Timeout >= 10000) {
-        DEBUG ((DEBUG_INFO, "%a:wait xfer complete Timeout\n", __func__));
+      if (Timeout >= TIMEOUT_BUFFER_WRITE) {
+        DEBUG ((DEBUG_MMCHOST_SD_ERROR, "%a:wait xfer complete Timeout\n", __func__));
         goto Timeout;
       }
     }
@@ -821,6 +838,7 @@ BmSdWrite (
 Timeout:
   return EFI_TIMEOUT;
 }
+
 
 /**
   Initialize the SD PHY.
@@ -836,7 +854,7 @@ SdPhyInit (
   UINTN Base;
   INT32 RetryCount;
 
-  Base       = BmParams.RegBase;
+  Base       = DwcParams.RegBase;
   RetryCount = 100;
 
   // reset hardware
@@ -915,11 +933,11 @@ SdInit (
   IN UINT32 Flags
 )
 {
-  BmParams.ClkRate = BmGetSdClk ();
+  DwcParams.ClkRate = DwcGetSdClk ();
 
-  DEBUG ((DEBUG_INFO, "SD initializing %dHz\n", BmParams.ClkRate));
+  DEBUG ((DEBUG_MMCHOST_SD_INFO, "SD source %dHz, initializing %dHz\n", DwcParams.ClkRate, SDCARD_INIT_FREQ));
 
-  BmParams.Flags = Flags;
+  DwcParams.Flags = Flags;
 
   SdPhyInit ();
 

@@ -25,19 +25,14 @@
 #include <Protocol/EmbeddedExternalDevice.h>
 #include <Protocol/BlockIo.h>
 #include <Protocol/DevicePath.h>
-#include <Include/MmcHost.h>
 
 #include "SdHci.h"
 
 #define SDHOST_BLOCK_BYTE_LENGTH  512
 
-#define DEBUG_MMCHOST_SD          DEBUG_VERBOSE
-#define DEBUG_MMCHOST_SD_INFO     DEBUG_INFO
-#define DEBUG_MMCHOST_SD_ERROR    DEBUG_ERROR
-
 STATIC BOOLEAN            mCardIsPresent   = FALSE;
 STATIC CARD_DETECT_STATE  mCardDetectState = CardDetectRequired;
-BM_SD_PARAMS              BmParams;
+DWC_SD_PARAMS             DwcParams;
 
 /**
   Check if the SD card is read-only.
@@ -108,7 +103,7 @@ SdSendCommand (
 {
   EFI_STATUS Status;
 
-  Status = BmSdSendCmd (MmcCmd, Argument, Type, Buffer);
+  Status = DwcSdSendCmd (MmcCmd, Argument, Type, Buffer);
 
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SdSendCommand Error, Status=%r.\n", Status));
@@ -141,10 +136,10 @@ SdReadBlockData (
 {
   EFI_STATUS Status;
 
-  ASSERT (Buffer != NULL);
-  ASSERT (Length % 4 == 0);
+  if ((Buffer == NULL) || (Length % 4 != 0))
+    return EFI_UNSUPPORTED;
 
-  Status = BmSdRead (Lba, Buffer, Length);
+  Status = DwcSdRead (Lba, Buffer, Length);
 
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SdReadBlockData Error, Status=%r.\n", Status));
@@ -177,10 +172,10 @@ SdWriteBlockData (
 {
   EFI_STATUS Status;
 
-  ASSERT (Buffer != NULL);
-  ASSERT (Length % SDHOST_BLOCK_BYTE_LENGTH == 0);
+  if ((Buffer == NULL) || (Length % SDHOST_BLOCK_BYTE_LENGTH != 0))
+    return EFI_UNSUPPORTED;
 
-  Status = BmSdWrite (Lba, Buffer, Length);
+  Status = DwcSdWrite (Lba, Buffer, Length);
 
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SdWriteBlockData Error, Status=%r.\n", Status));
@@ -214,7 +209,7 @@ SdSetIos (
   DEBUG ((DEBUG_MMCHOST_SD_INFO, "%a: Setting Freq %u Hz\n", __func__, BusClockFreq));
   DEBUG ((DEBUG_MMCHOST_SD_INFO, "%a: Setting BusWidth %u\n", __func__, BusWidth));
 
-  Status = BmSdSetIos (BusClockFreq,BusWidth);
+  Status = DwcSdSetIos (BusClockFreq,BusWidth);
 
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SdSetIos Error, Status=%r.\n", Status));
@@ -247,7 +242,7 @@ SdPrepare (
 {
   EFI_STATUS Status;
 
-  Status = BmSdPrepare (Lba, Buffer, Length);
+  Status = DwcSdPrepare (Lba, Buffer, Length);
 
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SdPrepare Error, Status=%r.\n", Status));
@@ -282,7 +277,7 @@ SdNotifyState (
 
   switch (State) {
     case MmcHwInitializationState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcHwInitializationState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcHwInitializationState\n"));
 
       EFI_STATUS Status = SdInit (SD_USE_PIO);
       if (EFI_ERROR (Status)) {
@@ -291,34 +286,34 @@ SdNotifyState (
       }
       break;
     case MmcIdleState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcIdleState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcIdleState\n"));
       break;
     case MmcReadyState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcReadyState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcReadyState\n"));
       break;
     case MmcIdentificationState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcIdentificationState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcIdentificationState\n"));
       break;
     case MmcStandByState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcStandByState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcStandByState\n"));
       break;
     case MmcTransferState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcTransferState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcTransferState\n"));
       break;
     case MmcSendingDataState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcSendingDataState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcSendingDataState\n"));
       break;
     case MmcReceiveDataState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcReceiveDataState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcReceiveDataState\n"));
       break;
     case MmcProgrammingState:
-      DEBUG ((DEBUG_MMCHOST_SD, "MmcProgrammingState\n", State));
+      DEBUG ((DEBUG_MMCHOST_SD, "MmcProgrammingState\n"));
       break;
     case MmcDisconnectState:
     case MmcInvalidState:
     default:
       DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SdHost: SdNotifyState(): Invalid State: %d\n", State));
-      ASSERT (0);
+      return EFI_DEVICE_ERROR;
   }
 
   return EFI_SUCCESS;
@@ -350,14 +345,13 @@ SdIsCardPresent (
   mCardDetectState = CardDetectInProgress;
   mCardIsPresent = FALSE;
 
-  if (BmSdCardDetect () == 1) {
+  if (DwcSdCardDetect () == 1) {
     mCardIsPresent = TRUE;
     goto out;
-  }
-  else {
+  } else {
     DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SdIsCardPresent: Error SdCardDetect.\n"));
-    mCardDetectState = CardDetectRequired;
-    return FALSE;
+    mCardIsPresent = FALSE;
+    goto out;
   }
 
   DEBUG ((DEBUG_MMCHOST_SD_INFO, "SdIsCardPresent: Not detected.\n"));
@@ -431,11 +425,11 @@ SdHostInitialize (
     }
   }
 
-  BmParams.RegBase  = Base;
-  BmParams.ClkRate  = 50 * 1000 * 1000;
-  BmParams.BusWidth = MMC_BUS_WIDTH_4;
-  BmParams.Flags    = 0;
-  BmParams.CardIn   = SDCARD_STATUS_UNKNOWN;
+  DwcParams.RegBase  = Base;
+  DwcParams.ClkRate  = 50 * 1000 * 1000;
+  DwcParams.BusWidth = MMC_BUS_WIDTH_4;
+  DwcParams.Flags    = 0;
+  DwcParams.CardIn   = SDCARD_STATUS_UNKNOWN;
 
   Status = gBS->InstallMultipleProtocolInterfaces (
     &Handle,

@@ -11,6 +11,9 @@
 #ifndef _SD_HCI_H_
 #define _SD_HCI_H_
 
+#include "../../Include/MmcHost.h"
+
+#define SDCARD_INIT_FREQ                (200 * 1000)
 #define SDIO_BASE                       (FixedPcdGet64(PcdSDIOBase))
 #define SDHCI_DMA_ADDRESS               0x00
 #define SDHCI_BLOCK_SIZE                0x04
@@ -154,6 +157,16 @@
 
 #define SD_USE_PIO                    0x1
 
+#define DEBUG_MMCHOST_SD              DEBUG_VERBOSE
+#define DEBUG_MMCHOST_SD_INFO         DEBUG_INFO
+#define DEBUG_MMCHOST_SD_ERROR        DEBUG_ERROR
+
+#define FLAG_RESPONSE_MSK             0b11
+#define TIMEOUT_CMD_COMPLETE          100000
+#define TIMEOUT_BUFFER_READ           100000
+#define TIMEOUT_BUFFER_WRITE          250000
+#define TIMEOUT_SET_CLK               150000
+
 /**
   card detect status
   -1: haven't check the card detect register
@@ -168,7 +181,7 @@ typedef struct {
   UINT32  CmdIdx;
   UINT32  CmdArg;
   UINT32  ResponseType;
-  UINT32  Response[4];
+  UINT32  Response[MMC_RESPONSE_MAX];
 } MMC_CMD;
 
 typedef struct {
@@ -180,9 +193,9 @@ typedef struct {
   INT32   BusWidth;
   UINT32  Flags;
   INT32   CardIn;
-} BM_SD_PARAMS;
+} DWC_SD_PARAMS;
 
-extern BM_SD_PARAMS BmParams;
+extern DWC_SD_PARAMS DwcParams;
 
 /**
   SD card sends command.
@@ -199,7 +212,7 @@ extern BM_SD_PARAMS BmParams;
 **/
 EFI_STATUS
 EFIAPI
-BmSdSendCmd (
+DwcSdSendCmd (
   IN  UINT32 Idx,
   IN  UINT32 Arg,
   IN  UINT32 RespType,
@@ -216,7 +229,7 @@ BmSdSendCmd (
 
 **/
 INT32
-BmSdCardDetect (
+DwcSdCardDetect (
   VOID
   );
 
@@ -231,7 +244,7 @@ BmSdCardDetect (
 
 **/
 EFI_STATUS
-BmSdSetIos (
+DwcSdSetIos (
   IN UINT32 Clk,
   IN UINT32 Width
   );
@@ -249,7 +262,7 @@ BmSdSetIos (
 
 **/
 EFI_STATUS
-BmSdPrepare (
+DwcSdPrepare (
   IN INT32 Lba,
   IN UINTN Buf,
   IN UINTN Size
@@ -267,7 +280,7 @@ BmSdPrepare (
 
 **/
 EFI_STATUS
-BmSdRead (
+DwcSdRead (
   IN INT32   Lba,
   IN UINT32* Buf,
   IN UINTN   Size
@@ -285,7 +298,7 @@ BmSdRead (
 
 **/
 EFI_STATUS
-BmSdWrite (
+DwcSdWrite (
   IN INT32   Lba,
   IN UINT32* Buf,
   IN UINTN   Size

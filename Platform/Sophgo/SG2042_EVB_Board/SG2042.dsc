@@ -414,6 +414,8 @@
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region4BaseAddress|0x4D00000000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link1Region4Size|0x300000000
 
+  gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|25000000
+  gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|100000000
 [PcdsPatchableInModule]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042PhyAddrToVirAddr|0
 
@@ -530,9 +532,9 @@
   # RISC-V Platform module
   #
   Silicon/Sophgo/SG2042Pkg/Drivers/SpiDxe/SpiFlashMasterController.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/NorFlashDxe/NorFlashDxe.inf
+  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/SG2042Pkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/MmcDxe/MmcDxe.inf
+  Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/SG2042Pkg/Drivers/SdHostDxe/SdHostDxe.inf
 
   #

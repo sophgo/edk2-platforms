@@ -8,14 +8,13 @@
 ##
 [Defines]
 DEFINE BLOCK_SIZE        = 0x1000
-
 DEFINE FW_BASE_ADDRESS   = 0x02000000
 DEFINE FW_SIZE           = 0x00800000
 DEFINE FW_BLOCKS         = 0x800
 
 #
-# 0x000000-0x7DFFFF code
-# 0x7E0000-0x800000 variables
+# 0x000000-0x77FFFF code
+# 0x780000-0x7AFFFF variables
 #
 DEFINE CODE_BASE_ADDRESS = $(FW_BASE_ADDRESS)
 DEFINE CODE_SIZE         = 0x00780000
@@ -38,11 +37,11 @@ DEFINE FVMAIN_SIZE                   = 0x00780000
 # all of sub regions of EFI Variable
 #
 DEFINE VARS_OFFSET                   = 0x00780000
-DEFINE VARS_SIZE                     = 0x00007000
+DEFINE VARS_SIZE                     = 0x00010000
 DEFINE VARS_FTW_WORKING_OFFSET       = $(VARS_OFFSET) + $(VARS_SIZE)
-DEFINE VARS_FTW_WORKING_SIZE         = 0x00001000
+DEFINE VARS_FTW_WORKING_SIZE         = 0x00010000
 DEFINE VARS_FTW_SPARE_OFFSET         = $(VARS_FTW_WORKING_OFFSET) + $(VARS_FTW_WORKING_SIZE)
-DEFINE VARS_FTW_SPARE_SIZE           = 0x00018000
+DEFINE VARS_FTW_SPARE_SIZE           = 0x00010000
 
 DEFINE VARIABLE_FW_SIZE  = $(VARS_FTW_SPARE_OFFSET) + $(VARS_FTW_SPARE_SIZE) - $(VARS_OFFSET)
 
@@ -53,9 +52,3 @@ SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFirmwareRegionBaseAddress = $
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFirmwareRegionSize        = $(VARIABLE_FW_SIZE)
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase                  = $(CODE_BASE_ADDRESS) + $(FW_SIZE) + 0x1FF0000
 SET gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize                  = 0x10000
-
-SET gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042SDIOBase          = 0x704002B000
-SET gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase              = 0x7040000000
-SET gEfiMdePkgTokenSpaceGuid.PcdUartDefaultBaudRate                   = 115200
-SET gHisiTokenSpaceGuid.PcdSerialPortSendDelay                        = 10000000
-SET gHisiTokenSpaceGuid.PcdUartClkInHz                                = 500000000

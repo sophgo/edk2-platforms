@@ -356,8 +356,8 @@ SdIsCardPresent (
   }
   else {
     DEBUG ((DEBUG_MMCHOST_SD_ERROR, "SdIsCardPresent: Error SdCardDetect.\n"));
-    mCardDetectState = CardDetectRequired;
-    return FALSE;
+    mCardIsPresent = FALSE;
+    goto out;
   }
 
   DEBUG ((DEBUG_MMCHOST_SD_INFO, "SdIsCardPresent: Not detected.\n"));

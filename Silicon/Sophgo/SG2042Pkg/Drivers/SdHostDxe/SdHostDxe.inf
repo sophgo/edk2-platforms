@@ -44,5 +44,5 @@
   gSophgoMmcHostProtocolGuid        ## PRODUCES
 
 [FixedPcd]
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042SDIOBase        ## CONSUMES
+  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSDIOBase              ## CONSUMES
   gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode             ## CONSUMES

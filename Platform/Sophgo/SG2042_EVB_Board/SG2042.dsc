@@ -181,6 +181,10 @@
 
   # Nor Flash Library
   NorFlashInfoLib|EmbeddedPkg/Library/NorFlashInfoLib/NorFlashInfoLib.inf
+
+  # Ds1307 RTC Library
+  RealTimeClockLib|Silicon/Sophgo/Library/Ds1307RealTimeClockLib/Ds1307RealTimeClockLib.inf
+
 [LibraryClasses.common.SEC]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
   ExtractGuidedSectionLib|MdePkg/Library/BaseExtractGuidedSectionLib/BaseExtractGuidedSectionLib.inf
@@ -358,6 +362,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize|0x00010000
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
+  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum0|0
+  gSophgoTokenSpaceGuid.PcdRtcI2cBusNum1|1
 
 [PcdsFixedAtBuild.common]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSDIOBase|0x704002B000
@@ -525,7 +531,7 @@
   }
   EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf {
     <LibraryClasses>
-      RealTimeClockLib|EmbeddedPkg/Library/VirtualRealTimeClockLib/VirtualRealTimeClockLib.inf
+      RealTimeClockLib|Silicon/Sophgo/Library/Ds1307RealTimeClockLib/Ds1307RealTimeClockLib.inf
   }
 
   #
@@ -536,6 +542,7 @@
   Silicon/Sophgo/SG2042Pkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/SG2042Pkg/Drivers/SdHostDxe/SdHostDxe.inf
+  Silicon/Sophgo/SG2042Pkg/Drivers/DwI2cDxe/DwI2cDxe.inf
 
   #
   # RISC-V Core module

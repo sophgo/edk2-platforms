@@ -515,10 +515,10 @@ GcdAttributeToPageAttribute (
 {
   UINTN  RiscVAttributes;
 
-  if ( GcdAttributes == EFI_MEMORY_UC ) {
+  if ( GcdAttributes & EFI_MEMORY_UC ) {
      RiscVAttributes = RISCV_PG_R | RISCV_PG_W |
                        THEAD_C920_PTE_SO | THEAD_C920_PTE_SH;
-  } else if ( GcdAttributes == EFI_MEMORY_WC ) {
+  } else if ( GcdAttributes & EFI_MEMORY_WC ) {
     // To be further verified
     RiscVAttributes = RISCV_PG_R | RISCV_PG_W |
                       THEAD_C920_PTE_B | THEAD_C920_PTE_SH;

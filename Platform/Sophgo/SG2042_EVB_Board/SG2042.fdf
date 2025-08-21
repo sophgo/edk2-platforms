@@ -79,6 +79,7 @@ INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
 INF  Silicon/Sophgo/SG2042Pkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 INF  Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
 INF  Silicon/Sophgo/SG2042Pkg/Drivers/SdHostDxe/SdHostDxe.inf
+INF  Silicon/Sophgo/SG2042Pkg/Drivers/DwI2cDxe/DwI2cDxe.inf
 
 # RISC-V Core Drivers
 INF  UefiCpuPkg/CpuTimerDxeRiscV64/CpuTimerDxeRiscV64.inf

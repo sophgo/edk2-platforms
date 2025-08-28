@@ -33,26 +33,12 @@ Scope(_SB)
     }
   } // End _OSC
 
-  Name (CLPI, Package () {  /* LPI for Cluster, support 1 LPI state */
+  Name (PLPI, Package () {  /* LPI for Processor, support 1 LPI states */
     0,                      // Version
     0,                      // Level Index
     1,                      // Count
-    // LPI3
-    Package () LPI_PACKAGE_INIT(3500, 100, 1, 0, 100, 1, 0x1000000080000000, "RISC-V NONRET_DEFAULT")
-  })
-
-  Name (PLPI, Package () {  /* LPI for Processor, support 3 LPI states */
-    0,                      // Version
-    0,                      // Level Index
-    3,                      // Count
     // LPI1
-    Package () LPI_PACKAGE_INIT(1, 1, 1, 0, 100, 0, 0x0000000000000000, "RISC-V WFI"),
-
-    // LPI2
-    Package () LPI_PACKAGE_INIT(10, 10, 1, 0, 100, 1, 0x1000000000000000, "RISC-V RET_DEFAULT"),
-
-    // LPI3
-    Package () LPI_PACKAGE_INIT(3500, 100, 1, 0, 100, 1, 0x1000000080000000, "RISC-V NONRET_DEFAULT")
+    Package () LPI_PACKAGE_INIT(1, 1, 1, 0, 100, 0, 0x0000000000000000, "RISC-V WFI")
   })
 
   //
@@ -61,9 +47,6 @@ Scope(_SB)
   Device (CL00) {   // Cluster 0
     Name (_HID, "ACPI0010")
     Name (_UID, 0)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP00) { // SG2044 Cluster 0, core 0
       Name (_HID, "ACPI0007")
@@ -185,9 +168,6 @@ Scope(_SB)
   Device (CL01) {   // Cluster 1
     Name (_HID, "ACPI0010")
     Name (_UID, 1)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP04) { // SG2044 Cluster 1, core 4
       Name (_HID, "ACPI0007")
@@ -309,9 +289,6 @@ Scope(_SB)
   Device (CL02) {   // Cluster 2
     Name (_HID, "ACPI0010")
     Name (_UID, 2)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP08) { // SG2044 Cluster 2, core 8
       Name (_HID, "ACPI0007")
@@ -433,9 +410,6 @@ Scope(_SB)
   Device (CL03) {   // Cluster 3
     Name (_HID, "ACPI0010")
     Name (_UID, 3)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP12) { // SG2044 Cluster 3, core 12
       Name (_HID, "ACPI0007")
@@ -557,9 +531,6 @@ Scope(_SB)
   Device (CL04) {   // Cluster 4
     Name (_HID, "ACPI0010")
     Name (_UID, 4)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP16) { // SG2044 Cluster 4, core 16
       Name (_HID, "ACPI0007")
@@ -681,9 +652,6 @@ Scope(_SB)
   Device (CL05) {   // Cluster 5
     Name (_HID, "ACPI0010")
     Name (_UID, 5)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP20) { // SG2044 Cluster 5, core 20
       Name (_HID, "ACPI0007")
@@ -805,9 +773,6 @@ Scope(_SB)
   Device (CL06) {   // Cluster 6
     Name (_HID, "ACPI0010")
     Name (_UID, 6)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP24) { // SG2044 Cluster 6, core 24
       Name (_HID, "ACPI0007")
@@ -929,9 +894,6 @@ Scope(_SB)
   Device (CL07) {   // Cluster 7
     Name (_HID, "ACPI0010")
     Name (_UID, 7)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP28) { // SG2044 Cluster 7, core 28
       Name (_HID, "ACPI0007")
@@ -1053,9 +1015,6 @@ Scope(_SB)
   Device (CL08) {   // Cluster 8
     Name (_HID, "ACPI0010")
     Name (_UID, 8)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP32) { // SG2044 Cluster 8, core 32
       Name (_HID, "ACPI0007")
@@ -1177,9 +1136,6 @@ Scope(_SB)
   Device (CL09) {   // Cluster 9
     Name (_HID, "ACPI0010")
     Name (_UID, 9)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP36) { // SG2044 Cluster 9, core 36
       Name (_HID, "ACPI0007")
@@ -1301,9 +1257,6 @@ Scope(_SB)
   Device (CL10) {   // Cluster 10
     Name (_HID, "ACPI0010")
     Name (_UID, 10)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP40) { // SG2044 Cluster 10, core 40
       Name (_HID, "ACPI0007")
@@ -1425,9 +1378,6 @@ Scope(_SB)
   Device (CL11) {   // Cluster 11
     Name (_HID, "ACPI0010")
     Name (_UID, 11)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP44) { // SG2044 Cluster 11, core 44
       Name (_HID, "ACPI0007")
@@ -1549,9 +1499,6 @@ Scope(_SB)
   Device (CL12) {   // Cluster 12
     Name (_HID, "ACPI0010")
     Name (_UID, 12)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP48) { // SG2044 Cluster 12, core 48
       Name (_HID, "ACPI0007")
@@ -1673,9 +1620,6 @@ Scope(_SB)
   Device (CL13) {   // Cluster 13
     Name (_HID, "ACPI0010")
     Name (_UID, 13)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP52) { // SG2044 Cluster 13, core 52
       Name (_HID, "ACPI0007")
@@ -1798,10 +1742,6 @@ Scope(_SB)
     Name (_HID, "ACPI0010")
     Name (_UID, 14)
 
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
-
     Device (CP56) { // SG2044 Cluster 14, core 56
       Name (_HID, "ACPI0007")
       Name (_UID, 56)
@@ -1922,9 +1862,6 @@ Scope(_SB)
   Device (CL15) {   // Cluster 15
     Name (_HID, "ACPI0010")
     Name (_UID, 15)
-    Method (_LPI, 0, NotSerialized) {
-      Return (\_SB.CLPI)
-    }
 
     Device (CP60) { // SG2044 Cluster 15, core 60
       Name (_HID, "ACPI0007")

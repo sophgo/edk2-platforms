@@ -515,10 +515,10 @@ GcdAttributeToPageAttribute (
 {
   UINTN  RiscVAttributes;
 
-  if ( GcdAttributes & EFI_MEMORY_UC ) {
+  if (GcdAttributes & EFI_MEMORY_UC) {
      RiscVAttributes = RISCV_PG_R | RISCV_PG_W |
                        THEAD_C920_PTE_SO | THEAD_C920_PTE_SH;
-  } else if ( GcdAttributes & EFI_MEMORY_WC ) {
+  } else if (GcdAttributes & EFI_MEMORY_WC) {
     // To be further verified
     RiscVAttributes = RISCV_PG_R | RISCV_PG_W |
                       THEAD_C920_PTE_B | THEAD_C920_PTE_SH;
@@ -704,21 +704,6 @@ RiscVMmuSetSatpMode (
       ASSERT_EFI_ERROR (Status);
     }
   }
-
-  //
-  // Variables of Firmware Volume
-  //
-  Status = UpdateRegionMapping (
-    PcdGet64 (PcdFlashVariableOffset),
-    PcdGet32 (PcdFlashNvStorageFtwSpareSize) +
-    PcdGet32 (PcdFlashNvStorageFtwWorkingSize) +
-    PcdGet32 (PcdFlashNvStorageVariableSize),
-    RISCV_PG_R | RISCV_PG_W | THEAD_C920_PTE_SH | THEAD_C920_PTE_SO,
-    PTE_ATTRIBUTES_MASK,
-    TranslationTable,
-    FALSE
-    );
-  ASSERT_EFI_ERROR (Status);
 
   FreePool ((VOID *)MemoryMap);
 

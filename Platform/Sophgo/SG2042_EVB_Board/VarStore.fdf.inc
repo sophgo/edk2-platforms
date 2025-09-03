@@ -10,7 +10,7 @@
 ##
 
 $(VARS_OFFSET)|$(VARS_SIZE)
-gUefiRiscVPlatformPkgTokenSpaceGuid.PcdPlatformFlashNvStorageVariableBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
+gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
 #
 # NV_VARIABLE_STORE
 #
@@ -29,9 +29,9 @@ DATA = {
   # Signature "_FVH"       # Attributes
   0x5f, 0x46, 0x56, 0x48, 0xff, 0xfe, 0x04, 0x00,
   # HeaderLength # CheckSum # ExtHeaderOffset #Reserved #Revision
-  0x48, 0x00, 0x38, 0xF1, 0x00, 0x00, 0x00, 0x02,
-  # Blockmap[0]: 0x20 Blocks * 0x1000 Bytes / Block
-  0x00, 0x08, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
+  0x48, 0x00, 0x08, 0xF9, 0x00, 0x00, 0x00, 0x02,
+  # Blockmap[0]: 0x30 Blocks * 0x1000 Bytes / Block
+  0x30, 0x00, 0x00, 0x00, 0x00, 0x10, 0x00, 0x00,
   # Blockmap[1]: End
   0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00,
   ## This is the VARIABLE_STORE_HEADER
@@ -57,7 +57,7 @@ DATA = {
 }
 
 $(VARS_FTW_WORKING_OFFSET)|$(VARS_FTW_WORKING_SIZE)
-gUefiRiscVPlatformPkgTokenSpaceGuid.PcdPlatformFlashNvStorageFtwWorkingBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
+gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
 #
 #NV_FTW_WROK
 #
@@ -73,6 +73,6 @@ DATA = {
 }
 
 $(VARS_FTW_SPARE_OFFSET)|$(VARS_FTW_SPARE_SIZE)
-gUefiRiscVPlatformPkgTokenSpaceGuid.PcdPlatformFlashNvStorageFtwSpareBase|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
+gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
 #
 #NV_FTW_SPARE

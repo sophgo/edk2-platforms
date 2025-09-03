@@ -1,5 +1,5 @@
 /** @file
- * 
+ *
  *  SPI Flash Master Controller (SPIFMC) registers.
  *
  *  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
@@ -21,15 +21,12 @@
 #include <Library/DxeServicesTableLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 
-#include <Include/Spi.h>
+#include <Include/Spifmc.h>
 #include <Include/SpiNorFlash.h>
 
 //
 // SPIFMC registers
 //
-// #define SPIFMC_BASE                        (FixedPcdGet64(PcdSPIFMC0Base))
-#define SPIFMC_BASE                        (FixedPcdGet64(PcdSPIFMC1Base))
-
 #define SPIFMC_CTRL                        0x00
 #define SPIFMC_CTRL_CPHA                      BIT12
 #define SPIFMC_CTRL_CPOL                      BIT13
@@ -38,6 +35,7 @@
 #define SPIFMC_CTRL_LSBF                      BIT20
 #define SPIFMC_CTRL_SRST                      BIT21
 #define SPIFMC_CTRL_SCK_DIV_SHIFT             0
+#define SPIFMC_CTRL_SCK_DIV_SHIFT_MASK        0x7FF
 #define SPIFMC_CTRL_FRAME_LEN_SHIFT           16
 
 #define SPIFMC_CE_CTRL                     0x04
@@ -159,13 +157,7 @@ SPI_NOR *
 EFIAPI
 SpiMasterSetupSlave (
   IN SOPHGO_SPI_MASTER_PROTOCOL *This,
-  IN SPI_NOR                    *Nor
-  );
-
-EFI_STATUS
-EFIAPI
-SpiMasterFreeSlave (
-  IN SPI_NOR *Nor
+  IN UINT8                      SelectedFlashNumber
   );
 
 EFI_STATUS

@@ -162,10 +162,5 @@ PlatformPeimInitialization (
   //
   PopulateIoResources (Base, "bitmain,bm-sd");
 
-  //
-  // Add SPI Flash Master Controller resource
-  //
-  PopulateIoResources (Base, "sophgo,spifmc");
-
   return EFI_SUCCESS;
 }

@@ -21,7 +21,8 @@
   MdePkg/MdePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  Silicon/Sophgo/SG2042Pkg/SG2042Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
+  Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -38,12 +39,13 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdFlashVariableOffset
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdVariableFdBlockSize
 
 [Guids]
   gEfiEventVirtualAddressChangeGuid
@@ -53,12 +55,11 @@
   gEfiVariableGuid
 
 [Protocols]
-  gEfiDevicePathProtocolGuid
-  gEfiFirmwareVolumeBlockProtocolGuid
-  gSophgoSpiMasterProtocolGuid
-  gSophgoNorFlashProtocolGuid
+  gEfiDevicePathProtocolGuid           ## PRODUCES
+  gEfiFirmwareVolumeBlockProtocolGuid  ## PRODUCES
+  gSophgoSpiMasterProtocolGuid         ## CONSUMES
+  gSophgoNorFlashProtocolGuid          ## CONSUMES
 
 [Depex]
-  gEfiCpuArchProtocolGuid AND
   gSophgoSpiMasterProtocolGuid AND
   gSophgoNorFlashProtocolGuid

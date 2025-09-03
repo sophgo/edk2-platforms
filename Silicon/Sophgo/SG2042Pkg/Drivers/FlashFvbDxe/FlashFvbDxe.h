@@ -11,7 +11,7 @@
 
 #include <Protocol/BlockIo.h>
 #include <Protocol/FirmwareVolumeBlock.h>
-#include <Include/Spi.h>
+#include <Include/Spifmc.h>
 #include <Include/SpiNorFlash.h>
 
 #define FVB_FLASH_SIGNATURE                       SIGNATURE_32('S', 'n', 'o', 'r')

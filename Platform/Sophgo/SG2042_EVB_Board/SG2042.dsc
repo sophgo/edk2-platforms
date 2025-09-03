@@ -57,7 +57,6 @@
 [BuildOptions.common.EDKII.DXE_RUNTIME_DRIVER]
   GCC:  *_*_*_DLINK_FLAGS = -z common-page-size=0x1000
   MSFT: *_*_*_DLINK_FLAGS = /ALIGN:4096
-
 ################################################################################
 #
 # SKU Identification section - list of all SKU IDs supported by this Platform.
@@ -356,7 +355,10 @@
   # 64KB + 64KB + 64KB
   # Flash Offset: 32MB
   #
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdFlashVariableOffset|0x02780000
+  gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x600000
+  gSophgoTokenSpaceGuid.PcdFdOffset|0x2040000
+  gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x7002180000
+
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize|0x00010000
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize|0x00010000
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize|0x00010000
@@ -367,8 +369,6 @@
 
 [PcdsFixedAtBuild.common]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSDIOBase|0x704002B000
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSPIFMC0Base|0x7000180000
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSPIFMC1Base|0x7002180000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link0CfgBase|0x7060000000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci0Link1CfgBase|0x7060800000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPci1Link0CfgBase|0x7062000000
@@ -432,10 +432,6 @@
 ################################################################################
 
 [PcdsDynamicDefault]
-  gEfiMdeModulePkgTokenSpaceGuid.PcdEmuVariableNvStoreReserved|0
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0x02780000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|0x02790000
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x027A0000
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|FALSE
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0208
@@ -453,6 +449,12 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution|480
   #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutRow|0
   #gEfiMdeModulePkgTokenSpaceGuid.PcdConOutColumn|0
+
+  # flash variable releated
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64|0x0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingBase64|0x0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareBase64|0x0
 
   #
   # RC#0(P0L0,BIT0); RC#1(P0L1,BIT1); RC#2(P1L0,BIT2); RC#3(P1L1,BIT3)
@@ -537,12 +539,12 @@
   #
   # RISC-V Platform module
   #
-  Silicon/Sophgo/SG2042Pkg/Drivers/SpiDxe/SpiFlashMasterController.inf
+  Silicon/Sophgo/SG2042Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/SG2042Pkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+  Silicon/Sophgo/SG2042Pkg/Drivers/DwI2cDxe/DwI2cDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/SG2042Pkg/Drivers/SdHostDxe/SdHostDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/DwI2cDxe/DwI2cDxe.inf
 
   #
   # RISC-V Core module

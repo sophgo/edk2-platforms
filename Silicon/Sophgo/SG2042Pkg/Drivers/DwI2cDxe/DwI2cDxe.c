@@ -844,13 +844,17 @@ I2cVirtualNotifyEvent (
   DW_I2C *I2c;
 
   for (Loop = 0; Loop < mI2cNum; ++Loop) {
-    EfiConvertPointer (0x0, (VOID**)&mI2cInfo[Loop].Base);
+    mI2cInfo[Loop].Base = mI2cInfo[Loop].Base & 0x7fffffffff;
+    EfiConvertPointer(0x0, (VOID **)&mI2cInfo[Loop].Base);
+
     I2c = (DW_I2C *)mI2cInfo[Loop].Dev;
-    EfiConvertPointer (0x0, (VOID**)&I2c->Regs);
+    I2c->Regs = (VOID *)((UINTN)I2c->Regs & 0x7fffffffff);
+    EfiConvertPointer(0x0, (VOID **)&I2c->Regs);
   }
 
   EfiConvertPointer (0x0, (VOID**)&mI2cMasterProtocol);
   EfiConvertPointer (0x0, (VOID**)&mI2cInfo);
+
 }
 
 EFI_STATUS
@@ -877,12 +881,12 @@ DwI2cEntryPoint (
   //
   // Declare the controller as EFI_MEMORY_RUNTIME
   //
-  Status = SetI2cMemoryRuntime (I2cInformation, I2cNum);
+  Status = SetI2cMemoryRuntime (I2cInformation, mI2cNum);
   if (EFI_ERROR (Status)) {
     goto ErrorI2cInit;
   }
 
-  Status = I2cInit (I2cInformation, I2cNum);
+  Status = I2cInit (I2cInformation, mI2cNum);
   if (EFI_ERROR (Status)) {
     goto ErrorI2cInit;
   }

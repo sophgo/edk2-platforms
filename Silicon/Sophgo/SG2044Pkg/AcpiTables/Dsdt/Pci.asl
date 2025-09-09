@@ -153,8 +153,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Prefetchable, ReadWrite,
         0x0,                // Granularity
-        0x4200000000,       // Min Base Address pci address
-        0x43FFFFFFFF,       // Max Base Address
+        0x4400000000,       // Min Base Address pci address
+        0x47FFFFFFFF,       // Max Base Address
         0x0,                // Translate
         0x0200000000        // Length
       )
@@ -163,8 +163,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Cacheable, ReadWrite,
         0x0,                // Granularity
-        0x4100000000,       // Min Base Address pci address
-        0x41FFFFFFFF,       // Max Base Address
+        0x4200000000,       // Min Base Address pci address
+        0x43FFFFFFFF,       // Max Base Address
         0x0,                // Translate
         0x0100000000        // Length
       )
@@ -323,8 +323,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Prefetchable, ReadWrite,
         0x0,               // Granularity
-        0x4600000000,      // Min Base Address pci address
-        0x47FFFFFFFF,      // Max Base Address
+        0x4C00000000,      // Min Base Address pci address
+        0x4FFFFFFFFF,      // Max Base Address
         0x0000000000,      // Translate
         0x0200000000       // Length
       )
@@ -333,8 +333,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Cacheable, ReadWrite,
         0x0,               // Granularity
-        0x4500000000,      // Min Base Address pci address
-        0x45FFFFFFFF,      // Max Base Address
+        0x4A00000000,      // Min Base Address pci address
+        0x4BFFFFFFFF,      // Max Base Address
         0x0000000000,      // Translate
         0x0100000000       // Length
       )
@@ -344,7 +344,7 @@ Scope(_SB)
         0x0,               // Granularity
         0x0000000000,      // Min Base Address
         0x00001FFFFF,      // Max Base Address
-        0x4410000000,      // Translate
+        0x4810000000,      // Translate
         0x0000200000       // Length
       )
     })
@@ -412,8 +412,8 @@ Scope(_SB)
           MinFixed, MaxFixed, 
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
-          0x4400000000,                       // Range Minimum
-          0x4400000FFF,                       // Range Maximum
+          0x4800000000,                       // Range Minimum
+          0x4800000FFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
           0x0000001000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
@@ -491,8 +491,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Prefetchable, ReadWrite,
         0x0000000000,       // Granularity
-        0x4A00000000,       // Min Base Address pci address
-        0x4BFFFFFFFF,       // Max Base Address
+        0x5400000000,       // Min Base Address pci address
+        0x57FFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0200000000        // Length
       )
@@ -501,8 +501,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Cacheable, ReadWrite,
         0x0000000000,       // Granularity
-        0x4900000000,       // Min Base Address pci address
-        0x49FFFFFFFF,       // Max Base Address
+        0x5200000000,       // Min Base Address pci address
+        0x53FFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0100000000        // Length
       )
@@ -512,7 +512,7 @@ Scope(_SB)
         0x0,               // Granularity
         0x0000000000,      // Min Base Address
         0x00001FFFFF,      // Max Base Address
-        0x4810000000,      // Translate
+        0x5010000000,      // Translate
         0x0000200000       // Length
       )
     })
@@ -580,8 +580,8 @@ Scope(_SB)
           MinFixed, MaxFixed,
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
-          0x4800000000,                       // Range Minimum
-          0x4800000FFF,                       // Range Maximum
+          0x5000000000,                       // Range Minimum
+          0x5000000FFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
           0x0000001000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
@@ -659,8 +659,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Prefetchable, ReadWrite,
         0x0000000000,       // Granularity
-        0x4E00000000,       // Min Base Address pci address
-        0x4FFFFFFFFF,       // Max Base Address
+        0x5C00000000,       // Min Base Address pci address
+        0x5FFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0200000000        // Length
       )
@@ -669,8 +669,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Cacheable, ReadWrite,
         0x0000000000,       // Granularity
-        0x4D00000000,       // Min Base Address pci address
-        0x4DFFFFFFFF,       // Max Base Address
+        0x5A00000000,       // Min Base Address pci address
+        0x5BFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0100000000        // Length
       )
@@ -680,7 +680,7 @@ Scope(_SB)
         0x0,               // Granularity
         0x0000000000,      // Min Base Address
         0x00001FFFFF,      // Max Base Address
-        0x4C10000000,      // Translate
+        0x5810000000,      // Translate
         0x0000200000       // Length
       )
     })
@@ -748,8 +748,8 @@ Scope(_SB)
           MinFixed, MaxFixed,
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
-          0x4C00000000,                       // Range Minimum
-          0x4C00000FFF,                       // Range Maximum
+          0x5800000000,                       // Range Minimum
+          0x5800000FFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
           0x0000001000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
@@ -827,8 +827,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Prefetchable, ReadWrite,
         0x0000000000,       // Granularity
-        0x5200000000,       // Min Base Address pci address
-        0x53FFFFFFFF,       // Max Base Address
+        0x7900000000,       // Min Base Address pci address
+        0x79FFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0200000000        // Length
       )
@@ -837,8 +837,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Cacheable, ReadWrite,
         0x0000000000,       // Granularity
-        0x5100000000,       // Min Base Address pci address
-        0x51FFFFFFFF,       // Max Base Address
+        0x7880000000,       // Min Base Address pci address
+        0x78FFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0100000000        // Length
       )
@@ -848,7 +848,7 @@ Scope(_SB)
         0x0,               // Granularity
         0x0000000000,      // Min Base Address
         0x00001FFFFF,      // Max Base Address
-        0x5010000000,      // Translate
+        0x7810000000,      // Translate
         0x0000200000       // Length
       )
     })
@@ -916,8 +916,8 @@ Scope(_SB)
           MinFixed, MaxFixed,
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
-          0x5000000000,                       // Range Minimum
-          0x5000000FFF,                       // Range Maximum
+          0x7800000000,                       // Range Minimum
+          0x7800000FFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
           0x0000001000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
@@ -995,8 +995,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Prefetchable, ReadWrite,
         0x0000000000,       // Granularity
-        0x5600000000,       // Min Base Address pci address
-        0x57FFFFFFFF,       // Max Base Address
+        0x7B00000000,       // Min Base Address pci address
+        0x7BFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0200000000        // Length
       )
@@ -1005,8 +1005,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Cacheable, ReadWrite,
         0x0000000000,       // Granularity
-        0x5500000000,       // Min Base Address pci address
-        0x55FFFFFFFF,       // Max Base Address
+        0x7A80000000,       // Min Base Address pci address
+        0x7AFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0100000000        // Length
       )
@@ -1016,7 +1016,7 @@ Scope(_SB)
         0x0,               // Granularity
         0x0000000000,      // Min Base Address
         0x00001FFFFF,      // Max Base Address
-        0x5410000000,      // Translate
+        0x7A10000000,      // Translate
         0x0000200000       // Length
       )
     })
@@ -1084,8 +1084,8 @@ Scope(_SB)
           MinFixed, MaxFixed,
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
-          0x5400000000,                       // Range Minimum
-          0x5400000FFF,                       // Range Maximum
+          0x7A00000000,                       // Range Minimum
+          0x7A00000FFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
           0x0000001000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
@@ -1163,8 +1163,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Prefetchable, ReadWrite,
         0x0000000000,       // Granularity
-        0x5A00000000,       // Min Base Address pci address
-        0x5BFFFFFFFF,       // Max Base Address
+        0x7D00000000,       // Min Base Address pci address
+        0x7DFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0200000000        // Length
       )
@@ -1173,8 +1173,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Cacheable, ReadWrite,
         0x0000000000,       // Granularity
-        0x5900000000,       // Min Base Address pci address
-        0x59FFFFFFFF,       // Max Base Address
+        0x7C80000000,       // Min Base Address pci address
+        0x7CFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0100000000        // Length
       )
@@ -1184,7 +1184,7 @@ Scope(_SB)
         0x0,               // Granularity
         0x0000000000,      // Min Base Address
         0x00001FFFFF,      // Max Base Address
-        0x5810000000,      // Translate
+        0x7C10000000,      // Translate
         0x0000200000       // Length
       )
     })
@@ -1252,8 +1252,8 @@ Scope(_SB)
           MinFixed, MaxFixed,
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
-          0x5800000000,                       // Range Minimum
-          0x5800000FFF,                       // Range Maximum
+          0x7C00000000,                       // Range Minimum
+          0x7C00000FFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
           0x0000001000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
@@ -1331,8 +1331,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Prefetchable, ReadWrite,
         0x0000000000,       // Granularity
-        0x5E00000000,       // Min Base Address pci address
-        0x5FFFFFFFFF,       // Max Base Address
+        0x7F00000000,       // Min Base Address pci address
+        0x7FFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0200000000        // Length
       )
@@ -1341,8 +1341,8 @@ Scope(_SB)
         MinFixed, MaxFixed,
         Cacheable, ReadWrite,
         0x0000000000,       // Granularity
-        0x5D00000000,       // Min Base Address pci address
-        0x5DFFFFFFFF,       // Max Base Address
+        0x7E80000000,       // Min Base Address pci address
+        0x7EFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
         0x0100000000        // Length
       )
@@ -1352,7 +1352,7 @@ Scope(_SB)
         0x0,               // Granularity
         0x0000000000,      // Min Base Address
         0x00001FFFFF,      // Max Base Address
-        0x5C10000000,      // Translate
+        0x7E10000000,      // Translate
         0x0000200000       // Length
       )
     })
@@ -1420,8 +1420,8 @@ Scope(_SB)
           MinFixed, MaxFixed,
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
-          0x5C00000000,                       // Range Minimum
-          0x5C00000FFF,                       // Range Maximum
+          0x7E00000000,                       // Range Minimum
+          0x7E00000FFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
           0x0000001000,                       // Length
           , , , AddressRangeMemory, TypeStatic)

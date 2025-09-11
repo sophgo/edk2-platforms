@@ -156,7 +156,7 @@ Scope(_SB)
         0x4400000000,       // Min Base Address pci address
         0x47FFFFFFFF,       // Max Base Address
         0x0,                // Translate
-        0x0200000000        // Length
+        0x0400000000        // Length
       )
       QWordMemory ( // 64-bit BAR Windows
         ResourceProducer, PosDecode,
@@ -166,7 +166,7 @@ Scope(_SB)
         0x4200000000,       // Min Base Address pci address
         0x43FFFFFFFF,       // Max Base Address
         0x0,                // Translate
-        0x0100000000        // Length
+        0x0200000000        // Length
       )
       QWordIO (
         ResourceProducer, MinFixed, MaxFixed,
@@ -326,7 +326,7 @@ Scope(_SB)
         0x4C00000000,      // Min Base Address pci address
         0x4FFFFFFFFF,      // Max Base Address
         0x0000000000,      // Translate
-        0x0200000000       // Length
+        0x0400000000       // Length
       )
       QWordMemory ( // 64-bit BAR Windows
         ResourceProducer, PosDecode,
@@ -336,7 +336,7 @@ Scope(_SB)
         0x4A00000000,      // Min Base Address pci address
         0x4BFFFFFFFF,      // Max Base Address
         0x0000000000,      // Translate
-        0x0100000000       // Length
+        0x0200000000       // Length
       )
       QWordIO (
         ResourceProducer, MinFixed, MaxFixed,
@@ -494,7 +494,7 @@ Scope(_SB)
         0x5400000000,       // Min Base Address pci address
         0x57FFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0200000000        // Length
+        0x0400000000        // Length
       )
       QWordMemory ( // 64-bit BAR Windows
         ResourceProducer, PosDecode,
@@ -504,7 +504,7 @@ Scope(_SB)
         0x5200000000,       // Min Base Address pci address
         0x53FFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0100000000        // Length
+        0x0200000000        // Length
       )
       QWordIO (
         ResourceProducer, MinFixed, MaxFixed,
@@ -662,7 +662,7 @@ Scope(_SB)
         0x5C00000000,       // Min Base Address pci address
         0x5FFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0200000000        // Length
+        0x0400000000        // Length
       )
       QWordMemory ( // 64-bit BAR Windows
         ResourceProducer, PosDecode,
@@ -672,7 +672,7 @@ Scope(_SB)
         0x5A00000000,       // Min Base Address pci address
         0x5BFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0100000000        // Length
+        0x0200000000        // Length
       )
       QWordIO (
         ResourceProducer, MinFixed, MaxFixed,
@@ -830,7 +830,7 @@ Scope(_SB)
         0x7900000000,       // Min Base Address pci address
         0x79FFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0200000000        // Length
+        0x0100000000        // Length
       )
       QWordMemory ( // 64-bit BAR Windows
         ResourceProducer, PosDecode,
@@ -840,7 +840,7 @@ Scope(_SB)
         0x7880000000,       // Min Base Address pci address
         0x78FFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0100000000        // Length
+        0x0080000000        // Length
       )
       QWordIO (
         ResourceProducer, MinFixed, MaxFixed,
@@ -998,7 +998,7 @@ Scope(_SB)
         0x7B00000000,       // Min Base Address pci address
         0x7BFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0200000000        // Length
+        0x0100000000        // Length
       )
       QWordMemory ( // 64-bit BAR Windows
         ResourceProducer, PosDecode,
@@ -1008,7 +1008,7 @@ Scope(_SB)
         0x7A80000000,       // Min Base Address pci address
         0x7AFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0100000000        // Length
+        0x0080000000        // Length
       )
       QWordIO (
         ResourceProducer, MinFixed, MaxFixed,
@@ -1166,7 +1166,7 @@ Scope(_SB)
         0x7D00000000,       // Min Base Address pci address
         0x7DFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0200000000        // Length
+        0x0100000000        // Length
       )
       QWordMemory ( // 64-bit BAR Windows
         ResourceProducer, PosDecode,
@@ -1176,7 +1176,7 @@ Scope(_SB)
         0x7C80000000,       // Min Base Address pci address
         0x7CFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0100000000        // Length
+        0x0080000000        // Length
       )
       QWordIO (
         ResourceProducer, MinFixed, MaxFixed,
@@ -1334,7 +1334,7 @@ Scope(_SB)
         0x7F00000000,       // Min Base Address pci address
         0x7FFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0200000000        // Length
+        0x0100000000        // Length
       )
       QWordMemory ( // 64-bit BAR Windows
         ResourceProducer, PosDecode,
@@ -1344,7 +1344,7 @@ Scope(_SB)
         0x7E80000000,       // Min Base Address pci address
         0x7EFFFFFFFF,       // Max Base Address
         0x0000000000,       // Translate
-        0x0100000000        // Length
+        0x0080000000        // Length
       )
       QWordIO (
         ResourceProducer, MinFixed, MaxFixed,

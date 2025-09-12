@@ -55,6 +55,7 @@ UpdateBmcUserInfo(
 			BmcData->UserConfigData.UserTotalNum ++;
 			HiiSetString(PrivateData->HiiHandle, TokenList[UserId], BmcData->UserConfigData.UserEntry[UserId].UserName, NULL);
 			BmcData->UserConfigData.UserEntry[UserId].Flag = 1;
+      DEBUG ((DEBUG_INFO, "User %d: %s\n", UserId, BmcData->UserConfigData.UserEntry[UserId].UserName));
 		}
 	}
 	Status = UpdateBmcVarStore(BmcData);

@@ -41,4 +41,9 @@ ProcessMacAddrSet (
   IN  EFI_IFR_TYPE_VALUE            *Value
   );
 
+EFI_STATUS
+ProcessCommitMacAddr (
+  IN  NET_PRIVATE_DATA             *Private,
+  IN  EFI_QUESTION_ID               QuestionId
+  );
 #endif

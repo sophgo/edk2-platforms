@@ -25,7 +25,7 @@ UpdateBmcBasicInfo(
   {
     return EFI_INVALID_PARAMETER;
   }
-  Status = GetBmcBasicInfo(BmcData->FmVersion, BmcData->IpmiVersion);
+  Status = GetBmcBasicInfo(BmcData);
 
   Status = GetBmcBootOption(&BootDeviceSelector, &BootInitiator,&IsPersistent);
 

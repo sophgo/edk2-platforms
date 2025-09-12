@@ -52,35 +52,35 @@ formset
            option text  = STRING_TOKEN(STR_DHCP_ENABLED), value = 0x02,  flags = 0;
            option text  = STRING_TOKEN(STR_DHCP_DISABLED), value = 0x01, flags = 0;
      endoneof;
-     grayoutif ideqval BMCConfigData.EnableDHCP == 2;
+     suppressif ideqval BMCConfigData.EnableDHCP == 2;
       label LABEL_SET;
       label LABEL_END;
       endif;
-      text
+      /*text
        help     = STRING_TOKEN(STR_REFRESH_HELP),
        text     = STRING_TOKEN(STR_REFRESH_PROMPT),
        flags    = INTERACTIVE,
-       key      = REFRESH_QUESTION_ID;
+       key      = REFRESH_QUESTION_ID;*/
   endform;
   form formid = MAC_ADDR_FORM_ID,
       title = STRING_TOKEN(STR_MAC_SET_TITLE);
       label LABEL_MAC_START;
       label LABEL_MAC_END;
-      text
+      /*text
        help     = STRING_TOKEN(STR_REFRESH_HELP),
        text     = STRING_TOKEN(STR_REFRESH_PROMPT),
        flags    = INTERACTIVE,
-       key      = MAC_ADDR_REFRESH_ID;
+       key      = MAC_ADDR_REFRESH_ID;*/
   endform;
   form formid = BASIC_INFO_FORM_ID,
       title = STRING_TOKEN(STR_BMC_BASIC_INFO_TITLE);
       label LABEL_INFO_START;
       label LABEL_INFO_END;
-      text
+      /*text
        help     = STRING_TOKEN(STR_REFRESH_HELP),
        text     = STRING_TOKEN(STR_REFRESH_PROMPT),
        flags    = INTERACTIVE,
-       key      = BASIC_INFO_REFRESH_ID;
+       key      = BASIC_INFO_REFRESH_ID;*/
   endform;
   form formid = BMC_USER_FORM_ID,
       title = STRING_TOKEN(STR_MAC_USER_MANAGER_PROMPT);
@@ -371,11 +371,11 @@ formset
        endpassword;
       endif;
 
-      text
+      /*text
        help     = STRING_TOKEN(STR_REFRESH_HELP),
        text     = STRING_TOKEN(STR_REFRESH_PROMPT),
        flags    = INTERACTIVE,
-       key      = USER_REFRESH_ID;
+       key      = USER_REFRESH_ID;*/
 
   endform;
 endformset;

@@ -56,6 +56,13 @@ ProcessIpAddrSet (
   IN  EFI_IFR_TYPE_VALUE            *Value
   );
 
+EFI_STATUS
+ProcessIpSetAll (
+  IN  NET_PRIVATE_DATA             *Private,
+  IN  EFI_QUESTION_ID               QuestionId,
+  IN  EFI_IFR_TYPE_VALUE            *Value
+  );
+
 VOID
 UpdateNetworkForm(
     NET_PRIVATE_DATA *PrivateData

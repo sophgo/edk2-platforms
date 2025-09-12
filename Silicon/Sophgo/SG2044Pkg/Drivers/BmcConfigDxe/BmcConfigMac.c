@@ -1,7 +1,8 @@
 
 #include "BmcConfigMac.h"
 #include "BmcConfigIpmi.h"
-extern EFI_GUID gBmcConfigFormSetGuid;
+extern EFI_GUID          gBmcConfigFormSetGuid;
+extern BOOLEAN           IsMacFormatChanged;
 
 //Verify the validity of the MAC address
 BOOLEAN
@@ -243,7 +244,6 @@ ProcessMacAddrSet (
 {
 	EFI_STATUS                       Status;
 	CHAR16                          *MacAddr;
-	IPMI_LAN_MAC_ADDRESS             BmcMacAddr;
 	MacAddr = HiiGetString(Private->HiiHandle, Value->string, NULL);
 	if (MacAddr == NULL) {
 		DEBUG((
@@ -268,21 +268,39 @@ ProcessMacAddrSet (
 						MacAddr
 						);
 
-			ConvertChar16ToIpmiMac(Private->BmcConfigData.MacAddr, BmcMacAddr.MacAddress);
-
-			Status = IpmiSetBmcMacAddr(BmcMacAddr.MacAddress);
-
-			if (EFI_ERROR(Status)) {
-				DEBUG((
-					DEBUG_ERROR,
-					"Failed to update BMC with Gateway Address: %r\n",
-					Status
-					));
-			} else {
-				UpdateBmcVarStore(&Private->BmcConfigData);
-			}
+      IsMacFormatChanged = TRUE;
 		}
 		FreePool(MacAddr);
 	}
 	return Status;
+}
+
+EFI_STATUS
+ProcessCommitMacAddr (
+  IN  NET_PRIVATE_DATA             *Private,
+  IN  EFI_QUESTION_ID               QuestionId
+  )
+{
+  EFI_STATUS                       Status;
+  IPMI_LAN_MAC_ADDRESS             BmcMacAddr;
+
+  Status = IpmiSetBmcMacAddrUnlock();
+  if (EFI_ERROR(Status)) {
+       DEBUG((DEBUG_ERROR,"Fail to Unlock BMC MAC set: %r\n",Status));
+  }
+
+  ConvertChar16ToIpmiMac(Private->BmcConfigData.MacAddr, BmcMacAddr.MacAddress);
+
+  Status = IpmiSetBmcMacAddr(BmcMacAddr.MacAddress);
+
+  if (EFI_ERROR(Status)) {
+    DEBUG((
+      DEBUG_ERROR,
+      "Failed to update BMC with Gateway Address: %r\n",
+      Status
+      ));
+  } else {
+    UpdateBmcVarStore(&Private->BmcConfigData);
+  }
+  return Status;
 }

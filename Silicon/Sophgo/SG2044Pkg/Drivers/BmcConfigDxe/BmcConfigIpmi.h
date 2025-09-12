@@ -139,6 +139,11 @@ IpmiSetBmcLanInfo (
   );
 
 EFI_STATUS
+IpmiSetBmcMacAddrUnlock (
+  VOID
+  );
+
+EFI_STATUS
 EFIAPI
 IpmiGetBmcMacAddr (
   OUT IPMI_LAN_MAC_ADDRESS      *BmcMacAddr
@@ -147,8 +152,7 @@ IpmiGetBmcMacAddr (
 EFI_STATUS
 EFIAPI
 GetBmcBasicInfo (
-  OUT CHAR16* BmcFwVersion,
-  OUT CHAR16* IpmiVersion
+  OUT BMC_DATA *BmcData
   );
 
 EFI_STATUS

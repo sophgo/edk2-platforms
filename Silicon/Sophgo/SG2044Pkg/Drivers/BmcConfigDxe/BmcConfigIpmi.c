@@ -71,6 +71,40 @@ Exit:
   return Status;
 }
 
+
+EFI_STATUS
+IpmiSetBmcMacAddrUnlock (
+  VOID
+  )
+{
+  UINT8       Commanddata[20];
+  UINT8       Commanddatasize;
+  UINT8       Response[20];
+  UINT32       Responsesize;
+  EFI_STATUS  Status = EFI_SUCCESS;
+
+  ZeroMem (Commanddata, 20);
+  ZeroMem (Response, 20);
+  //
+  // Set MAC Source Unlock
+  //
+  Commanddata[0] = BMC_IPMI_CHANNEL_NO;      // Channel number 0x01
+  Commanddata[1] = 0xC2;                     // Parameter selector OEM define
+
+  Commanddatasize = 2;
+  Responsesize    = 1;
+
+  Status = IpmiSubmitCommand (
+            IPMI_NETFN_TRANSPORT,           // NetFunction 0x0c
+            IPMI_TRANSPORT_SET_LAN_CONFIG_PARAMETERS,     // Command 0x01
+            (UINT8 *) &Commanddata[0],  // *CommandData
+            Commanddatasize,            // CommandDataSize
+            (UINT8 *) &Response,        // *ResponseData
+            (UINT32 *) &Responsesize     // *ResponseDataSize
+            );
+  return Status;
+}
+
 EFI_STATUS
 IpmiSetBmcMacAddr (
   IN OUT UINT8       *MacAddr
@@ -514,12 +548,12 @@ IpmiSetUserPassword (
 EFI_STATUS
 EFIAPI
 GetBmcBasicInfo (
-  OUT CHAR16* BmcFwVersion,
-  OUT CHAR16* IpmiVersion
+  OUT BMC_DATA *BmcData
   )
 {
   EFI_STATUS                   Status;
   IPMI_GET_DEVICE_ID_RESPONSE  DeviceId;
+  UINTN                        StrLen;
 
   Status = IpmiGetDeviceId (&DeviceId);
   if (  !EFI_ERROR (Status)
@@ -528,9 +562,16 @@ GetBmcBasicInfo (
     //
     // Firmware Revision
     //
-    UnicodeSPrint (
-      BmcFwVersion,
-      sizeof (BmcFwVersion),
+    DEBUG ((DEBUG_VERBOSE, "BMC Firmware Version:\n %d.%02d %2d %d %d\n",
+      DeviceId.FirmwareRev1.Bits.MajorFirmwareRev,
+      BcdToDecimal8 (DeviceId.MinorFirmwareRev),
+      DeviceId.MinorFirmwareRev,
+      sizeof (BmcData->FmVersion),
+      sizeof (BmcData->IpmiVersion)));
+
+    StrLen = UnicodeSPrint (
+      BmcData->FmVersion,
+      sizeof (BmcData->FmVersion),
       L"%d.%02d",
       DeviceId.FirmwareRev1.Bits.MajorFirmwareRev,
       BcdToDecimal8 (DeviceId.MinorFirmwareRev)
@@ -539,9 +580,9 @@ GetBmcBasicInfo (
     //
     // IPMI Version
     //
-    UnicodeSPrint (
-      IpmiVersion,
-      sizeof (IpmiVersion),
+    StrLen = UnicodeSPrint (
+      BmcData->IpmiVersion,
+      sizeof (BmcData->IpmiVersion),
       L"%d.%d",
       DeviceId.SpecificationVersion & 0x0F,
       (DeviceId.SpecificationVersion >> 4) & 0x0F

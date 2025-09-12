@@ -17,6 +17,8 @@ EFI_HANDLE        DriverHandle;
 EFI_GUID          gBmcConfigFormSetGuid = BMC_FORMSET_GUID;
 NET_PRIVATE_DATA *PrivateData = NULL;
 BOOLEAN           IsFormatOpen = FALSE;
+BOOLEAN           IsLanFormatChanged = FALSE;
+BOOLEAN           IsMacFormatChanged = FALSE;
 
 /**
  * @brief   Defines a vendor-specific device path structure for the Set Date and Time HII formset.
@@ -110,10 +112,10 @@ InitializeBmcVarstore(
             L"root");
     StrCpyS(PrivateData->BmcConfigData.FmVersion,
             sizeof(PrivateData->BmcConfigData.FmVersion) / sizeof(CHAR16),
-            L"1.0");
+            L"1.05");
     StrCpyS(PrivateData->BmcConfigData.IpmiVersion,
             sizeof(PrivateData->BmcConfigData.IpmiVersion) / sizeof(CHAR16),
-            L"1.0");
+            L"2.0");
     StrCpyS(PrivateData->BmcConfigData.MacAddr,
             sizeof(PrivateData->BmcConfigData.MacAddr) / sizeof(CHAR16),
             L"ff:ff:ff:ff:ff:ff");
@@ -328,19 +330,19 @@ DriverCallback(
       ProcessIpSourceSet(PrivateData, QuestionId, Value);
       break;
     case NETWORK_SET_IP_KEY_ID:
-      Status = ProcessIpAddrSet(PrivateData, QuestionId, Value);
+      ProcessIpAddrSet(PrivateData, QuestionId, Value);
       break;
     case NETWORK_SET_SUBNET_KEY_ID:
-      Status = ProcessSubnetMaskSet(PrivateData, QuestionId, Value);
+      ProcessSubnetMaskSet(PrivateData, QuestionId, Value);
       break;
     case NETWORK_SET_GATEWAY_KEY_ID:
-      Status = ProcessGateWayAddrSet(PrivateData, QuestionId, Value);
+      ProcessGateWayAddrSet(PrivateData, QuestionId, Value);
       break;
     case MAC_ADDR_SET_KEY_ID:
-      Status = ProcessMacAddrSet(PrivateData, QuestionId, Value);
+      ProcessMacAddrSet(PrivateData, QuestionId, Value);
       break;
     case REFRESH_QUESTION_ID:
-      Status = UpdateBmcLanConfigData(PrivateData);
+      UpdateBmcLanConfigData(PrivateData);
       UpdateNetworkForm(PrivateData);
       break;
     case BASIC_INFO_REFRESH_ID:
@@ -382,7 +384,17 @@ DriverCallback(
     }
   } else if (Action == EFI_BROWSER_ACTION_CHANGING) {
     if (QuestionId >= KEY_PASSWORD_1 && QuestionId <= KEY_PASSWORD_15) {
-      Status = ProcessPasswordSet(PrivateData, QuestionId, Value);
+      ProcessPasswordSet(PrivateData, QuestionId, Value);
+    }
+  }
+  else if (Action == EFI_BROWSER_ACTION_SUBMITTED) {
+    if (IsLanFormatChanged == TRUE) {
+      ProcessIpSetAll(PrivateData, QuestionId, Value);
+      IsLanFormatChanged = FALSE;
+    }
+    if (IsMacFormatChanged == TRUE) {
+      ProcessCommitMacAddr(PrivateData, QuestionId);
+      IsMacFormatChanged = FALSE;
     }
   }
   return EFI_SUCCESS;

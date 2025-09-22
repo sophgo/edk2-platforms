@@ -19,17 +19,11 @@
 #include <Include/SG2044AcpiHeader.h>
 
 //
-// Default ACPI table information
-//
-
-//
 // BERT context structure
 //
 typedef struct {
   EFI_ACPI_6_5_BOOT_ERROR_RECORD_TABLE_HEADER  *BertHeader;
 } BERT_CONTEXT;
-
-extern BERT_CONTEXT  mBertContext;
 
 /**
   Creates and initializes a minimal Boot Error Record Table (BERT) header.
@@ -49,16 +43,27 @@ BertHeaderCreator (
   );
 
 /**
-  Initializes an empty Boot Error Record Table (BERT).
+  Initializes Boot Error Record Table (BERT).
 
-  This function creates and initializes a minimal BERT table without error
-  records, serving as a placeholder for future SoC implementations.
+  @param[in] BootErrorRegion        64-bit physical address of the Boot Error Region.
+  @param[in] BootErrorRegionLength  the length in bytes of the boot error region.
 
   @retval EFI_SUCCESS      BERT table was initialized successfully.
   @retval EFI_DEVICE_ERROR Failed to create or initialize BERT header.
 **/
 EFI_STATUS
 BertInitTable (
+  IN  UINT64  BootErrorRegion,
+  IN  UINT32  BootErrorRegionLength
+  );
+
+BERT_CONTEXT *
+GetBertContext (
+  VOID
+  );
+
+VOID
+FreeBertContextHeader (
   VOID
   );
 

@@ -22,7 +22,7 @@ Scope(_SB)
         Or (CDW1,0x0A,CDW1)
       }
       Else {
-        And (CDW2,0xC0,CDW2)
+        And (CDW2,0xD0,CDW2)
       }
 
       Return (Arg3)

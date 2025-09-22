@@ -24,6 +24,8 @@
   Bert.h
   Hest.c
   Hest.h
+  Einj.c
+  Einj.h
 
 [Packages]
   MdePkg/MdePkg.dec

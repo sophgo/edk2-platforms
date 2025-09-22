@@ -9,7 +9,7 @@
 
 #include "Bert.h"
 
-BERT_CONTEXT  mBertContext;
+static BERT_CONTEXT  mBertContext;
 
 /**
   Creates and initializes a minimal Boot Error Record Table (BERT) header.
@@ -53,6 +53,11 @@ BertHeaderCreator (
   CopyMem (&Context->BertHeader->Header, &Header, sizeof (EFI_ACPI_DESCRIPTION_HEADER));
 
   //
+  // Initialize table length to header size
+  //
+  Context->BertHeader->Header.Length = sizeof (EFI_ACPI_6_5_BOOT_ERROR_RECORD_TABLE_HEADER);
+
+  //
   // Initialize BERT specific fields
   //
   Context->BertHeader->BootErrorRegionLength = 0;  // No error region
@@ -61,15 +66,36 @@ BertHeaderCreator (
   return EFI_SUCCESS;
 }
 
+BERT_CONTEXT *
+GetBertContext (
+  VOID
+  )
+{
+  return &mBertContext;
+}
+
+VOID
+FreeBertContextHeader (
+  VOID
+  )
+{
+  if (mBertContext.BertHeader != NULL)
+    FreePool (mBertContext.BertHeader);
+}
+
 /**
-  Initializes an empty Boot Error Record Table (BERT).
+  Initializes Boot Error Record Table (BERT).
+
+  @param[in] BootErrorRegion        64-bit physical address of the Boot Error Region.
+  @param[in] BootErrorRegionLength  the length in bytes of the boot error region.
 
   @retval EFI_SUCCESS      BERT table was initialized successfully.
   @retval EFI_DEVICE_ERROR Failed to create or initialize BERT header.
 **/
 EFI_STATUS
 BertInitTable (
-  VOID
+  IN  UINT64  BootErrorRegion,
+  IN  UINT32  BootErrorRegionLength
   )
 {
   UINT8       Checksum;
@@ -86,6 +112,9 @@ BertInitTable (
     return EFI_DEVICE_ERROR;
   }
 
+  mBertContext.BertHeader->BootErrorRegionLength = BootErrorRegionLength;
+  mBertContext.BertHeader->BootErrorRegion = BootErrorRegion;
+
   //
   // Calculate and update checksum
   //
@@ -98,4 +127,3 @@ BertInitTable (
   DEBUG ((DEBUG_INFO, "%a: Empty BERT table initialized successfully\n", __func__));
   return EFI_SUCCESS;
 }
-

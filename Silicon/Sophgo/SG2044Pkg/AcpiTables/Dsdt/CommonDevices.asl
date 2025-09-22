@@ -410,4 +410,42 @@ Scope(_SB)
       }
     })
   }
+
+  //
+  // Report APEI Errors to GHES via SCI notification.
+  // SCI notification requires one GED and one HED Device
+  //     GED = Generic Event Device (ACPI0013)
+  //     HED = Hardware Error Device (PNP0C33)
+  //
+  Device(GED2) {
+    Name(_HID, "ACPI0013")
+    Name(_UID, 2)
+    Method(_STA) {
+      Return (0xF)
+    }
+    Name(_CRS, ResourceTemplate () {
+      Interrupt(ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 860 } // GHES
+    })
+
+    // MTLI 860 interrupt
+    OperationRegion(INTR, SystemMemory, 0x6D500007F0, 4)
+    Field(INTR, DWordAcc, NoLock, Preserve) {
+      MTLI, 32
+    }
+
+    Method(_EVT, 1, Serialized) {
+      Switch (ToInteger(Arg0)) {
+        Case (860) {
+          // Clear the interrupt
+          Store (0, MTLI)
+          Notify (HED0, 0x80)
+        }
+      }
+    }
+  }
+
+  Device(HED0) {
+    Name(_HID, EISAID("PNP0C33"))
+    Name(_UID, Zero)
+  }
 }

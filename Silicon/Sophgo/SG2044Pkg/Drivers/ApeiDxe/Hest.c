@@ -13,10 +13,10 @@
 
 #include "Hest.h"
 
-PCIE_RC_CONFIG  mPcieRcConfig[PCIE_MAX_ROOT_COMPLEXES];
-UINTN           mPcieRcCount = 0;
-HEST_CONTEXT    mHestContext;
-BOOLEAN         mPcieConfigParsed = FALSE;
+PCIE_RC_CONFIG       mPcieRcConfig[PCIE_MAX_ROOT_COMPLEXES];
+STATIC UINTN         mPcieRcCount = 0;
+STATIC HEST_CONTEXT  mHestContext;
+BOOLEAN              mPcieConfigParsed = FALSE;
 
 
 /**
@@ -93,15 +93,12 @@ ParsePcieRcConfig (
     mPcieRcConfig[mPcieRcCount].RcId = mPcieRcCount;
     mPcieRcConfig[mPcieRcCount].Enabled = TRUE;
     mPcieRcConfig[mPcieRcCount].PortCount = 1;  // Each RC has 1 port
-    // dbi region is the first reg entry (index 0)
-    mPcieRcConfig[mPcieRcCount].ConfigBase = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
 
     DEBUG ((DEBUG_VERBOSE, "%a: Found RC%d: enabled=%d, port_count=%d, config_base=0x%lx\n",
             __func__,
             mPcieRcConfig[mPcieRcCount].RcId,
             mPcieRcConfig[mPcieRcCount].Enabled,
-            mPcieRcConfig[mPcieRcCount].PortCount,
-            mPcieRcConfig[mPcieRcCount].ConfigBase));
+            mPcieRcConfig[mPcieRcCount].PortCount));
 
     mPcieRcCount++;
   }
@@ -116,104 +113,27 @@ ParsePcieRcConfig (
 }
 
 /**
-  Initialize PCIe AER error source structure.
+  Initialize generic hardware error source configuration.
 
-  @param[out] GhesV2       Pointer to PCIe AER structure to initialize
-  @param[in]  RcConfig     Pointer to RC configuration
-  @param[in]  ErrorBlock   Pointer to error status block
-  @param[in]  BlockSize    Size of error status block
+  This function configures the Generic Hardware Error Source version 2 (GHESv2)
+  with the given notification type ccording to ACPI 6.5 specification.
 
-  @retval EFI_SUCCESS           Initialization successful
-  @retval EFI_INVALID_PARAMETER Invalid parameter
-**/
-STATIC
-EFI_STATUS
-InitializePcieAerErrorSource (
-  OUT EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE  *GhesV2,
-  IN  PCIE_RC_CONFIG                                                  *RcConfig,
-  IN  VOID                                                            *ErrorBlock,
-  IN  UINTN                                                           BlockSize
-  )
-{
-  if (GhesV2 == NULL || RcConfig == NULL || ErrorBlock == NULL) {
-    return EFI_INVALID_PARAMETER;
-  }
+  @param[out] GhesV2        Pointer to GHES v2 structure to be initialized
+  @param[in]  ErrorBlock    Pointer to the memory used for storing error blocks, 
+                            read ack register, and error status address
+  @param[in]  SourceId      Uniquely identify the error source.
+  @param[in]  Notification  Pointer to the hardware error notification structure
 
-  //
-  // Initialize GHES v2 basic fields
-  //
-  GhesV2->Type = EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_VERSION_2;
-  GhesV2->SourceId = PCIE_ERROR_SOURCE_ID_BASE + RcConfig->RcId;
-  GhesV2->RelatedSourceId = 0xFFFF;
-  GhesV2->Flags = EFI_ACPI_6_5_ERROR_SOURCE_FLAG_FIRMWARE_FIRST;
-  GhesV2->Enabled = TRUE;
-
-  //
-  // Configure error record parameters
-  //
-  GhesV2->NumberOfRecordsToPreAllocate = 1;
-  GhesV2->MaxSectionsPerRecord = 1;
-  GhesV2->MaxRawDataLength = GENERIC_HARDWARE_ERROR_BLOCK_SIZE;
-
-  //
-  // Configure error status parameters - using system memory space
-  //
-  GhesV2->ErrorStatusAddress.AddressSpaceId = EFI_ACPI_6_5_SYSTEM_MEMORY;
-  GhesV2->ErrorStatusAddress.RegisterBitWidth = 64;
-  GhesV2->ErrorStatusAddress.RegisterBitOffset = 0;
-  GhesV2->ErrorStatusAddress.AccessSize = EFI_ACPI_6_5_QWORD;
-  GhesV2->ErrorStatusAddress.Address = (UINT64)(UINTN)ErrorBlock;
-
-  //
-  // Configure notification
-  //
-  GhesV2->NotificationStructure.Type = EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_POLLED;
-  GhesV2->NotificationStructure.PollInterval = 1000;  // 1 second polling interval
-  GhesV2->NotificationStructure.Vector = 0;
-  GhesV2->NotificationStructure.SwitchToPollingThresholdValue = 0;
-  GhesV2->NotificationStructure.SwitchToPollingThresholdWindow = 0;
-  GhesV2->NotificationStructure.ErrorThresholdValue = 0;
-  GhesV2->NotificationStructure.ErrorThresholdWindow = 0;
-
-  //
-  // Configure error status block
-  //
-  GhesV2->ErrorStatusBlockLength = BlockSize;
-
-  //
-  // Configure read-ack register - using system memory space
-  // Use DBI base address from RC config
-  //
-  GhesV2->ReadAckRegister.AddressSpaceId = EFI_ACPI_6_5_SYSTEM_MEMORY;
-  GhesV2->ReadAckRegister.RegisterBitWidth = 64;
-  GhesV2->ReadAckRegister.RegisterBitOffset = 0;
-  GhesV2->ReadAckRegister.AccessSize = EFI_ACPI_6_5_QWORD;
-  GhesV2->ReadAckRegister.Address = RcConfig->ConfigBase + PCIE_AER_CAP_BASE + PCIE_AER_ERROR_STATUS_OFFSET;
-  GhesV2->ReadAckPreserve = 0xFFFFFFFF;
-  GhesV2->ReadAckWrite = 0x00000001;
-
-  return EFI_SUCCESS;
-}
-
-/**
-  Initialize DDR ECC error source configuration.
-
-  This function configures the Generic Hardware Error Source (GHES) for DDR ECC errors.
-  It sets up notification type, polling interval, error status block parameters and
-  error record configurations according to ACPI 6.5 specification.
-
-  @param[out] GhesV2  Pointer to GHES v2 structure to be initialized
-
-  @retval EFI_SUCCESS           DDR ECC error source initialized successfully
+  @retval EFI_SUCCESS           Error source initialized successfully
   @retval EFI_INVALID_PARAMETER GhesV2 is NULL
 **/
 STATIC
 EFI_STATUS
-InitializeDdrEccErrorSource (
+InitializeErrorSourceStruct (
   OUT EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE  *GhesV2,
   IN  VOID                                                            *ErrorBlock,
-  IN  UINTN                                                           BlockSize,
-  IN  UINT8                                                           ControllerId
+  IN  UINT16                                                           SourceId,
+  IN  EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE              *Notification
   )
 {
   if (GhesV2 == NULL) {
@@ -224,42 +144,42 @@ InitializeDdrEccErrorSource (
   // Configure basic GHES v2 fields
   //
   GhesV2->Type = EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_VERSION_2;
-  GhesV2->SourceId = DDR_ECC_ERROR_SOURCE_ID_BASE + ControllerId;
+  GhesV2->SourceId = SourceId;
   GhesV2->RelatedSourceId = 0xFFFF;
-  GhesV2->Flags = EFI_ACPI_6_5_ERROR_SOURCE_FLAG_FIRMWARE_FIRST;
+  GhesV2->Flags = 0;
   GhesV2->Enabled = TRUE;
 
   //
   // Configure error record parameters
   //
   GhesV2->NumberOfRecordsToPreAllocate = 1;
-  GhesV2->MaxSectionsPerRecord = 1;
-  GhesV2->MaxRawDataLength = GENERIC_HARDWARE_ERROR_BLOCK_SIZE;
+  GhesV2->MaxSectionsPerRecord = 2;
+  GhesV2->MaxRawDataLength = GHES_ERR_STATUS_BLOCK_MAX_SIZE;
 
   //
-  // Configure error status parameters
+  // Configure error status address parameters
   //
   GhesV2->ErrorStatusAddress.AddressSpaceId = EFI_ACPI_6_5_SYSTEM_MEMORY;
   GhesV2->ErrorStatusAddress.RegisterBitWidth = 64;
   GhesV2->ErrorStatusAddress.RegisterBitOffset = 0;
   GhesV2->ErrorStatusAddress.AccessSize = EFI_ACPI_6_5_QWORD;
-  GhesV2->ErrorStatusAddress.Address = (UINT64)(UINTN)ErrorBlock;
+  GhesV2->ErrorStatusAddress.Address = (UINT64)(UINTN)(ErrorBlock + GHES_ERR_STATUS_BLOCK_MAX_SIZE);
+  MmioWrite64 (GhesV2->ErrorStatusAddress.Address, (UINT64)(UINTN)ErrorBlock);
+
+  //
+  // Clear ErrorBlock.BlockStatus to initialize ErrorBlock memory region
+  //
+  ZeroMem (ErrorBlock, sizeof(EFI_ACPI_6_5_ERROR_BLOCK_STATUS));
 
   //
   // Configure notification
   //
-  GhesV2->NotificationStructure.Type = EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_POLLED;
-  GhesV2->NotificationStructure.PollInterval = 1000;  // 1 second polling interval
-  GhesV2->NotificationStructure.Vector = 0;
-  GhesV2->NotificationStructure.SwitchToPollingThresholdValue = 0;
-  GhesV2->NotificationStructure.SwitchToPollingThresholdWindow = 0;
-  GhesV2->NotificationStructure.ErrorThresholdValue = 0;
-  GhesV2->NotificationStructure.ErrorThresholdWindow = 0;
+  CopyMem (&(GhesV2->NotificationStructure), Notification, sizeof(EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE));
 
   //
   // Configure error status block
   //
-  GhesV2->ErrorStatusBlockLength = BlockSize;
+  GhesV2->ErrorStatusBlockLength = GHES_ERR_STATUS_BLOCK_MAX_SIZE;
 
   //
   // Configure read-ack register
@@ -269,19 +189,14 @@ InitializeDdrEccErrorSource (
   GhesV2->ReadAckRegister.RegisterBitOffset = 0;
   GhesV2->ReadAckRegister.AccessSize = EFI_ACPI_6_5_QWORD;
 
-  //
-  // Calculate the correct controller address
-  //
-  UINT8 CfgIndex = ControllerId / 2;  // Get the configuration area index
-  UINT8 CtlIndex = ControllerId % 2;  // Get the controller index (0 or 1)
-  UINT64 CtlBase = DDR_CFG_BASE_ARRAY[CfgIndex] +
-                   (CtlIndex == 0 ? DDR_CTL0_START_ADDRESS : DDR_CTL1_START_ADDRESS);
-  GhesV2->ReadAckRegister.Address = CtlBase + DDR_ECC_STATUS_OFFSET;
-  GhesV2->ReadAckPreserve = DDR_ECC_ERROR_ACK_PRESERVE;
-  GhesV2->ReadAckWrite = DDR_ECC_ERROR_ACK_WRITE;
+  GhesV2->ReadAckRegister.Address = (UINT64)(UINTN)(ErrorBlock + MEM_SIZE_PER_GHES - GHES_READ_ACK_REG_LEN);
+  GhesV2->ReadAckPreserve = GHES_READ_ACK_REG_PRESERVE;
+  GhesV2->ReadAckWrite = GHES_READ_ACK_REG_WRITE_VALUE;
 
-  DEBUG ((DEBUG_VERBOSE, "%a: DDR ECC error source initialized for Controller %d at 0x%lx\n",
-          __func__, ControllerId, GhesV2->ErrorStatusAddress.Address));
+  //
+  // Initialize ReadAckRegister
+  //
+  MmioWrite64(GhesV2->ReadAckRegister.Address, GhesV2->ReadAckWrite);
 
   return EFI_SUCCESS;
 }
@@ -293,8 +208,10 @@ InitializeDdrEccErrorSource (
   1. PCIe Root Complex AER error sources
   2. LPDDR5x inline ECC error source
 
-  @param[out] GhesV2       Array of GHES V2 structures
-  @param[in]  NumOfGhesV2  Number of GHES structures to create
+  @param[out] GhesV2          Array of GHES V2 structures
+  @param[in]  NumOfGhesV2     Number of GHES structures to create
+  @param[in]  ErrorBlockBase  The base address to store error block and related register data
+  @param[out] MemUsedSize     The byte size of the SHARED_MEMORY used by GHES
 
   @retval EFI_SUCCESS           GHES context created successfully
   @retval EFI_OUT_OF_RESOURCES  Failed to allocate memory
@@ -303,7 +220,9 @@ InitializeDdrEccErrorSource (
 EFI_STATUS
 GhesV2ContextForHest (
   OUT EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE  GhesV2[],
-  IN  UINT8                                                           NumOfGhesV2
+  IN  UINT8                                                           NumOfGhesV2,
+  IN  UINTN                                                           ErrorBlockBase,
+  OUT UINT32                                                          *MemUsedSize
   )
 {
   EFI_STATUS  Status;
@@ -312,6 +231,7 @@ GhesV2ContextForHest (
   VOID        *CurrentBlock;
   UINT8       TotalErrorSources;
   UINT8       ValidSourceCount = 0;
+  EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE *Notification;
 
   //
   // Get total number of error sources
@@ -322,14 +242,48 @@ GhesV2ContextForHest (
     return EFI_BUFFER_TOO_SMALL;
   }
 
-  //
-  // Use shared memory for error blocks
-  //
-  ErrorBlock = (VOID *)(UINTN)SHARED_MEMORY_BASE;
+  ErrorBlock = (VOID *)ErrorBlockBase;
   CurrentBlock = ErrorBlock;
 
   DEBUG ((DEBUG_VERBOSE, "%a: Initial ErrorBlock at 0x%llx\n", __func__, (UINT64)(UINTN)ErrorBlock));
   DEBUG ((DEBUG_VERBOSE, "%a: Initial CurrentBlock at 0x%llx\n", __func__, (UINT64)(UINTN)CurrentBlock));
+
+  Notification = (EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE *) AllocateZeroPool (sizeof(EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE));
+  
+  Notification->Type = EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_GSIV;
+  Notification->Length = sizeof(EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE);
+
+  //
+  // Create DDR ECC error sources for each controller
+  //
+  for (Index = 0; Index < DDR_CFG_BASE_ARRAY_SIZE; Index++) {
+    Status = InitializeErrorSourceStruct (
+               &GhesV2[ValidSourceCount],
+               CurrentBlock,
+               DDR_ECC_ERROR_SOURCE_ID_BASE + Index,
+               Notification
+               );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a: Failed to initialize DDR ECC error source for Controller %d: %r\n",
+              __func__, Index, Status));
+      continue;
+    }
+
+    DEBUG ((DEBUG_VERBOSE, "%a: DDR ECC error source initialized for Controller %d at 0x%lx\n",
+      __func__, Index, GhesV2[ValidSourceCount].ErrorStatusAddress.Address));
+
+    DEBUG ((DEBUG_VERBOSE, "%a: Added DDR error source %d with ID 0x%x at 0x%llx\n",
+            __func__, ValidSourceCount, GhesV2[ValidSourceCount].SourceId,
+            (UINT64)(UINTN)CurrentBlock));
+
+    CurrentBlock = (VOID *)((UINTN)CurrentBlock + MEM_SIZE_PER_GHES);
+    ValidSourceCount++;
+  }
+
+  ZeroMem (Notification, sizeof (*Notification));
+  Notification->Type = EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_POLLED;
+  Notification->Length = sizeof(EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE);
+  Notification->PollInterval = 20000;
 
   //
   // Create PCIe AER error sources
@@ -338,13 +292,12 @@ GhesV2ContextForHest (
     if (!mPcieRcConfig[Index].Enabled) {
       continue;
     }
-
-    Status = InitializePcieAerErrorSource (
-               &GhesV2[ValidSourceCount],
-               &mPcieRcConfig[Index],
-               CurrentBlock,
-               GENERIC_HARDWARE_ERROR_BLOCK_SIZE
-               );
+    Status = InitializeErrorSourceStruct (
+              &GhesV2[ValidSourceCount],
+              CurrentBlock,
+              PCIE_ERROR_SOURCE_ID_BASE + Index,
+              Notification
+              );
     if (EFI_ERROR (Status)) {
       DEBUG ((DEBUG_ERROR, "%a: Failed to initialize AER source for RC%d: %r\n",
               __func__, mPcieRcConfig[Index].RcId, Status));
@@ -355,33 +308,11 @@ GhesV2ContextForHest (
             __func__, ValidSourceCount, GhesV2[ValidSourceCount].SourceId,
             (UINT64)(UINTN)CurrentBlock));
 
-    CurrentBlock = (VOID *)((UINTN)CurrentBlock + GENERIC_HARDWARE_ERROR_BLOCK_SIZE);
+    CurrentBlock = (VOID *)((UINTN)CurrentBlock + MEM_SIZE_PER_GHES);
     ValidSourceCount++;
   }
 
-  //
-  // Create DDR ECC error sources for each controller
-  //
-  for (Index = 0; Index < DDR_CFG_BASE_ARRAY_SIZE * 2; Index++) {
-    Status = InitializeDdrEccErrorSource (
-               &GhesV2[ValidSourceCount],
-               CurrentBlock,
-               GENERIC_HARDWARE_ERROR_BLOCK_SIZE,
-               Index
-               );
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: Failed to initialize DDR ECC error source for Controller %d: %r\n",
-              __func__, Index, Status));
-      continue;
-    }
-
-    DEBUG ((DEBUG_VERBOSE, "%a: Added DDR error source %d with ID 0x%x at 0x%llx\n",
-            __func__, ValidSourceCount, GhesV2[ValidSourceCount].SourceId,
-            (UINT64)(UINTN)CurrentBlock));
-
-    CurrentBlock = (VOID *)((UINTN)CurrentBlock + GENERIC_HARDWARE_ERROR_BLOCK_SIZE);
-    ValidSourceCount++;
-  }
+  *MemUsedSize = (UINT32)((UINTN)CurrentBlock - ErrorBlockBase);
 
   DEBUG ((DEBUG_VERBOSE, "%a: Final CurrentBlock at 0x%llx\n", __func__, (UINT64)(UINTN)CurrentBlock));
   DEBUG ((DEBUG_VERBOSE, "%a: Initialized %d valid error sources out of %d total\n",
@@ -537,8 +468,123 @@ GetTotalErrorSources (
   }
 
   DEBUG ((DEBUG_VERBOSE, "%a: Returning total error sources: PCIe RC=%d + DDR=%d = %d\n",
-          __func__, mPcieRcCount, DDR_CFG_BASE_ARRAY_SIZE * 2,
-          mPcieRcCount + (DDR_CFG_BASE_ARRAY_SIZE * 2)));
+          __func__, mPcieRcCount, DDR_CFG_BASE_ARRAY_SIZE,
+          mPcieRcCount + DDR_CFG_BASE_ARRAY_SIZE));
 
-  return mPcieRcCount + (DDR_CFG_BASE_ARRAY_SIZE * 2);
+  return mPcieRcCount + DDR_CFG_BASE_ARRAY_SIZE;
+}
+
+HEST_CONTEXT *
+GetHestContext (
+  VOID
+  )
+{
+  return &mHestContext;
+}
+
+VOID
+GetGhesV2Count (
+  OUT  UINT32  *DdrCount,
+  OUT  UINT32  *PcieCount
+  )
+{
+  *DdrCount = DDR_CFG_BASE_ARRAY_SIZE;
+  *PcieCount = mPcieRcCount;
+}
+
+VOID
+FreeHestContextHeader (
+  VOID
+  )
+{
+  if (mHestContext.HestHeader != NULL)
+    FreePool (mHestContext.HestHeader);
+}
+
+/**
+  Initialize HEST table and register error handlers.
+
+  @param[in]  ErrorBlockBase  The base address to store error block and related register data
+  @param[out] MemUsedSize     The byte size of the SHARED_MEMORY used by GHES
+
+  @retval EFI_SUCCESS           HEST initialized successfully
+  @retval Others                Initialization failed
+**/
+EFI_STATUS
+HestInitTable (
+  IN  UINTN     ErrorBlockBase,
+  OUT UINT32    *MemUsedSize
+  )
+{
+  EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE *GhesV2;
+  UINT8       Index;
+  UINT8       TotalErrorSources;
+  EFI_STATUS  Status;
+
+  if (IS_ALIGNED (ErrorBlockBase, 8) == 0){
+    DEBUG ((DEBUG_ERROR, "%a: Invalid ErrorBlockBase: 0x%llx\n", __func__, ErrorBlockBase));
+    DEBUG ((DEBUG_ERROR, "%a: ErrorBlockBase must be aligned on 8-byte boundaries!\n", __func__));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  //
+  // Get total number of error sources from Hest.c
+  //
+  TotalErrorSources = GetTotalErrorSources ();
+
+  //
+  // Allocate memory for GHES structures
+  //
+  GhesV2 = AllocateZeroPool (TotalErrorSources * sizeof (EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE));
+  if (GhesV2 == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a: Failed to allocate GHES structures\n", __func__));
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  //
+  // Create HEST header
+  //
+  Status = HestHeaderCreator (&mHestContext, HEST_TABLE_SIZE);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a: Failed to create HEST header - %r\n", __func__, Status));
+    goto InitError;
+  }
+
+  //
+  // Initialize GHES structures
+  //
+  Status = GhesV2ContextForHest (GhesV2, TotalErrorSources, ErrorBlockBase, MemUsedSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "%a: Failed to create GHES context - %r\n", __func__, Status));
+    goto InitError;
+  }
+
+  //
+  // Add error source descriptors to HEST
+  //
+  for (Index = 0; Index < TotalErrorSources; Index++) {
+    Status = HestAddErrorSourceDescriptor (
+               &mHestContext,
+               &GhesV2[Index],
+               sizeof (EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE)
+               );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((DEBUG_ERROR, "%a: Failed to add error source %d - %r\n",
+              __func__, Index, Status));
+      goto InitError;
+    }
+  }
+
+  //
+  // Free allocated memory
+  //
+  FreePool (GhesV2);
+
+  return EFI_SUCCESS;
+
+InitError:
+  FreePool (GhesV2);
+  FreeHestContextHeader ();
+
+  return Status;
 }

@@ -24,8 +24,32 @@
 #include <Guid/Cper.h>
 #include "Bert.h"
 #include "Hest.h"
+#include "Einj.h"
 
-#define MAX_ERROR_SOURCES   0x1000
+#define SHARED_MEMORY_BASE                 0x70101D0000ULL
+#define APEI_READY_REGISTER                (SHARED_MEMORY_BASE)
+#define APEI_READY_REGISTER_LEN            8
+#define APEI_TABLE_INFO_BASE               (APEI_READY_REGISTER + APEI_READY_REGISTER_LEN)
+#define APEI_TABLE_INFO_LEN                (0x400 - APEI_READY_REGISTER_LEN)
+#define BOOT_ERROR_REGION_BASE             (APEI_TABLE_INFO_BASE + APEI_TABLE_INFO_LEN)
+#define BOOT_ERROR_REGION_LEN              0x1000
+
+#define MAX_ERROR_SOURCES                  0x100
+#define BERT_INIT_DONE                     (1 << 0)
+#define HEST_INIT_DONE                     (1 << 1)
+#define EINJ_INIT_DONE                     (1 << 2)
+#define APEI_TABLE_INFO_WRITTEN            (1 << 4)
+
+typedef struct {
+  UINT64  HestAddr;
+  UINT64  EinjAddr;
+  UINT16  SourceIdDdrBase;
+  UINT16  SourceIdPcieBase;
+  UINT32  GhesV2CountDdr;
+  UINT32  GhesV2CountPcie;
+  UINT32  Reserved;
+} APEI_TABLE_INFO;
+
 //
 // Error section GUIDs
 //
@@ -39,338 +63,51 @@ EFI_ACPI_TABLE_PROTOCOL         *mAcpiTableProtocol = NULL;
 EFI_ACPI_SDT_PROTOCOL           *mAcpiSdtProtocol = NULL;
 
 //
-// Error handling statistics
-//
-typedef struct {
-  UINT32 PcieAerCount;    // PCIe AER error count
-  UINT32 DdrEccCount;     // DDR ECC error count
-} ERROR_STATS;
-
-ERROR_STATS mErrorStats = {0};
-
-//
-// Error handler function types
-//
-typedef EFI_STATUS (*HARDWARE_ERROR_HANDLER) (
-  IN UINT8   *Buffer,
-  IN UINT32  Length,
-  IN UINT32  ErrorSeverity
-  );
-
-//
-// Error source handler structure
-//
-typedef struct {
-  EFI_GUID                *ErrorType;      // Error section type GUID
-  HARDWARE_ERROR_HANDLER   Handler;         // Handler function
-  CHAR8                   *Description;     // Handler description
-} ERROR_SOURCE_HANDLER;
-
-//
-// Handler registration status
-//
-typedef struct {
-  BOOLEAN PcieAerHandlerRegistered;
-  BOOLEAN DdrEccHandlerRegistered;
-} HANDLER_STATUS;
-
-extern ERROR_SOURCE_HANDLER mErrorHandlers[];
-extern HANDLER_STATUS mHandlerStatus;
-
-//
-// Global variables
-//
-HANDLER_STATUS mHandlerStatus = {
-  .PcieAerHandlerRegistered = FALSE,
-  .DdrEccHandlerRegistered = FALSE
-};
-
-//
-// Forward declarations
-//
-STATIC
-EFI_STATUS
-HandlePcieAerError (
-  IN UINT8   *Buffer,
-  IN UINT32  Length,
-  IN UINT32  ErrorSeverity
-  );
-
-STATIC
-EFI_STATUS
-HandleDdrEccError (
-  IN UINT8   *Buffer,
-  IN UINT32  Length,
-  IN UINT32  ErrorSeverity
-  );
-
-//
-// Error handlers table
-//
-ERROR_SOURCE_HANDLER mErrorHandlers[] = {
-  {
-    .ErrorType = &gEfiPcieErrorSectionGuid,
-    .Handler = HandlePcieAerError,
-    .Description = "PCIe AER Handler"
-  },
-  {
-    .ErrorType = &gEfiPlatformMemoryErrorSectionGuid,
-    .Handler = HandleDdrEccError,
-    .Description = "DDR ECC Handler"
-  },
-  { NULL, NULL, NULL } // Terminator
-};
-
-//
-// Add HEST and BERT table key definitions
+// Add HEST, BERT and EINJ table key definitions
 //
 UINTN                          mHestTableKey = 0;
 UINTN                          mBertTableKey = 0;
-
-/**
-  Handle PCIe AER error.
-
-  @param[in] Buffer        CPER buffer containing error data
-  @param[in] Length        Length of CPER buffer
-  @param[in] ErrorSeverity Error severity from CPER header
-
-  @retval EFI_SUCCESS     Error handled successfully
-  @retval Others          Error handling failed
-**/
-STATIC
-EFI_STATUS
-HandlePcieAerError (
-  IN UINT8   *Buffer,
-  IN UINT32  Length,
-  IN UINT32  ErrorSeverity
-  )
-{
-  EFI_STATUS                     Status;
-  EFI_ERROR_SECTION_DESCRIPTOR   *Descriptor;
-  EFI_PCIE_ERROR_DATA           *PcieError;
-
-  DEBUG ((DEBUG_INFO, "%a: Processing PCIe AER error\n", __func__));
-
-  //
-  // Get error section descriptor
-  //
-  Descriptor = (EFI_ERROR_SECTION_DESCRIPTOR *)(Buffer +
-               sizeof(EFI_COMMON_ERROR_RECORD_HEADER));
-
-  //
-  // Get PCIe error data
-  //
-  PcieError = (EFI_PCIE_ERROR_DATA *)((UINT8 *)Buffer + Descriptor->SectionOffset);
-
-  //
-  // Handle error based on severity
-  //
-  switch (ErrorSeverity) {
-  case EFI_ACPI_6_5_ERROR_SEVERITY_CORRECTABLE:
-    //
-    // For correctable errors:
-    // - Log error
-    // - Update statistics
-    // - Clear error status
-    //
-    DEBUG ((DEBUG_INFO, "PCIe correctable error on device %04x:%02x:%02x.%x\n",
-            PcieError->DevBridge.Segment,
-            PcieError->DevBridge.PrimaryOrDeviceBus,
-            PcieError->DevBridge.Device,
-            PcieError->DevBridge.Function));
-
-    mErrorStats.PcieAerCount++;
-    Status = EFI_SUCCESS;
-    break;
-
-  case EFI_ACPI_6_5_ERROR_SEVERITY_FATAL:
-  case EFI_ACPI_6_5_ERROR_SEVERITY_CORRECTED:
-    //
-    // For fatal/uncorrectable errors:
-    // - Log error
-    // - Reset PCIe device if possible
-    // - Update statistics
-    //
-    DEBUG ((DEBUG_ERROR, "PCIe fatal/uncorrectable error on device %04x:%02x:%02x.%x\n",
-            PcieError->DevBridge.Segment,
-            PcieError->DevBridge.PrimaryOrDeviceBus,
-            PcieError->DevBridge.Device,
-            PcieError->DevBridge.Function));
-
-    // TODO: Implement PCIe device reset
-
-    mErrorStats.PcieAerCount++;
-    Status = EFI_SUCCESS;
-    break;
-
-  default:
-    Status = EFI_UNSUPPORTED;
-    break;
-  }
-
-  return Status;
-}
-
-/**
-  Handle DDR ECC error.
-
-  @param[in] Buffer        CPER buffer containing error data
-  @param[in] Length        Length of CPER buffer
-  @param[in] ErrorSeverity Error severity from CPER header
-
-  @retval EFI_SUCCESS     Error handled successfully
-  @retval Others          Error handling failed
-**/
-STATIC
-EFI_STATUS
-HandleDdrEccError (
-  IN UINT8   *Buffer,
-  IN UINT32  Length,
-  IN UINT32  ErrorSeverity
-  )
-{
-  EFI_STATUS                        Status;
-  EFI_ERROR_SECTION_DESCRIPTOR      *Descriptor;
-  EFI_MEMORY_ERROR_SECTION         *MemError;
-
-  DEBUG ((DEBUG_INFO, "%a: Processing DDR ECC error\n", __func__));
-
-  //
-  // Get error section descriptor
-  //
-  Descriptor = (EFI_ERROR_SECTION_DESCRIPTOR *)(Buffer +
-               sizeof(EFI_COMMON_ERROR_RECORD_HEADER));
-
-  //
-  // Get memory error data
-  //
-  MemError = (EFI_MEMORY_ERROR_SECTION *)((UINT8 *)Buffer +
-             Descriptor->SectionOffset);
-
-  //
-  // Handle error based on severity
-  //
-  switch (ErrorSeverity) {
-  case EFI_ACPI_6_5_ERROR_SEVERITY_CORRECTABLE:
-    //
-    // For correctable errors:
-    // - Log error
-    // - Update statistics
-    // - Scrub memory if needed
-    //
-    DEBUG ((DEBUG_INFO, "DDR correctable ECC error at 0x%llx\n",
-            MemError->PhysicalAddress));
-
-    // TODO: Implement memory scrubbing
-
-    mErrorStats.DdrEccCount++;
-    Status = EFI_SUCCESS;
-    break;
-
-  case EFI_ACPI_6_5_ERROR_SEVERITY_FATAL:
-  case EFI_ACPI_6_5_ERROR_SEVERITY_CORRECTED:
-    //
-    // For fatal/uncorrectable errors:
-    // - Log error
-    // - Offline memory page if possible
-    // - Update statistics
-    //
-    DEBUG ((DEBUG_ERROR, "DDR fatal/uncorrectable ECC error at 0x%llx\n",
-            MemError->PhysicalAddress));
-
-    // TODO: Implement memory page offline
-
-    mErrorStats.DdrEccCount++;
-    Status = EFI_SUCCESS;
-    break;
-
-  default:
-    Status = EFI_UNSUPPORTED;
-    break;
-  }
-
-  return Status;
-}
+UINTN                          mEinjTableKey = 0;
 
 /**
   Initialize HEST table and register error handlers.
+
+  @param[in]  ErrorBlockBase  The base address to store error block and related register data
+  @param[out] MemUsedSize     The byte size of the SHARED_MEMORY used by GHES
 
   @retval EFI_SUCCESS           HEST initialized successfully
   @retval Others                Initialization failed
 **/
 EFI_STATUS
 InitHestTable (
-  VOID
+  IN  UINTN     ErrorBlockBase,
+  OUT UINT32    *MemUsedSize
   )
 {
-  EFI_STATUS Status;
-  EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE *GhesV2;
-  UINT8 Index;
-  UINT8 TotalErrorSources;
+  EFI_STATUS   Status;
+  HEST_CONTEXT *Context;
 
   //
-  // Get total number of error sources from Hest.c
+  // Initialize HEST table using Hest.c implementation
   //
-  TotalErrorSources = GetTotalErrorSources ();
-
-  //
-  // Allocate memory for GHES structures
-  //
-  GhesV2 = AllocateZeroPool (TotalErrorSources * sizeof (EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE));
-  if (GhesV2 == NULL) {
-    DEBUG ((DEBUG_ERROR, "%a: Failed to allocate GHES structures\n", __func__));
-    return EFI_OUT_OF_RESOURCES;
-  }
-
-  //
-  // Create HEST header
-  //
-  Status = HestHeaderCreator (&mHestContext, HEST_TABLE_SIZE);
+  Status = HestInitTable (ErrorBlockBase, MemUsedSize);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: Failed to create HEST header - %r\n", __func__, Status));
-    FreePool (GhesV2);
+    DEBUG ((DEBUG_ERROR, "Failed to initialize HEST table - %r\n", Status));
     return Status;
   }
 
-  //
-  // Initialize GHES structures
-  //
-  Status = GhesV2ContextForHest (GhesV2, TotalErrorSources);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: Failed to create GHES context - %r\n", __func__, Status));
-    FreePool (GhesV2);
+  Context = GetHestContext();
+  if (Context == NULL) {
+    DEBUG ((DEBUG_ERROR, "Error, get a NULL pointer of mHestContext- %r\n", Status));
     return Status;
   }
-
-  //
-  // Add error source descriptors to HEST
-  //
-  for (Index = 0; Index < TotalErrorSources; Index++) {
-    Status = HestAddErrorSourceDescriptor (
-               &mHestContext,
-               &GhesV2[Index],
-               sizeof (EFI_ACPI_6_5_GENERIC_HARDWARE_ERROR_SOURCE_VERSION_2_STRUCTURE)
-               );
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: Failed to add error source %d - %r\n",
-              __func__, Index, Status));
-      FreePool (GhesV2);
-      return Status;
-    }
-  }
-
-  //
-  // Free allocated memory
-  //
-  FreePool (GhesV2);
-
   //
   // Install HEST table
   //
   Status = mAcpiTableProtocol->InstallAcpiTable (
                                 mAcpiTableProtocol,
-                                mHestContext.HestHeader,
-                                mHestContext.HestHeader->Header.Length,
+                                Context->HestHeader,
+                                Context->HestHeader->Header.Length,
                                 &mHestTableKey
                                 );
   if (EFI_ERROR (Status)) {
@@ -384,38 +121,128 @@ InitHestTable (
 /**
   Initialize BERT table.
 
+  @param[in] BootErrorRegion        64-bit physical address of the Boot Error Region.
+  @param[in] BootErrorRegionLength  the length in bytes of the boot error region.
+
   @retval EFI_SUCCESS           BERT initialized successfully
   @retval Others                Initialization failed
 **/
 EFI_STATUS
 InitBertTable (
-  VOID
+  IN  UINT64  BootErrorRegion,
+  IN  UINT32  BootErrorRegionLength
   )
 {
-  EFI_STATUS  Status;
+  EFI_STATUS   Status;
+  BERT_CONTEXT *Context;
 
   //
   // Initialize BERT table using Bert.c implementation
   //
-  Status = BertInitTable ();
+  Status = BertInitTable (BootErrorRegion, BootErrorRegionLength);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to initialize BERT table - %r\n", Status));
     return Status;
   }
+
+  Context = GetBertContext();
 
   //
   // Install BERT table
   //
   Status = mAcpiTableProtocol->InstallAcpiTable (
                                 mAcpiTableProtocol,
-                                mBertContext.BertHeader,
-                                mBertContext.BertHeader->Header.Length,
+                                Context->BertHeader,
+                                Context->BertHeader->Header.Length,
                                 &mBertTableKey
                                 );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to install BERT table - %r\n", Status));
     return Status;
   }
+
+  return EFI_SUCCESS;
+}
+
+/**
+  Initialize EINJ table.
+
+  @param[in]  ErrorBlockBase  The base address to place EINJ related register and data
+  @param[out] MemUsedSize     The byte size of the SHARED_MEMORY used by EINJ
+
+  @retval EFI_SUCCESS           EINJ initialized successfully
+  @retval Others                Initialization failed
+**/
+EFI_STATUS
+InitEinjTable (
+  IN  UINTN     ErrorBlockBase,
+  OUT UINT32    *MemUsedSize
+  )
+{
+  EFI_STATUS   Status;
+  EINJ_CONTEXT *Context;
+
+  //
+  // Initialize EINJ table using Einj.c implementation
+  //
+  Status = EinjInitTable (ErrorBlockBase, MemUsedSize);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to initialize EINJ table - %r\n", Status));
+    return Status;
+  }
+
+  Context = GetEinjContext();
+
+  //
+  // Install EINJ table
+  //
+  Status = mAcpiTableProtocol->InstallAcpiTable (
+                                mAcpiTableProtocol,
+                                Context->EinjHeader,
+                                Context->EinjHeader->Header.Length,
+                                &mEinjTableKey
+                                );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to install EINJ table - %r\n", Status));
+    return Status;
+  }
+
+  return EFI_SUCCESS;
+}
+
+STATIC
+EFI_STATUS
+InitApeiTableInfoRegion (
+  IN  UINTN   ShareMemTableWrittenBase,
+  OUT UINTN  *ShareMemEndAdr
+  )
+{
+  UINT8            *CurrentPtr;
+  APEI_TABLE_INFO  ApeiTableInfo;
+
+  HEST_CONTEXT  *HestContext;
+  EINJ_CONTEXT  *EinjContext;
+
+  HestContext = GetHestContext ();
+  EinjContext = GetEinjContext ();
+
+  ZeroMem (&ApeiTableInfo, sizeof(APEI_TABLE_INFO));
+
+  CurrentPtr = (UINT8 *)ShareMemTableWrittenBase;
+  CopyMem (CurrentPtr, HestContext->HestHeader, HestContext->HestHeader->Header.Length);
+  ApeiTableInfo.HestAddr = (UINT64)CurrentPtr;
+
+  CurrentPtr += HestContext->HestHeader->Header.Length;
+  CopyMem (CurrentPtr, EinjContext->EinjHeader, EinjContext->EinjHeader->Header.Length);
+  ApeiTableInfo.EinjAddr = (UINT64)CurrentPtr;
+
+  *ShareMemEndAdr = (UINTN)(CurrentPtr + EinjContext->EinjHeader->Header.Length);
+  ApeiTableInfo.SourceIdDdrBase = DDR_ECC_ERROR_SOURCE_ID_BASE;
+  ApeiTableInfo.SourceIdPcieBase = PCIE_ERROR_SOURCE_ID_BASE;
+  GetGhesV2Count ( &(ApeiTableInfo.GhesV2CountDdr), &(ApeiTableInfo.GhesV2CountPcie));
+
+  CurrentPtr = (UINT8 *)APEI_TABLE_INFO_BASE;
+  CopyMem (CurrentPtr, &(ApeiTableInfo), sizeof (APEI_TABLE_INFO));
 
   return EFI_SUCCESS;
 }
@@ -438,16 +265,24 @@ ApeiDriverEntryPoint (
   )
 {
   EFI_STATUS            Status;
+  UINTN                 ShareMemHestBase, ShareMemEinjBase, ShareMemTableWrittenBase;
+  UINTN                 ShareMemUsedAllSize;
+  UINTN                 ShareMemEndAdr = 0;
+  UINT32                ShareMemUsedSizeHest = 0;
+  UINT32                ShareMemUsedSizeEinj = 0;
   EFI_PHYSICAL_ADDRESS  SharedMemoryAddress = SHARED_MEMORY_BASE;
 
+  ShareMemUsedAllSize = APEI_READY_REGISTER_LEN + APEI_TABLE_INFO_LEN + BOOT_ERROR_REGION_LEN
+                        + MEM_SIZE_PER_GHES * MAX_ERROR_SOURCES + EINJ_MEM_USED_SIZE
+                        + HEST_TABLE_SIZE + EINJ_TABLE_SIZE;
   //
   // Ensure memory attributes are correct
   //
   Status = gDS->AddMemorySpace (
-                  EfiGcdMemoryTypeSystemMemory,
+                  EfiGcdMemoryTypeMemoryMappedIo,
                   SharedMemoryAddress,
-                  EFI_SIZE_TO_PAGES(sizeof(GHES_REGISTER) * MAX_ERROR_SOURCES) * EFI_PAGE_SIZE,
-                  EFI_MEMORY_UC | EFI_MEMORY_RUNTIME | EFI_MEMORY_XP  // Use write-back caching and execute protection
+                  EFI_SIZE_TO_PAGES(ShareMemUsedAllSize) * EFI_PAGE_SIZE,
+                  EFI_MEMORY_UC | EFI_MEMORY_RUNTIME  // Use write-back caching and execute protection
                   );
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "%a: Failed to add memory space with correct attributes - %r\n", __func__, Status));
@@ -459,7 +294,7 @@ ApeiDriverEntryPoint (
   //
   Status = gDS->SetMemorySpaceAttributes (
                   SharedMemoryAddress,
-                  EFI_SIZE_TO_PAGES(sizeof(GHES_REGISTER) * MAX_ERROR_SOURCES) * EFI_PAGE_SIZE,
+                  EFI_SIZE_TO_PAGES(ShareMemUsedAllSize) * EFI_PAGE_SIZE,
                   EFI_MEMORY_UC | EFI_MEMORY_RUNTIME
                   );
   if (EFI_ERROR (Status)) {
@@ -496,18 +331,46 @@ ApeiDriverEntryPoint (
   //
   // Initialize APEI tables
   //
-  Status = InitBertTable ();
+  Status = InitBertTable (BOOT_ERROR_REGION_BASE, BOOT_ERROR_REGION_LEN);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to initialize BERT table - %r\n", Status));
-    return Status;
+    goto ErrInitBert;
   }
 
-  Status = InitHestTable ();
+  ShareMemHestBase = ALIGN_VALUE ((BOOT_ERROR_REGION_BASE + BOOT_ERROR_REGION_LEN), 8);
+  Status = InitHestTable (ShareMemHestBase, &ShareMemUsedSizeHest);
   if (EFI_ERROR (Status)) {
     DEBUG ((DEBUG_ERROR, "Failed to initialize HEST table - %r\n", Status));
-    return Status;
+    goto ErrInitHest;
   }
 
+  ShareMemEinjBase = ALIGN_VALUE ((ShareMemHestBase + ShareMemUsedSizeHest), 8);
+  Status = InitEinjTable (ShareMemEinjBase, &ShareMemUsedSizeEinj);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to initialize EINJ table - %r\n", Status));
+    goto ErrInitEinj;
+  }
+
+  ShareMemTableWrittenBase = ALIGN_VALUE ((ShareMemEinjBase + ShareMemUsedSizeEinj), 8);
+  InitApeiTableInfoRegion (ShareMemTableWrittenBase, &ShareMemEndAdr);
+
+  DEBUG ((DEBUG_INFO, "ShareMemUse: 0x%llx -- 0x%llx\n", SHARED_MEMORY_BASE, ShareMemEndAdr));
+
+  MmioWrite64 (APEI_READY_REGISTER, (BERT_INIT_DONE | HEST_INIT_DONE
+                                     | EINJ_INIT_DONE | APEI_TABLE_INFO_WRITTEN));
+
   DEBUG ((DEBUG_INFO, "APEI initialization completed successfully\n"));
-  return EFI_SUCCESS;
+
+  Status = EFI_SUCCESS;
+
+ErrInitEinj:
+  FreeEinjContextHeader ();
+
+ErrInitHest:
+  FreeHestContextHeader ();
+
+ErrInitBert:
+  FreeBertContextHeader ();
+
+  return Status;
 }

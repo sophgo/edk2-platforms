@@ -49,7 +49,7 @@ Sophgo SG2042 UEFI can currently use Opensbi+UEFI firmware+GRUB to successfully 
    source edk2/edksetup.sh --reconfig
    make -C edk2/BaseTools
    source edk2/edksetup.sh BaseTools
-   build -a RISCV64 -t GCC5 -p Platform/Sophgo/SG2042_EVB_Board/SG2042.dsc
+   build -a RISCV64 -t GCC5 -p Platform/Sophgo/SG2042Pkg/SG2042_Server/SG2042.dsc
    ```
 
    4.2 Using CLANGDWARF toolchain (clang + lld)
@@ -63,7 +63,7 @@ Sophgo SG2042 UEFI can currently use Opensbi+UEFI firmware+GRUB to successfully 
    source edk2/edksetup.sh --reconfig
    make -C edk2/BaseTools
    source edk2/edksetup.sh BaseTools
-   build -a RISCV64 -t CLANGDWARF -p Platform/Sophgo/SG2042_EVB_Board/SG2042.dsc
+   build -a RISCV64 -t CLANGDWARF -p Platform/Sophgo/SG2042Pkg/SG2042_Server/SG2042.dsc
    ```
 
    After a successful build, the resulting images can be found in Build/{Platform Name}/{TARGET}_{TOOL_CHAIN_TAG}/FV/SG2042.fd.
@@ -84,18 +84,18 @@ Sophgo SG2042 UEFI can currently use Opensbi+UEFI firmware+GRUB to successfully 
 
 
 ## Platform Status ##
-**SG2042_EVB_Board** Currently the binary built from SG2042 edk2 package can boot Sophgo SG2042 EVB to EFI shell with console, boot the operating system using GRUB2 into the Linux operating system for execution. Please refer to
+**SG2042_Server** Currently the binary built from SG2042 edk2 package can boot Sophgo SG2042 Server to EFI shell with console, boot the operating system using GRUB2 into the Linux operating system for execution. Please refer to
 https://github.com/AII-SDU/edk2-platforms/blob/devel-Sophgo/SG2042Pkg/Platform/Sophgo/About_Sophgo_platform.md for the boot process.
 
 ## Supported Operating Systems
-The preliminary running test of the following operating systems has been completed on the EVB test board, and the desktop environment has been deployed.
+The preliminary running test of the following operating systems has been completed on the Server, and the desktop environment has been deployed.
 1. Ubuntu
 2. Fedora
 3. openKylin
 4. opemEuler
 
 ## Known Issues and Limitations
-This test only runs on SG2042 EVB with RISC-V RV64 architecture
+This test only runs on SG2042 Server with RISC-V RV64 architecture
 
 
 

@@ -35,7 +35,8 @@
   }
 
 #define CORE_COUNT      4
-#define CLUSTER_COUNT   16
+#define EVB_CLUSTER_COUNT   16
+#define SERVER_CLUSTER_COUNT   32
 
 // ACPI OSC Status bits
 #define OSC_STS_BIT0_RES              (1U << 0)

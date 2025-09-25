@@ -148,7 +148,7 @@
 #pragma pack(1)
 typedef struct {
   TH_PPTT_PACKAGE                        RootPackage;
-  TH_PPTT_CLUSTER                        Cluster[CLUSTER_COUNT];
+  TH_PPTT_CLUSTER                        Cluster[EVB_CLUSTER_COUNT];
 } SG2042_PPTT_PACKAGE;
 
 /*

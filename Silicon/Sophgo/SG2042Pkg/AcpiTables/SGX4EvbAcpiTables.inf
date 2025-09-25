@@ -1,6 +1,7 @@
 ## @file
 #  ACPI table data and ASL sources required to boot the platform.
 #
+#  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 #  Copyright (c) 2020 - 2022, Arm Limited. All rights reserved.
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -17,8 +18,6 @@
 [Sources]
   Fadt.aslc
   Spcr.aslc
-  Srat.aslc
-  Slit.aslc
   Mcfg.aslc
   Madt.aslc
   Pptt.aslc
@@ -33,4 +32,5 @@
 
 [FixedPcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase
-  gEfiMdePkgTokenSpaceGuid.PcdPciExpressBaseAddress
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate

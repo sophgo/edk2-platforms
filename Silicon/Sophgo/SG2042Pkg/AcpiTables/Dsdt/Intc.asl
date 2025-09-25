@@ -1,6 +1,7 @@
 /** @file
   Differentiated System Description Table Fields (DSDT)
 
+  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
   Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
 
 **/
@@ -37,10 +38,15 @@ Scope(_SB)
     }
   }
 
-  Device (INTC) {        // Top intc
-    Name(_HID, "SGPH0002")
+  Device (INTC) {
+    Name(_HID, "SOPH0001")
+
+    Name (_DEP, Package () {
+      \_SB.PLIC
+    })
+
     Name(_CRS, ResourceTemplate() {
-      QWordMemory (
+      QWordMemory ( //sta
         ResourceProducer, PosDecode,
         MinFixed, MaxFixed,
         NonCacheable, ReadWrite,
@@ -51,7 +57,7 @@ Scope(_SB)
         0x0000000004                 // Length
       )
 
-      QWordMemory (
+      QWordMemory ( //set
         ResourceProducer, PosDecode,
         MinFixed, MaxFixed,
         NonCacheable, ReadWrite,
@@ -62,7 +68,7 @@ Scope(_SB)
         0x0000000004                 // Length
       )
 
-      QWordMemory (
+      QWordMemory ( // clr
         ResourceProducer, PosDecode,
         MinFixed, MaxFixed,
         NonCacheable, ReadWrite,

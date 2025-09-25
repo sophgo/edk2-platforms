@@ -6,6 +6,7 @@
   Differentiated Definition Block, which in turn provides variable information
   to an ACPI-compatible OS concerning the base system design.
 
+  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
   Copyright (c) 2018 - 2022, Arm Limited. All rights reserved.
 
   SPDX-License-Identifier: BSD-2-Clause-Patent

@@ -1,6 +1,7 @@
 /** @file
 *
 *  Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
+*  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 *
 *  SPDX-License-Identifier: BSD-2-Clause-Patent
 *
@@ -9,6 +10,29 @@
 /*
   See ACPI 6.5 Spec, 6.2.11, PCI Firmware Spec 3.0, 4.5
 */
+#define LNK_DEVICE(Unique_Id, Link_Name, irq)                                  \
+  Device(Link_Name) {                                                          \
+      Name(_HID, EISAID("PNP0C0F"))                                            \
+      Name(_UID, Unique_Id)                                                    \
+      Name(_PRS, ResourceTemplate() {                                          \
+          Interrupt(ResourceProducer, Level, ActiveHigh, Exclusive) { irq }    \
+      })                                                                       \
+      Method (_CRS, 0) { Return (_PRS) }                                       \
+      Method (_SRS, 1) { }                                                     \
+      Method (_DIS) { }                                                        \
+  }
+
+#define PRT_ENTRY(Address, Pin, Link)                                                             \
+        Package (4) {                                                                             \
+            Address,    /* uses the same format as _ADR */                                        \
+            Pin,        /* The PCI pin number of the device (0-INTA, 1-INTB, 2-INTC, 3-INTD). */  \
+            Link,       /* Interrupt allocated via Link device. */                                \
+            Zero        /* global system interrupt number (no used) */                            \
+          }
+
+#define ROOT_PRT_ENTRY(Pin, Link)   PRT_ENTRY(0x0000FFFF, Pin, Link)
+                                                    // Device 0 for Bridge.
+
 #define PCI_OSC_SUPPORT() \
   Name(SUPP, Zero) /* PCI _OSC Support Field value */ \
   Name(CTRL, Zero) /* PCI _OSC Control Field value */ \
@@ -51,6 +75,10 @@
 
 Scope(_SB)
 {
+
+  LNK_DEVICE(1, RCA0, 122)
+  LNK_DEVICE(2, RCA2, 123)
+
   // PCIe Root bus
   Device (PCI0)
   {
@@ -59,6 +87,10 @@ Scope(_SB)
     Name (_SEG, 0)         // Segment of this Root complex
     Name (_BBN, 0)         // Base Bus Number
     Name (_CCA, 0)
+
+    Name (_DEP, Package () {
+      \_SB.INTC
+    })
 
     Name(_DSD, Package () {
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
@@ -69,17 +101,18 @@ Scope(_SB)
         Package () { "device-id", 0x2042 },
         Package () { "pcie-id", 0x0 },
         Package () { "link-id", 0x0 },
-        Package () { "top-intc-used", 0 },
+        Package () { "top-intc-used", 1 },
         Package () { "top-intc-id", 0 },
+        Package () { "msix-supported", 0 },
       }
     })
 
     // PCI Routing Table
-    Name (_PRT, Package () {
-      Package () { 0xFFFF, 0, 0, 122 },   // INTA
-      Package () { 0xFFFF, 1, 0, 122 },   // INTB
-      Package () { 0xFFFF, 2, 0, 122 },   // INTC
-      Package () { 0xFFFF, 3, 0, 122 },   // INTD
+    Name(_PRT, Package() {
+      ROOT_PRT_ENTRY(0, RCA0),   // INTA
+      ROOT_PRT_ENTRY(1, RCA0),   // INTB
+      ROOT_PRT_ENTRY(2, RCA0),   // INTC
+      ROOT_PRT_ENTRY(3, RCA0),   // INTD
     })
 
     Name (_CRS, ResourceTemplate () { // Root complex resources
@@ -149,7 +182,7 @@ Scope(_SB)
         ,
         MinFixed,
         MaxFixed,
-        Prefetchable,
+        Cacheable,
         ReadWrite,
         0x0,
         0x0,          // MIN
@@ -163,7 +196,7 @@ Scope(_SB)
 
     Device (RES0)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x0)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -191,10 +224,13 @@ Scope(_SB)
     Name (_BBN, 0x40)      // Base Bus Number
     Name (_CCA, 0)
 
+    Name (_DEP, Package () {
+      \_SB.INTC
+    })
+
     Name (_DSD, Package () {
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package () {
-        Package () { "interrupt-parent" , Package() { \_SB.INTC }},
         Package () { "cdns,max-outbound-regions", 16 },
         Package () { "cdns,no-bar-match-nbits", 48 },
         Package () { "vendor-id", 0x1E30 },
@@ -207,46 +243,12 @@ Scope(_SB)
       }
     })
 
-    Name (_PRT, Package (){
-      Package () {0xFFFF, 0, 0, 64},         // INT_A
-      Package () {0xFFFF, 1, 0, 65},         // INT_B
-      Package () {0xFFFF, 2, 0, 66},         // INT_C
-      Package () {0xFFFF, 3, 0, 67},         // INT_D
-
-      Package () {0x2FFFF, 0, 0, 68},         // INT_A
-      Package () {0x2FFFF, 1, 0, 69},         // INT_B
-      Package () {0x2FFFF, 2, 0, 70},         // INT_C
-      Package () {0x2FFFF, 3, 0, 71},         // INT_D
-
-      Package () {0x3FFFF, 0, 0, 72},         // INT_A
-      Package () {0x3FFFF, 1, 0, 73},         // INT_B
-      Package () {0x3FFFF, 2, 0, 74},         // INT_C
-      Package () {0x3FFFF, 3, 0, 75},         // INT_D
-
-      Package () {0x4FFFF, 0, 0, 76},         // INT_A
-      Package () {0x4FFFF, 1, 0, 77},         // INT_B
-      Package () {0x4FFFF, 2, 0, 78},         // INT_C
-      Package () {0x4FFFF, 3, 0, 79},         // INT_D
-
-      Package () {0x8FFFF, 0, 0, 80},         // INT_A
-      Package () {0x8FFFF, 1, 0, 81},         // INT_B
-      Package () {0x8FFFF, 2, 0, 82},         // INT_C
-      Package () {0x8FFFF, 3, 0, 83},         // INT_D
-
-      Package () {0xCFFFF, 0, 0, 84},         // INT_A
-      Package () {0xCFFFF, 1, 0, 85},         // INT_B
-      Package () {0xCFFFF, 2, 0, 86},         // INT_C
-      Package () {0xCFFFF, 3, 0, 87},         // INT_D
-
-      Package () {0xEFFFF, 0, 0, 88},         // INT_A
-      Package () {0xEFFFF, 1, 0, 89},         // INT_B
-      Package () {0xEFFFF, 2, 0, 90},         // INT_C
-      Package () {0xEFFFF, 3, 0, 91},         // INT_D
-
-      Package () {0xFFFFF, 0, 0, 92},         // INT_A
-      Package () {0xFFFFF, 1, 0, 93},         // INT_B
-      Package () {0xFFFFF, 2, 0, 94},         // INT_C
-      Package () {0xFFFFF, 3, 0, 95},         // INT_D
+    // PCI Routing Table
+    Name(_PRT, Package() {
+      ROOT_PRT_ENTRY(0, RCA0),   // INTA
+      ROOT_PRT_ENTRY(1, RCA0),   // INTB
+      ROOT_PRT_ENTRY(2, RCA0),   // INTC
+      ROOT_PRT_ENTRY(3, RCA0),   // INTD
     })
 
     Name (_CRS, ResourceTemplate () { // Root complex resources
@@ -315,7 +317,7 @@ Scope(_SB)
       QWordMemory (
         ResourceProducer, ,
         MinFixed, MaxFixed,
-        Prefetchable, ReadWrite,
+        Cacheable, ReadWrite,
         0x0,
         0x0,               // MIN
         0x1effffffff,      // MAX
@@ -335,6 +337,10 @@ Scope(_SB)
     Name (_BBN, 0x80)      // Base Bus Number
     Name (_CCA, 0)
 
+    Name (_DEP, Package () {
+      \_SB.INTC
+    })
+
     Name (_DSD, Package () {
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package () {
@@ -351,11 +357,11 @@ Scope(_SB)
     })
 
     // PCI Routing Table
-    Name (_PRT, Package () {
-      Package () { 0xFFFF, 0, 0, 123 },   // INTA
-      Package () { 0xFFFF, 1, 0, 123 },   // INTB
-      Package () { 0xFFFF, 2, 0, 123 },   // INTC
-      Package () { 0xFFFF, 3, 0, 123 },   // INTD
+    Name(_PRT, Package() {
+      ROOT_PRT_ENTRY(0, RCA2),   // INTA
+      ROOT_PRT_ENTRY(1, RCA2),   // INTB
+      ROOT_PRT_ENTRY(2, RCA2),   // INTC
+      ROOT_PRT_ENTRY(3, RCA2),   // INTD
     })
 
     Name (_CRS, ResourceTemplate () { // Root complex resources
@@ -424,7 +430,7 @@ Scope(_SB)
       QWordMemory (
         ResourceProducer, ,
         MinFixed, MaxFixed,
-        Prefetchable, ReadWrite,
+        Cacheable, ReadWrite,
         0x0,
         0x0,               // MIN
         0x1effffffff,      // MAX
@@ -435,7 +441,7 @@ Scope(_SB)
 
     Device (RES2)
     {
-      Name (_HID, "SGPH0001" /* PNP Motherboard Resources */)  // _HID: Hardware ID
+      Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
       Name (_UID, 0x2)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
@@ -457,47 +463,5 @@ Scope(_SB)
 
   } // Device(PCI2)
 
-
-  Device (RESP)  //reserve for ecam resource
-  {
-    Name (_HID, "PNP0C02")
-    Name (_CRS, ResourceTemplate (){
-      // ECAM space for PCI0 [bus 00-3f]
-      QWordMemory (
-        ResourceProducer, PosDecode,
-        MinFixed, MaxFixed,
-        NonCacheable, ReadWrite,
-        0x0000000000,                       // Granularity
-        0x4000000000,                       // Range Minimum
-        0x4003FFFFFF,                       // Range Maximum
-        0x0000000000,                       // Translation Offset
-        0x0004000000,                       // Length
-        , , , AddressRangeMemory, TypeStatic)
-
-      // ECAM space for PCI2 [bus 40-7f]
-      QWordMemory (
-        ResourceProducer, PosDecode,
-        MinFixed, MaxFixed,
-        NonCacheable, ReadWrite,
-        0x0000000000,                        // Granularity
-        0x4400000000,                        // Range Minimum
-        0x4403FFFFFF,                        // Range Maximum
-        0x0000000000,                        // Translation Offset
-        0x0004000000,                        // Length
-        , , , AddressRangeMemory, TypeStatic)
-
-      // ECAM space for PCI1 [bus 80-ff]
-      QWordMemory (
-        ResourceProducer, PosDecode,
-        MinFixed, MaxFixed,
-        NonCacheable, ReadWrite,
-        0x0000000000,                         // Granularity
-        0x4800000000,                         // Range Minimum
-        0x4807FFFFFF,                         // Range Maximum
-        0x0000000000,                         // Translation Offset
-        0x0008000000,                         // Length
-        , , , AddressRangeMemory, TypeStatic)
-   })
-  }
 }
 

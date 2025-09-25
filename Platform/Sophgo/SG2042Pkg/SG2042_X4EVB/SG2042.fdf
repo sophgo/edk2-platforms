@@ -1,6 +1,7 @@
 # @file
 #  Flash definition file on Sophgo SG2042 EVB RISC-V platform
 #
+#  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 #  Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent

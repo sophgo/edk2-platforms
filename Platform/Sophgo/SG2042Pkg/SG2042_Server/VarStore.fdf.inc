@@ -1,7 +1,7 @@
 ## @file
 #  FDF include file with Layout Regions that define an empty variable store.
 #
-#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+#  Copyright (c) 2025, SOPHGO Inc. All rights reserved.<BR>
 #  Copyright (C) 2014, Red Hat, Inc.
 #  Copyright (c) 2006 - 2013, Intel Corporation. All rights reserved.<BR>
 #

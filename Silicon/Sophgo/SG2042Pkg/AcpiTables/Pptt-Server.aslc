@@ -148,7 +148,7 @@
 #pragma pack(1)
 typedef struct {
   TH_PPTT_PACKAGE                        RootPackage;
-  TH_PPTT_CLUSTER                        Cluster[EVB_CLUSTER_COUNT];
+  TH_PPTT_CLUSTER                        Cluster[SERVER_CLUSTER_COUNT];
 } SG2042_PPTT_PACKAGE;
 
 /*
@@ -187,7 +187,23 @@ STATIC EFI_ACPI_6_5_PROCESSOR_PROPERTIES_TOPOLOGY_TABLE Pptt = {
       PPTT_CLUSTER_INIT (0, 12),
       PPTT_CLUSTER_INIT (0, 13),
       PPTT_CLUSTER_INIT (0, 14),
-      PPTT_CLUSTER_INIT (0, 15)
+      PPTT_CLUSTER_INIT (0, 15),
+      PPTT_CLUSTER_INIT (0, 16),
+      PPTT_CLUSTER_INIT (0, 17),
+      PPTT_CLUSTER_INIT (0, 18),
+      PPTT_CLUSTER_INIT (0, 19),
+      PPTT_CLUSTER_INIT (0, 20),
+      PPTT_CLUSTER_INIT (0, 21),
+      PPTT_CLUSTER_INIT (0, 22),
+      PPTT_CLUSTER_INIT (0, 23),
+      PPTT_CLUSTER_INIT (0, 24),
+      PPTT_CLUSTER_INIT (0, 25),
+      PPTT_CLUSTER_INIT (0, 26),
+      PPTT_CLUSTER_INIT (0, 27),
+      PPTT_CLUSTER_INIT (0, 28),
+      PPTT_CLUSTER_INIT (0, 29),
+      PPTT_CLUSTER_INIT (0, 30),
+      PPTT_CLUSTER_INIT (0, 31)
     }
   }
 };

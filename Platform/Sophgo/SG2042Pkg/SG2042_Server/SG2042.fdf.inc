@@ -2,7 +2,7 @@
 #
 #  Definitions of Flash definition file on SOPHON SG2044 RISC-V platform
 #
-#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #

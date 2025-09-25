@@ -1,6 +1,7 @@
 ## @file
 #  RISC-V EFI on Sophgo SG2042 EVB RISC-V platform
 #
+#  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 #  Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -21,7 +22,7 @@
   SUPPORTED_ARCHITECTURES        = RISCV64
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
-  FLASH_DEFINITION               = Platform/Sophgo/SG2042_EVB_Board/SG2042.fdf
+  FLASH_DEFINITION               = Platform/Sophgo/SG2042Pkg/SG2042_X4EVB/SG2042.fdf
 
   #
   # Enable below options may cause build error or may not work on

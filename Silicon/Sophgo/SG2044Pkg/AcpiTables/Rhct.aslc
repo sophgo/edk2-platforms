@@ -65,7 +65,7 @@ STATIC EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE Rhct = {
     8,
     1,
     0,
-    0
+    1
   },
   {
     EFI_ACPI_6_6_HART_INFO_NODE_INIT (0),

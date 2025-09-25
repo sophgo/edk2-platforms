@@ -18,7 +18,7 @@
 #define EFI_ACPI_RISCV_OEM_TABLE_ID     SIGNATURE_64 ('2','0','4','2',' ',' ',' ',' ')
 #define EFI_ACPI_RISCV_OEM_REVISION     0x01
 #define EFI_ACPI_RISCV_CREATOR_ID       SIGNATURE_32('2','0','4','2')
-#define EFI_ACPI_RISCV_CREATOR_REVISION 0x00000099
+#define EFI_ACPI_RISCV_CREATOR_REVISION 0x20250925
 
 // A macro to initialise the common header part of EFI ACPI tables as defined by
 // EFI_ACPI_DESCRIPTION_HEADER structure.
@@ -34,7 +34,7 @@
     EFI_ACPI_RISCV_CREATOR_REVISION   /* UINT32  CreatorRevision */ \
   }
 
-#define CORE_COUNT      64
+#define CORE_COUNT      4
 #define CLUSTER_COUNT   16
 
 // ACPI OSC Status bits
@@ -55,6 +55,39 @@
 #define OSC_CAP_PLAT_COORDINATED_LPI  (1U << 7)
 #define OSC_CAP_OS_INITIATED_LPI      (1U << 8)
 
+///
+/// Sophgo Serial Port Console Redirection Table Format Revision 4
+///
+#pragma pack(1)
+typedef struct {
+  EFI_ACPI_DESCRIPTION_HEADER               Header;
+  UINT8                                     InterfaceType;
+  UINT8                                     Reserved1[3];
+  EFI_ACPI_5_0_GENERIC_ADDRESS_STRUCTURE    BaseAddress;
+  UINT8                                     InterruptType;
+  UINT8                                     Irq;
+  UINT32                                    GlobalSystemInterrupt;
+  UINT8                                     BaudRate;
+  UINT8                                     Parity;
+  UINT8                                     StopBits;
+  UINT8                                     FlowControl;
+  UINT8                                     TerminalType;
+  UINT8                                     Reserved2;
+  UINT16                                    PciDeviceId;
+  UINT16                                    PciVendorId;
+  UINT8                                     PciBusNumber;
+  UINT8                                     PciDeviceNumber;
+  UINT8                                     PciFunctionNumber;
+  UINT32                                    PciFlags;
+  UINT8                                     PciSegment;
+  UINT32                                    UartClockFrequency;
+  UINT32                                    PreciseBaudRate;
+  UINT16                                    NameSpaceStrLength;
+  UINT16                                    NameSpaceStrOffset;
+  CHAR8                                     NameSpaceString[16];
+} EFI_ACPI_4_0_SERIAL_PORT_CONSOLE_REDIRECTION_SOPHGO_TABLE;
+#pragma pack(0)
+
 //
 // "RHCT" RISC-V Hart Capabilities Table
 //
@@ -63,6 +96,7 @@
 // RHCT Revision (as defined in ACPI 6.5 spec.)
 //
 #define EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE_REVISION  0x01
+#define MAX_ISA_LENGTH 256
 
 //
 // RISC-V Hart Capabilities Table header definition.  The rest of the table
@@ -82,7 +116,7 @@ typedef struct {
   UINT16     Length;
   UINT16     Revision;
   UINT16     ISALen;
-  CHAR8      ISAStr[12];
+  CHAR8      ISAStr[MAX_ISA_LENGTH];
 } EFI_ACPI_6_6_ISA_STRING_NODE_STRUCTURE;
 
 // CMO node structure
@@ -139,9 +173,18 @@ typedef enum {
   L1DataCache = 1,
   L1InstructionCache,
   L2Cache,
+  L3Cache,
 } TH_PPTT_CACHE_TYPE;
 
 #pragma pack(1)
+
+// PPTT processor Package structure
+typedef struct {
+  EFI_ACPI_6_5_PPTT_STRUCTURE_PROCESSOR  RootPackage;
+  UINT32                                 ResourceOffset;
+  EFI_ACPI_6_5_PPTT_STRUCTURE_CACHE      L3Cache;
+} TH_PPTT_PACKAGE;
+
 // PPTT processor core structure
 typedef struct {
   EFI_ACPI_6_5_PPTT_STRUCTURE_PROCESSOR  Core;
@@ -174,16 +217,6 @@ typedef struct {
     EFI_ACPI_6_5_PPTT_IMPLEMENTATION_IDENTICAL                                 \
   }
 
-// Processor structure flags for cluster
-#define PPTT_PROCESSOR_CLUSTER_FLAGS                                           \
-  {                                                                            \
-    EFI_ACPI_6_5_PPTT_PACKAGE_NOT_PHYSICAL,                                    \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_ID_VALID,                                      \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_IS_NOT_THREAD,                                 \
-    EFI_ACPI_6_5_PPTT_NODE_IS_NOT_LEAF,                                        \
-    EFI_ACPI_6_5_PPTT_IMPLEMENTATION_IDENTICAL                                 \
-  }
-
 // Processor structure flags for cluster with multi-thread core
 #define PPTT_PROCESSOR_CLUSTER_THREADED_FLAGS                                  \
   {                                                                            \
@@ -200,25 +233,6 @@ typedef struct {
     EFI_ACPI_6_5_PPTT_PACKAGE_NOT_PHYSICAL,                                    \
     EFI_ACPI_6_5_PPTT_PROCESSOR_ID_VALID,                                      \
     EFI_ACPI_6_5_PPTT_PROCESSOR_IS_NOT_THREAD,                                 \
-    EFI_ACPI_6_5_PPTT_NODE_IS_LEAF                                             \
-  }
-
-// Processor structure flags for multi-thread core
-#define PPTT_PROCESSOR_CORE_THREADED_FLAGS                                     \
-  {                                                                            \
-    EFI_ACPI_6_5_PPTT_PACKAGE_NOT_PHYSICAL,                                    \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_ID_INVALID,                                    \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_IS_NOT_THREAD,                                 \
-    EFI_ACPI_6_5_PPTT_NODE_IS_NOT_LEAF,                                        \
-    EFI_ACPI_6_5_PPTT_IMPLEMENTATION_IDENTICAL                                 \
-  }
-
-// Processor structure flags for CPU thread
-#define PPTT_PROCESSOR_THREAD_FLAGS                                            \
-  {                                                                            \
-    EFI_ACPI_6_5_PPTT_PACKAGE_NOT_PHYSICAL,                                    \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_ID_VALID,                                      \
-    EFI_ACPI_6_5_PPTT_PROCESSOR_IS_THREAD,                                     \
     EFI_ACPI_6_5_PPTT_NODE_IS_LEAF                                             \
   }
 

@@ -5,6 +5,7 @@
   This table is required to communicate certain capabilities of
   RISC-V Hart (hardware thread) to the Operating System.
 
+  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
   Copyright (c) 2020 - 2022, Arm Limited. All rights reserved.
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -40,15 +41,15 @@ STATIC EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE Rhct = {
     // RHCT specific fields
     0,                      // Flags
     50000000,               // Time Base Frequency
-    67,                     // Number of RHCT nodes
+    67,                     // Number of RHCT nodes, 64 + 1 + 1 + 1
     RHCT_NODE_ARRAY_OFFSET  // Offset to the RHCT node array
   },
   {
     0,
-    20,                     // 8 + N + P: Size of this structure.
+    OFFSET_OF (EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE, CMONode) - OFFSET_OF (EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE, ISAStrNode),                     // 8 + N + P: Size of this structure.
     1,
-    12,
-    "rv64imafdcvx"
+    MAX_ISA_LENGTH,
+    "rv64imafdc_xtheadvector_zicntr_zicsr_zifencei_zihpm"
   },
   {
     1,

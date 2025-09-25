@@ -3,9 +3,10 @@
 
   The MADT table provides OSPM with information necessary for operation on
   systems with Generic interrupt controller (GIC). The information about the GIC
-  CPU interface, redistributor, distributor and ITS blocks on the SG2042
+  CPU interface, redistributor, distributor and ITS blocks on the SG2044
   multichip platform is included in this table.
 
+  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
   Copyright (c) 2020 - 2022, Arm Limited. All rights reserved.
 
   SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -206,7 +207,7 @@ STATIC EFI_ACPI_6_6_MULTIPLE_APIC_DESCRIPTION_TABLE Madt = {
       1, 63, 63, ACPI_BUILD_INTC_ID(0,127), 0, 0),
   },
   // PLIC
-  EFI_ACPI_6_6_PLIC_STRUCTURE_INIT (0, 0, 224, 7, 0x04000000, 0x7090000000, 0)
+  EFI_ACPI_6_6_PLIC_STRUCTURE_INIT (0, 0, 225, 7, 0x04000000, 0x7090000000, 0)
 };
 
 //

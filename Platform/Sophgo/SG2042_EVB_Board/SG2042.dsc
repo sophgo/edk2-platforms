@@ -422,6 +422,12 @@
 
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|25000000
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|100000000
+
+  # ACPI Table Spcr's Pcds.
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialRegisterBase|0x7040000000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialClockRate|500000000
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSerialBaudRate|115200
+
 [PcdsPatchableInModule]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042PhyAddrToVirAddr|0
 

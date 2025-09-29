@@ -14,7 +14,7 @@
 #
 ################################################################################
 [Defines]
-  PLATFORM_NAME                  = SG2042_EVB
+  PLATFORM_NAME                  = SG2042_X4EVB
   PLATFORM_GUID                  = 8014637B-6999-4110-9762-464BE11E935F
   PLATFORM_VERSION               = 0.1
   DSC_SPECIFICATION              = 0x0001001c

@@ -25,7 +25,6 @@
 #define EINJ_TABLE_SIZE                             0x4000
 #define EINJ_INJECTION_ENTRY_COUNT                  9
 #define EINJ_BEGIN_OPERATION_OFF                    0
-#define EINJ_END_OPERATION_OFF                      0
 #define EINJ_GET_TRIGGER_TABLE_OFF                  0x8
 #define EINJ_SET_ERROR_TYPE_OFF                     0x10
 #define EINJ_GET_ERROR_TYPE_OFF                     0x18
@@ -33,6 +32,7 @@
 #define EINJ_CHECK_BUSY_STATUS_OFF                  0x28
 #define EINJ_GET_COMMAND_STATUS_OFF                 0x30
 #define EINJ_TRIGGER_ERROR_OFF                      0x38
+#define EINJ_END_OPERATION_OFF                      0x40
 #define EINJ_SET_ERR_TYPE_WITH_ADDR_OFF             0x60
 #define EINJ_TRIGGER_ERROR_ACTION_TABLE_OFF         0x88
 #define EINJ_MEM_USED_SIZE                          0xB8

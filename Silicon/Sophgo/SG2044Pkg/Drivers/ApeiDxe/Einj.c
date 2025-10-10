@@ -196,14 +196,20 @@ SetEinjRegisterDefaultVal (
   DefaultVal = 0;
   MmioWrite64 (RegisterAddr, DefaultVal);
 
+  //
+  // Set the supported error types for injection using EINJ
+  //
   RegisterAddr = GetAddrByInjectionAction (EFI_ACPI_6_5_EINJ_GET_ERROR_TYPE);
   DefaultVal = EFI_ACPI_6_5_EINJ_ERROR_MEMORY_CORRECTABLE
                 | EFI_ACPI_6_5_EINJ_ERROR_MEMORY_UNCORRECTABLE_NONFATAL
-                | EFI_ACPI_6_5_EINJ_ERROR_MEMORY_UNCORRECTABLE_FATAL;
+                | EFI_ACPI_6_5_EINJ_ERROR_MEMORY_UNCORRECTABLE_FATAL
+                | EFI_ACPI_6_5_EINJ_ERROR_PCI_EXPRESS_CORRECTABLE
+                | EFI_ACPI_6_5_EINJ_ERROR_PCI_EXPRESS_UNCORRECTABLE_NONFATAL
+                | EFI_ACPI_6_5_EINJ_ERROR_PCI_EXPRESS_UNCORRECTABLE_FATAL;
   MmioWrite64 (RegisterAddr, DefaultVal);
 
   RegisterAddr = GetAddrByInjectionAction (EFI_ACPI_6_5_EINJ_END_OPERATION);
-  DefaultVal = ACTION_END_OPERATION_VAL;
+  DefaultVal = ACTION_BEGIN_OPERATION_VAL;
   MmioWrite64 (RegisterAddr, DefaultVal);
 
   RegisterAddr = GetAddrByInjectionAction (EFI_ACPI_6_5_EINJ_EXECUTE_OPERATION);

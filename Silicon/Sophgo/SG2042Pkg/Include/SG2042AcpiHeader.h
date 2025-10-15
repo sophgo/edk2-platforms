@@ -368,14 +368,38 @@ typedef struct {
 // Define the number of each table type.
 // This is where the table layout is modified.
 //
-#define EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT 5
-#define EFI_ACPI_PROCESSOR_LOCAL_APIC_SAPIC_AFFINITY_STRUCTURE_COUNT 64
+#define EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB 4
+#define EFI_ACPI_RINTC_AFFINITY_STRUCTURE_COUNT_EVB 64
+
+#define EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER 8
+#define EFI_ACPI_RINTC_AFFINITY_STRUCTURE_COUNT_SERVER 128
+
+///
+/// For RISC-V (ACPI Spec 6.6)
+/// SRAT Static Resource Allocation Structure: RINTC Affinity Structure Definition
+///
+#define EFI_ACPI_6_6_RINTC_AFFINITY 0x07
+typedef struct {
+  UINT8     Type;
+  UINT8     Length;
+  UINT16    Reserved;
+  UINT32    ProximityDomain;
+  UINT32    ACPIProcessorUid;
+  UINT32    Flags;
+  UINT32    ClockDomain;
+} EFI_ACPI_6_6_RINTC_AFFINITY_STRUCTURE;
 
 typedef struct {
   EFI_ACPI_6_5_SYSTEM_RESOURCE_AFFINITY_TABLE_HEADER          Header;
-  EFI_ACPI_6_5_MEMORY_AFFINITY_STRUCTURE                      Memory[EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT];
-  EFI_ACPI_6_5_PROCESSOR_LOCAL_APIC_SAPIC_AFFINITY_STRUCTURE  APIC[EFI_ACPI_PROCESSOR_LOCAL_APIC_SAPIC_AFFINITY_STRUCTURE_COUNT];
-} EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE;
+  EFI_ACPI_6_6_RINTC_AFFINITY_STRUCTURE                       RINTC[EFI_ACPI_RINTC_AFFINITY_STRUCTURE_COUNT_EVB];
+  EFI_ACPI_6_5_MEMORY_AFFINITY_STRUCTURE                      Memory[EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB];
+} EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE_EVB;
+
+typedef struct {
+  EFI_ACPI_6_5_SYSTEM_RESOURCE_AFFINITY_TABLE_HEADER          Header;
+  EFI_ACPI_6_6_RINTC_AFFINITY_STRUCTURE                       RINTC[EFI_ACPI_RINTC_AFFINITY_STRUCTURE_COUNT_SERVER];
+  EFI_ACPI_6_5_MEMORY_AFFINITY_STRUCTURE                      Memory[EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER];
+} EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE_SERVER;
 #pragma pack ()
 
 // EFI_ACPI_6_5_MEMORY_AFFINITY_STRUCTURE
@@ -394,6 +418,15 @@ typedef struct {
     EFI_ACPI_6_5_PROCESSOR_LOCAL_APIC_SAPIC_AFFINITY,                                   \
     sizeof (EFI_ACPI_6_5_PROCESSOR_LOCAL_APIC_SAPIC_AFFINITY_STRUCTURE),                \
     ProximityDomainL, APICID, Flags, LocalSAPICEID, {0x00, 0x00, 0x00}, ClockDomain     \
+  }
+
+// EFI_ACPI_6_6_RINTC_AFFINITY_STRUCTURE
+#define EFI_ACPI_6_6_RINTC_AFFINITY_STRUCTURE_INIT(                                \
+    ProximityDomain, ACPIProcessorUid, Flags, ClockDomain)                              \
+  {                                                                                     \
+    EFI_ACPI_6_6_RINTC_AFFINITY,                                            \
+    sizeof (EFI_ACPI_6_6_RINTC_AFFINITY_STRUCTURE),                                     \
+    EFI_ACPI_RESERVED_WORD, ProximityDomain, ACPIProcessorUid, Flags, ClockDomain       \
   }
 
 // EFI_ACPI_6_5_PPTT_STRUCTURE_PROCESSOR

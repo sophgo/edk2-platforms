@@ -92,6 +92,10 @@ Scope(_SB)
       \_SB.INT0
     })
 
+    Method (_PXM, 0, NotSerialized) {
+      Return (3)  // proximity domain 3
+    }
+
     Name(_DSD, Package () {
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),
       Package () {
@@ -227,6 +231,11 @@ Scope(_SB)
     Name (_DEP, Package () {
       \_SB.INT1
     })
+
+
+    Method (_PXM, 0, NotSerialized) {
+      Return (7)  // proximity domain 7
+    }
 
     Name (_DSD, Package () {
       ToUUID("daffd814-6eba-4d8c-8a91-bc9bbf4aa301"),

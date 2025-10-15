@@ -22,6 +22,8 @@
   Madt.aslc
   Pptt.aslc
   Rhct.aslc
+  Srat.aslc
+  Slit.aslc
   Dsdt/SGX4EvbDsdt.asl
 
 [Packages]

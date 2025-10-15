@@ -22,6 +22,8 @@
   Madt-Server.aslc
   Pptt-Server.aslc
   Rhct-Server.aslc
+  Srat-Server.aslc
+  Slit-Server.aslc
   Dsdt/SG2042ServerDsdt.asl
 
 [Packages]

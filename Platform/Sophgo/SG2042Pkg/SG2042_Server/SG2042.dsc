@@ -728,7 +728,7 @@
   #
 !if $(ACPI_ENABLE) == TRUE
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
+  Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformServerDxe/AcpiPlatformServerDxe.inf
   MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
   Silicon/Sophgo/SG2042Pkg/AcpiTables/SG2042ServerAcpiTables.inf
 !endif

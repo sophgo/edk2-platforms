@@ -13,6 +13,7 @@
 #include <Include/SG2042AcpiHeader.h>
 
 #define CORECOUNT(X) ((X) * CORE_NUM_PER_SOCKET)
+
   typedef struct {
     UINT64 MinBase;
     UINT64 TotalSize;
@@ -24,21 +25,21 @@
 STATIC
 VOID
 RemoveUnusedMemoryNode (
-  IN OUT EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE_EVB  *Table,
+  IN OUT EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE_SERVER  *Table,
   IN     UINTN                        MemoryNodeNum
 )
 {
   UINTN                   CurrPtr, NewPtr;
   UINTN                   OriginalLength = Table->Header.Header.Length;
 
-  if (MemoryNodeNum >= EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB) {
+  if (MemoryNodeNum >= EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER) {
     DEBUG((DEBUG_INFO,
            "No unused nodes (MemoryNodeNum >= %d)\n",
-           EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB));
+           EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER));
     return;
   }
 
-  CurrPtr = (UINTN) &(Table->Memory[EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB]);
+  CurrPtr = (UINTN) &(Table->Memory[EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER]);
   NewPtr = (UINTN) &(Table->Memory[MemoryNodeNum]);
 
   UINTN   MoveSize = (UINTN)Table + OriginalLength - CurrPtr;
@@ -47,7 +48,7 @@ RemoveUnusedMemoryNode (
   DEBUG((DEBUG_INFO,
          "Unused region: %d bytes (%d nodes)\n",
          UnusedSize,
-         EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB - MemoryNodeNum));
+         EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER - MemoryNodeNum));
 
   CopyMem((VOID *)NewPtr, (VOID *)CurrPtr, MoveSize);
 
@@ -73,7 +74,7 @@ RemoveUnusedMemoryNode (
 STATIC
 EFI_STATUS
 UpdateSrat (
-  IN OUT EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE_EVB *Table
+  IN OUT EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE_SERVER *Table
   )
 {
   FDT_CLIENT_PROTOCOL              *FdtClient;
@@ -88,7 +89,7 @@ UpdateSrat (
   UINT32                           NodeIdLen;
   UINTN                            MemoryNode = 0;
 
-  NODE_INFO NodeInfo[EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB];
+  NODE_INFO NodeInfo[EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER];
   ZeroMem(NodeInfo, sizeof(NodeInfo));
 
   DEBUG((DEBUG_INFO, "SRAT: Updating SRAT memory information.\n"));
@@ -100,7 +101,7 @@ UpdateSrat (
                   );
   ASSERT_EFI_ERROR (Status);
 
-  for (UINTN i = 0; i < EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB; i++) {
+  for (UINTN i = 0; i < EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER; i++) {
     NodeInfo[i].MinBase = MAX_UINT64;
     NodeInfo[i].TotalSize = 0;
     NodeInfo[i].Valid = FALSE;
@@ -149,10 +150,11 @@ UpdateSrat (
     }
 
     UINT32 ProximityDomain = SwapBytes32 (NodeId[0]);
+    DEBUG((DEBUG_ERROR, "SRAT:   NodeIdLen=%d, NodeId=%d\n", NodeIdLen, ProximityDomain));
 
-    if (ProximityDomain >= EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB) {
+    if (ProximityDomain >= EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER) {
       DEBUG((DEBUG_ERROR, "SRAT: Invalid ProximityDomain %d (>= %d)\n",
-             ProximityDomain, EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB));
+             ProximityDomain, EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER));
       continue;
     }
 
@@ -180,7 +182,7 @@ UpdateSrat (
     }
   }
 
-  for (UINTN i = 0; i < EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_EVB; i++) {
+  for (UINTN i = 0; i < EFI_ACPI_MEMORY_AFFINITY_STRUCTURE_COUNT_SERVER; i++) {
     if (!NodeInfo[i].Valid) continue;
 
     UINT64 RoundedSize = NodeInfo[i].TotalSize;
@@ -226,7 +228,7 @@ UpdateAcpiTable (
   switch (TableHeader->Signature) {
 
   case EFI_ACPI_6_5_SYSTEM_RESOURCE_AFFINITY_TABLE_SIGNATURE:
-    Status = UpdateSrat ((EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE_EVB *) TableHeader);
+    Status = UpdateSrat ((EFI_ACPI_STATIC_RESOURCE_AFFINITY_TABLE_SERVER *) TableHeader);
     break;
 
   case EFI_ACPI_6_5_SYSTEM_LOCALITY_INFORMATION_TABLE_SIGNATURE:

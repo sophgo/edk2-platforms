@@ -9,6 +9,16 @@
 
 #include "PlatformBm.h"
 
+#define Default 0x0
+
+EFI_GUID  mAutoCreateBootOptionGuid = {
+  0x8108ac4e, 0x9f11, 0x4d59, { 0x85, 0x0e, 0xe2, 0x1a, 0x52, 0x2c, 0x59, 0xb2 }
+};
+
+EFI_GUID  mBootMenuFile = {
+  0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
+};
+
 STATIC PLATFORM_SERIAL_CONSOLE mSerialConsole = {
   //
   // VENDOR_DEVICE_PATH SerialDxe
@@ -419,6 +429,137 @@ PlatformRegisterFvBootOption (
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 }
 
+/**
+  Return TRUE when the boot option is auto-created instead of manually added.
+
+  @param BootOption Pointer to the boot option to check.
+
+  @retval TRUE  The boot option is auto-created.
+  @retval FALSE The boot option is manually added.
+**/
+BOOLEAN
+IsAutoCreateBootOption (
+  EFI_BOOT_MANAGER_LOAD_OPTION  *BootOption
+  )
+{
+  if ((BootOption->OptionalDataSize == sizeof (EFI_GUID)) &&
+      CompareGuid ((EFI_GUID *)BootOption->OptionalData, &mAutoCreateBootOptionGuid)
+      )
+  {
+    return TRUE;
+  } else {
+    return FALSE;
+  }
+}
+
+/**
+  Check boot options status and cleanup if needed.
+
+  @param  VOID
+  @retval BOOLEAN   TRUE if cleanup is needed (invalid options found or no valid block device boot option)
+**/
+BOOLEAN
+CheckBootOptionsStatus (
+  VOID
+  )
+{
+  EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
+  UINTN                           BootOptionCount;
+  UINTN                           BootOptionIndex;
+  EFI_HANDLE                      Handle1;
+  EFI_HANDLE                      Handle2;
+  EFI_STATUS                      Status1;
+  EFI_STATUS                      Status2;
+  EFI_DEVICE_PATH_PROTOCOL        *TempPath;
+  BOOLEAN                         InvalidFound;
+  BOOLEAN                         HasValidAutoCreatedBlockDevice;
+
+  InvalidFound = FALSE;
+  HasValidAutoCreatedBlockDevice = FALSE;
+  BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
+
+  for (BootOptionIndex = 0; BootOptionIndex < BootOptionCount; ++BootOptionIndex) {
+    TempPath = DuplicateDevicePath(BootOptions[BootOptionIndex].FilePath);
+    Status1 = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &TempPath, &Handle1);
+    Status2 = gBS->LocateDevicePath (&gEfiLoadFileProtocolGuid, &TempPath, &Handle2);
+
+    if (EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
+      // Found invalid boot option
+      InvalidFound = TRUE;
+      DEBUG ((DEBUG_INFO, "Found invalid boot option Description: %s\n", BootOptions[BootOptionIndex].Description));
+      DEBUG ((DEBUG_INFO, "Removing invalid boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
+      EfiBootManagerDeleteLoadOptionVariable(
+        BootOptions[BootOptionIndex].OptionNumber,
+        LoadOptionTypeBoot
+        );
+    } else if (!EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
+      // For valid block devices (not LoadFile devices), check if any are auto-created
+      if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex])) {
+        HasValidAutoCreatedBlockDevice = TRUE;
+      }
+    }
+  }
+
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+
+  // Need cleanup if either invalid options found or no valid block device boot option exists
+  return (InvalidFound || !HasValidAutoCreatedBlockDevice);
+}
+
+/**
+  Remove automatically created boot options.
+
+  @param  VOID
+  @retval VOID
+**/
+VOID
+RemoveAutoCreatedBootOptions (
+  VOID
+  )
+{
+  EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
+  UINTN                           BootOptionCount;
+  UINTN                           BootOptionIndex;
+
+  BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
+
+  for (BootOptionIndex = 0; BootOptionIndex < BootOptionCount; ++BootOptionIndex) {
+    if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex])) {
+      DEBUG ((DEBUG_INFO, "Removing auto-created boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
+      EfiBootManagerDeleteLoadOptionVariable(
+        BootOptions[BootOptionIndex].OptionNumber,
+        LoadOptionTypeBoot
+        );
+    }
+  }
+
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+}
+
+/**
+  Clean up boot options if needed:
+  1. Remove all boot options if any invalid entry is found
+  2. Remove all boot options if no valid auto created block device boot option exists
+  This ensures system can properly handle boot device changes.
+
+  @param  VOID
+  @retval VOID
+**/
+VOID
+PlatformCleanupBootOptions (
+  VOID
+  )
+{
+  BOOLEAN CleanupNeeded;
+
+  CleanupNeeded = CheckBootOptionsStatus();
+
+  if (CleanupNeeded) {
+    DEBUG ((DEBUG_INFO, "Cleanup needed: removing all auto created boot options\n"));
+    RemoveAutoCreatedBootOptions();
+  }
+}
+
 /** Boot a Fv Boot Option.
 
   This function is useful for booting the UEFI Shell as it is loaded
@@ -478,127 +619,95 @@ PlatformBootFvBootOption (
 }
 
 /**
-  Make a platform driver to create predefined boot options and related hot keys.
+  Extracts the GUID from a device path string. This function converts the given
+  device path to a string format and then extracts the GUID part from the FvFile
+  node in the device path, if present. This function is specifically tailored
+  for FvFile type device paths.
 
-  @param  VOID
+  @param  DevicePath   The device path from which the GUID will be extracted.
+  @param  Guid         Guid of this device path.
 
-  @retval  VOID
+  @return EFI_SUCCESS on success, otherwise return an error
+
+  Note:
+  - The function uses ConvertDevicePathToText to convert the device path to a
+    string format.
+  - It assumes the GUID follows the "FvFile(" node in the string representation.
+  - Only applicable for device paths containing FvFile nodes.
 **/
-STATIC
-VOID
-GetPlatformOptions (
-  VOID
+EFI_STATUS
+ExtractGuidFromDevicePathString (
+  IN  EFI_DEVICE_PATH_PROTOCOL  *DevicePath,
+  OUT EFI_GUID                  *Guid
   )
 {
-  EFI_STATUS                      Status;
-  EFI_BOOT_MANAGER_LOAD_OPTION    *CurrentBootOptions;
-  EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
-  EFI_INPUT_KEY                   *BootKeys;
-  PLATFORM_BOOT_MANAGER_PROTOCOL  *PlatformBootManager;
-  UINTN                           CurrentBootOptionCount;
-  UINTN                           Index;
-  UINTN                           BootCount;
+  CHAR16        *DevicePathStr;
+  CHAR16        *GuidStart;
+  RETURN_STATUS  Status;
 
-  Status = gBS->LocateProtocol (
-                  &gPlatformBootManagerProtocolGuid,
-                  NULL,
-                  (VOID **)&PlatformBootManager
-                  );
-  if (EFI_ERROR (Status)) {
-    return;
+  DevicePathStr = ConvertDevicePathToText(DevicePath, TRUE, TRUE);
+  if (DevicePathStr == NULL) {
+    DEBUG((DEBUG_ERROR, "Failed to convert device path to text\n"));
+    return EFI_NOT_FOUND;
   }
 
-  Status = PlatformBootManager->GetPlatformBootOptionsAndKeys (
-                                  &BootCount,
-                                  &BootOptions,
-                                  &BootKeys
-                                  );
-  if (EFI_ERROR (Status)) {
-    return;
+  GuidStart = StrStr(DevicePathStr, L"FvFile(");
+  if (GuidStart == NULL) {
+    FreePool(DevicePathStr);
+    return EFI_NOT_FOUND;
   }
 
-  //
-  // Fetch the existent boot options. If there are none, CurrentBootCount
-  // will be zeroed.
-  //
-  CurrentBootOptions = EfiBootManagerGetLoadOptions (
-                         &CurrentBootOptionCount,
-                         LoadOptionTypeBoot
-                         );
-  //
-  // Process the platform boot options.
-  //
-  for (Index = 0; Index < BootCount; Index++) {
-    INTN   Match;
-    UINTN  BootOptionNumber;
+  GuidStart += StrLen(L"FvFile(");
+  Status = StrToGuid(GuidStart, Guid);
+  if (RETURN_ERROR(Status)) {
+    DEBUG((DEBUG_ERROR, "Failed to parse GUID from string: %r\n", Status));
+  }
 
-    //
-    // If there are any preexistent boot options, and the subject platform boot
-    // option is already among them, then don't try to add it. Just get its
-    // assigned boot option number so we can associate a hotkey with it. Note
-    // that EfiBootManagerFindLoadOption() deals fine with (CurrentBootOptions
-    // == NULL) if (CurrentBootCount == 0).
-    //
-    Match = EfiBootManagerFindLoadOption (
-              &BootOptions[Index],
-              CurrentBootOptions,
-              CurrentBootOptionCount
-              );
-    if (Match >= 0) {
-      BootOptionNumber = CurrentBootOptions[Match].OptionNumber;
-    } else {
-      //
-      // Add the platform boot options as a new one, at the end of the boot
-      // order. Note that if the platform provided this boot option with an
-      // unassigned option number, then the below function call will assign a
-      // number.
-      //
-      Status = EfiBootManagerAddLoadOptionVariable (
-                 &BootOptions[Index],
-                 MAX_UINTN
-                 );
-      if (EFI_ERROR (Status)) {
-        DEBUG ((
-          DEBUG_ERROR,
-          "%a: failed to register \"%s\": %r\n",
-          __func__,
-          BootOptions[Index].Description,
-          Status
-          ));
-        continue;
+  FreePool(DevicePathStr);
+  return Status;
+}
+
+/**
+  GetOption
+
+  @param[in]  Description
+  @param[in]  guid
+  @param[in]  Attributes of the boot option
+  @retval     OptionNumber
+**/
+UINTN
+GetOption (
+  IN CHAR16 *Description,
+  EFI_GUID  Guid,
+  UINT32    Attributes
+  )
+{
+  UINTN                         BootOptionCount;
+  EFI_BOOT_MANAGER_LOAD_OPTION  *BootOptions;
+  UINTN                         Index;
+  UINTN                         OptionNumber;
+  EFI_GUID                      GuidFind;
+  EFI_STATUS                    Status;
+
+  BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
+
+  for (Index = 0; Index < BootOptionCount; Index++) {
+      Status = ExtractGuidFromDevicePathString(BootOptions[Index].FilePath, &GuidFind);
+      if (EFI_ERROR(Status)) {
+          continue;
       }
-
-      BootOptionNumber = BootOptions[Index].OptionNumber;
-    }
-
-    //
-    // Register a hotkey with the boot option, if requested.
-    //
-    if (BootKeys[Index].UnicodeChar == L'\0') {
-      continue;
-    }
-
-    Status = EfiBootManagerAddKeyOptionVariable (
-               NULL,
-               BootOptionNumber,
-               0,
-               &BootKeys[Index],
-               NULL
-               );
-    if (EFI_ERROR (Status)) {
-      DEBUG ((
-        DEBUG_ERROR,
-        "%a: failed to register hotkey for \"%s\": %r\n",
-        __func__,
-        BootOptions[Index].Description,
-        Status
-        ));
-    }
+      if (CompareGuid(&Guid, &GuidFind)) {
+        OptionNumber = BootOptions[Index].OptionNumber;
+        break;
+      }
   }
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 
-  EfiBootManagerFreeLoadOptions (CurrentBootOptions, CurrentBootOptionCount);
-  EfiBootManagerFreeLoadOptions (BootOptions, BootCount);
-  FreePool (BootKeys);
+  if (Index >= BootOptionCount) {
+    return LoadOptionNumberUnassigned;
+  } else {
+    return OptionNumber;
+  }
 }
 
 /**
@@ -609,20 +718,18 @@ GetPlatformOptions (
   @retval  VOID
 **/
 VOID
-PlatformRegisterOptionsAndKeys (
+PlatformRegisterKeys (
   VOID
   )
 {
   EFI_STATUS                   Status;
   EFI_INPUT_KEY                Enter;
+  EFI_INPUT_KEY                F7;
   EFI_INPUT_KEY                F2;
   EFI_INPUT_KEY                Esc;
+  EFI_INPUT_KEY                Key;
+  UINT16                        OptionNumber;
   EFI_BOOT_MANAGER_LOAD_OPTION BootOption;
-
-  //
-  // Load platform boot options
-  //
-  GetPlatformOptions ();
 
   //
   // Register ENTER as CONTINUE key
@@ -631,6 +738,12 @@ PlatformRegisterOptionsAndKeys (
   Enter.UnicodeChar = CHAR_CARRIAGE_RETURN;
   Status = EfiBootManagerRegisterContinueKeyOption (0, &Enter, NULL);
   ASSERT_EFI_ERROR (Status);
+
+  // F7: open boot device list menu
+  F7.ScanCode    = SCAN_F7;
+  F7.UnicodeChar = CHAR_NULL;
+  OptionNumber   = GetOption (L"UEFI BootManagerMenuApp",mBootMenuFile, Default);
+  EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) OptionNumber, 0, &F7, NULL);
 
   //
   // Map F2 and ESC to Boot Manager Menu
@@ -641,21 +754,19 @@ PlatformRegisterOptionsAndKeys (
   Esc.UnicodeChar = CHAR_NULL;
   Status = EfiBootManagerGetBootManagerMenu (&BootOption);
   ASSERT_EFI_ERROR (Status);
-  Status = EfiBootManagerAddKeyOptionVariable (
-             NULL,
-             (UINT16) BootOption.OptionNumber,
-             0,
-             &F2,
-             NULL
-             );
+  Status = EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &F2, NULL);
   ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
-  Status = EfiBootManagerAddKeyOptionVariable (
-             NULL,
-             (UINT16) BootOption.OptionNumber,
-             0,
-             &Esc,
-             NULL
-             );
+  Status = EfiBootManagerAddKeyOptionVariable (NULL, (UINT16) BootOption.OptionNumber, 0, &Esc, NULL);
+  ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
+
+  //
+  // Add UEFI Shell Key "s"
+  //
+  Key.ScanCode    = SCAN_NULL;
+  Key.UnicodeChar = L's';
+  OptionNumber   = GetOption (L"UEFI Shell", gUefiShellFileGuid, Default);
+  DEBUG((DEBUG_ERROR, "OptionNumber is %d\n", OptionNumber));
+  Status = EfiBootManagerAddKeyOptionVariable (NULL, OptionNumber, 0, &Key, NULL);
   ASSERT (Status == EFI_SUCCESS || Status == EFI_ALREADY_STARTED);
 }
 
@@ -754,11 +865,6 @@ PlatformBootManagerBeforeConsole (
     (EFI_DEVICE_PATH_PROTOCOL *)&mSerialConsole,
     NULL
     );
-
-  //
-  // Register platform-specific boot options and keyboard shortcuts.
-  //
-  PlatformRegisterOptionsAndKeys ();
 }
 
 /**
@@ -780,7 +886,6 @@ PlatformBootManagerAfterConsole (
 {
   EFI_STATUS                    Status;
   UINTN                         FirmwareVerLength;
-  EFI_INPUT_KEY                 Key;
 
   FirmwareVerLength = StrLen (PcdGetPtr (PcdFirmwareVersionString));
   //
@@ -794,20 +899,16 @@ PlatformBootManagerAfterConsole (
   EfiBootManagerConnectAll ();
 
   //
+  // Clean up boot options
+  //
+  PlatformCleanupBootOptions();
+
+  //
   // Enumerate all possible boot options, then filter and reorder them.
   //
   EfiBootManagerRefreshAllBootOption ();
 
-  //
-  // Register UEFI Shell
-  //
-  Key.ScanCode    = SCAN_NULL;
-  Key.UnicodeChar = L's';
-  PlatformRegisterFvBootOption (
-    &gUefiShellFileGuid, 
-    L"UEFI Shell",
-    LOAD_OPTION_ACTIVE,
-    &Key);
+  PlatformRegisterKeys();
 }
 
 /**

@@ -68,3 +68,5 @@
   gEdkiiNonDiscoverableDeviceProtocolGuid
   gEfiSimpleFileSystemProtocolGuid
   gEfiUsb2HcProtocolGuid
+  gEfiBlockIoProtocolGuid
+  gEfiLoadFileProtocolGuid

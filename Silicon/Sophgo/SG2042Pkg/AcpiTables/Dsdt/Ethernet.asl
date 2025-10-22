@@ -10,16 +10,37 @@
 Scope(_SB)
 {
   Device (ETH0) {
-    Name (_HID, "SOPH0007")
+    Name (_HID, "SOPH0006")
     Name (_UID, Zero)
     Name (_CCA, 0)
     Method (_STA)                                       // _STA: Device status
     {
       Return (0xF)
     }
-    Method (_CRS, 0x0, NotSerialized)
+    /** Clock Divider Control Register of Divider for clk_tx_eth0
+    *
+    *   bit[0]: Divider Reset Control
+    *   bit[3]: Select Divide Factor from Register
+    *   bit[26-16]: Clock Divider Factor
+    **/
+    OperationRegion(CDDR, SystemMemory, 0x7030012080, 4)
+    Field(CDDR, DWordAcc, NoLock, Preserve) {
+      TDIV, 32
+    }
+
+    Method (SCLK, 1, NotSerialized)
     {
-      Name (RBUF, ResourceTemplate()
+      Divide(1000000000, Arg0,, Local0)
+      ShiftLeft(Local0, 0x10, Local0)
+      Or(Local0, 0x9, Local0)
+      Store(Local0, TDIV)
+    }
+
+    Name (_DEP, Package () {
+      \_SB.GPI0
+    })
+
+      Name (_CRS, ResourceTemplate()
       {
         QWordMemory (
           ResourceConsumer, PosDecode,
@@ -36,8 +57,6 @@ Scope(_SB)
 
         GpioIo (Exclusive, PullUp, 0, 0, IoRestrictionOutputOnly, "\\_SB.GPI0", 0, ResourceConsumer) {27}
       })
-      Return(RBUF)
-    }
 
     Name (_DSD, Package ()  // _DSD: Device-Specific Data
     {

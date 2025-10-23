@@ -1,0 +1,35 @@
+///**
+//Firmware manager formset.
+//
+//Copyright (c) 2024, SOPHGO Technologies Inc. All rights reserved.
+//
+//SPDX-License-Identifier: BSD-2-Clause-Patent
+//**/
+#include "FirmwareManagerFormGuid.h"
+
+formset
+  guid      = FIRMWARE_MANAGER_FORMSET_GUID,
+  title     = STRING_TOKEN (STR_FIRMWARE_MANAGER_TITLE),
+  help      = STRING_TOKEN (STR_FIRMWARE_MANAGER_HELP),
+  classguid = gEfiIfrFrontPageGuid,
+
+  form formid = FORM_FIRMWARE_MANAGER_ID,
+       title = STRING_TOKEN (STR_FIRMWARE_MANAGER_TITLE);
+
+    goto FORM_FIRMWARE_MANAGER_ID,
+      prompt = STRING_TOKEN (STR_UPDATE_FIRMWARE_TITLE),
+      help   = STRING_TOKEN (STR_UPDATE_FIRMWARE_HELP),
+      flags  = INTERACTIVE,
+      key    = UPDATE_FIRMWARE_KEY;
+/* 
+   // Due to an issue with the spif0@7000180000 probe on the SG2042-X4EVB, 
+   // the function to update conf.ini file in BIOS Menu has been temporarily disabled
+    goto FORM_FIRMWARE_MANAGER_ID,
+      prompt = STRING_TOKEN (STR_UPDATE_INI_TITLE),
+      help   = STRING_TOKEN (STR_UPDATE_INI_HELP),
+      flags  = INTERACTIVE,
+      key    = UPDATE_INI_KEY;
+*/
+  endform;
+
+endformset;

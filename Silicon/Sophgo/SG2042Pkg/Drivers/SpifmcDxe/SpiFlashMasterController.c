@@ -474,7 +474,7 @@ SetMemory (
     Status = gDS->AddMemorySpace (
                     EfiGcdMemoryTypeMemoryMappedIo,
                     Nor->SpiBase,
-                    SIZE_64MB,
+                    SIZE_16MB,
                     EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
                     );
     if (Status == EFI_ACCESS_DENIED) {
@@ -490,7 +490,7 @@ SetMemory (
   init:
     Status = gDS->SetMemorySpaceAttributes (
                     Nor->SpiBase,
-                    SIZE_64MB,
+                    SIZE_16MB,
                     EFI_MEMORY_UC | EFI_MEMORY_XP | EFI_MEMORY_RUNTIME
                     );
     if (EFI_ERROR (Status)) {
@@ -549,6 +549,7 @@ SpifmcEntryPoint (
   }
 
   mNorFlashInstance[0].SpiBase = FixedPcdGet64 (PcdSPIFMC0Base);
+  // mNorFlashInstance[1].SpiBase = FixedPcdGet64 (PcdSPIFMC1Base);
 
   Status = SetMemory ();
   if (EFI_ERROR (Status)) {

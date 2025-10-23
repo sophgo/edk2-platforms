@@ -1,0 +1,34 @@
+///** @file
+//String definitions for Firmware manager menu.
+//
+//Copyright (c) 2024, SOPHGO Technologies Inc. All rights reserved.
+//
+//SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+//**/
+
+/=#
+#langdef    en-US  "English"
+
+#string STR_FIRMWARE_MANAGER_TITLE         #language en-US "Firmware Manager"
+#string STR_FIRMWARE_MANAGER_HELP          #language en-US "View and set the firmware config"
+
+#string STR_UPDATE_FIRMWARE_TITLE          #language en-US "Update Firmware"
+#string STR_UPDATE_FIRMWARE_HELP           #language en-US "Select the file to update the firmware. Do not power off or reset the device during the update"
+#string STR_UPDATING_WARNING               #language en-US "Do not power-off/reset during the update"
+#string STR_UPDATE_PROMPT_MESSAGE          #language en-US "Do you want to skip the variable range?"
+
+#string STR_FIRMWARE_UPDATE_SUCC           #language en-US "Firmware update success"
+#string STR_FIRMWARE_UPDATE_FAIL           #language en-US "Firmware update failed"
+#string STR_UPDATING_FIRMWARE              #language en-US "Updating Firmware"
+#string STR_FIRMWARE_VERIFY_PASS           #language en-US "Firmware verification passed"
+#string STR_FIRMWARE_VERIFY_FAIL           #language en-US "Firmware verification failed"
+#string STR_PRESS_ENTER_TO_CONTINUE        #language en-US "Press Enter to continue"
+#string STR_PRESS_ENTER_TO_REBOOT          #language en-US "Press Enter to reboot the system"
+#string STR_VARIABLE_LOCKED                #language en-US "SecureBoot enabled, variable area locked"
+
+#string STR_UPDATE_INI_TITLE               #language en-US "Update CONF.INI"
+#string STR_UPDATE_INI_HELP                #language en-US "Select the file to update the conf.ini"
+#string STR_UPDATING_INI                   #language en-US "Updating conf.ini"
+#string STR_INI_UPDATE_SUCC                #language en-US "conf.ini update success"
+#string STR_INI_UPDATE_FAIL                #language en-US "conf.ini update failed"

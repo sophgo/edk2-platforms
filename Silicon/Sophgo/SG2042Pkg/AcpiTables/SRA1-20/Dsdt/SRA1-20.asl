@@ -12,10 +12,10 @@
 
 DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2042    ",
                  EFI_ACPI_RISCV_OEM_REVISION) {
-  include ("Cpu-Server.asl")
-  include ("CommonDevices-Server.asl")
+  include ("Cpu.asl")
+  include ("CommonDevices.asl")
   include ("Uart.asl")
   include ("Mmc.asl")
-  include ("Intc-Server.asl")
-  include ("Pci-Server.asl")
+  include ("Intc.asl")
+  include ("Pci.asl")
 }

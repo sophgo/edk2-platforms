@@ -1,6 +1,6 @@
-## @file SG2044.fdf.inc
+## @file MilkV-Pioneer.fdf.inc
 #
-#  Definitions of Flash definition file on SOPHON SG2044 RISC-V platform
+#  Definitions of Flash definition file on SOPHGO MilkV-Pioneer platform
 #
 #  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 #

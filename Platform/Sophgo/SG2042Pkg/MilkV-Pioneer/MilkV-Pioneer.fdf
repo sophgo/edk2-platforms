@@ -1,5 +1,5 @@
 # @file
-#  Flash definition file on Sophgo SG2042 Server RISC-V platform
+#  Flash definition file on Sophgo MilkV-Pioneer RISC-V platform
 #
 #  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 #  Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
@@ -8,13 +8,13 @@
 #
 # Platform definitions
 #
-!include SG2042.fdf.inc
+!include MilkV-Pioneer.fdf.inc
 
 #
 # Build the variable store and the firmware code as one unified flash device
 # image.
 #
-[FD.SG2042]
+[FD.MILKV-PIONEER]
 BaseAddress   = $(FW_BASE_ADDRESS)
 Size          = $(FW_SIZE)
 ErasePolarity = 1
@@ -118,9 +118,9 @@ INF  Silicon/Sophgo/SG2042Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 #
 !if $(ACPI_ENABLE) == TRUE
   INF MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
-  INF Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformServerDxe/AcpiPlatformServerDxe.inf
+  INF Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
   INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2042Pkg/AcpiTables/SG2042ServerAcpiTables.inf
+  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2042Pkg/AcpiTables/MilkV-Pioneer/MilkV-Pioneer-AcpiTables.inf
 !endif
 
 #
@@ -225,6 +225,7 @@ INF  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
 INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
 INF  MdeModulePkg/Application/UiApp/UiApp.inf
 INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
+INF  Silicon/Sophgo/SG2042Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
 
 ################################################################################
 

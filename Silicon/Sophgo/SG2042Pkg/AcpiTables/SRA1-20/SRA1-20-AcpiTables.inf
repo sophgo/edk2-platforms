@@ -10,7 +10,7 @@
 
 [Defines]
   INF_VERSION                    = 0x0001001A
-  BASE_NAME                      = SG2042EvbAcpiTables
+  BASE_NAME                      = SRA1-20-AcpiTables
   FILE_GUID                      = 7E374E25-8E01-4FEE-87F2-390C23C606CD
   MODULE_TYPE                    = USER_DEFINED
   VERSION_STRING                 = 1.0
@@ -24,7 +24,7 @@
   Rhct.aslc
   Srat.aslc
   Slit.aslc
-  Dsdt/SGX4EvbDsdt.asl
+  Dsdt/SRA1-20.asl
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec

@@ -1,5 +1,5 @@
-## @file  SG2042.dec
-# This Package provides Sophgo SG2042 modules and libraries.
+## @file  MilkV-Pioneer.dec
+# This Package provides Sophgo MilkV-Pioneer modules and libraries.
 #
 # Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 # Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
@@ -10,7 +10,7 @@
 
 [Defines]
   DEC_SPECIFICATION              = 0x0001001b
-  PACKAGE_NAME                   = SG2042
+  PACKAGE_NAME                   = MilkV-Pioneer
   PACKAGE_GUID                   = BBF86176-C58B-4EC5-8D76-B8D458A2548E
   PACKAGE_VERSION                = 1.0
 

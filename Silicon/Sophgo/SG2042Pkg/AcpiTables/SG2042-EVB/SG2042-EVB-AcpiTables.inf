@@ -10,7 +10,7 @@
 
 [Defines]
   INF_VERSION                    = 0x0001001A
-  BASE_NAME                      = SG2042EvbAcpiTables
+  BASE_NAME                      = SG2042-EVB-AcpiTables
   FILE_GUID                      = 7E374E25-8E01-4FEE-87F2-390C23C606CD
   MODULE_TYPE                    = USER_DEFINED
   VERSION_STRING                 = 1.0
@@ -18,13 +18,13 @@
 [Sources]
   Fadt.aslc
   Spcr.aslc
-  Mcfg-Server.aslc
-  Madt-Server.aslc
-  Pptt-Server.aslc
-  Rhct-Server.aslc
-  Srat-Server.aslc
-  Slit-Server.aslc
-  Dsdt/SG2042ServerDsdt.asl
+  Mcfg.aslc
+  Madt.aslc
+  Pptt.aslc
+  Rhct.aslc
+  Srat.aslc
+  Slit.aslc
+  Dsdt/SG2042-EVB.asl
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec

@@ -1,5 +1,5 @@
 ## @file
-#  RISC-V EFI on Sophgo SG2042 EVB RISC-V platform
+#  RISC-V EFI on Sophgo SG2042 SRA1-20 RISC-V platform
 #
 #  Copyright (c) 2025, SOPHGO Inc. All rights reserved.
 #  Copyright (c) 2023, Academy of Intelligent Innovation, Shandong Universiy, China.P.R. All rights reserved.<BR>
@@ -14,7 +14,7 @@
 #
 ################################################################################
 [Defines]
-  PLATFORM_NAME                  = SG2042_X4EVB
+  PLATFORM_NAME                  = SRA1-20
   PLATFORM_GUID                  = 8014637B-6999-4110-9762-464BE11E935F
   PLATFORM_VERSION               = 0.1
   DSC_SPECIFICATION              = 0x0001001c
@@ -22,7 +22,7 @@
   SUPPORTED_ARCHITECTURES        = RISCV64
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
-  FLASH_DEFINITION               = Platform/Sophgo/SG2042Pkg/SG2042_X4EVB/SG2042.fdf
+  FLASH_DEFINITION               = Platform/Sophgo/SG2042Pkg/SRA1-20/SRA1-20.fdf
 
   #
   # Enable below options may cause build error or may not work on
@@ -151,9 +151,9 @@
   OrderedCollectionLib|MdePkg/Library/BaseOrderedCollectionRedBlackTreeLib/BaseOrderedCollectionRedBlackTreeLib.inf
 
 [LibraryClasses.common]
+!if $(SECURE_BOOT_ENABLE) == TRUE
   BaseCryptLib|CryptoPkg/Library/BaseCryptLib/BaseCryptLib.inf
-  OpensslLib|CryptoPkg/Library/OpensslLib/OpensslLib.inf
-  IntrinsicLib|CryptoPkg/Library/IntrinsicLib/IntrinsicLib.inf
+!endif
 
 !ifdef $(DEBUG_ON_SERIAL_PORT)
   DebugLib|MdePkg/Library/BaseDebugLibSerialPort/BaseDebugLibSerialPort.inf
@@ -168,7 +168,7 @@
 
   TimerLib|UefiCpuPkg/Library/BaseRiscV64CpuTimerLib/BaseRiscV64CpuTimerLib.inf
   TimeBaseLib|EmbeddedPkg/Library/TimeBaseLib/TimeBaseLib.inf
-  RealTimeClockLib|EmbeddedPkg//Library/VirtualRealTimeClockLib/VirtualRealTimeClockLib.inf
+  RealTimeClockLib|Silicon/Sophgo/SG2042Pkg/Library/VirtualRealTimeClockLib/VirtualRealTimeClockLib.inf
 
   # Flattened Device Tree (FDT) access library
   FdtLib|EmbeddedPkg/Library/FdtLib/FdtLib.inf
@@ -181,17 +181,6 @@
 
   # Nor Flash Library
   NorFlashInfoLib|EmbeddedPkg/Library/NorFlashInfoLib/NorFlashInfoLib.inf
-
-  # Ds1307 RTC Library
-  RealTimeClockLib|Silicon/Sophgo/Library/Ds1307RealTimeClockLib/Ds1307RealTimeClockLib.inf
-
-  ResetSystemLib|OvmfPkg/RiscVVirt/Library/ResetSystemLib/BaseResetSystemLib.inf
-
-  #
-  # Random Generator Library
-  #
-  TrngLib|Silicon/Sophgo/Library/TrngLib/TrngLib.inf
-  RngLib|Silicon/Sophgo/Library/RngLib/RngLib.inf
 
 [LibraryClasses.common.SEC]
   ReportStatusCodeLib|MdeModulePkg/Library/PeiReportStatusCodeLib/PeiReportStatusCodeLib.inf
@@ -548,7 +537,7 @@
   }
   EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf {
     <LibraryClasses>
-      RealTimeClockLib|Silicon/Sophgo/Library/Ds1307RealTimeClockLib/Ds1307RealTimeClockLib.inf
+      RealTimeClockLib|Silicon/Sophgo/SG2042Pkg/Library/VirtualRealTimeClockLib/VirtualRealTimeClockLib.inf
   }
 
   #
@@ -736,14 +725,13 @@
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
-  Silicon/Sophgo/SG2042Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
 
   #
   # ACPI Support
   #
 !if $(ACPI_ENABLE) == TRUE
   MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
+  Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformServerDxe/AcpiPlatformServerDxe.inf
   MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  Silicon/Sophgo/SG2042Pkg/AcpiTables/SGX4EvbAcpiTables.inf
+  Silicon/Sophgo/SG2042Pkg/AcpiTables/SRA1-20/SRA1-20-AcpiTables.inf
 !endif

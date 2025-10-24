@@ -8,13 +8,13 @@
 #
 # Platform definitions
 #
-!include SG2042.fdf.inc
+!include SG2042-EVB.fdf.inc
 
 #
 # Build the variable store and the firmware code as one unified flash device
 # image.
 #
-[FD.SG2042]
+[FD.SG2042-EVB]
 BaseAddress   = $(FW_BASE_ADDRESS)
 Size          = $(FW_SIZE)
 ErasePolarity = 1
@@ -120,7 +120,7 @@ INF  Silicon/Sophgo/SG2042Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
   INF MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
   INF Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
   INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2042Pkg/AcpiTables/SGX4EvbAcpiTables.inf
+  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2042Pkg/AcpiTables/SG2042-EVB/SG2042-EVB-AcpiTables.inf
 !endif
 
 #

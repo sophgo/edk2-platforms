@@ -1145,7 +1145,7 @@ PeiCheckAndSwitchStack (
     NewStackSize = RShiftU64 (Private->PhysicalMemoryLength, 1);
     NewStackSize = ALIGN_VALUE (NewStackSize, EFI_PAGE_SIZE);
     NewStackSize = MIN (PcdGet32 (PcdPeiCoreMaxPeiStackSize), NewStackSize);
-    DEBUG ((DEBUG_INFO, "Old Stack size %d, New stack size %d\n", (UINT32)SecCoreData->StackSize, (UINT32)NewStackSize));
+    DEBUG ((DEBUG_INFO, "Old Stack size 0x%x, New stack size 0x%x\n", (UINT32)SecCoreData->StackSize, (UINT32)NewStackSize));
     ASSERT (NewStackSize >= SecCoreData->StackSize);
 
     //

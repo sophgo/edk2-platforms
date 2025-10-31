@@ -14,63 +14,37 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
-#include <Protocol/FdtClient.h>
 
 #include "SmbiosPlatformDxe.h"
+#include <Include/PcieHostPcd.h>
 
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformSystemSlot) {
-  FDT_CLIENT_PROTOCOL  *FdtClient;
-  CONST CHAR8          *CompatibleString;
-  EFI_STATUS           FindNodeStatus, Status;
-  INT32                Node;
-  UINT32               Index, NumberOfControllers, SlotID, PropSize;
-  CONST VOID           *Prop;
-  STR_TOKEN_INFO       *InputStrToken;
-  SMBIOS_TABLE_TYPE9   *Type9Record;
-  SMBIOS_TABLE_TYPE9   *InputData;
-  CHAR16               SlotDesignation[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  EFI_STATUS                         Status;
+  UINT32                             Index, NumberOfControllers, SlotID;
+  STR_TOKEN_INFO                     *InputStrToken;
+  SMBIOS_TABLE_TYPE9                 *Type9Record;
+  SMBIOS_TABLE_TYPE9                 *InputData;
+  CHAR16                             SlotDesignation[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  PCIE_HOST_BRIDGE_TABLE            *PcieRcConfig;
 
   InputData     = (SMBIOS_TABLE_TYPE9 *)RecordData;
   InputStrToken = (STR_TOKEN_INFO *)StrToken;
-  CompatibleString = "sophgo,sg2044-pcie-host";
-
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "[%a] No FDT client service found\n", __func__));
+  PcieRcConfig  = (PCIE_HOST_BRIDGE_TABLE *)PcdGetPtr (PcdPcieHostBridgeTable);
+  if (PcieRcConfig == NULL) {
+    DEBUG ((DEBUG_ERROR, "[%a] No PCIe host bridge configuration found\n", __func__));
     return EFI_NOT_FOUND;
   }
 
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "linux,pci-domain", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "[%a] GetNodeProperty (linux,pci-domain) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    ++Index;
-  }
+  NumberOfControllers = PcieRcConfig->NumOfControllers;
 
-  if (Index == 0) {
-    DEBUG ((DEBUG_ERROR, "[%a] Cannot get PCIe node from DTS (Status == %r)\n", __func__, Status));
-    return EFI_NOT_FOUND;
-  }
-  NumberOfControllers = Index;
-
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "linux,pci-domain", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "[%a] GetNodeProperty (linux,pci-domain) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    SlotID = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
+  for (Index = 0; Index < NumberOfControllers; ++Index) {
+    SlotID = PcieRcConfig->PcieDomain[Index][0] | (PcieRcConfig->PcieDomain[Index][1] << 8) |
+             (PcieRcConfig->PcieDomain[Index][2] << 16) | (PcieRcConfig->PcieDomain[Index][3] << 24);
     UnicodeSPrint (SlotDesignation, sizeof (SlotDesignation), L"SLOT%u", SlotID);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], SlotDesignation, NULL);
     InputData->SlotID = (UINT16) SlotID;
     InputData->SegmentGroupNum = (UINT16) SlotID;
-    
+
     SmbiosPlatformDxeCreateTable (
       (VOID *)&Type9Record,
       (VOID *)&InputData,
@@ -88,8 +62,6 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformSystemSlot) {
     }
 
     FreePool (Type9Record);
-    ++Index;
   }
-
   return EFI_SUCCESS;
 }

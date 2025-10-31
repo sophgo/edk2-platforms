@@ -19,7 +19,6 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/TimerLib.h>
-#include <Protocol/FdtClient.h>
 #include <Protocol/Cpu.h>
 #include <Include/DwSpi.h>
 

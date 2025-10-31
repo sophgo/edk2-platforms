@@ -12,11 +12,11 @@
 **/
 
 #include "Hest.h"
-
-PCIE_RC_CONFIG       mPcieRcConfig[PCIE_MAX_ROOT_COMPLEXES];
-STATIC UINTN         mPcieRcCount = 0;
-STATIC HEST_CONTEXT  mHestContext;
-BOOLEAN              mPcieConfigParsed = FALSE;
+#include <Include/PcieHostPcd.h>
+PCIE_RC_CONFIG  mPcieRcConfig[PCIE_MAX_ROOT_COMPLEXES];
+UINTN           mPcieRcCount = 0;
+HEST_CONTEXT    mHestContext;
+BOOLEAN         mPcieConfigParsed = FALSE;
 
 
 /**
@@ -40,72 +40,35 @@ ParsePcieRcConfig (
   )
 {
   EFI_STATUS              Status;
-  FDT_CLIENT_PROTOCOL     *FdtClient;
   CONST VOID             *Prop;
-  INT32                   Node;
+  INT32                   Node, Index;
   EFI_STATUS              FindNodeStatus;
+  PCIE_HOST_BRIDGE_TABLE  *PcieRcConfig;
 
-  //
-  // Initialize RC count
-  //
-  mPcieRcCount = 0;
-
-  //
-  // Locate FDT Client Protocol
-  //
-  Status = gBS->LocateProtocol (
-                  &gFdtClientProtocolGuid,
-                  NULL,
-                  (VOID **)&FdtClient
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: Failed to locate FDT Client Protocol: %r\n", __func__, Status));
-    return Status;
+  PcieRcConfig  = (PCIE_HOST_BRIDGE_TABLE *)PcdGetPtr (PcdPcieHostBridgeTable);
+  if (PcieRcConfig == NULL) {
+    DEBUG ((DEBUG_ERROR, "[%a] No PCIe host bridge configuration found\n", __func__));
+    return EFI_NOT_FOUND;
   }
 
-  DEBUG ((DEBUG_VERBOSE, "%a: Starting PCIe RC configuration parsing\n", __func__));
-
-  //
-  // Find all PCIe nodes
-  //
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, "sophgo,sg2044-pcie-host", &Node);
-       FindNodeStatus == EFI_SUCCESS;
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, "sophgo,sg2044-pcie-host", Node, &Node)) {
-
-    //
-    // Get reg property for base addresses
-    //
-    Status = FdtClient->GetNodeProperty (
-                         FdtClient,
-                         Node,
-                         "reg",
-                         &Prop,
-                         NULL
-                         );
-    if (Status == EFI_NOT_FOUND) {
-      DEBUG ((DEBUG_ERROR, "%a: Failed to get reg property for RC%d\n", __func__, mPcieRcCount));
-      continue;
-    }
-
-    //
-    // Configure RC
-    //
-    mPcieRcConfig[mPcieRcCount].RcId = mPcieRcCount;
-    mPcieRcConfig[mPcieRcCount].Enabled = TRUE;
-    mPcieRcConfig[mPcieRcCount].PortCount = 1;  // Each RC has 1 port
-
-    DEBUG ((DEBUG_VERBOSE, "%a: Found RC%d: enabled=%d, port_count=%d, config_base=0x%lx\n",
-            __func__,
-            mPcieRcConfig[mPcieRcCount].RcId,
-            mPcieRcConfig[mPcieRcCount].Enabled,
-            mPcieRcConfig[mPcieRcCount].PortCount));
-
-    mPcieRcCount++;
+  mPcieRcCount = PcieRcConfig->NumOfControllers;
+  if (mPcieRcCount > PCIE_MAX_ROOT_COMPLEXES) {
+    DEBUG ((DEBUG_ERROR, "Too many PCIe controllers, only %d supported\n", PCIE_MAX_ROOT_COMPLEXES));
+    return EFI_OUT_OF_RESOURCES;
   }
-
   if (mPcieRcCount == 0) {
     DEBUG ((DEBUG_ERROR, "No PCIe RCs found\n"));
     return EFI_NOT_FOUND;
+  }
+
+  for (Index = 0; Index < mPcieRcCount; ++Index) {
+    mPcieRcConfig[Index].RcId = Index;
+    mPcieRcConfig[Index].Enabled = TRUE;
+    mPcieRcConfig[Index].PortCount = 1;  // Each RC has 1 port
+    DEBUG ((DEBUG_INFO, "RC%d: enabled=%d, port_count=%d\n",
+            mPcieRcConfig[Index].RcId,
+            mPcieRcConfig[Index].Enabled,
+            mPcieRcConfig[Index].PortCount));
   }
 
   DEBUG ((DEBUG_VERBOSE, "%a: Final PCIe RC count: %d\n", __func__, mPcieRcCount));
@@ -119,7 +82,7 @@ ParsePcieRcConfig (
   with the given notification type ccording to ACPI 6.5 specification.
 
   @param[out] GhesV2        Pointer to GHES v2 structure to be initialized
-  @param[in]  ErrorBlock    Pointer to the memory used for storing error blocks, 
+  @param[in]  ErrorBlock    Pointer to the memory used for storing error blocks,
                             read ack register, and error status address
   @param[in]  SourceId      Uniquely identify the error source.
   @param[in]  Notification  Pointer to the hardware error notification structure
@@ -249,7 +212,7 @@ GhesV2ContextForHest (
   DEBUG ((DEBUG_VERBOSE, "%a: Initial CurrentBlock at 0x%llx\n", __func__, (UINT64)(UINTN)CurrentBlock));
 
   Notification = (EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE *) AllocateZeroPool (sizeof(EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE));
-  
+
   Notification->Type = EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_GSIV;
   Notification->Length = sizeof(EFI_ACPI_6_5_HARDWARE_ERROR_NOTIFICATION_STRUCTURE);
 

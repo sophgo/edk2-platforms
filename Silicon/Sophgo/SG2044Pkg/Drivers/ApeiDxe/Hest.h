@@ -16,7 +16,6 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/IoLib.h>
 #include <Library/PrintLib.h>
-#include <Protocol/FdtClient.h>
 #include <IndustryStandard/Acpi65.h>
 #include <Guid/Cper.h>
 #include <Include/SG2044AcpiHeader.h>

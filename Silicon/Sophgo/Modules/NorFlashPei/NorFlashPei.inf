@@ -1,0 +1,58 @@
+#/** @file
+#
+#    Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#
+#    SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = NorFlashPei
+  FILE_GUID                      = 193C6420-E06F-4833-ACDB-876C4A69FE61
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = SpiNorEntryPoint
+
+[Sources.common]
+  NorFlashPei.c
+  NorFlashPei.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+  Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+
+[LibraryClasses]
+  DebugLib
+  MemoryAllocationLib
+  NorFlashInfoLib
+  TimerLib
+  IoLib
+  PeimEntryPoint
+  HobLib
+
+[Guids]
+  gVariableFlashInfoHobGuid
+  gEfiSophgoPeiVariableGuid
+
+[ppis]
+  gEfiPeiNorFlashSupportPpiGuid
+  gEfiPeiNvVariableSupportPpiGuid
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdSPIFMC0Base                             ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdSPIFMC1Base                             ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdFlashVariableOffset                     ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress              ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdFdOffset                                ## CONSUMES
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVDxeFvSize            ## CONSUMES
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableBase64
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwSpareSize
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize
+
+[Depex]
+  gEfiPeiNorFlashSupportPpiGuid

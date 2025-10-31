@@ -8,7 +8,7 @@
 
 **/
 
-#include <PiPei.h>
+#include "PiPei.h"
 #include <Library/DebugLib.h>
 #include <Library/HobLib.h>
 
@@ -17,14 +17,20 @@
 
 **/
 EFI_STATUS
-CpuPeimInitialization (
-  VOID
+PeiCpuInitialization (
+  IN       EFI_PEI_FILE_HANDLE  FileHandle,
+  IN CONST EFI_PEI_SERVICES     **PeiServices
   )
 {
   //
   // Publish the CPU Memory and IO spaces sizes.
   //
   BuildCpuHob (PcdGet8 (PcdPrePiCpuMemorySize), PcdGet8 (PcdPrePiCpuIoSize));
+  DEBUG ((
+    DEBUG_INFO,
+    "RiscV cpu memorysize is 0x%x\n",
+    PcdGet8 (PcdPrePiCpuMemorySize)
+    ));
 
   return EFI_SUCCESS;
 }

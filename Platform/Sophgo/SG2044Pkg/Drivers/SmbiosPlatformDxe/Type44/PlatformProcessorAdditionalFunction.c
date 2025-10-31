@@ -12,7 +12,6 @@
 #include <Library/MemoryAllocationLib.h>
 #include <SmbiosProcessorSpecificData.h>
 #include <ProcessorSpecificHobData.h>
-#include <Protocol/FdtClient.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/BaseRiscVSbiLib.h>
 
@@ -52,18 +51,14 @@ STATIC VOID SbiGetMachineImplId (
 }
 
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessorAdditional) {
-  EFI_STATUS                  FindNodeStatus, Status;
+  EFI_STATUS                  Status;
   SMBIOS_TABLE_TYPE44         *Type44Ptr;
-  FDT_CLIENT_PROTOCOL         *FdtClient;
-  CONST CHAR8                 *CompatibleString;
-  INT32                       Node;
-  UINT32                      Index, PropSize;
+  UINT32                      Index;
   UINT64                      CoreReg;
   UINTN                       MachineVendorId, MachineArchId, MachineImplId;
-  CONST VOID                  *Prop;
   EFI_RISCV_FIRMWARE_CONTEXT  *FirmwareContext;
-
-  CompatibleString = "thead,c920";
+  UINT32                      CpuNum;
+  UINT64                      *CpuRegs;
 
   GetFirmwareContext (&FirmwareContext);
   SbiGetMachineVendorId (&MachineVendorId);
@@ -73,21 +68,18 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessorAdditional) {
   DEBUG ((DEBUG_INFO, "BootHardId: %lu\n", FirmwareContext->BootHartId));
   DEBUG ((DEBUG_INFO, "MachineVendorId: %lx, MachineArchId: %lx, MachineImplId: %lx\n", MachineVendorId, MachineArchId, MachineImplId));
 
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "[%a] No FDT client service found\n", __func__));
+
+  CpuNum  = FixedPcdGet32 (PcdCpuCount);
+  CpuRegs = (UINT64 *)PcdGetPtr (PcdCpuReg);
+  if (CpuNum == 0 || CpuRegs == NULL) {
+    DEBUG ((DEBUG_ERROR, "No CPU info found in PCD\n"));
     return EFI_NOT_FOUND;
   }
 
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "[%a] GetNodeProperty failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    CoreReg = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
+  for (Index = 0; Index < CpuNum; Index++) {
+
+    CoreReg = CpuRegs[Index];
+    DEBUG ((DEBUG_INFO, "CoreReg: %lx\n", CoreReg));
 
     Type44Ptr = AllocateZeroPool (sizeof (SMBIOS_TABLE_TYPE44) + sizeof (SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA) + 2); // Two ending zero.
     if (Type44Ptr == NULL) {

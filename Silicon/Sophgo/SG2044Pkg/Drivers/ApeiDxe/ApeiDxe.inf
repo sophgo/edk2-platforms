@@ -49,9 +49,9 @@
 [Protocols]
   gEfiAcpiTableProtocolGuid                   ## CONSUMES
   gEfiAcpiSdtProtocolGuid                     ## CONSUMES
-  gFdtClientProtocolGuid                      ## CONSUMES
 
 [Pcd]
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable
 
 [Depex]
   gEfiAcpiTableProtocolGuid AND

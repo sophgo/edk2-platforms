@@ -37,6 +37,7 @@
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdServerNamePrefix
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform
 
 [Depex]
   TRUE

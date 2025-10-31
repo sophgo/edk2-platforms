@@ -57,13 +57,6 @@ SmbiosPlatformDxeEntry (
 
   mSmbiosPlatformDxeImageHandle = ImageHandle;
 
-  if (IniConfIniParse (NULL) < 0) {
-    DEBUG ((DEBUG_VERBOSE, "Config INI parse fail.\n"));
-  }
-
-  //
-  // Allocate buffer to save default strings of HII Database
-  //
   mDefaultHiiDatabaseStr = AllocateZeroPool (SIZE_OF_HII_DATABASE_DEFAULT_STRINGS);
   if (mDefaultHiiDatabaseStr == NULL) {
     DEBUG ((

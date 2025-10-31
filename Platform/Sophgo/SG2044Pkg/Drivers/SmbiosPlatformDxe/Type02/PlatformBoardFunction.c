@@ -15,6 +15,7 @@
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
 #include <Library/IniParserLib.h>
+#include <Library/PcdLib.h>
 
 #include "SmbiosPlatformDxe.h"
 
@@ -23,8 +24,9 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBoard) {
   STR_TOKEN_INFO      *InputStrToken;
   SMBIOS_TABLE_TYPE2  *Type2Record;
   SMBIOS_TABLE_TYPE2  *InputData;
-  CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  CHAR16         *UnicodeStrFromPcd;
+  // CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  // CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
 
   InputData     = (SMBIOS_TABLE_TYPE2 *)RecordData;
   InputStrToken = (STR_TOKEN_INFO *)StrToken;
@@ -35,25 +37,10 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBoard) {
       return Status;
     }
 
-    if (IniGetValueBySectionAndName ("board", "product_name", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStr, NULL);
-    }
-
-    if (IniGetValueBySectionAndName ("board", "vendor", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], UnicodeStr, NULL);
-    }
-
-    if (IniGetValueBySectionAndName ("board", "version", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStr, NULL);
-    }
-
-    if (IniGetValueBySectionAndName ("board", "serial-number", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[3], UnicodeStr, NULL);
-    }
+    UnicodeStrFromPcd = FixedPcdGetPtr(PcdBoardName);
+    HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStrFromPcd, NULL);
+    UnicodeStrFromPcd = FixedPcdGetPtr(PcdBoardVersion);
+    HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStrFromPcd, NULL);
 
     SmbiosPlatformDxeCreateTable (
       (VOID *)&Type2Record,

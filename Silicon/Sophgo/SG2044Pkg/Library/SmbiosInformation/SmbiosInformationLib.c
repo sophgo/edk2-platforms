@@ -298,6 +298,7 @@ FreeSmbiosData (
   return 1;
 }
 
+#if 0
 BOOLEAN
 IsServerProduct(
     VOID
@@ -353,6 +354,16 @@ IsServerProduct(
 
   return IsServerBoard;
 }
+#else
+BOOLEAN
+IsServerProduct(
+    VOID
+  )
+{
+  return (FixedPcdGetBool (PcdIsServerPlatform));
+}
+#endif
+
 
 EFI_STATUS
 EFIAPI

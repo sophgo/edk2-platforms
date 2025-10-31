@@ -205,10 +205,9 @@ SmbiosPlatformDxeDirectAddRecord (
 
 EFI_STATUS
 UpdateCacheSize(
-  IN CHAR16          *UnicodeStr,
-  IN CHAR8           *IniField,
+  IN CHAR16           *UnicodeStr,
   SMBIOS_TABLE_TYPE7  *InputData
-);
+  );
 //
 // Data Table Array
 //

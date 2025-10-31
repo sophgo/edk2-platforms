@@ -16,7 +16,6 @@
 #include <Library/IoLib.h>
 #include <Pi/PiDxeCis.h>
 #include <Library/TimerLib.h>
-#include <Protocol/FdtClient.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PcdLib.h>
@@ -816,7 +815,7 @@ DwSpiTransferOne (
       DEBUG ((DEBUG_ERROR, "check status error\n"));
       return Status;
     }
-  } while (Dws->RxLen);  
+  } while (Dws->RxLen);
 
   return EFI_SUCCESS;
 }
@@ -863,7 +862,7 @@ DwSpiFlowControl (
   return EFI_SUCCESS;
 }
 
-EFI_STATUS 
+EFI_STATUS
 Tpm2WriteNBytes (
   IN UINTN  regs,
   IN UINT8* Data,
@@ -926,7 +925,7 @@ Tpm2WriteNBytes (
     }
     DeAssertCs ();
     MicroSecondDelay (5);
-  
+
     Data += TransferLen;
     Size -= TransferLen;
   }
@@ -935,7 +934,7 @@ Tpm2WriteNBytes (
   return Status;
 }
 
-EFI_STATUS 
+EFI_STATUS
 Tpm2readNBytes (
   IN UINTN   regs,
   IN UINT16  Size,
@@ -1046,7 +1045,7 @@ Tpm2Read32 (
   UINT8       RxBuffer[4];
   UINT32      ReadByte;
   EFI_STATUS  Status;
-  
+
   Status = Tpm2readNBytes (regs, sizeof (UINT32), RxBuffer);
   if (EFI_ERROR (Status))
     return 0xffffffff;

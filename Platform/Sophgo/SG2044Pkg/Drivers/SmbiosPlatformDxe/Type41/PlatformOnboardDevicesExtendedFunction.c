@@ -12,11 +12,12 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DebugLib.h>
-#include <Protocol/FdtClient.h>
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
 
 #include "SmbiosPlatformDxe.h"
+
+#include <Include/PcieHostPcd.h>
 
 #define TYPE41_DEVICE_TYPE_OTHERS 0x81
 
@@ -31,16 +32,14 @@
 
 **/
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformOnboardDevicesExtended) {
-  EFI_STATUS           FindNodeStatus, Status;
-  FDT_CLIENT_PROTOCOL  *FdtClient;
-  CONST CHAR8          *CompatibleString;
-  STR_TOKEN_INFO       *InputStrToken;
-  SMBIOS_TABLE_TYPE41  *InputData;
-  SMBIOS_TABLE_TYPE41  *Type41Record;
-  INT32                Node;
-  UINT32               Index, SlotID, PropSize, InstanceNum;
-  CONST VOID           *Prop;
-  CHAR16               SlotDesignation[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  EFI_STATUS                        Status;
+  STR_TOKEN_INFO                    *InputStrToken;
+  SMBIOS_TABLE_TYPE41               *InputData;
+  SMBIOS_TABLE_TYPE41               *Type41Record;
+  UINT32                            Index, SlotID, InstanceNum;
+  CHAR16                            SlotDesignation[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  PCIE_HOST_BRIDGE_TABLE            *PcieRcConfig;
+
 
   InputData     = (SMBIOS_TABLE_TYPE41 *)RecordData;
   InputStrToken = (STR_TOKEN_INFO *)StrToken;
@@ -72,24 +71,16 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformOnboardDevicesExtended) {
 
   InputData        = (SMBIOS_TABLE_TYPE41 *)RecordData;
   InputStrToken    = (STR_TOKEN_INFO *)StrToken;
-  CompatibleString = "sophgo,sg2044-pcie-host";
-
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "[%a] No FDT client service found\n", __func__));
+  PcieRcConfig  = (PCIE_HOST_BRIDGE_TABLE *)PcdGetPtr (PcdPcieHostBridgeTable);
+  if (PcieRcConfig == NULL) {
+    DEBUG ((DEBUG_ERROR, "[%a] No PCIe host bridge configuration found\n", __func__));
     return EFI_NOT_FOUND;
   }
 
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "linux,pci-domain", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "[%a] GetNodeProperty (linux,pci-domain) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    SlotID = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
-    UnicodeSPrint (SlotDesignation, sizeof (SlotDesignation), L"PCIE_SLOT%u", SlotID);
+  for (Index = 0; Index < PcieRcConfig->NumOfControllers; ++Index) {
+    SlotID = PcieRcConfig->PcieDomain[Index][0] | (PcieRcConfig->PcieDomain[Index][1] << 8) |
+             (PcieRcConfig->PcieDomain[Index][2] << 16) | (PcieRcConfig->PcieDomain[Index][3] << 24);
+    UnicodeSPrint (SlotDesignation, sizeof (SlotDesignation), L"SLOT%u", SlotID);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], SlotDesignation, NULL);
     InputData->DeviceType = TYPE41_DEVICE_TYPE_OTHERS;
     InputData->DeviceTypeInstance = InstanceNum;
@@ -114,7 +105,6 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformOnboardDevicesExtended) {
     }
 
     FreePool (Type41Record);
-    Index++;
     InstanceNum++;
   }
 

@@ -23,6 +23,7 @@
   MdePkg/MdePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   Silicon/Sophgo/Sophgo.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -35,12 +36,18 @@
 [Guids]
 
 [Pcd]
-  gSophgoTokenSpaceGuid.PcdEfuseControllerNum    ## CONSUMES
-  gSophgoTokenSpaceGuid.PcdEfuse0Base            ## CONSUMES
-  gSophgoTokenSpaceGuid.PcdEfuse1Base            ## CONSUMES
-  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits      ## CONSUMES
-  gSophgoTokenSpaceGuid.PcdEfuseNumCells         ## CONSUMES
-  gSophgoTokenSpaceGuid.PcdEfuseCellWidth        ## CONSUMES
+  # gSophgoTokenSpaceGuid.PcdEfuseControllerNum    ## CONSUMES
+  # gSophgoTokenSpaceGuid.PcdEfuse0Base            ## CONSUMES
+  # gSophgoTokenSpaceGuid.PcdEfuse1Base            ## CONSUMES
+  # gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits      ## CONSUMES
+  # gSophgoTokenSpaceGuid.PcdEfuseNumCells         ## CONSUMES
+  # gSophgoTokenSpaceGuid.PcdEfuseCellWidth        ## CONSUMES
+
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseControllerNum
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseBase
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumAddrBits
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumCells
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseCellWidth
 
 [Protocols]
-  gFdtClientProtocolGuid          ## CONSUMES
+

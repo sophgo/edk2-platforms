@@ -11,27 +11,123 @@
 **/
 
 #include "PeilessSec.h"
+#include <Ppi/TemporaryRamSupport.h>
+// #include <sbi/sbi_types.h>
+//#include <Ppi/SecHobData.h>
 
-EFI_PEI_FIRMWARE_VOLUME_INFO_PPI mDxeAddtionFVPpi = {
-  EFI_FIRMWARE_FILE_SYSTEM2_GUID,
-  NULL,
-  0,
-  NULL,
-  NULL
+
+EFI_STATUS
+EFIAPI
+TemporaryRamMigration (
+  IN CONST EFI_PEI_SERVICES   **PeiServices,
+  IN EFI_PHYSICAL_ADDRESS     TemporaryMemoryBase,
+  IN EFI_PHYSICAL_ADDRESS     PermanentMemoryBase,
+  IN UINTN                    CopySize
+  );
+
+STATIC EFI_PEI_TEMPORARY_RAM_SUPPORT_PPI mTemporaryRamSupportPpi = {
+  TemporaryRamMigration
 };
+
+//EFI_STATUS
+//EFIAPI
+//GetSecHobData (
+//  IN CONST EFI_SEC_HOB_DATA_PPI *This,
+//  OUT EFI_HOB_GENERIC_HEADER    **HobList
+//  );
+
+//STATIC EFI_SEC_HOB_DATA_PPI mSecHobDataPpi = {
+//  GetSecHobData
+//};
 
 EFI_PEI_PPI_DESCRIPTOR mPrivateDispatchTable[] = {
-  {
-    EFI_PEI_PPI_DESCRIPTOR_PPI,
-    &gEfiPeiMemoryDiscoveredPpiGuid,
-    NULL
-  },
+  //{
+  //  EFI_PEI_PPI_DESCRIPTOR_PPI,
+  //  &gEfiSecHobDataPpiGuid,
+  //  &mSecHobDataPpi
+  //},
   {
     EFI_PEI_PPI_DESCRIPTOR_PPI | EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST,
-    &gEfiPeiFirmwareVolumeInfoPpiGuid,
-    &mDxeAddtionFVPpi
-  }
+    &gEfiTemporaryRamSupportPpiGuid,
+    &mTemporaryRamSupportPpi
+  },
 };
+
+/** Temporary RAM migration function.
+
+  This function migrates the data from temporary RAM to permanent
+  memory.
+
+  @param[in]  PeiServices           PEI service
+  @param[in]  TemporaryMemoryBase   Temporary memory base address
+  @param[in]  PermanentMemoryBase   Permanent memory base address
+  @param[in]  CopySize              Size to copy
+
+**/
+EFI_STATUS
+EFIAPI
+TemporaryRamMigration (
+  IN CONST EFI_PEI_SERVICES   **PeiServices,
+  IN EFI_PHYSICAL_ADDRESS     TemporaryMemoryBase,
+  IN EFI_PHYSICAL_ADDRESS     PermanentMemoryBase,
+  IN UINTN                    CopySize
+  )
+{
+  VOID      *OldHeapBase;
+  VOID      *NewHeapBase;
+  VOID      *OldStackBase;
+  VOID      *NewStackBase;
+  UINT32     Offset;
+
+  DEBUG ((DEBUG_INFO,
+    "%a: Temp Mem Base:0x%Lx, Permanent Mem Base:0x%Lx, CopySize:0x%Lx\n",
+    __func__,
+    TemporaryMemoryBase,
+    PermanentMemoryBase,
+    (UINT64)CopySize
+    ));
+
+  OldHeapBase = (VOID*)(UINTN)TemporaryMemoryBase;
+  NewHeapBase = (VOID*)((UINTN)PermanentMemoryBase + FixedPcdGet32 (PcdTemporaryRamSize));
+
+  OldStackBase = (VOID*)((UINTN)TemporaryMemoryBase + (CopySize - FixedPcdGet32 (PcdTemporaryRamSize)));
+  NewStackBase = (VOID*)((UINTN)PermanentMemoryBase);
+
+  CopyMem (NewHeapBase, OldHeapBase, CopySize - FixedPcdGet32 (PcdTemporaryRamSize));   // Migrate Heap
+  CopyMem (NewStackBase, OldStackBase,  FixedPcdGet32 (PcdTemporaryRamSize)); // Migrate Stack
+
+  //
+  // Relocate PEI Service **
+  //
+  Offset = (unsigned long)((UINTN)NewStackBase - (UINTN)OldStackBase);
+  DEBUG ((DEBUG_INFO, "Relocate: PEI Service at 0x%x offset is 0x%x\n\n", NewStackBase, Offset));
+
+  register uintptr_t a0 asm ("a0") = (uintptr_t)((UINTN)NewStackBase - (UINTN)OldStackBase);
+  asm volatile ("add sp, sp, a0"::"r"(a0):);
+
+  return EFI_SUCCESS;
+}
+
+//EFI_STATUS
+//EFIAPI
+//GetSecHobData (
+//  IN CONST EFI_SEC_HOB_DATA_PPI *This,
+//  OUT EFI_HOB_GENERIC_HEADER    **HobList
+//  )
+//{
+//  VOID                  *HobStart;
+//  EFI_PEI_HOB_POINTERS  Hob;
+
+//  HobStart = GetHobList ();
+//  Hob.Raw = (UINT8 *)HobStart;
+//  if (Hob.Header->HobType == EFI_HOB_TYPE_HANDOFF) {
+//    DEBUG ((DEBUG_INFO, "Find the base PHIT Hob\n"));
+//    Hob.Raw = GET_NEXT_HOB (Hob);
+//  }
+//  *HobList = Hob.Header;
+
+//  return EFI_SUCCESS;
+//}
 
 /**
   Initialize the memory and CPU, setting the boot mode, and platform
@@ -46,25 +142,20 @@ SecInitializePlatform (
   VOID
   )
 {
-  EFI_STATUS  Status;
+  // EFI_STATUS  Status;
   FIRMWARE_SEC_PERFORMANCE      Performance;
   UINT64                        StartTimeStamp;
 
-  MemoryPeimInitialization ();
-
-  CpuPeimInitialization ();
   // Store timer value logged at the beginning of firmware image execution
   StartTimeStamp = GetPerformanceCounter();
   Performance.ResetEnd = GetTimeInNanoSecond (StartTimeStamp);
 
   // Build SEC Performance Data Hob
   BuildGuidDataHob (&gEfiFirmwarePerformanceGuid, &Performance, sizeof (Performance));
+  BuildFvHob (PcdGet32 (PcdRiscVDxeFvBase), PcdGet32 (PcdRiscVDxeFvSize));
 
-  // Set the Boot Mode
-  SetBootMode (BOOT_WITH_FULL_CONFIGURATION);
-
-  Status = PlatformPeimInitialization ();
-  ASSERT_EFI_ERROR (Status);
+  // Status = PlatformPeimInitialization ();
+  // ASSERT_EFI_ERROR (Status);
 
   return EFI_SUCCESS;
 }
@@ -120,18 +211,16 @@ SecStartup (
 {
   EFI_HOB_HANDOFF_INFO_TABLE  *HobList;
   EFI_RISCV_FIRMWARE_CONTEXT  FirmwareContext;
-  EFI_STATUS                  Status;
   UINT64                      UefiMemoryBase;
   UINT64                      StackBase;
   UINT32                      StackSize;
-  EFI_PEI_FV_HANDLE           VolumeHandle;
   EFI_SEC_PEI_HAND_OFF        SecCoreData;
 
   SerialPortInitialize ();
   //
   // Report Status Code to indicate entering SEC core
   //
-  
+
   DEBUG ((
     DEBUG_INFO,
     "%a() SecStartup: 0x%lx BootHartId: 0x%x, DeviceTreeAddress=0x%lx\n",
@@ -185,20 +274,11 @@ SecStartup (
   //
   ProcessLibraryConstructorList ();
 
-  // Assume the FV that contains the SEC (our code) also contains a compressed FV.
-  Status = DecompressFirstFv ();
-  ASSERT_EFI_ERROR (Status);
-
-  // transfer the second FV info to PEI phase
-  GetNextVolume (1, &VolumeHandle);
-  mDxeAddtionFVPpi.FvInfo = VolumeHandle;
-  mDxeAddtionFVPpi.FvInfoSize = ((EFI_FIRMWARE_VOLUME_HEADER *)VolumeHandle)->FvLength;
-
   //transfer the memory info from SEC to PEI phase
   SecCoreData.StackBase = (VOID *)StackBase;
   SecCoreData.StackSize = StackSize;
   SecCoreData.TemporaryRamBase = (VOID *)UefiMemoryBase;
-  SecCoreData.TemporaryRamSize = (StackBase + StackSize - UefiMemoryBase) >> 1;
+  SecCoreData.TemporaryRamSize = (StackBase + StackSize - UefiMemoryBase);
   SecCoreData.PeiTemporaryRamBase = SecCoreData.TemporaryRamBase;
   SecCoreData.PeiTemporaryRamSize = SecCoreData.TemporaryRamSize;
 

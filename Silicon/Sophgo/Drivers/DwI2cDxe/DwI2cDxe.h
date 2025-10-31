@@ -20,7 +20,6 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiRuntimeLib.h>
-#include <Protocol/FdtClient.h>
 #include <Include/DwI2c.h>
 
 #if !defined(IC_CLK)

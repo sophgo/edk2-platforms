@@ -43,15 +43,39 @@
 
 [Protocols]
   gEfiAcpiTableProtocolGuid                                 ## CONSUMES
-  gFdtClientProtocolGuid                                    ## CONSUMES
   gEfiAcpiSdtProtocolGuid                                   ## CONSUMES
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiTableStorageFile    ## CONSUMES
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCppcMinFrequency
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCppcMaxFrequency
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCppcStep
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdClusterNum
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuNumPerCluster
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable
+
+   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrType
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrRate
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrRank
+
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProcessorVersion
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuFrequencyHz
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL1ICacheSizeBytes
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL1DCacheSizeBytes
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL2CacheSizeBytes
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL3CacheSizeBytes
+
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion
+
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductVersion
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductManufacturer
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductSN
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductUUID
 
 [Depex]
-  gEfiAcpiTableProtocolGuid AND
-  gFdtClientProtocolGuid
+  gEfiAcpiTableProtocolGuid
 
 [UserExtensions.TianoCore."ExtraFiles"]
   AcpiPlatformExtra.uni

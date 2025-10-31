@@ -11,7 +11,6 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseRiscVSbiLib.h>
-#include <Protocol/FdtClient.h>
 
 #define MIN_FILE_SIZE       BASE_64KB
 #define FWINFO_START(size)  ((size) - 128)
@@ -41,27 +40,8 @@ MCUDeviceMatch (
   VOID
   )
 {
-  EFI_STATUS                  Status;
-  INT32                       Node;
-  FDT_CLIENT_PROTOCOL	        *FdtClient;
-  CONST CHAR8                 *Compatible = "sophgo,sg2042-hwmon-mcu";
-
-  Status = gBS->LocateProtocol (
-      &gFdtClientProtocolGuid,
-      NULL,
-      (VOID **)&FdtClient
-      );
-
-  if (Status != EFI_SUCCESS) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+  if (!FixedPcdGetBool(PcdMcuExistence)) {
     return EFI_NOT_FOUND;
-  }
-
-  Status = FdtClient->FindCompatibleNode (FdtClient, Compatible, &Node);
-
-  if (Status != EFI_SUCCESS) {
-      DEBUG ((DEBUG_ERROR, "Cannot find device %a\n", Compatible));
-      return EFI_NOT_FOUND;
   }
 
   return EFI_SUCCESS;
@@ -383,9 +363,9 @@ MCUFlashRead(
     Left = Size - Xoff;
     if(Left >= FlashDataMax)
       Slen = FlashDataMax;
-    else 
+    else
       Slen = Left;
-    
+
     Status = MCUFlashSetOffset(
       I2cMasterProtocol,
       MCUI2cBus,
@@ -400,11 +380,11 @@ MCUFlashRead(
       (UINT8 *)Data + Xoff,
       Slen
       );
-    
+
     if (EFI_ERROR(Status))
       return Status;
 
-    gST->ConOut->SetCursorPosition (gST->ConOut, CursorColumns, CursorRows);    
+    gST->ConOut->SetCursorPosition (gST->ConOut, CursorColumns, CursorRows);
     Print (L"Verify  flash  %08X  %d%%", Xoff, Xoff * 100 / Size);
 
     Xoff += Slen;
@@ -435,7 +415,7 @@ MCUFirmwareCheck (
     REG_BOARD_TYPE,
     &BoardType
     );
-  
+
   gST->ConOut->SetCursorPosition (gST->ConOut, CursorColumns, CursorRows);
   if (EFI_ERROR(Status)) {
     Print (L"Failed to retrieve board type\n");
@@ -547,7 +527,7 @@ MCUFirmwareVerify (
   } else {
     Print (L"MCU Flash verify successfully");
   }
-    
+
 
 ExitChannel:
   FreePool (ReadBack);

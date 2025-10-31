@@ -35,9 +35,7 @@
 #include <Ppi/SecPerformance.h>
 #include <Library/TimerLib.h>
 
-#include <Guid/FirmwareFileSystem2.h>
-#include <Ppi/FirmwareVolumeInfo.h>
-
+typedef unsigned long		uintptr_t;
 /**
   Entry point to the C language phase of SEC. After the SEC assembly
   code has initialized some temporary memory and set up the stack,

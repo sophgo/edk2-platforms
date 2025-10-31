@@ -34,7 +34,7 @@ InitializeMemoryServices (
   // in PeiCore's private data according to hand off data from SEC core.
   //
   if (OldCoreData == NULL) {
-    PrivateData->PeiMemoryInstalled = TRUE;
+    PrivateData->PeiMemoryInstalled = FALSE;
     PrivateData->HobList.Raw        = SecCoreData->PeiTemporaryRamBase;
 
     //PeiCoreBuildHobHandoffInfoTable (
@@ -86,17 +86,17 @@ PeiInstallPeiMemory (
   // If it is invoked more than one time, ASSERT information is given for developer debugging in debug tip and
   // simply return EFI_SUCCESS in release tip to ignore it.
   //
-  //if (PrivateData->PeiMemoryInstalled) {
-  //  DEBUG ((DEBUG_ERROR, "ERROR: PeiInstallPeiMemory is called more than once!\n"));
-  //  ASSERT (FALSE);
-  //  return EFI_SUCCESS;
-  //}
+  if (PrivateData->PeiMemoryInstalled) {
+    DEBUG ((DEBUG_ERROR, "ERROR: PeiInstallPeiMemory is called more than once!\n"));
+    ASSERT (FALSE);
+    return EFI_SUCCESS;
+  }
 
   PrivateData->PhysicalMemoryBegin   = MemoryBegin;
   PrivateData->PhysicalMemoryLength  = MemoryLength;
   PrivateData->FreePhysicalMemoryTop = MemoryBegin + MemoryLength;
 
-  //PrivateData->SwitchStackSignal = TRUE;
+  PrivateData->SwitchStackSignal = TRUE;
 
   return EFI_SUCCESS;
 }

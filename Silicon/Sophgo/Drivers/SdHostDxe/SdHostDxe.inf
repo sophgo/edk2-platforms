@@ -29,6 +29,7 @@
   MdeModulePkg/MdeModulePkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
   Silicon/Sophgo/Sophgo.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -42,8 +43,8 @@
 
 [Protocols]
   gSophgoMmcHostProtocolGuid        ## PRODUCES
-  gFdtClientProtocolGuid            ## CONSUMES
 
 [FixedPcd]
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency            ## CONSUMES
   gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode          ## CONSUMES
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdBaseAddress

@@ -693,83 +693,40 @@ I2cSmbusWrite (
   return I2cXfer (I2c, &Msg, 1);
 }
 
-/**
-  Get I2c.
 
-  @param[in]   CompatibleString  I2c node compatible string in device tree.
-  @param[in]   Frequency         I2c bus frequency for setting.
-  @param[in]   Speed             I2c bus speed for setting.
-  @param[out]  I2cInformation    I2c information for initialization.
-  @param[out]  Num               I2c bus number.
-
-  @retval  EFI_SUCCESS           The operation completed successfully.
-  @retval  EFI_NOT_FOUND         No FDT client service found or no i2c node found in DTS.
-  @retval  EFI_OUT_OF_RESOURCES  Failed to allocate memory.
-
-**/
 EFI_STATUS
-GetI2cInfoByFdt (
-  IN  CONST CHAR8     *CompatibleString,
+GetI2cInfoByPcd (
   IN        UINTN     Frequency,
   IN        UINTN     Speed,
   OUT       I2C_INFO  **I2cInforP,
   OUT       UINT32    *Num
 )
 {
-  FDT_CLIENT_PROTOCOL  *FdtClient;
-  EFI_STATUS           FindNodeStatus, Status;
-  INT32                Node;
-  UINT32               I2cNum;
-  CONST VOID           *Prop;
-  UINT32               PropSize;
-  I2C_INFO             *I2cInfoPointer, *I2cInformation;
+  // EFI_STATUS Status;
+  UINT32    I2cNum;
+  UINT64    *I2cBaseAddresses;
+  I2C_INFO  *I2cInfoPointer, *I2cInformation;
 
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+  I2cNum = FixedPcdGet32(PcdI2cControllerCount);
+  I2cBaseAddresses = (UINT64 *)PcdGetPtr(PcdI2cBaseAddresses);
+  if (I2cNum == 0 || I2cBaseAddresses == NULL) {
+    DEBUG ((DEBUG_ERROR, "%a: Cannot get I2c node from PCD\n", __func__));
     return EFI_NOT_FOUND;
   }
-
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), I2cNum = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty () failed (Status == %r)\n", __func__, Status));
-      continue;
-    } else {
-      ++I2cNum;
-    }
-  }
-
-  if (I2cNum == 0) {
-    DEBUG ((DEBUG_ERROR, "%a: Cannot get I2c node from DTS (Status == %r)\n", __func__, Status));
-    return EFI_NOT_FOUND;
-  }
-
   I2cInformation = AllocateRuntimeZeroPool ((I2cNum * sizeof (I2C_INFO)));
   if (I2cInformation == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
 
   I2cInfoPointer = I2cInformation;
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node);
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty () failed (Status == %r)\n", __func__, Status));
-      continue;
-    } else {
-      I2cInfoPointer->Base  = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
-      I2cInfoPointer->Freq  = Frequency;
-      I2cInfoPointer->Speed = Speed;
-      ++I2cInfoPointer;
-    }
-  }
-
   for (UINT32 Index = 0; Index < I2cNum; Index++) {
-    DEBUG ((DEBUG_VERBOSE,
+    CopyMem(&I2cInformation[Index].Base, I2cBaseAddresses + Index, sizeof(UINT64));
+    I2cInformation[Index].Freq  = Frequency;
+    I2cInformation[Index].Speed = Speed;
+    ++I2cInfoPointer;
+  }
+  for (UINT32 Index = 0; Index < I2cNum; Index++) {
+    DEBUG ((/* DEBUG_VERBOSE */DEBUG_INFO,
       "  [I2c%d base: 0x%lx, freq: %lu, speed: %lu ]\n",
       Index,
       I2cInformation[Index].Base,
@@ -778,7 +735,6 @@ GetI2cInfoByFdt (
   }
   *Num       = I2cNum;
   *I2cInforP = I2cInformation;
-
   return EFI_SUCCESS;
 }
 
@@ -851,11 +807,11 @@ DwI2cEntryPoint (
   UINT32               I2cNum = 0;
   I2C_INFO             *I2cInformation = NULL;
 
-  Status = GetI2cInfoByFdt ("snps,designware-i2c",
-                            I2C_BUS_FREQUENCY,
+  Status = GetI2cInfoByPcd (I2C_BUS_FREQUENCY,
                             I2C_BUS_SPEED,
                             &I2cInformation,
                             &I2cNum);
+
   if (EFI_ERROR (Status))
     return Status;
 

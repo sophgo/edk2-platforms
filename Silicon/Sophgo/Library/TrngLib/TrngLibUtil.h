@@ -16,7 +16,6 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
-#include <Protocol/FdtClient.h>
 #include <Protocol/Cpu.h>
 
 /* registers */

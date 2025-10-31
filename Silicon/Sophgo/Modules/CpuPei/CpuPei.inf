@@ -8,18 +8,17 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = RiscVCpuPeiLib
+  BASE_NAME                      = RiscVCpuPei
   FILE_GUID                      = F21E370E-4532-453F-BF82-2C9F5A6DE728
-  MODULE_TYPE                    = BASE
+  MODULE_TYPE                    = PEIM
   VERSION_STRING                 = 1.0
-  LIBRARY_CLASS                  = CpuPeiLib|SEC PEIM
+  ENTRY_POINT                    = PeiCpuInitialization
 
 [Sources]
-  CpuPeiLib.c
+  CpuPei.c
 
 [Packages]
   MdePkg/MdePkg.dec
-  MdeModulePkg/MdeModulePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   Silicon/Sophgo/Sophgo.dec
 
@@ -27,6 +26,7 @@
   PcdLib
   DebugLib
   HobLib
+  PeimEntryPoint
 
 [FixedPcd]
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize                                 ## CONSUMES

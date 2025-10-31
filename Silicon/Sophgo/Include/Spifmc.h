@@ -98,7 +98,66 @@ struct _SOPHGO_SPI_MASTER_PROTOCOL {
   SG_SPI_MASTER_PROTOCOL_READ                Read;
   SG_SPI_MASTER_PROTOCOL_WRITE               Write;
   SG_SPI_MASTER_PROTOCOL_ERASE               Erase;
-  SG_SPI_MASTER_PROTOCOL_SETUP_DEVICE        SetupDevice;
+SG_SPI_MASTER_PROTOCOL_SETUP_DEVICE        SetupDevice;
 };
+
+typedef
+EFI_STATUS
+(EFIAPI *SPI_FMC_READ_REGISTER)(
+  IN SPI_NOR  *Nor,
+  IN  UINT8   Opcode,
+  IN  UINTN   Length,
+  OUT UINT8   *Buffer
+  );
+
+typedef
+EFI_STATUS
+(EFIAPI *SPI_FMC_WRITE_REGISTER)(
+  IN SPI_NOR      *Nor,
+  IN UINT8        Opcode,
+  IN CONST UINT8 *Buffer,
+  IN UINTN        Length
+  );
+
+typedef
+EFI_STATUS
+(EFIAPI *SPI_FMC_READ)(
+  IN SPI_NOR  *Nor,
+  IN  UINTN   From,
+  IN  UINTN   Length,
+  OUT UINT8   *Buffer
+  );
+
+typedef
+EFI_STATUS
+(EFIAPI *SPI_FMC_WRITE)(
+  IN SPI_NOR     *Nor,
+  IN UINTN       To,
+  IN UINTN       Length,
+  IN CONST UINT8 *Buffer
+  );
+
+typedef
+EFI_STATUS
+(EFIAPI *SPI_FMC_ERASE)(
+  IN SPI_NOR  *Nor,
+  IN UINTN    Offs
+  );
+
+typedef
+SPI_NOR *
+(EFIAPI *SPI_MASTER_SET_UP) (
+  IN UINT8                      SelectedFlashNumber
+  );
+
+typedef struct {
+  SPI_FMC_READ_REGISTER   ReadRegister;
+  SPI_FMC_WRITE_REGISTER  WriteRegister;
+  SPI_FMC_READ            Read;
+  SPI_FMC_WRITE           Write;
+  SPI_FMC_ERASE           Erase;
+  SPI_MASTER_SET_UP       SetupDevice;
+} EFI_PEI_SPI_FLASH_SUPPORT_PPI;
+
 
 #endif // __SPI_FLASH_MASTER_CONTROLLER_H__

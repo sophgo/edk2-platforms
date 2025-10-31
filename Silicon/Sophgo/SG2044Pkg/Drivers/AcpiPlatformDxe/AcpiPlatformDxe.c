@@ -27,6 +27,7 @@
 #include <Guid/Acpi.h>
 #include <Guid/VendorGlobalVariables.h>
 #include "SG2044AcpiHeader.h"
+#include <Include/PcieHostPcd.h>
 
 //
 // Constants and definitions
@@ -361,13 +362,57 @@ ShowPciRoot(
   DEBUG ((DEBUG_INFO, "Segment %u [%u - %u]\n",
         PciRoot->Segment, PciRoot->BusRange.Start, PciRoot->BusRange.End));
   DEBUG ((DEBUG_INFO, "Outbound:\n"));
-  ShowFdtPciRange("IO", &PciRoot->Io);
-  ShowFdtPciRange("Mem32", &PciRoot->Mem32);
-  ShowFdtPciRange("PMem32", &PciRoot->PMem32);
-  ShowFdtPciRange("Mem64", &PciRoot->Mem64);
-  ShowFdtPciRange("PMem64", &PciRoot->PMem64);
+  ShowFdtPciRange("IO      ", &PciRoot->Io);
+  ShowFdtPciRange("Mem32   ", &PciRoot->Mem32);
+  ShowFdtPciRange("PMem32  ", &PciRoot->PMem32);
+  ShowFdtPciRange("Mem64   ", &PciRoot->Mem64);
+  ShowFdtPciRange("PMem64  ", &PciRoot->PMem64);
 }
 
+STATIC
+VOID
+GetPciRootInfoFromPcd(
+    IN  PCIE_HOST_BRIDGE_TABLE *PcieRcConfig,
+    IN  UINT32                 PcieRcIndex,
+    OUT PCI_INFO               *PciRoot
+    )
+{
+  PCIE_BUS_CONFIG                   PcieBusEntry;
+  // PCIE_SUPPORT_FLAG                 PcieSupportEntry;
+  // PCIE_REG                          PcieRegEntry;
+  PCIE_RANGES                       PcieRangeEntry;
+
+  PciRoot->Segment           = PcieRcConfig->PcieDomain[PcieRcIndex][0] | (PcieRcConfig->PcieDomain[PcieRcIndex][1] << 8) |
+             (PcieRcConfig->PcieDomain[PcieRcIndex][2] << 16) | (PcieRcConfig->PcieDomain[PcieRcIndex][3] << 24);
+    // CopyMem(&PcieRegEntry, PcieRcConfig->PcieReg[Index], sizeof(PcieRegEntry));
+    // CopyMem(&PcieSupportEntry, PcieRcConfig->PcieSupportFlag[Index], sizeof(PcieSupportEntry));
+    CopyMem(&PcieBusEntry, PcieRcConfig->RootBusConfig[PcieRcIndex], sizeof(PcieBusEntry));
+    CopyMem(&PcieRangeEntry, PcieRcConfig->PcieRanges[PcieRcIndex], sizeof(PcieRangeEntry));
+
+    PciRoot->BusRange.Start                = PcieBusEntry.RootBusBase;
+    PciRoot->BusRange.End                  = PcieBusEntry.RootBusLimit;
+    PciRoot->PMem32.Flag                   = PCIE_RANGES_PMEM32_FLAG;
+    PciRoot->PMem32.PciAddr                = PcieRangeEntry.Pmem32PciAddr;
+    PciRoot->PMem32.CpuAddr                = PcieRangeEntry.Pmem32CpuAddr;
+    PciRoot->PMem32.Size                   = PcieRangeEntry.Pmem32Size;
+    PciRoot->Mem32.Flag                    = PCIE_RANGES_MEM32_FLAG;
+    PciRoot->Mem32.PciAddr                 = PcieRangeEntry.Mem32PciAddr;
+    PciRoot->Mem32.CpuAddr                 = PcieRangeEntry.Mem32CpuAddr;
+    PciRoot->Mem32.Size                    = PcieRangeEntry.Mem32Size;
+    PciRoot->PMem64.Flag                   = PCIE_RANGES_PMEM64_FLAG;
+    PciRoot->PMem64.PciAddr                = PcieRangeEntry.Pmem64PciAddr;
+    PciRoot->PMem64.CpuAddr                = PcieRangeEntry.Pmem64CpuAddr;
+    PciRoot->PMem64.Size                   = PcieRangeEntry.Pmem64Size;
+    PciRoot->Mem64.Flag                    = PCIE_RANGES_MEM64_FLAG;
+    PciRoot->Mem64.PciAddr                 = PcieRangeEntry.Mem64PciAddr;
+    PciRoot->Mem64.CpuAddr                 = PcieRangeEntry.Mem64CpuAddr;
+    PciRoot->Mem64.Size                    = PcieRangeEntry.Mem64Size;
+    PciRoot->Io.Flag                       = PCIE_RANGES_IO_FLAG;
+    PciRoot->Io.PciAddr                    = PcieRangeEntry.IoPciAddr;
+    PciRoot->Io.CpuAddr                    = PcieRangeEntry.IoCpuAddr;
+    PciRoot->Io.Size                       = PcieRangeEntry.IoSize;
+}
+#if 0
 STATIC
 VOID
 GetPciRootInfoFromFdt(
@@ -450,6 +495,7 @@ GetPciRootInfoFromFdt(
     CopyMem(Aperture, &Range[RangeIndex], sizeof(*Aperture));
   }
 }
+#endif
 
 STATIC
 VOID
@@ -473,13 +519,13 @@ SetDsdtPcieCrs (
 **/
 STATIC
 EFI_STATUS
-AcpiPatchPCIe (
+AcpiPatchPCIeFromPcd (
   IN EFI_ACPI_SDT_PROTOCOL  *AcpiSdtProtocol,
   IN EFI_ACPI_HANDLE        TableHandle
   )
 {
   RETURN_STATUS                 Status;
-  UINT32                        Index;
+  UINT32                        PcieRcNum, Index;
   CHAR8                         NodePath[256];
   EFI_ACPI_HANDLE               ObjectHandle;
   EFI_ACPI_HANDLE               StaHandle;
@@ -487,16 +533,13 @@ AcpiPatchPCIe (
   EFI_ACPI_DATA_TYPE            DataType;
   CHAR8                         *Buffer;
   UINTN                         DataSize;
-  FDT_CLIENT_PROTOCOL           *FdtClient;
-  RETURN_STATUS                 FindNodeStatus;
   PCI_INFO                      PciRoot;
-  INT32                         Node;
-  CONST CHAR8                   *Compatible = "sophgo,sg2044-pcie-host";
   QWORD_ADDRESS_SPACE_DESCRIPTOR  *PMem32;
   QWORD_ADDRESS_SPACE_DESCRIPTOR  *Mem32;
   QWORD_ADDRESS_SPACE_DESCRIPTOR  *PMem64;
   QWORD_ADDRESS_SPACE_DESCRIPTOR  *Mem64;
   QWORD_ADDRESS_SPACE_DESCRIPTOR  *Io;
+  PCIE_HOST_BRIDGE_TABLE            *PcieRcConfig;
 
   /* Init all PCIe nodes to disabled */
   for (Index = 0; Index < PCIE_NUM; Index++) {
@@ -520,21 +563,22 @@ AcpiPatchPCIe (
     }
   }
 
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
-    DEBUG ((DEBUG_ERROR, "Cannot init PCIe controllers\n"));
-    return EFI_SUCCESS;
+  PcieRcConfig  = (PCIE_HOST_BRIDGE_TABLE *)PcdGetPtr (PcdPcieHostBridgeTable);
+  if (PcieRcConfig == NULL) {
+    DEBUG ((DEBUG_ERROR, "[%a] No PCIe host bridge configuration found\n", __func__));
+    return EFI_NOT_FOUND;
   }
 
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, Compatible, &Node);
-      FindNodeStatus == EFI_SUCCESS;
-      FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, Compatible, Node, &Node)) {
+  PcieRcNum = PcieRcConfig->NumOfControllers;
+  if ( PcieRcNum > PCIE_NUM) {
+    DEBUG ((DEBUG_ERROR, "[%a] PCIe host bridge number %u exceed max %u\n",
+          __func__, PcieRcNum, PCIE_NUM));
+    return EFI_UNSUPPORTED;
+  }
 
-    GetPciRootInfoFromFdt(FdtClient, Node, &PciRoot);
+  for (Index = 0; Index < PcieRcNum; Index++) {
+    GetPciRootInfoFromPcd(PcieRcConfig, Index, &PciRoot);
     ShowPciRoot(&PciRoot);
-
     AsciiSPrint (NodePath, sizeof (NodePath), "\\_SB.PCI%1X", PciRoot.Segment);
     Status = AcpiSdtProtocol->FindPath (TableHandle, NodePath, &ObjectHandle);
     if (EFI_ERROR (Status)) {
@@ -590,7 +634,7 @@ AcpiPatchPCIe (
 
   return Status;
 }
-
+#if 0
 /**
   Get resource in fdt by name.
 
@@ -625,6 +669,8 @@ FdtGetResourceByName (
 
   return EFI_SUCCESS;
 }
+#endif
+
 
 /**
   Update CPU status in ACPI table based on configuration.
@@ -635,47 +681,29 @@ FdtGetResourceByName (
 **/
 STATIC
 VOID
-AcpiPatchCpu (
+AcpiPatchCpuFromPcd (
   IN EFI_ACPI_SDT_PROTOCOL  *AcpiSdtProtocol,
   IN EFI_ACPI_HANDLE        TableHandle
   )
 {
   EFI_STATUS            Status;
-  RETURN_STATUS         FindNodeStatus;
   EFI_ACPI_HANDLE       ObjectHandle;
   EFI_ACPI_DATA_TYPE    DataType;
-  FDT_CLIENT_PROTOCOL	*FdtClient;
-  CONST CHAR8           *Compatible = "sophgo,sg2044-cppc";
-  INT32                 Node;
   CHAR8                 *Buffer;
   UINTN                 DataSize;
   CHAR8                 CpcPath[256];
-  UINT8			ClusterIndex;
-  UINT8			CpuIndex;
-  UINT8			MaxCpuIndex;
-  UINT64		MaxFrequency;
-  UINT64		MinFrequency;
-  UINT32		HighestPerf;
-  UINT32		LowestPerf;
-  UINT64		Step;
+  UINT8                 ClusterIndex;
+  UINT8                 CpuIndex;
+  UINT8                 MaxCpuIndex;
+  UINT64                MaxFrequency;
+  UINT64                MinFrequency;
+  UINT32                HighestPerf;
+  UINT32                LowestPerf;
+  UINT64                Step;
 
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
-    return;
-  }
-
-  FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, Compatible, &Node);
-
-  if (FindNodeStatus != EFI_SUCCESS) {
-      DEBUG ((DEBUG_ERROR, "Cannot find device %a\n", Compatible));
-      return;
-  }
-
-  FdtGetResourceByName (FdtClient, Node, "min-frequency", &MinFrequency);
-  FdtGetResourceByName (FdtClient, Node, "max-frequency", &MaxFrequency);
-  FdtGetResourceByName (FdtClient, Node, "step", &Step);
+  MinFrequency = PcdGet64 (PcdCppcMinFrequency);
+  MaxFrequency = PcdGet64 (PcdCppcMaxFrequency);
+  Step         = PcdGet64 (PcdCppcStep);
 
   HighestPerf = MaxFrequency / Step;
   LowestPerf = MinFrequency / Step;
@@ -690,7 +718,7 @@ AcpiPatchCpu (
 
       if (EFI_ERROR (Status)) {
         DEBUG ((DEBUG_INFO, "can not found _CPC node in DSDT table\n"));
-	break;
+	      break;
       }
 
       Status = AcpiSdtProtocol->GetOption (ObjectHandle, 0, &DataType, (VOID *)&Buffer, &DataSize);
@@ -867,9 +895,9 @@ UpdateAcpiDsdtTable (
       break;
     }
 
-    AcpiPatchCpu (AcpiTableProtocol, TableHandle);
+    AcpiPatchCpuFromPcd (AcpiTableProtocol, TableHandle);
     AcpiPatchTpu (AcpiTableProtocol, TableHandle);
-    AcpiPatchPCIe (AcpiTableProtocol, TableHandle);
+    AcpiPatchPCIeFromPcd (AcpiTableProtocol, TableHandle);
     AcpiPatchDeviceStatus (AcpiTableProtocol, TableHandle);
 
     AcpiTableProtocol->Close (TableHandle);
@@ -879,26 +907,26 @@ UpdateAcpiDsdtTable (
   return EFI_SUCCESS;
 }
 
-STATIC
-INT64
-GetCacheSize(
-  IN CHAR8           *IniField
-  )
-{
-  EFI_STATUS Status;
-  CHAR8      value[128];
-  CHAR8      *End;
-  UINT64     Uint;
+// STATIC
+// INT64
+// GetCacheSize(
+//   IN CHAR8           *IniField
+//   )
+// {
+//   EFI_STATUS Status;
+//   CHAR8      value[128];
+//   CHAR8      *End;
+//   UINT64     Uint;
 
-  if (IniGetValueBySectionAndName("CPU", IniField, value))
-    return -1;
+//   if (IniGetValueBySectionAndName("CPU", IniField, value))
+//     return -1;
 
-  Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
-  if (RETURN_ERROR(Status))
-    return -1;
+//   Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
+//   if (RETURN_ERROR(Status))
+//     return -1;
 
-  return Uint;
-}
+//   return Uint;
+// }
 
 /**
   Update ACPI PPTT table
@@ -955,14 +983,14 @@ UpdateAcpiPpttTable (
     RootPackage   = (TH_PPTT_PACKAGE *)PackageBuffer;
     Cluster       = (TH_PPTT_CLUSTER *)(PackageBuffer + sizeof(TH_PPTT_PACKAGE));
 
-    CacheSize = GetCacheSize("l3-cache-size");
+    // CacheSize = GetCacheSize("l3-cache-size");
+    CacheSize = FixedPcdGet64 (PcdCpuL3CacheSizeBytes);
     if (CacheSize >= 0) {
       RootPackage->L3Cache.Size = CacheSize;
     }
-    L1IcacheSize = GetCacheSize("l1-i-cache-size");
-    L1DcacheSize = GetCacheSize("l1-d-cache-size");
-
-    CacheSize = GetCacheSize("l2-cache-size");
+    L1IcacheSize = FixedPcdGet64 (PcdCpuL1ICacheSizeBytes);
+    L1DcacheSize = FixedPcdGet64 (PcdCpuL1DCacheSizeBytes);
+    CacheSize    = FixedPcdGet64 (PcdCpuL2CacheSizeBytes);
     if (CacheSize >= 0) {
       for (ClusterIndex = 0; ClusterIndex < CLUSTER_COUNT; ClusterIndex++) {
         Cluster[ClusterIndex].L2Cache.Size = CacheSize;
@@ -1089,9 +1117,9 @@ AcpiPlatformDxeEntryPoint (
     CurrentTable = NULL;
   }
 
-  if (IniConfIniParse (NULL) < 0) {
-    DEBUG ((DEBUG_VERBOSE, "Config INI parse fail.\n"));
-  }
+  // if (IniConfIniParse (NULL) < 0) {
+  //   DEBUG ((DEBUG_VERBOSE, "Config INI parse fail.\n"));
+  // }
 
   Status = UpdateAcpiDsdtTable ();
   if (EFI_ERROR (Status)) {

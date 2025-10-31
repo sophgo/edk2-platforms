@@ -15,6 +15,7 @@
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
 #include <Library/IniParserLib.h>
+#include <Library/PcdLib.h>
 
 #include "SmbiosPlatformDxe.h"
 
@@ -23,10 +24,11 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessor) {
   STR_TOKEN_INFO      *InputStrToken;
   SMBIOS_TABLE_TYPE4  *Type4Record;
   SMBIOS_TABLE_TYPE4  *InputData;
-  CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  CHAR8		      *End;
-  UINTN		       Freq;
+  CHAR16         *UnicodeStrFromPcd;
+  // CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  // CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  // CHAR8		             *End;
+  UINT64		           Freq;
 
 
   InputData     = (SMBIOS_TABLE_TYPE4 *)RecordData;
@@ -38,25 +40,34 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessor) {
       return Status;
     }
 
-    if (IniGetValueBySectionAndName ("CPU", "processor_version", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStr, NULL);
-    }
+    // if (IniGetValueBySectionAndName ("CPU", "processor_version", value) == 0) {
+    //   AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
+    //   HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStr, NULL);
+    // }
 
-    if (IniGetValueBySectionAndName ("CPU", "serial-number", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[3], UnicodeStr, NULL);
+    // if (IniGetValueBySectionAndName ("CPU", "serial-number", value) == 0) {
+    //   AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
+    //   HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[3], UnicodeStr, NULL);
+    // }
+    // if (IniGetValueBySectionAndName("CPU", "frequency", value) == 0) {
+    // 	Status = AsciiStrDecimalToUintnS(value, &End, &Freq);
+    // 	if (RETURN_ERROR(Status)) {
+    //         return RETURN_UNSUPPORTED;
+    // 	}
+    // 	if (Freq >= 1000000) {
+    //         Freq = Freq / 1000000;
+    // 	}
+    // 	InputData->CurrentSpeed = Freq;
+    // }
+
+    UnicodeStrFromPcd = FixedPcdGetPtr(PcdProcessorVersion);
+    HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStrFromPcd, NULL);
+    Freq = FixedPcdGet64(PcdCpuFrequencyHz);
+    if (Freq >= 1000000) {
+          Freq = Freq / 1000000;
     }
-    if (IniGetValueBySectionAndName("CPU", "frequency", value) == 0) {
-    	Status = AsciiStrDecimalToUintnS(value, &End, &Freq);
-    	if (RETURN_ERROR(Status)) {
-            return RETURN_UNSUPPORTED;
-    	}
-    	if (Freq >= 1000000) {
-            Freq = Freq / 1000000;
-    	}
-    	InputData->CurrentSpeed = Freq;
-    }
+    InputData->CurrentSpeed = Freq;
+
     SmbiosPlatformDxeCreateTable (
       (VOID *)&Type4Record,
       (VOID *)&InputData,

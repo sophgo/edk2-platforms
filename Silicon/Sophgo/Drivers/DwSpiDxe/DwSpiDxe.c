@@ -137,53 +137,6 @@ FieldPrep (
 }
 
 STATIC
-EFI_STATUS
-DevicePropertyReadU32 (
-  IN       DW_SPI  *Dws,
-  IN CONST CHAR8   *PropertyName,
-  OUT      UINT32  *Val
-  )
-{
-  FDT_CLIENT_PROTOCOL  *FdtClient;
-  EFI_STATUS           FindNodeStatus, Status;
-  INT32                Node;
-  CONST VOID           *Prop;
-  UINT32               PropSize;
-  CHAR8                *SpiCompatibleString;
-  UINTN                BaseReg;
-
-  SpiCompatibleString = "snps,dw-apb-ssi";
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
-    return EFI_NOT_FOUND;
-  }
-
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, SpiCompatibleString, &Node);
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, SpiCompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    BaseReg = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
-    if (Dws->Regs == BaseReg) {
-      Status = FdtClient->GetNodeProperty (FdtClient, Node, PropertyName, &Prop, &PropSize);
-      if (EFI_ERROR (Status)) {
-        return EFI_NOT_FOUND;
-      }
-      *Val  = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
-      return EFI_SUCCESS;
-    } else {
-      continue;
-    }
-  }
-
-  return EFI_NOT_FOUND;
-}
-
-STATIC
 VOID *
 SpiGetCtldata (
   IN CONST SPI_DEVICE *Spi
@@ -310,7 +263,7 @@ DwSpiSetup (
   DW_SPI_CHIP_DATA *Chip;
   DW_SPI           *Dws;
   UINT32           RxSampleDlyNs;
-  EFI_STATUS       Status;
+  // EFI_STATUS       Status;
 
   if (SpiBus >= mSpiBusCount) {
     DEBUG ((DEBUG_ERROR, "SpiBus should be less than %u\n", mSpiBusCount));
@@ -331,11 +284,7 @@ DwSpiSetup (
     if (!Chip)
       return EFI_OUT_OF_RESOURCES;
     SpiSetCtldata (Spi, Chip);
-
-    Status = DevicePropertyReadU32 (Dws, "rx-sample-delay-ns", &RxSampleDlyNs);
-    if (EFI_ERROR (Status))
-      RxSampleDlyNs = Dws->DefRxSampleDlyNs;
-
+    RxSampleDlyNs = Dws->DefRxSampleDlyNs;
     Chip->RxSampleDly = DIV_ROUND_CLOSEST (RxSampleDlyNs, NSEC_PER_SEC / Dws->MaxFreq);
   }
 
@@ -984,88 +933,128 @@ SpiHwInit (
 }
 
 EFI_STATUS
-GetSpiInfoByFdt (
-  IN  CONST CHAR8     *CompatibleString
+GetSpiInfoByPcd (
+  VOID
   )
 {
-  FDT_CLIENT_PROTOCOL  *FdtClient;
-  EFI_STATUS           FindNodeStatus, Status;
-  INT32                Node;
-  UINT32               Index;
-  CONST VOID           *Prop;
-  UINT32               PropSize;
-  DW_SPI               *Dws;
+  UINT64         *SpiBaseAddresses;
+  UINT32         *SpiClockFrequencies;
+  UINT32         *SpiRxSampleDelays;
+  UINT32         Index;
+  DW_SPI         *Dws;
 
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+  mSpiBusCount = PcdGet32 (PcdSpiControllerCount);
+  if (mSpiBusCount == 0) {
+    DEBUG ((DEBUG_ERROR, "No SPI controller found\n"));
     return EFI_NOT_FOUND;
   }
-
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "clock-frequency", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (clock-frequency) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    ++Index;
-  }
-
-  if (Index == 0) {
-    DEBUG ((DEBUG_ERROR, "%a: Cannot get Spi node from DTS (Status == %r)\n", __func__, Status));
-    return EFI_NOT_FOUND;
-  }
-
-  mSpiBusCount        = Index;
-  mSpiMasterInstances = AllocateZeroPool ((mSpiBusCount * sizeof (DW_SPI)));
+  mSpiMasterInstances = AllocateZeroPool (mSpiBusCount * sizeof (DW_SPI));
   if (mSpiMasterInstances == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
-
   Dws = mSpiMasterInstances;
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
-      continue;
-    } else {
-      Dws->Regs = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
-    }
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "clock-frequency", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (clock-frequency) failed (Status == %r)\n", __func__, Status));
-      continue;
-    } else {
-      Dws->MaxFreq    = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
-      Dws->MaxMemFreq = Dws->MaxFreq;
-      Dws->SetCs      = DwSpiSetCs;
-      Dws->BusNum     = Index;
+  SpiBaseAddresses = (UINT64 *)PcdGetPtr (PcdSpiBaseAddresses);
+  SpiClockFrequencies = (UINT32 *)PcdGetPtr (PcdSpiClockFrequencies);
+  SpiRxSampleDelays = (UINT32 *)PcdGetPtr (PcdSpiRxSampleDelays);
 
-      //
-      // Get default rx sample delay
-      //
-      Status = FdtClient->GetNodeProperty (FdtClient, Node, "rx-sample-delay-ns", &Prop, &PropSize);
-      if (EFI_ERROR (Status)) {
-        Dws->DefRxSampleDlyNs = 0;
-      } else {
-        Dws->DefRxSampleDlyNs = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
-      }
+  for (Index = 0; Index < mSpiBusCount; Index++) {
+    Dws->Regs         = SpiBaseAddresses[Index];
+    Dws->MaxFreq      = SpiClockFrequencies[Index];
+    Dws->MaxMemFreq   = Dws->MaxFreq;
+    Dws->SetCs        = DwSpiSetCs;
+    Dws->BusNum       = Index;
+    Dws->DefRxSampleDlyNs = SpiRxSampleDelays[Index];
+    if (Dws->DefRxSampleDlyNs == 0) {
+      Dws->DefRxSampleDlyNs = 0;
     }
     ++Dws;
-    ++Index;
   }
-
   return EFI_SUCCESS;
 }
+
+// EFI_STATUS
+// GetSpiInfoByFdt (
+//   IN  CONST CHAR8     *CompatibleString
+//   )
+// {
+//   FDT_CLIENT_PROTOCOL  *FdtClient;
+//   EFI_STATUS           FindNodeStatus, Status;
+//   INT32                Node;
+//   UINT32               Index;
+//   CONST VOID           *Prop;
+//   UINT32               PropSize;
+//   DW_SPI               *Dws;
+
+//   Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
+//   if (Status) {
+//     DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+//     return EFI_NOT_FOUND;
+//   }
+
+//   for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
+//        !EFI_ERROR (FindNodeStatus);
+//        FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
+//     Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
+//     if (EFI_ERROR (Status)) {
+//       DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
+//       continue;
+//     }
+//     Status = FdtClient->GetNodeProperty (FdtClient, Node, "clock-frequency", &Prop, &PropSize);
+//     if (EFI_ERROR (Status)) {
+//       DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (clock-frequency) failed (Status == %r)\n", __func__, Status));
+//       continue;
+//     }
+//     ++Index;
+//   }
+
+//   if (Index == 0) {
+//     DEBUG ((DEBUG_ERROR, "%a: Cannot get Spi node from DTS (Status == %r)\n", __func__, Status));
+//     return EFI_NOT_FOUND;
+//   }
+
+//   mSpiBusCount        = Index;
+//   mSpiMasterInstances = AllocateZeroPool ((mSpiBusCount * sizeof (DW_SPI)));
+//   if (mSpiMasterInstances == NULL) {
+//     return EFI_OUT_OF_RESOURCES;
+//   }
+
+//   Dws = mSpiMasterInstances;
+//   for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
+//        !EFI_ERROR (FindNodeStatus);
+//        FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
+//     Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
+//     if (EFI_ERROR (Status)) {
+//       DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
+//       continue;
+//     } else {
+//       Dws->Regs = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
+//     }
+//     Status = FdtClient->GetNodeProperty (FdtClient, Node, "clock-frequency", &Prop, &PropSize);
+//     if (EFI_ERROR (Status)) {
+//       DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (clock-frequency) failed (Status == %r)\n", __func__, Status));
+//       continue;
+//     } else {
+//       Dws->MaxFreq    = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
+//       Dws->MaxMemFreq = Dws->MaxFreq;
+//       Dws->SetCs      = DwSpiSetCs;
+//       Dws->BusNum     = Index;
+
+//       //
+//       // Get default rx sample delay
+//       //
+//       Status = FdtClient->GetNodeProperty (FdtClient, Node, "rx-sample-delay-ns", &Prop, &PropSize);
+//       if (EFI_ERROR (Status)) {
+//         Dws->DefRxSampleDlyNs = 0;
+//       } else {
+//         Dws->DefRxSampleDlyNs = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
+//       }
+//     }
+//     ++Dws;
+//     ++Index;
+//   }
+
+//   return EFI_SUCCESS;
+// }
 
 EFI_STATUS
 ConfigControllerMemory (
@@ -1109,12 +1098,13 @@ DwSpiEntryPoint (
   )
 {
   EFI_STATUS  Status;
-  CHAR8       *CompatibleString;
   UINT32      Index;
   DW_SPI      *Dws;
 
-  CompatibleString = "snps,dw-apb-ssi";
-  Status = GetSpiInfoByFdt (CompatibleString);
+
+  DEBUG ((DEBUG_INFO, "%a: GetSpiInfoByPcd\n", __func__));
+  Status = GetSpiInfoByPcd ();
+
   if (EFI_ERROR (Status))
     return Status;
 

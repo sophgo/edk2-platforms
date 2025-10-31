@@ -14,6 +14,7 @@
 #include <Library/PrintLib.h>
 #include <Library/ConfigUtilsLib.h>
 #include <Library/IniParserLib.h>
+#include <Library/PcdLib.h>
 
 #include "SmbiosPlatformDxe.h"
 
@@ -32,12 +33,15 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
   STR_TOKEN_INFO       *InputStrToken;
   SMBIOS_TABLE_TYPE17  *InputData;
   SMBIOS_TABLE_TYPE17  *Type17Record;
-  CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
   UINT32               Size, Size0, Size1;
   BOOLEAN              IsObtainedDDRInfo;
-  UINT64               Uint;
-  CHAR8                *End;
+  // CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  // CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  // UINT64               Uint;
+  // CHAR8                *End;
+  CHAR16         *UnicodeStrFromPcd;
+  UINT64               Value;
+
   InputData         = (SMBIOS_TABLE_TYPE17 *)RecordData;
   InputStrToken     = (STR_TOKEN_INFO *)StrToken;
 
@@ -47,35 +51,50 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
         return Status;
       }
 
-      if (IniGetValueBySectionAndName ("DDR", "vendor", value) == 0) {
-        AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-        HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStr, NULL);
+      // if (IniGetValueBySectionAndName ("DDR", "vendor", value) == 0) {
+      //   AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
+      //   HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStr, NULL);
+      // }
+
+      // if (IniGetValueBySectionAndName ("DDR", "type", value) == 0) {
+      //   if (!AsciiStrCmp(value, "LPDDR4x"))
+      //     InputData->MemoryType = 0x1E; // LPDDR4
+
+      //   if (!AsciiStrCmp(value, "LPDDR5x"))
+      //     InputData->MemoryType = 0x23; // LPDDR5
+      // }
+
+      // if (IniGetValueBySectionAndName ("DDR", "data-rate", value) == 0) {
+      //     Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
+      //     if (RETURN_ERROR (Status)) {
+      //       return RETURN_UNSUPPORTED;
+      //     }
+      //     InputData->ExtendedSpeed = Uint / 1000000;
+      //     InputData->ExtendedConfiguredMemorySpeed = Uint / 1000000;
+      // }
+
+      // if (IniGetValueBySectionAndName ("DDR", "rank", value) == 0) {
+      //     Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
+      //     if (RETURN_ERROR (Status)) {
+      //       return RETURN_UNSUPPORTED;
+      //     }
+      //     InputData->Attributes = Uint;
+      // }
+
+      UnicodeStrFromPcd = FixedPcdGetPtr(PcdDdrType);
+      if (!StrCmp(UnicodeStrFromPcd, L"LPDDR4x")) {
+        InputData->MemoryType = 0x1E;
+      } else if (!StrCmp(UnicodeStrFromPcd, L"LPDDR5x")) {
+        InputData->MemoryType = 0x23;
       }
 
-      if (IniGetValueBySectionAndName ("DDR", "type", value) == 0) {
-        if (!AsciiStrCmp(value, "LPDDR4x"))
-          InputData->MemoryType = 0x1E; // LPDDR4
+      Value = FixedPcdGet64(PcdDdrRate);
+      InputData->ExtendedSpeed = Value / 1000000;
+      InputData->ExtendedConfiguredMemorySpeed = Value / 1000000;
 
-        if (!AsciiStrCmp(value, "LPDDR5x"))
-          InputData->MemoryType = 0x23; // LPDDR5
-      }
+      Value = FixedPcdGet64(PcdDdrRank);
+      InputData->Attributes = Value;
 
-      if (IniGetValueBySectionAndName ("DDR", "data-rate", value) == 0) {
-          Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
-          if (RETURN_ERROR (Status)) {
-            return RETURN_UNSUPPORTED;
-          }
-          InputData->ExtendedSpeed = Uint / 1000000;
-          InputData->ExtendedConfiguredMemorySpeed = Uint / 1000000;
-      }
-
-      if (IniGetValueBySectionAndName ("DDR", "rank", value) == 0) {
-          Status = AsciiStrDecimalToUint64S(value, &End, &Uint);
-          if (RETURN_ERROR (Status)) {
-            return RETURN_UNSUPPORTED;
-          }
-          InputData->Attributes = Uint;
-      }
       InputData->Size = MAX_SIZE;
       InputData->ExtendedSize = DEFAULT_DDR_SIZE;
       IsObtainedDDRInfo = FALSE;

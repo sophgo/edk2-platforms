@@ -965,6 +965,9 @@ InitializeImageServices (
   IN  PEI_CORE_INSTANCE  *OldCoreData
   )
 {
+  EFI_STATUS              Status;
+  EFI_PEI_LOAD_FILE_PPI   *OldLoadFilePpi;
+  EFI_PEI_PPI_DESCRIPTOR  *OldDescriptor;
   if (OldCoreData == NULL) {
     //
     // The first time we are XIP (running from FLASH). We need to remember the
@@ -977,6 +980,15 @@ InitializeImageServices (
     // 2nd time we are running from memory so replace the XIP version with the
     // new memory version.
     //
-    PeiServicesReInstallPpi (PrivateData->XipLoadFile, &gPpiLoadFilePpiList);
+    Status = PeiServicesLocatePpi (
+              &gEfiPeiLoadFilePpiGuid,
+              0,
+              &OldDescriptor,
+              (VOID**)&OldLoadFilePpi
+              );
+    if (!EFI_ERROR (Status)) {
+      Status = PeiServicesReInstallPpi (OldDescriptor, &gPpiLoadFilePpiList);
+      ASSERT_EFI_ERROR (Status);
+    }
   }
 }

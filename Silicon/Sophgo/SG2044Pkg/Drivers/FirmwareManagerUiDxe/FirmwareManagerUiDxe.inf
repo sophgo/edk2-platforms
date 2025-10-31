@@ -34,6 +34,7 @@
   MdeModulePkg/MdeModulePkg.dec
   Silicon/Sophgo/Sophgo.dec
   CryptoPkg/CryptoPkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -68,6 +69,7 @@
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset                     ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize     ## CONSUMES
   gSophgoTokenSpaceGuid.PcdMCUI2cBus                               ## CONSUMES
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence
 
 [Depex]
   gSophgoSpiMasterProtocolGuid      AND

@@ -21,6 +21,7 @@
 #include <Protocol/FdtClient.h>
 #include <Protocol/Cpu.h>
 #include <IndustryStandard/Pci22.h>
+#include <Include/PcieHostPcd.h>
 
 /* designware controller specific variables */
 #define DW_PCIE_ATU_LOWER_BASE      0x0008
@@ -400,205 +401,257 @@ typedef struct {
 #define FDT_PCI_MEM_PREFETCH_MASK     (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
 #define FDT_PCI_MEM_PREFETCH          (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
 
-STATIC
-VOID
-InitSlaveMappingFromFdt (
-    IN  FDT_CLIENT_PROTOCOL *FdtClient,
-    OUT PCI_ROOT_BRIDGE     *PciRoot,
-    IN  INT32               Node
-    )
-{
-  CONST VOID                *Prop;
-  UINT32                    PropSize;
-  EFI_STATUS                Status;
-  FDT_PCI_RANGE             Range[5];
-  UINT32                    RangeIndex;
-  PCI_ROOT_BRIDGE_APERTURE  *Aperture;
+// STATIC
+// VOID
+// InitSlaveMappingFromFdt (
+//     IN  FDT_CLIENT_PROTOCOL *FdtClient,
+//     OUT PCI_ROOT_BRIDGE     *PciRoot,
+//     IN  INT32               Node
+//     )
+// {
+//   CONST VOID                *Prop;
+//   UINT32                    PropSize;
+//   EFI_STATUS                Status;
+//   FDT_PCI_RANGE             Range[5];
+//   UINT32                    RangeIndex;
+//   PCI_ROOT_BRIDGE_APERTURE  *Aperture;
 
-  /* parse bus range */
-  Status = FdtClient->GetNodeProperty (FdtClient, Node, "bus-range", &Prop, &PropSize);
-  if (Status != EFI_SUCCESS)
-    DEBUG ((DEBUG_WARN, "Cannot found ranges from dt, assume 0-255\n"));
+//   /* parse bus range */
+//   Status = FdtClient->GetNodeProperty (FdtClient, Node, "bus-range", &Prop, &PropSize);
+//   if (Status != EFI_SUCCESS)
+//     DEBUG ((DEBUG_WARN, "Cannot found ranges from dt, assume 0-255\n"));
 
-  /* bus number always 0 for root port */
-  PciRoot->Bus.Base         = 0;
-  PciRoot->Bus.Limit        = 255;
-  PciRoot->Bus.Translation  = 0;
+//   /* bus number always 0 for root port */
+//   PciRoot->Bus.Base         = 0;
+//   PciRoot->Bus.Limit        = 255;
+//   PciRoot->Bus.Translation  = 0;
 
-  Status = FdtClient->GetNodeProperty (FdtClient, Node, "ranges", &Prop, &PropSize);
+//   Status = FdtClient->GetNodeProperty (FdtClient, Node, "ranges", &Prop, &PropSize);
 
-  if (Status != EFI_SUCCESS) {
-    DEBUG ((DEBUG_ERROR, "Cannot found ranges from dt\n"));
-    return;
-  }
+//   if (Status != EFI_SUCCESS) {
+//     DEBUG ((DEBUG_ERROR, "Cannot found ranges from dt\n"));
+//     return;
+//   }
 
-  if (PropSize > ARRAY_SIZE (Range) * FDT_PCI_RANGE_SIZE) {
-    DEBUG ((DEBUG_WARN, "Too many range in dt, maybe a wrong config\n"));
-    DEBUG ((DEBUG_WARN, "Only range[0] - range[%d] effect on\n", ARRAY_SIZE (Range)));
-    PropSize = sizeof (Range);
-  }
+//   if (PropSize > ARRAY_SIZE (Range) * FDT_PCI_RANGE_SIZE) {
+//     DEBUG ((DEBUG_WARN, "Too many range in dt, maybe a wrong config\n"));
+//     DEBUG ((DEBUG_WARN, "Only range[0] - range[%d] effect on\n", ARRAY_SIZE (Range)));
+//     PropSize = sizeof (Range);
+//   }
 
-  /* get flag */
-  for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex, Prop += FDT_PCI_RANGE_SIZE) {
-    Range[RangeIndex].Flag = SwapBytes32 (*(UINT32 *)Prop);
-    /* platform must support unaligned access */
-    Range[RangeIndex].PciAddr =
-      SwapBytes64 (*(UINT64 *)(Prop + 4));
-    Range[RangeIndex].CpuAddr =
-      SwapBytes64 (*(UINT64 *)(Prop + FDT_PCI_ADDRESS_CELLS * 4));
-    Range[RangeIndex].Size =
-      SwapBytes64 (*(UINT64 *)(Prop +  (FDT_PCI_ADDRESS_CELLS + FDT_PCI_PARENT_ADDRESS_CELLS) * 4));
-  }
+//   /* get flag */
+//   for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex, Prop += FDT_PCI_RANGE_SIZE) {
+//     Range[RangeIndex].Flag = SwapBytes32 (*(UINT32 *)Prop);
+//     /* platform must support unaligned access */
+//     Range[RangeIndex].PciAddr =
+//       SwapBytes64 (*(UINT64 *)(Prop + 4));
+//     Range[RangeIndex].CpuAddr =
+//       SwapBytes64 (*(UINT64 *)(Prop + FDT_PCI_ADDRESS_CELLS * 4));
+//     Range[RangeIndex].Size =
+//       SwapBytes64 (*(UINT64 *)(Prop +  (FDT_PCI_ADDRESS_CELLS + FDT_PCI_PARENT_ADDRESS_CELLS) * 4));
+//   }
 
-  for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex) {
-    switch (Range[RangeIndex].Flag & (FDT_PCI_MEM_TYPE_MASK | FDT_PCI_MEM_PREFETCH_MASK)) {
-      case FDT_PCI_MEM_TYPE_IO:
-        Aperture = &PciRoot->Io;
-        break;
-      case FDT_PCI_MEM_TYPE_MEM32:
-        Aperture = &PciRoot->Mem;
-        break;
-      case FDT_PCI_MEM_TYPE_MEM32 | FDT_PCI_MEM_PREFETCH:
-        Aperture = &PciRoot->PMem;
-        break;
-      case FDT_PCI_MEM_TYPE_MEM64:
-        Aperture = &PciRoot->MemAbove4G;
-        break;
-      case FDT_PCI_MEM_TYPE_MEM64 | FDT_PCI_MEM_PREFETCH:
-        Aperture = &PciRoot->PMemAbove4G;
-        break;
-      default:
-        DEBUG ((DEBUG_ERROR, "Undefined PCI memory type\n"));
-        continue;
-    }
-    Aperture->Base           = Range[RangeIndex].PciAddr;
-    Aperture->Limit          = Range[RangeIndex].PciAddr + Range[RangeIndex].Size - 1;
-    Aperture->Translation    = Range[RangeIndex].PciAddr - Range[RangeIndex].CpuAddr;
-  }
-}
+//   for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex) {
+//     switch (Range[RangeIndex].Flag & (FDT_PCI_MEM_TYPE_MASK | FDT_PCI_MEM_PREFETCH_MASK)) {
+//       case FDT_PCI_MEM_TYPE_IO:
+//         Aperture = &PciRoot->Io;
+//         break;
+//       case FDT_PCI_MEM_TYPE_MEM32:
+//         Aperture = &PciRoot->Mem;
+//         break;
+//       case FDT_PCI_MEM_TYPE_MEM32 | FDT_PCI_MEM_PREFETCH:
+//         Aperture = &PciRoot->PMem;
+//         break;
+//       case FDT_PCI_MEM_TYPE_MEM64:
+//         Aperture = &PciRoot->MemAbove4G;
+//         break;
+//       case FDT_PCI_MEM_TYPE_MEM64 | FDT_PCI_MEM_PREFETCH:
+//         Aperture = &PciRoot->PMemAbove4G;
+//         break;
+//       default:
+//         DEBUG ((DEBUG_ERROR, "Undefined PCI memory type\n"));
+//         continue;
+//     }
+//     Aperture->Base           = Range[RangeIndex].PciAddr;
+//     Aperture->Limit          = Range[RangeIndex].PciAddr + Range[RangeIndex].Size - 1;
+//     Aperture->Translation    = Range[RangeIndex].PciAddr - Range[RangeIndex].CpuAddr;
+//   }
+// }
 
-STATIC
-RETURN_STATUS
-FdtGetResourceByName (
-    IN  FDT_CLIENT_PROTOCOL *FdtClient,
-    IN  INT32               Node,
-    IN  CONST CHAR8         *ResourceName,
-    OUT UINTN               *Base,
-    OUT UINTN               *Size
-    )
-{
-  CONST CHAR8  *NameList;
-  UINT32      NameIndex;
-  UINT32      NameListSize;
-  UINT32      ResourceIndex;
-  CONST VOID  *ResourceProp;
-  UINT32      ResourcePropSize;
-  UINT32      ResourceOffset;
-  UINT32      ResourcePropElementSize;
-  EFI_STATUS  Status;
+// STATIC
+// RETURN_STATUS
+// FdtGetResourceByName (
+//     IN  FDT_CLIENT_PROTOCOL *FdtClient,
+//     IN  INT32               Node,
+//     IN  CONST CHAR8         *ResourceName,
+//     OUT UINTN               *Base,
+//     OUT UINTN               *Size
+//     )
+// {
+//   CONST CHAR8  *NameList;
+//   UINT32      NameIndex;
+//   UINT32      NameListSize;
+//   UINT32      ResourceIndex;
+//   CONST VOID  *ResourceProp;
+//   UINT32      ResourcePropSize;
+//   UINT32      ResourceOffset;
+//   UINT32      ResourcePropElementSize;
+//   EFI_STATUS  Status;
 
-  Status = FdtClient->GetNodeProperty(FdtClient, Node, "reg-names",
-      (CONST VOID **)&NameList, &NameListSize);
+//   Status = FdtClient->GetNodeProperty(FdtClient, Node, "reg-names",
+//       (CONST VOID **)&NameList, &NameListSize);
 
-  if (Status != EFI_SUCCESS) {
-    DEBUG ((DEBUG_ERROR, "No reg-names property\n"));
-    return EFI_NOT_FOUND;
-  }
+//   if (Status != EFI_SUCCESS) {
+//     DEBUG ((DEBUG_ERROR, "No reg-names property\n"));
+//     return EFI_NOT_FOUND;
+//   }
 
-  for (NameIndex = 0, ResourceIndex = 0; NameIndex < NameListSize; ++NameIndex, ++ResourceIndex) {
-    if (AsciiStrCmp(NameList + NameIndex, ResourceName) != 0) {
-      /* to next string */
-      for (; NameIndex < NameListSize; ++NameIndex) {
-        if (NameList[NameIndex] == 0)
-          break;
-      }
-    } else {
-      break;
-    }
-  }
+//   for (NameIndex = 0, ResourceIndex = 0; NameIndex < NameListSize; ++NameIndex, ++ResourceIndex) {
+//     if (AsciiStrCmp(NameList + NameIndex, ResourceName) != 0) {
+//       /* to next string */
+//       for (; NameIndex < NameListSize; ++NameIndex) {
+//         if (NameList[NameIndex] == 0)
+//           break;
+//       }
+//     } else {
+//       break;
+//     }
+//   }
 
-  /* not found */
-  if (NameIndex >= NameListSize) {
-    DEBUG ((DEBUG_ERROR, "Resource %a not found\n", ResourceName));
-    return EFI_NOT_FOUND;
-  }
+//   /* not found */
+//   if (NameIndex >= NameListSize) {
+//     DEBUG ((DEBUG_ERROR, "Resource %a not found\n", ResourceName));
+//     return EFI_NOT_FOUND;
+//   }
 
-  /* found */
-  Status = FdtClient->GetNodeProperty(FdtClient, Node, "reg", &ResourceProp, &ResourcePropSize);
+//   /* found */
+//   Status = FdtClient->GetNodeProperty(FdtClient, Node, "reg", &ResourceProp, &ResourcePropSize);
 
-  if (Status != EFI_SUCCESS) {
-    DEBUG ((DEBUG_ERROR, "No reg property\n"));
-    return EFI_NOT_FOUND;
-  }
+//   if (Status != EFI_SUCCESS) {
+//     DEBUG ((DEBUG_ERROR, "No reg property\n"));
+//     return EFI_NOT_FOUND;
+//   }
 
-  ResourcePropElementSize = (FDT_PCI_PARENT_ADDRESS_CELLS + FDT_PCI_PARENT_SIZE_CELLS) * 4;
-  ResourceOffset = ResourcePropElementSize * ResourceIndex;
+//   ResourcePropElementSize = (FDT_PCI_PARENT_ADDRESS_CELLS + FDT_PCI_PARENT_SIZE_CELLS) * 4;
+//   ResourceOffset = ResourcePropElementSize * ResourceIndex;
 
-  if (ResourceOffset + ResourcePropElementSize > ResourcePropSize) {
-    DEBUG ((DEBUG_ERROR, "Not enough reg properties\n"));
-    return EFI_OUT_OF_RESOURCES;
-  }
+//   if (ResourceOffset + ResourcePropElementSize > ResourcePropSize) {
+//     DEBUG ((DEBUG_ERROR, "Not enough reg properties\n"));
+//     return EFI_OUT_OF_RESOURCES;
+//   }
 
-  if (Base != NULL)
-    *Base = SwapBytes64(*(UINT64 *)(ResourceProp + ResourceOffset));
+//   if (Base != NULL)
+//     *Base = SwapBytes64(*(UINT64 *)(ResourceProp + ResourceOffset));
 
-  if (Size != NULL)
-    *Size = SwapBytes64(*(UINT64 *)(ResourceProp + ResourceOffset + FDT_PCI_PARENT_ADDRESS_CELLS * 4));
+//   if (Size != NULL)
+//     *Size = SwapBytes64(*(UINT64 *)(ResourceProp + ResourceOffset + FDT_PCI_PARENT_ADDRESS_CELLS * 4));
 
-  return EFI_SUCCESS;
-}
+//   return EFI_SUCCESS;
+// }
 
+#if 1
 UINT32
-InitPlatformFromFdt (
+InitPlatformFromPcd (
     OUT   SG2044_PCIE_ROOT *SG2044PciRoot
     )
 {
-  RETURN_STATUS       FindNodeStatus;
-  RETURN_STATUS       Status;
-  FDT_CLIENT_PROTOCOL *FdtClient;
-  INT32               Node;
-  CONST VOID          *Prop;
-  UINT32              PropSize;
-  CONST CHAR8         *Compatible = "sophgo,sg2044-pcie-host";
-  UINT32              Segment;
-  PCI_ROOT_BRIDGE     *PciRoot;
-  DW_PCIE             *DwPcie;
+  UINT32                            Segment;
+  PCIE_HOST_BRIDGE_TABLE            *PcieRcConfig;
+  PCI_ROOT_BRIDGE                   *PciRoot;
+  DW_PCIE                           *DwPcie;
+  PCIE_BUS_CONFIG                   PcieBusEntry;
+  PCIE_SUPPORT_FLAG                 PcieSupportEntry;
+  PCIE_REG                          PcieRegEntry;
+  PCIE_RANGES                       PcieRangeEntry;
+
 
   SetMem (SG2044PciRoot, sizeof (SG2044_PCIE_ROOT), 0);
 
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
+  PcieRcConfig = (PCIE_HOST_BRIDGE_TABLE *)PcdGetPtr (PcdPcieHostBridgeTable);
 
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
-    DEBUG ((DEBUG_ERROR, "Cannot init PCIe controllers\n"));
+  if (PcieRcConfig->NumOfControllers > SG2044_PCIE_MAX_ROOT) {
+    DEBUG ((DEBUG_ERROR, "Too many PCIe controllers, only %d supported\n", SG2044_PCIE_MAX_ROOT));
     return 0;
   }
 
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, Compatible, &Node), Segment = 0;
-      FindNodeStatus == EFI_SUCCESS;
-      FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, Compatible, Node, &Node), ++Segment) {
-
-    /* Setup registers by name */
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-
-    if (Status != EFI_SUCCESS) {
-      DEBUG ((DEBUG_ERROR, "Cannot find reg property\n"));
-      continue;
-    }
-
-    if (PropSize < sizeof (DwPcie->DbiBase) + sizeof (DwPcie->AtuBase) + sizeof (DwPcie->CfgBase)) {
-      DEBUG ((DEBUG_ERROR, "Not enough reg properties, should have dbi, atu and config registers\n"));
-      continue;
-    }
-
+  for (Segment = 0; Segment < PcieRcConfig->NumOfControllers; Segment++) {
     PciRoot = &SG2044PciRoot->PciRoot[Segment];
     DwPcie = &SG2044PciRoot->DwPcie[Segment];
 
-    PciRoot->Segment = Segment;
+    CopyMem(&PcieRegEntry, PcieRcConfig->PcieReg[Segment], sizeof(PcieRegEntry));
+    CopyMem(&PcieSupportEntry, PcieRcConfig->PcieSupportFlag[Segment], sizeof(PcieSupportEntry));
+    CopyMem(&PcieBusEntry, PcieRcConfig->RootBusConfig[Segment], sizeof(PcieBusEntry));
+    CopyMem(&PcieRangeEntry, PcieRcConfig->PcieRanges[Segment], sizeof(PcieRangeEntry));
 
-    FdtGetResourceByName (FdtClient, Node, "dbi", &DwPcie->DbiBase, &DwPcie->DbiSize);
-    FdtGetResourceByName (FdtClient, Node, "atu", &DwPcie->AtuBase, &DwPcie->AtuSize);
-    FdtGetResourceByName (FdtClient, Node, "config", &DwPcie->CfgBase, &DwPcie->CfgSize);
+    DEBUG ((DEBUG_VERBOSE, "!!!!!!!!!!!!!!!!!!!!!!!!!!PCIe%d:\n"
+          "DOMAIN                                [%08x]\n"
+          "BUSBASE                               [%016lx]\n"
+          "BUSLIMIT                              [%016lx]\n"
+          "BUSTRANSL                             [%016lx]\n",
+          Segment,
+          *(UINT32 *)PcieRcConfig->PcieDomain[Segment],
+          PcieBusEntry.RootBusBase,
+          PcieBusEntry.RootBusLimit,
+          PcieBusEntry.RootBusTranslation));
+
+    DEBUG ((DEBUG_VERBOSE,
+          "Mem32Support                          [%u]\n"
+          "Pmem32Support                         [%u]\n"
+          "Mem64Support                          [%u]\n"
+          "Pmem64Support                         [%u]\n"
+          "IoSupport                             [%u]\n",
+          (UINT32)(PcieSupportEntry.Mem32Support ? 1 : 0),
+          (UINT32)(PcieSupportEntry.Pmem32Support ? 1 : 0),
+          (UINT32)(PcieSupportEntry.Mem64Support ? 1 : 0),
+          (UINT32)(PcieSupportEntry.Pmem64Support ? 1 : 0),
+          (UINT32)(PcieSupportEntry.IoSupport ? 1 : 0)));
+
+    DEBUG ((DEBUG_VERBOSE,
+          "DBI                                   [%016lx - %016lx]\n"
+          "ATU                                   [%016lx - %016lx]\n"
+          "Config                                [%016lx - %016lx]\n",
+          PcieRegEntry.DbiBase, PcieRegEntry.DbiBase + PcieRegEntry.DbiSize,
+          PcieRegEntry.AtuBase, PcieRegEntry.AtuBase + PcieRegEntry.AtuSize,
+          PcieRegEntry.CfgBase, PcieRegEntry.CfgBase + PcieRegEntry.CfgSize));
+
+    DEBUG ((DEBUG_VERBOSE,
+          "Pmem32PciRange                        [%016lx - %016lx]\n"
+          "Pmem32CpuRange                        [%016lx - %016lx]\n",
+          PcieRangeEntry.Pmem32PciAddr, PcieRangeEntry.Pmem32PciAddr + PcieRangeEntry.Pmem32Size - 1,
+          PcieRangeEntry.Pmem32CpuAddr, PcieRangeEntry.Pmem32CpuAddr + PcieRangeEntry.Pmem32Size - 1));
+
+    DEBUG ((DEBUG_VERBOSE,
+          "Mem32PciRange                         [%016lx - %016lx]\n"
+          "Mem32CpuRange                         [%016lx - %016lx]\n",
+          PcieRangeEntry.Mem32PciAddr, PcieRangeEntry.Mem32PciAddr + PcieRangeEntry.Mem32Size - 1,
+          PcieRangeEntry.Mem32CpuAddr, PcieRangeEntry.Mem32CpuAddr + PcieRangeEntry.Mem32Size - 1));
+
+    DEBUG ((DEBUG_VERBOSE,
+          "Pmem64PciRange                        [%016lx - %016lx]\n"
+          "Pmem64CpuRange                        [%016lx - %016lx]\n",
+          PcieRangeEntry.Pmem64PciAddr, PcieRangeEntry.Pmem64PciAddr + PcieRangeEntry.Pmem64Size - 1,
+          PcieRangeEntry.Pmem64CpuAddr, PcieRangeEntry.Pmem64CpuAddr + PcieRangeEntry.Pmem64Size - 1));
+
+    DEBUG ((DEBUG_VERBOSE,
+          "Mem64PciRange                         [%016lx - %016lx]\n"
+          "Mem64CpuRange                         [%016lx - %016lx]\n",
+          PcieRangeEntry.Mem64PciAddr, PcieRangeEntry.Mem64PciAddr + PcieRangeEntry.Mem64Size - 1,
+          PcieRangeEntry.Mem64CpuAddr, PcieRangeEntry.Mem64CpuAddr + PcieRangeEntry.Mem64Size - 1));
+
+    DEBUG ((DEBUG_VERBOSE,
+          "IoPciRange                            [%016lx - %016lx]\n"
+          "IoCpuRange                            [%016lx - %016lx]\n",
+          PcieRangeEntry.IoPciAddr, PcieRangeEntry.IoPciAddr + PcieRangeEntry.IoSize - 1,
+          PcieRangeEntry.IoCpuAddr, PcieRangeEntry.IoCpuAddr + PcieRangeEntry.IoSize - 1));
+
+
+    //Init DwPcie parameters
+    DwPcie->DbiBase = PcieRegEntry.DbiBase;
+    DwPcie->DbiSize = PcieRegEntry.DbiSize;
+    DwPcie->AtuBase = PcieRegEntry.AtuBase;
+    DwPcie->AtuSize = PcieRegEntry.AtuSize;
+    DwPcie->CfgBase = PcieRegEntry.CfgBase;
+    DwPcie->CfgSize = PcieRegEntry.CfgSize;
 
     DEBUG ((DEBUG_INFO, "PCIe%d:\n"
           "DBI    [%016lx - %016lx]\n"
@@ -608,21 +661,114 @@ InitPlatformFromFdt (
         DwPcie->DbiBase, DwPcie->DbiBase + DwPcie->DbiSize,
         DwPcie->AtuBase, DwPcie->AtuBase + DwPcie->AtuSize,
         DwPcie->CfgBase, DwPcie->CfgBase + DwPcie->CfgSize));
-
+    //Init PciRoot parameters
     PciRoot->Supports                  = 0;
     PciRoot->Attributes                = 0;
     PciRoot->DmaAbove4G                = TRUE;
     PciRoot->NoExtendedConfigSpace     = FALSE;
     PciRoot->ResourceAssigned          = FALSE;
     PciRoot->AllocationAttributes      = EFI_PCI_HOST_BRIDGE_MEM64_DECODE;
-
-    InitSlaveMappingFromFdt (FdtClient, PciRoot, Node);
+    PciRoot->Segment                   = /* PcieRcConfig->PcieDomain[Segment] */ Segment;
+      //slave mapping
+    PciRoot->Bus.Base                  = PcieBusEntry.RootBusBase;
+    PciRoot->Bus.Limit                 = PcieBusEntry.RootBusLimit;
+    PciRoot->Bus.Translation           = PcieBusEntry.RootBusTranslation;
+    PciRoot->PMem.Base                 = PcieRangeEntry.Pmem32PciAddr;
+    PciRoot->PMem.Limit                = PcieRangeEntry.Pmem32PciAddr + PcieRangeEntry.Pmem32Size - 1;
+    PciRoot->PMem.Translation          = PcieRangeEntry.Pmem32PciAddr - PcieRangeEntry.Pmem32CpuAddr;
+    PciRoot->Mem.Base                  = PcieRangeEntry.Mem32PciAddr;
+    PciRoot->Mem.Limit                 = PcieRangeEntry.Mem32PciAddr + PcieRangeEntry.Mem32Size - 1;
+    PciRoot->Mem.Translation           = PcieRangeEntry.Mem32PciAddr - PcieRangeEntry.Mem32CpuAddr;
+    PciRoot->PMemAbove4G.Base          = PcieRangeEntry.Pmem64PciAddr;
+    PciRoot->PMemAbove4G.Limit         = PcieRangeEntry.Pmem64PciAddr + PcieRangeEntry.Pmem64Size - 1;
+    PciRoot->PMemAbove4G.Translation   = PcieRangeEntry.Pmem64PciAddr - PcieRangeEntry.Pmem64CpuAddr;
+    PciRoot->MemAbove4G.Base           = PcieRangeEntry.Mem64PciAddr;
+    PciRoot->MemAbove4G.Limit          = PcieRangeEntry.Mem64PciAddr + PcieRangeEntry.Mem64Size - 1;
+    PciRoot->MemAbove4G.Translation    = PcieRangeEntry.Mem64PciAddr - PcieRangeEntry.Mem64CpuAddr;
+    PciRoot->Io.Base                   = PcieRangeEntry.IoPciAddr;
+    PciRoot->Io.Limit                  = PcieRangeEntry.IoPciAddr + PcieRangeEntry.IoSize - 1;
+    PciRoot->Io.Translation            = PcieRangeEntry.IoPciAddr - PcieRangeEntry.IoCpuAddr;
   }
-
-  mSG2044PciRoot.Count = Segment;
-
+  mSG2044PciRoot.Count = PcieRcConfig->NumOfControllers;
   return mSG2044PciRoot.Count;
 }
+#endif
+
+// UINT32
+// InitPlatformFromFdt (
+//     OUT   SG2044_PCIE_ROOT *SG2044PciRoot
+//     )
+// {
+//   RETURN_STATUS       FindNodeStatus;
+//   RETURN_STATUS       Status;
+//   FDT_CLIENT_PROTOCOL *FdtClient;
+//   INT32               Node;
+//   CONST VOID          *Prop;
+//   UINT32              PropSize;
+//   CONST CHAR8         *Compatible = "sophgo,sg2044-pcie-host";
+//   UINT32              Segment;
+//   PCI_ROOT_BRIDGE     *PciRoot;
+//   DW_PCIE             *DwPcie;
+
+//   SetMem (SG2044PciRoot, sizeof (SG2044_PCIE_ROOT), 0);
+
+//   Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
+
+//   if (Status) {
+//     DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+//     DEBUG ((DEBUG_ERROR, "Cannot init PCIe controllers\n"));
+//     return 0;
+//   }
+
+//   for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, Compatible, &Node), Segment = 0;
+//       FindNodeStatus == EFI_SUCCESS;
+//       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, Compatible, Node, &Node), ++Segment) {
+
+//     /* Setup registers by name */
+//     Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
+
+//     if (Status != EFI_SUCCESS) {
+//       DEBUG ((DEBUG_ERROR, "Cannot find reg property\n"));
+//       continue;
+//     }
+
+//     if (PropSize < sizeof (DwPcie->DbiBase) + sizeof (DwPcie->AtuBase) + sizeof (DwPcie->CfgBase)) {
+//       DEBUG ((DEBUG_ERROR, "Not enough reg properties, should have dbi, atu and config registers\n"));
+//       continue;
+//     }
+
+//     PciRoot = &SG2044PciRoot->PciRoot[Segment];
+//     DwPcie = &SG2044PciRoot->DwPcie[Segment];
+
+//     PciRoot->Segment = Segment;
+
+//     FdtGetResourceByName (FdtClient, Node, "dbi", &DwPcie->DbiBase, &DwPcie->DbiSize);
+//     FdtGetResourceByName (FdtClient, Node, "atu", &DwPcie->AtuBase, &DwPcie->AtuSize);
+//     FdtGetResourceByName (FdtClient, Node, "config", &DwPcie->CfgBase, &DwPcie->CfgSize);
+
+//     DEBUG ((DEBUG_INFO, "PCIe%d:\n"
+//           "DBI    [%016lx - %016lx]\n"
+//           "ATU    [%016lx - %016lx]\n"
+//           "Config [%016lx - %016lx]\n",
+//         Segment,
+//         DwPcie->DbiBase, DwPcie->DbiBase + DwPcie->DbiSize,
+//         DwPcie->AtuBase, DwPcie->AtuBase + DwPcie->AtuSize,
+//         DwPcie->CfgBase, DwPcie->CfgBase + DwPcie->CfgSize));
+
+//     PciRoot->Supports                  = 0;
+//     PciRoot->Attributes                = 0;
+//     PciRoot->DmaAbove4G                = TRUE;
+//     PciRoot->NoExtendedConfigSpace     = FALSE;
+//     PciRoot->ResourceAssigned          = FALSE;
+//     PciRoot->AllocationAttributes      = EFI_PCI_HOST_BRIDGE_MEM64_DECODE;
+
+//     InitSlaveMappingFromFdt (FdtClient, PciRoot, Node);
+//   }
+
+//   mSG2044PciRoot.Count = Segment;
+
+//   return mSG2044PciRoot.Count;
+// }
 
 VOID
 SetupPciRoot (
@@ -768,7 +914,7 @@ PciPlatformInit (
 
   DEBUG ((DEBUG_INFO, "SG2044 PCIe Init\n"));
 
-  PciRootCount = InitPlatformFromFdt (&mSG2044PciRoot);
+  PciRootCount = InitPlatformFromPcd (&mSG2044PciRoot);
 
   /* get the start of system memory and the end of system memory */
   SystemMemoryStart = MAX_ADDRESS;
@@ -916,7 +1062,7 @@ PciSegmentRead (
 
     CfgBase = DwPcie->CfgBase;
   }
-  
+
   switch (Width) {
     case 8:
       Value = MmioRead8 (CfgBase + Offset);

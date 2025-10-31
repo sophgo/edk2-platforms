@@ -9,217 +9,6 @@
 
 #include "PrePi.h"
 
-//
-// Hack to work in NT32
-//
-EFI_STATUS
-
-EFIAPI
-
-SecWinNtPeiLoadFile (
-  IN  VOID                  *Pe32Data,
-  IN  EFI_PHYSICAL_ADDRESS  *ImageAddress,
-  IN  UINT64                *ImageSize,
-  IN  EFI_PHYSICAL_ADDRESS  *EntryPoint
-  );
-
-STATIC
-VOID *
-EFIAPI
-AllocateCodePages (
-  IN  UINTN  Pages
-  )
-{
-  VOID                  *Alloc;
-  EFI_PEI_HOB_POINTERS  Hob;
-
-  Alloc = AllocatePages (Pages);
-  if (Alloc == NULL) {
-    return NULL;
-  }
-
-  // find the HOB we just created, and change the type to EfiBootServicesCode
-  Hob.Raw = GetFirstHob (EFI_HOB_TYPE_MEMORY_ALLOCATION);
-  while (Hob.Raw != NULL) {
-    if (Hob.MemoryAllocation->AllocDescriptor.MemoryBaseAddress == (UINTN)Alloc) {
-      Hob.MemoryAllocation->AllocDescriptor.MemoryType = EfiBootServicesCode;
-      return Alloc;
-    }
-
-    Hob.Raw = GetNextHob (EFI_HOB_TYPE_MEMORY_ALLOCATION, GET_NEXT_HOB (Hob));
-  }
-
-  ASSERT (FALSE);
-
-  FreePages (Alloc, Pages);
-  return NULL;
-}
-
-EFI_STATUS
-EFIAPI
-LoadPeCoffImage (
-  IN  VOID                  *PeCoffImage,
-  OUT EFI_PHYSICAL_ADDRESS  *ImageAddress,
-  OUT UINT64                *ImageSize,
-  OUT EFI_PHYSICAL_ADDRESS  *EntryPoint
-  )
-{
-  RETURN_STATUS                 Status;
-  PE_COFF_LOADER_IMAGE_CONTEXT  ImageContext;
-  VOID                          *Buffer;
-
-  ZeroMem (&ImageContext, sizeof (ImageContext));
-
-  ImageContext.Handle    = PeCoffImage;
-  ImageContext.ImageRead = PeCoffLoaderImageReadFromMemory;
-
-  Status = PeCoffLoaderGetImageInfo (&ImageContext);
-  ASSERT_EFI_ERROR (Status);
-
-  //
-  // Allocate Memory for the image
-  //
-  Buffer = AllocateCodePages (EFI_SIZE_TO_PAGES ((UINT32)ImageContext.ImageSize));
-  ASSERT (Buffer != 0);
-
-  ImageContext.ImageAddress = (EFI_PHYSICAL_ADDRESS)(UINTN)Buffer;
-
-  //
-  // Load the image to our new buffer
-  //
-  Status = PeCoffLoaderLoadImage (&ImageContext);
-  ASSERT_EFI_ERROR (Status);
-
-  //
-  // Relocate the image in our new buffer
-  //
-  Status = PeCoffLoaderRelocateImage (&ImageContext);
-  ASSERT_EFI_ERROR (Status);
-
-  *ImageAddress = ImageContext.ImageAddress;
-  *ImageSize    = ImageContext.ImageSize;
-  *EntryPoint   = ImageContext.EntryPoint;
-
-  //
-  // Flush not needed for all architectures. We could have a processor specific
-  // function in this library that does the no-op if needed.
-  //
-  InvalidateInstructionCacheRange ((VOID *)(UINTN)*ImageAddress, (UINTN)*ImageSize);
-
-  return Status;
-}
-
-typedef
-VOID
-(EFIAPI *DXE_CORE_ENTRY_POINT)(
-  IN  VOID *HobStart
-  );
-
-EFI_STATUS
-EFIAPI
-LoadDxeCoreFromFfsFile (
-  IN EFI_PEI_FILE_HANDLE  FileHandle,
-  IN UINTN                StackSize
-  )
-{
-  EFI_STATUS            Status;
-  VOID                  *PeCoffImage;
-  EFI_PHYSICAL_ADDRESS  ImageAddress;
-  UINT64                ImageSize;
-  EFI_PHYSICAL_ADDRESS  EntryPoint;
-  VOID                  *BaseOfStack;
-  VOID                  *TopOfStack;
-  VOID                  *Hob;
-  EFI_FV_FILE_INFO      FvFileInfo;
-
-  Status = FfsFindSectionDataWithHook (EFI_SECTION_PE32, NULL, FileHandle, &PeCoffImage);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
-
-  Status = LoadPeCoffImage (PeCoffImage, &ImageAddress, &ImageSize, &EntryPoint);
-  // For NT32 Debug  Status = SecWinNtPeiLoadFile (PeCoffImage, &ImageAddress, &ImageSize, &EntryPoint);
-  ASSERT_EFI_ERROR (Status);
-
-  //
-  // Extract the DxeCore GUID file name.
-  //
-  Status = FfsGetFileInfo (FileHandle, &FvFileInfo);
-  ASSERT_EFI_ERROR (Status);
-
-  BuildModuleHob (&FvFileInfo.FileName, (EFI_PHYSICAL_ADDRESS)(UINTN)ImageAddress, EFI_SIZE_TO_PAGES ((UINT32)ImageSize) * EFI_PAGE_SIZE, EntryPoint);
-
-  DEBUG ((DEBUG_INFO | DEBUG_LOAD, "Loading DxeCore at 0x%10p EntryPoint=0x%10p\n", (VOID *)(UINTN)ImageAddress, (VOID *)(UINTN)EntryPoint));
-
-  Hob = GetHobList ();
-  if (StackSize == 0) {
-    // User the current stack
-
-    ((DXE_CORE_ENTRY_POINT)(UINTN)EntryPoint)(Hob);
-  } else {
-    //
-    // Allocate 128KB for the Stack
-    //
-    BaseOfStack = AllocatePages (EFI_SIZE_TO_PAGES (StackSize));
-    ASSERT (BaseOfStack != NULL);
-
-    //
-    // Compute the top of the stack we were allocated. Pre-allocate a UINTN
-    // for safety.
-    //
-    TopOfStack = (VOID *)((UINTN)BaseOfStack + EFI_SIZE_TO_PAGES (StackSize) * EFI_PAGE_SIZE - CPU_STACK_ALIGNMENT);
-    TopOfStack = ALIGN_POINTER (TopOfStack, CPU_STACK_ALIGNMENT);
-
-    //
-    // Update the contents of BSP stack HOB to reflect the real stack info passed to DxeCore.
-    //
-    UpdateStackHob ((EFI_PHYSICAL_ADDRESS)(UINTN)BaseOfStack, StackSize);
-
-    SwitchStack (
-      (SWITCH_STACK_ENTRY_POINT)(UINTN)EntryPoint,
-      Hob,
-      NULL,
-      TopOfStack
-      );
-  }
-
-  // Should never get here as DXE Core does not return
-  DEBUG ((DEBUG_ERROR, "DxeCore returned\n"));
-  ASSERT (FALSE);
-
-  return EFI_DEVICE_ERROR;
-}
-
-EFI_STATUS
-EFIAPI
-LoadDxeCoreFromFv (
-  IN UINTN  *FvInstance    OPTIONAL,
-  IN UINTN  StackSize
-  )
-{
-  EFI_STATUS           Status;
-  EFI_PEI_FV_HANDLE    VolumeHandle;
-  EFI_PEI_FILE_HANDLE  FileHandle = NULL;
-
-  if (FvInstance != NULL) {
-    //
-    // Caller passed in a specific FV to try, so only try that one
-    //
-    Status = FfsFindNextVolume (*FvInstance, &VolumeHandle);
-    if (!EFI_ERROR (Status)) {
-      Status = FfsFindNextFile (EFI_FV_FILETYPE_DXE_CORE, VolumeHandle, &FileHandle);
-    }
-  } else {
-    Status = FfsAnyFvFindFirstFile (EFI_FV_FILETYPE_DXE_CORE, &VolumeHandle, &FileHandle);
-  }
-
-  if (!EFI_ERROR (Status)) {
-    return LoadDxeCoreFromFfsFile (FileHandle, StackSize);
-  }
-
-  return Status;
-}
-
 EFI_STATUS
 EFIAPI
 DecompressFirstFv (
@@ -237,6 +26,47 @@ DecompressFirstFv (
   return Status;
 }
 
+RETURN_STATUS
+EFIAPI
+PeCoffLoaderGetEntryPoint (
+  IN  VOID  *Pe32Data,
+  OUT VOID  **EntryPoint
+  )
+{
+  EFI_IMAGE_DOS_HEADER                 *DosHdr;
+  EFI_IMAGE_OPTIONAL_HEADER_PTR_UNION  Hdr;
+
+  ASSERT (Pe32Data   != NULL);
+  ASSERT (EntryPoint != NULL);
+
+  DosHdr = (EFI_IMAGE_DOS_HEADER *)Pe32Data;
+  if (DosHdr->e_magic == EFI_IMAGE_DOS_SIGNATURE) {
+    //
+    // DOS image header is present, so read the PE header after the DOS image header.
+    //
+    Hdr.Pe32 = (EFI_IMAGE_NT_HEADERS32 *)((UINTN)Pe32Data + (UINTN)((DosHdr->e_lfanew) & 0x0ffff));
+  } else {
+    //
+    // DOS image header is not present, so PE header is at the image base.
+    //
+    Hdr.Pe32 = (EFI_IMAGE_NT_HEADERS32 *)Pe32Data;
+  }
+
+  //
+  // Calculate the entry point relative to the start of the image.
+  // AddressOfEntryPoint is common for PE32 & PE32+
+  //
+  if (Hdr.Te->Signature == EFI_TE_IMAGE_HEADER_SIGNATURE) {
+    *EntryPoint = (VOID *)((UINTN)Pe32Data + (UINTN)(Hdr.Te->AddressOfEntryPoint & 0x0ffffffff) + sizeof (EFI_TE_IMAGE_HEADER) - Hdr.Te->StrippedSize);
+    return RETURN_SUCCESS;
+  } else if (Hdr.Pe32->Signature == EFI_IMAGE_NT_SIGNATURE) {
+    *EntryPoint = (VOID *)((UINTN)Pe32Data + (UINTN)(Hdr.Pe32->OptionalHeader.AddressOfEntryPoint & 0x0ffffffff));
+    return RETURN_SUCCESS;
+  }
+
+  return RETURN_UNSUPPORTED;
+}
+
 EFI_STATUS
 EFIAPI
 LoadPeiEntryPointFromFfsFile (
@@ -246,8 +76,6 @@ LoadPeiEntryPointFromFfsFile (
 {
   EFI_STATUS                      Status;
   VOID                            *PeCoffImage;
-  EFI_PHYSICAL_ADDRESS            ImageAddress;
-  UINT64                          ImageSize;
 
   Status = FfsFindSectionDataWithHook (EFI_SECTION_PE32, NULL, FileHandle, &PeCoffImage);
   if (EFI_ERROR (Status)) {
@@ -255,8 +83,9 @@ LoadPeiEntryPointFromFfsFile (
     return Status;
   }
 
-  Status = LoadPeCoffImage (PeCoffImage, &ImageAddress, &ImageSize, EntryPoint);
-  ASSERT_EFI_ERROR (Status);
+  Status = PeCoffLoaderGetEntryPoint ((VOID *)(UINTN)PeCoffImage, (VOID **)EntryPoint);
+  if (EFI_ERROR (Status))
+    DEBUG ((DEBUG_INFO, "%a: Failed to find PEI Core EntryPoint\n", __func__));
 
   return Status;
 }
@@ -268,11 +97,11 @@ GetNextVolume (
   OUT EFI_PEI_FV_HANDLE        *VolumeHandle
   )
 {
-  EFI_STATUS           Status;  
+  EFI_STATUS           Status;
 
   Status = FfsFindNextVolume (Instance, VolumeHandle);
-  if (!EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_INFO, "find the target volume:0x%lx\n", VolumeHandle));
+  if (EFI_ERROR (Status)) {
+    DEBUG ((DEBUG_ERROR, "Failed to find the target volume!\n"));
   }
   return Status;
 }
@@ -289,14 +118,14 @@ LoadPeiEntryPointFromFv (
 
   Status = FfsAnyFvFindFirstFile (EFI_FV_FILETYPE_PEI_CORE, &VolumeHandle, &FileHandle);
   if (EFI_ERROR(Status)) {
-      DEBUG ((DEBUG_ERROR, "Failed to find pei core\n"));
+      DEBUG ((DEBUG_ERROR, "Failed to find the pei core!\n"));
       return Status;
   }
   DEBUG ((DEBUG_INFO, "%a: Fv: 0x%lX\n", __func__, (UINTN)VolumeHandle));
 
   LoadPeiEntryPointFromFfsFile (FileHandle, (EFI_PHYSICAL_ADDRESS *)PeiCoreEntryPoint);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Failed to found PeiCoreEntryPoint\n"));
+    DEBUG ((DEBUG_ERROR, "Failed to find the PeiCoreEntryPoint!\n"));
     return Status;
   }
 

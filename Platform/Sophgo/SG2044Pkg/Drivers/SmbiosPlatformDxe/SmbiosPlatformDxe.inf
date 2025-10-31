@@ -76,10 +76,32 @@
 
 [Protocols]
   gEfiSmbiosProtocolGuid                            ## CONSUMED
-  gFdtClientProtocolGuid                            ## CONSUMES
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdMisa
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuCount
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuReg
+
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrType
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrRate
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrRank
+
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProcessorVersion
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuFrequencyHz
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL1ICacheSizeBytes
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL1DCacheSizeBytes
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL2CacheSizeBytes
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL3CacheSizeBytes
+
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion
+
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductVersion
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductManufacturer
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductSN
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductUUID
 
 [Depex]
   TRUE

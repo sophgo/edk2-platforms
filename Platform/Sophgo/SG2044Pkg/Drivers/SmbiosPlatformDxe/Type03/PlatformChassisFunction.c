@@ -23,8 +23,9 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformChassis) {
   STR_TOKEN_INFO      *InputStrToken;
   SMBIOS_TABLE_TYPE3  *Type3Record;
   SMBIOS_TABLE_TYPE3  *InputData;
-  CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  // CHAR16         *UnicodeStrFromPcd;
+  // CHAR16               UnicodeStr[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  // CHAR8                value[SMBIOS_UNICODE_STRING_MAX_LENGTH];
 
   InputData     = (SMBIOS_TABLE_TYPE3 *)RecordData;
   InputStrToken = (STR_TOKEN_INFO *)StrToken;
@@ -35,15 +36,15 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformChassis) {
       return Status;
     }
 
-    if (IniGetValueBySectionAndName ("chassis", "name", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], UnicodeStr, NULL);
-    }
+    // if (IniGetValueBySectionAndName ("chassis", "name", value) == 0) {
+    //   AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
+    //   HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], UnicodeStr, NULL);
+    // }
 
-    if (IniGetValueBySectionAndName ("chassis", "serial-number", value) == 0) {
-      AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStr, NULL);
-    }
+    // if (IniGetValueBySectionAndName ("chassis", "serial-number", value) == 0) {
+    //   AsciiStrToUnicodeStrS (value, UnicodeStr, SMBIOS_UNICODE_STRING_MAX_LENGTH);
+    //   HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStr, NULL);
+    // }
 
     SmbiosPlatformDxeCreateTable (
       (VOID *)&Type3Record,

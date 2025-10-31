@@ -37,5 +37,4 @@
   gSophgoTokenSpaceGuid.PcdTrngBase                            ## CONSUMES
 
 [Protocols]
-  gFdtClientProtocolGuid    ## CONSUMES
   gEfiCpuArchProtocolGuid   ## CONSUMES

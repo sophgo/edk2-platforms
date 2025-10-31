@@ -18,6 +18,7 @@
 #include <Library/UefiLib.h>
 #include <Library/PrintLib.h>
 #include <Protocol/Smbios.h>
+#include <Library/PcdLib.h>
 
 #define MAX_STRING_LENGTH                64
 #define CPU_SERIALNUM_MAX_LEN            64

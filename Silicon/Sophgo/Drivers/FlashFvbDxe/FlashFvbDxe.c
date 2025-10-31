@@ -743,6 +743,7 @@ FvbWrite (
                   Instance->StartLba + Lba,
                   Instance->Media.BlockSize);
 
+
   Status = Instance->NorFlashProtocol->WriteData (
               Instance->Nor,
               DataOffset,

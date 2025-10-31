@@ -29,5 +29,8 @@
   IoLib
 
 [Protocols]
-  gFdtClientProtocolGuid		## CONSUMES
   gEfiCpuArchProtocolGuid		## CONSUMES
+
+[Pcd]
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable
+

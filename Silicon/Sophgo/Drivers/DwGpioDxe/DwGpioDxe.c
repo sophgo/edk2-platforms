@@ -15,7 +15,7 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/BaseLib.h>
-#include <Protocol/FdtClient.h>
+#include <Library/BaseMemoryLib.h>
 #include <Include/DwGpio.h>
 
 #define GPIO_MUX_VAL(Gpio)        (0x00000001 << (Gpio))
@@ -326,61 +326,45 @@ SetMemory (
   return EFI_SUCCESS;
 }
 
+STATIC
 EFI_STATUS
-GetControllerInfoByFdt (
-  IN  CONST CHAR8     *CompatibleString
+GetControllerInfoByPcd (
+  VOID
   )
 {
-  FDT_CLIENT_PROTOCOL  *FdtClient;
-  EFI_STATUS           FindNodeStatus, Status;
-  INT32                Node;
-  UINT32               Index;
-  CONST VOID           *Prop;
-  UINT32               PropSize;
+  UINT32    GpioNum, Index;
+  UINT64    *GpioBaseAddresses;
 
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+  GpioNum = FixedPcdGet32 (PcdGpioControllerCount);
+  GpioBaseAddresses = (UINT64 *)PcdGetPtr (PcdGpioBaseAddresses);
+  if (GpioNum == 0 || GpioBaseAddresses == NULL) {
+    DEBUG ((DEBUG_ERROR, "No GPIO controller info found in PCD\n"));
     return EFI_NOT_FOUND;
   }
 
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    ++Index;
-  }
+  mNumberOfControllers = GpioNum;
 
-  if (Index == 0) {
-    DEBUG ((DEBUG_ERROR, "%a: Cannot get GPIO node from DTS (Status == %r)\n", __func__, Status));
-    return EFI_NOT_FOUND;
-  }
-
-  mNumberOfControllers = Index;
   mDwGpios = AllocateZeroPool (mNumberOfControllers * sizeof (DW_GPIO));
   if (mDwGpios == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
 
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    mDwGpios[Index].Regs    = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
+  for (Index = 0; Index < GpioNum; Index++) {
+    DEBUG ((DEBUG_INFO, "GpioBaseAddresses[%d]: 0x%lx\n", Index, GpioBaseAddresses[Index]));
+    mDwGpios[Index].Regs = GpioBaseAddresses[Index];
+    // CopyMem(&mDwGpios[Index].Regs, GpioBaseAddresses + Index, sizeof(UINT64));
     mDwGpios[Index].NrGpios = GPIO_PINS_PER_CONTROLLER;
-    ++Index;
   }
-
+  for (UINT32 Index = 0; Index < GpioNum; Index++) {
+    DEBUG ((/* DEBUG_VERBOSE */DEBUG_INFO,
+      "  [Gpio%d base: 0x%lx, pins: %lu ]\n",
+      Index,
+      mDwGpios[Index].Regs,
+      mDwGpios[Index].NrGpios));
+  }
   return EFI_SUCCESS;
 }
+
 
 EFI_STATUS
 EFIAPI
@@ -390,10 +374,8 @@ DwGpioEntryPoint (
   )
 {
   EFI_STATUS   Status;
-  CONST CHAR8  *CompatibleString;
-
-  CompatibleString = "snps,dw-apb-gpio";
-  Status = GetControllerInfoByFdt (CompatibleString);
+  DEBUG ((DEBUG_INFO, "%a: GpioGetControllerInfoByPcd\n", __func__));
+  Status = GetControllerInfoByPcd ();
   if (EFI_ERROR (Status))
     return Status;
 

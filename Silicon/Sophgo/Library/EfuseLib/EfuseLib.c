@@ -18,8 +18,6 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/EfuseLib.h>
 
-#include <Protocol/FdtClient.h>
-
 #define EFUSE_MODE             0x00
 #define EFUSE_ADR              0x04
 #define EFUSE_RD_DATA          0x0c
@@ -338,97 +336,38 @@ GetEfuseInfo (
 
 STATIC
 EFI_STATUS
-GetControllerInfoByFdt (
-  IN  CONST CHAR8     *CompatibleString
+GetControllerInfoByPcd (
+  VOID
   )
 {
-  FDT_CLIENT_PROTOCOL  *FdtClient;
-  EFI_STATUS           FindNodeStatus, Status;
-  INT32                Node;
-  UINT32               Index;
-  CONST VOID           *Prop;
-  UINT32               PropSize;
+  UINT64                *EfuseBaseAddresses;
+  UINT32                *EfuseNumAddrBits;
+  UINT32                *EfuseNumCells;
+  UINT32                *EfuseCellWidth;
+  UINT32                Index;
 
-  Status = gBS->LocateProtocol (&gFdtClientProtocolGuid, NULL, (VOID **)&FdtClient);
-  if (Status) {
-    DEBUG ((DEBUG_ERROR, "No FDT client service found\n"));
+  mNumberOfControllers = FixedPcdGet32 (PcdEfuseControllerNum);
+  EfuseBaseAddresses   = (UINT64 *)PcdGetPtr (PcdEfuseBase);
+  EfuseNumAddrBits     = (UINT32 *)PcdGetPtr (PcdEfuseNumAddrBits);
+  EfuseNumCells        = (UINT32 *)PcdGetPtr (PcdEfuseNumCells);
+  EfuseCellWidth       = (UINT32 *)PcdGetPtr (PcdEfuseCellWidth);
+
+  if ((mNumberOfControllers == 0) || (EfuseBaseAddresses == NULL) ||
+      (EfuseNumAddrBits == NULL) || (EfuseNumCells == NULL) || (EfuseCellWidth == NULL)) {
+    DEBUG ((DEBUG_ERROR, "No EFUSE controller found\n"));
     return EFI_NOT_FOUND;
   }
 
-  for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-       !EFI_ERROR (FindNodeStatus);
-       FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-    Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
-      continue;
-    }
-    ++Index;
+  mEfuseArray = AllocateZeroPool (mNumberOfControllers * sizeof (SG_EFUSE_DEVICE));
+  if (mEfuseArray == NULL) {
+    return EFI_OUT_OF_RESOURCES;
   }
 
-  if (Index == 0) {
-    //
-    // Using Pcd to get controller infomation.
-    //
-    mNumberOfControllers = FixedPcdGet32 (PcdEfuseControllerNum);
-    mEfuseArray = AllocateZeroPool (mNumberOfControllers * sizeof (SG_EFUSE_DEVICE));
-    if (mEfuseArray == NULL) {
-      return EFI_OUT_OF_RESOURCES;
-    }
-
-    mEfuseArray[0].Regs = FixedPcdGet64 (PcdEfuse0Base);
-    mEfuseArray[0].NumAddrBits = FixedPcdGet32 (PcdEfuseNumAddrBits);
-    mEfuseArray[0].NumCells = FixedPcdGet32 (PcdEfuseNumCells);
-    mEfuseArray[0].CellWidth = FixedPcdGet32 (PcdEfuseCellWidth);
-
-    if (mNumberOfControllers > 1) {
-      mEfuseArray[1].Regs = FixedPcdGet64 (PcdEfuse1Base);
-      mEfuseArray[1].NumAddrBits = FixedPcdGet32 (PcdEfuseNumAddrBits);
-      mEfuseArray[1].NumCells = FixedPcdGet32 (PcdEfuseNumCells);
-      mEfuseArray[1].CellWidth = FixedPcdGet32 (PcdEfuseCellWidth);
-    }
-  } else {
-    //
-    // Using DTB to get controller infomation.
-    //
-    mNumberOfControllers = Index;
-    mEfuseArray = AllocateZeroPool (mNumberOfControllers * sizeof (SG_EFUSE_DEVICE));
-    if (mEfuseArray == NULL) {
-      return EFI_OUT_OF_RESOURCES;
-    }
-
-    for (FindNodeStatus = FdtClient->FindCompatibleNode (FdtClient, CompatibleString, &Node), Index = 0;
-        !EFI_ERROR (FindNodeStatus);
-        FindNodeStatus = FdtClient->FindNextCompatibleNode (FdtClient, CompatibleString, Node, &Node)) {
-      Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
-      if (EFI_ERROR (Status)) {
-        DEBUG ((DEBUG_ERROR, "%a: GetNodeProperty (reg) failed (Status == %r)\n", __func__, Status));
-        continue;
-      }
-      mEfuseArray[Index].Regs = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
-
-      Status = FdtClient->GetNodeProperty (FdtClient, Node, "num_address_bits", &Prop, &PropSize);
-      if (EFI_ERROR (Status)) {
-        mEfuseArray[Index].NumAddrBits = FixedPcdGet32 (PcdEfuseNumAddrBits);
-      } else {
-        mEfuseArray[Index].NumAddrBits = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
-      }
-
-      Status = FdtClient->GetNodeProperty (FdtClient, Node, "num_cells", &Prop, &PropSize);
-      if (EFI_ERROR (Status)) {
-        mEfuseArray[Index].NumCells = FixedPcdGet32 (PcdEfuseNumCells);
-      } else {
-        mEfuseArray[Index].NumCells = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
-      }
-
-      Status = FdtClient->GetNodeProperty (FdtClient, Node, "cell_width", &Prop, &PropSize);
-      if (EFI_ERROR (Status)) {
-        mEfuseArray[Index].CellWidth = FixedPcdGet32 (PcdEfuseCellWidth);
-      } else {
-        mEfuseArray[Index].CellWidth = SwapBytes32 (((CONST UINT32 *)Prop)[0]);
-      }
-      ++Index;
-    }
+  for (Index = 0; Index < mNumberOfControllers; Index++) {
+    mEfuseArray[Index].Regs          = EfuseBaseAddresses[Index];
+    mEfuseArray[Index].NumAddrBits   = EfuseNumAddrBits[Index];
+    mEfuseArray[Index].NumCells      = EfuseNumCells[Index];
+    mEfuseArray[Index].CellWidth     = EfuseCellWidth[Index];
   }
 
   return EFI_SUCCESS;
@@ -484,10 +423,9 @@ EfuseLibConstructor (
   )
 {
   EFI_STATUS   Status;
-  CONST CHAR8  *CompatibleString;
 
-  CompatibleString = "sg,efuse";
-  Status = GetControllerInfoByFdt (CompatibleString);
+  DEBUG ((DEBUG_INFO, "%a: GetControllerInfoByPcd\n", __func__));
+  Status = GetControllerInfoByPcd ();
   if (EFI_ERROR (Status))
     return Status;
 

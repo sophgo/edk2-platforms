@@ -21,6 +21,7 @@
                                 due to a hardware or firmware error.
   @retval EFI_INVALID_PARAMETER Buffer is NULL or BufferSize is zero.
 **/
+
 EFI_STATUS
 EFIAPI
 GenerateRandomNumbers (
@@ -29,10 +30,6 @@ GenerateRandomNumbers (
   )
 {
   EFI_STATUS           Status;
-  FDT_CLIENT_PROTOCOL  *FdtClient;
-  INT32                Node;
-  CONST VOID           *Prop;
-  UINT32               PropSize;
   SOPHGO_TRNG_DRIVER   *TrngDriver;
   UINTN                Count;
   UINTN                RandSize;
@@ -55,83 +52,38 @@ GenerateRandomNumbers (
     return EFI_OUT_OF_RESOURCES;
   }
 
+  TrngDriver->RegBase = FixedPcdGet64 (PcdTrngBase);
+  EFI_CPU_ARCH_PROTOCOL *Cpu;
+
   Status = gBS->LocateProtocol (
-		  &gFdtClientProtocolGuid,
+		  &gEfiCpuArchProtocolGuid,
 		  NULL,
-		  (VOID **)&FdtClient
+		  (VOID **)&Cpu
 		  );
+
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
-      "%a: FDT client protocol not found!\n",
-      __func__
-      ));
-    goto ErrorGetBase;
+	    "%a: Cannot locate CPU arch service\n",
+	    __func__
+	  ));
+    goto Error;
   }
 
-  Status = FdtClient->FindCompatibleNode (
-		  FdtClient,
-		  "snps,designware-clp890",
-		  &Node);
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_VERBOSE,
-      "%a: TRNG device node not found! Use default base address!\n",
-      __func__
-      ));
-    goto ErrorGetBase;
-  }
+  Status = Cpu->SetMemoryAttributes (
+		  Cpu,
+		  TrngDriver->RegBase,
+		  SIZE_4KB,
+		  EFI_MEMORY_UC
+		  );
 
-  Status = FdtClient->GetNodeProperty (FdtClient, Node, "reg", &Prop, &PropSize);
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
-      "%a: GetNodeProperty () failed (Status == %r)\n",
-      __func__,
-      Status
-      ));
-
-    goto ErrorGetBase;
-  }
-
-  TrngDriver->RegBase = SwapBytes64 (((CONST UINT64 *)Prop)[0]);
-
-ErrorGetBase:
-  if (EFI_ERROR (Status)) {
-    TrngDriver->RegBase = FixedPcdGet64 (PcdTrngBase);
-    EFI_CPU_ARCH_PROTOCOL *Cpu;
-
-    Status = gBS->LocateProtocol (
-		    &gEfiCpuArchProtocolGuid,
-		    NULL,
-		    (VOID **)&Cpu
-		    );
-
-    if (EFI_ERROR (Status)) {
-      DEBUG ((
-        DEBUG_ERROR,
-	"%a: Cannot locate CPU arch service\n",
-	__func__
-	));
-      goto Error;
-    }
-
-    Status = Cpu->SetMemoryAttributes (
-		    Cpu,
-		    TrngDriver->RegBase,
-		    SIZE_4KB,
-		    EFI_MEMORY_UC
-		    );
-
-    if (EFI_ERROR (Status)) {
-      DEBUG ((
-        DEBUG_ERROR,
-	"%a: Failed to set memory attributes\n",
-	__func__
-	));
-
-      goto Error;
-    }
+	    "%a: Failed to set memory attributes\n",
+	    __func__
+	  ));
+    goto Error;
   }
 
   //

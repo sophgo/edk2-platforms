@@ -275,6 +275,9 @@ InitializeRamRegions (
     MemSize = MemSizeEfuse - ReservedMemSize;
   }
 
+  MemSize = FixedPcdGet64 (PcdEfiMemoryBottom) > FixedPcdGet64 (PcdMemoryBaseAddress) ?
+        (MemSize - (FixedPcdGet64 (PcdEfiMemoryBottom) - FixedPcdGet64 (PcdMemoryBaseAddress))) : MemSize;
+
   MemBaseAddress = FixedPcdGet64 (PcdEfiMemoryBottom) > FixedPcdGet64 (PcdMemoryBaseAddress) ?
         FixedPcdGet64 (PcdEfiMemoryBottom) : FixedPcdGet64 (PcdMemoryBaseAddress);
 

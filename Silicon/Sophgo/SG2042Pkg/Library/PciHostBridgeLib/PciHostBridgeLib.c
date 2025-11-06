@@ -18,11 +18,9 @@
 
 #include <Protocol/PciHostBridgeResourceAllocation.h>
 
-#ifndef MDEPKG_NDEBUG
 STATIC CHAR16 CONST * CONST mPciHostBridgeLibAcpiAddressSpaceTypeStr[] = {
   L"Mem", L"I/O", L"Bus"
 };
-#endif
 
 #pragma pack(1)
 typedef struct {

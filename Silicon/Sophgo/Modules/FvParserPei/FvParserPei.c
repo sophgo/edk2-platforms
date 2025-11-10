@@ -33,7 +33,17 @@ PeiFvInitialization (
   DEBUG ((DEBUG_INFO, "%a: Parser Compressed Firmware Volume\n", __func__));
 
   Status = DecompressFirstFv ();
-  GetNextVolume (1, &VolumeHandle);
+  if (EFI_ERROR(Status)) {
+      DEBUG ((DEBUG_ERROR, "%a (): Failed to Decompress DxeFv!\n", __func__));
+      return Status;
+  }
+
+  Status = GetNextVolume (1, &VolumeHandle);
+  if (EFI_ERROR(Status)) {
+      DEBUG ((DEBUG_ERROR, "%a (): Failed to Get DxeFv Handle!\n", __func__));
+      return Status;
+  }
+
   FvSize = ((EFI_FIRMWARE_VOLUME_HEADER *)VolumeHandle)->FvLength;
 
   //

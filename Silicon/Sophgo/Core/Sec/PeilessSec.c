@@ -12,9 +12,7 @@
 
 #include "PeilessSec.h"
 #include <Ppi/TemporaryRamSupport.h>
-// #include <sbi/sbi_types.h>
-//#include <Ppi/SecHobData.h>
-
+#include <Ppi/SecHobData.h>
 
 EFI_STATUS
 EFIAPI
@@ -29,23 +27,23 @@ STATIC EFI_PEI_TEMPORARY_RAM_SUPPORT_PPI mTemporaryRamSupportPpi = {
   TemporaryRamMigration
 };
 
-//EFI_STATUS
-//EFIAPI
-//GetSecHobData (
-//  IN CONST EFI_SEC_HOB_DATA_PPI *This,
-//  OUT EFI_HOB_GENERIC_HEADER    **HobList
-//  );
+EFI_STATUS
+EFIAPI
+GetSecHobData (
+  IN CONST EFI_SEC_HOB_DATA_PPI *This,
+  OUT EFI_HOB_GENERIC_HEADER    **HobList
+  );
 
-//STATIC EFI_SEC_HOB_DATA_PPI mSecHobDataPpi = {
-//  GetSecHobData
-//};
+STATIC EFI_SEC_HOB_DATA_PPI mSecHobDataPpi = {
+  GetSecHobData
+};
 
 EFI_PEI_PPI_DESCRIPTOR mPrivateDispatchTable[] = {
-  //{
-  //  EFI_PEI_PPI_DESCRIPTOR_PPI,
-  //  &gEfiSecHobDataPpiGuid,
-  //  &mSecHobDataPpi
-  //},
+  {
+    EFI_PEI_PPI_DESCRIPTOR_PPI,
+    &gEfiSecHobDataPpiGuid,
+    &mSecHobDataPpi
+  },
   {
     EFI_PEI_PPI_DESCRIPTOR_PPI | EFI_PEI_PPI_DESCRIPTOR_TERMINATE_LIST,
     &gEfiTemporaryRamSupportPpiGuid,
@@ -108,26 +106,27 @@ TemporaryRamMigration (
   return EFI_SUCCESS;
 }
 
-//EFI_STATUS
-//EFIAPI
-//GetSecHobData (
-//  IN CONST EFI_SEC_HOB_DATA_PPI *This,
-//  OUT EFI_HOB_GENERIC_HEADER    **HobList
-//  )
-//{
-//  VOID                  *HobStart;
-//  EFI_PEI_HOB_POINTERS  Hob;
+EFI_STATUS
+EFIAPI
+GetSecHobData (
+  IN CONST EFI_SEC_HOB_DATA_PPI *This,
+  OUT EFI_HOB_GENERIC_HEADER    **HobList
+  )
+{
+  VOID                  *HobStart;
+  EFI_PEI_HOB_POINTERS  Hob;
 
-//  HobStart = GetHobList ();
-//  Hob.Raw = (UINT8 *)HobStart;
-//  if (Hob.Header->HobType == EFI_HOB_TYPE_HANDOFF) {
-//    DEBUG ((DEBUG_INFO, "Find the base PHIT Hob\n"));
-//    Hob.Raw = GET_NEXT_HOB (Hob);
-//  }
-//  *HobList = Hob.Header;
+  HobStart = GetHobList ();
+  Hob.Raw = (UINT8 *)HobStart;
 
-//  return EFI_SUCCESS;
-//}
+  if (Hob.Header->HobType == EFI_HOB_TYPE_HANDOFF) {
+    DEBUG ((DEBUG_INFO, "Success to find the base PHIT Hob\n"));
+    Hob.Raw = GET_NEXT_HOB (Hob);
+  }
+  *HobList = Hob.Header;
+
+  return EFI_SUCCESS;
+}
 
 /**
   Initialize the memory and CPU, setting the boot mode, and platform
@@ -153,9 +152,6 @@ SecInitializePlatform (
   // Build SEC Performance Data Hob
   BuildGuidDataHob (&gEfiFirmwarePerformanceGuid, &Performance, sizeof (Performance));
   BuildFvHob (PcdGet32 (PcdRiscVDxeFvBase), PcdGet32 (PcdRiscVDxeFvSize));
-
-  // Status = PlatformPeimInitialization ();
-  // ASSERT_EFI_ERROR (Status);
 
   return EFI_SUCCESS;
 }
@@ -258,9 +254,9 @@ SecStartup (
 
   // Declare the PI/UEFI memory region
   HobList = HobConstructor (
-              (VOID *)UefiMemoryBase,
-              StackBase + StackSize - UefiMemoryBase,
-              (VOID *)UefiMemoryBase,
+              (VOID *)UefiMemoryBase + SEC_MEMORY_OFFSET,
+              StackBase - UefiMemoryBase - SEC_MEMORY_OFFSET,
+              (VOID *)UefiMemoryBase + SEC_MEMORY_OFFSET,
               (VOID *)StackBase // The top of the UEFI Memory is reserved for the stacks
               );
   PrePeiSetHobList (HobList);
@@ -280,7 +276,7 @@ SecStartup (
   SecCoreData.TemporaryRamBase = (VOID *)UefiMemoryBase;
   SecCoreData.TemporaryRamSize = (StackBase + StackSize - UefiMemoryBase);
   SecCoreData.PeiTemporaryRamBase = SecCoreData.TemporaryRamBase;
-  SecCoreData.PeiTemporaryRamSize = SecCoreData.TemporaryRamSize;
+  SecCoreData.PeiTemporaryRamSize = (SecCoreData.TemporaryRamSize - StackSize);
 
   PeiCore (&SecCoreData);
 

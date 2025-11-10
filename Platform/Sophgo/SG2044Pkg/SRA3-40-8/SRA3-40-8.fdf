@@ -293,7 +293,7 @@ READ_LOCK_STATUS   = TRUE
 FvNameGuid         = 02CBA7CB-BDE9-4934-A182-9043BE539261
 
 INF Silicon/Sophgo/Core/Sec/PeilessSec.inf
-INF Silicon/Sophgo/Core/Pei/PeiMain.inf
+INF MdeModulePkg/Core/Pei/PeiMain.inf
 
 #
 #Pei phase modules
@@ -303,7 +303,6 @@ INF Silicon/Sophgo/Modules/FvParserPei/FvParserPei.inf
 INF Silicon/Sophgo/Modules/MemoryInitPei/MemoryInitPei.inf
 INF Silicon/Sophgo/Modules/PlatformPei/PlatformInitPei.inf
 INF MdeModulePkg/Universal/PCD/Pei/Pcd.inf
-# INF MdeModulePkg/Universal/Variable/Pei/VariablePei.inf
 INF Silicon/Sophgo/Modules/VariablePei/VariablePei.inf
 INF Silicon/Sophgo/Modules/SpifmcPei/SpiFlashMasterController.inf
 INF Silicon/Sophgo/Modules/NorFlashPei/NorFlashPei.inf

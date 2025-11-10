@@ -774,7 +774,7 @@
   #
   # PEI Phase modules
   #
-  Silicon/Sophgo/Core/Pei/PeiMain.inf  {
+  MdeModulePkg/Core/Pei/PeiMain.inf  {
     <LibraryClasses>
     PeiServicesLib|MdePkg/Library/PeiServicesLib/PeiServicesLib.inf
   }

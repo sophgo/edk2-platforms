@@ -37,8 +37,6 @@ PublishPeiMemory (
   // TODO: This value should come from platform
   // configuration or the memory sizing code.
   //
-  // MemoryBase = 0x85000000UL;
-  // MemorySize = 0x4000000; // 64MB
   MemoryBase = PcdGet64 (PcdPeiPermanentMemBase);
   MemorySize = PcdGet64 (PcdPeiPermanentMemSize);
   DEBUG ((DEBUG_INFO, "%a: PEI MemoryBase is 0x%x and MemorySize is 0x%x\n", __func__, MemoryBase, MemorySize));

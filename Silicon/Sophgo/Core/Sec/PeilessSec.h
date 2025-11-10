@@ -35,7 +35,10 @@
 #include <Ppi/SecPerformance.h>
 #include <Library/TimerLib.h>
 
+#define SEC_MEMORY_OFFSET 0x1000
+
 typedef unsigned long		uintptr_t;
+
 /**
   Entry point to the C language phase of SEC. After the SEC assembly
   code has initialized some temporary memory and set up the stack,

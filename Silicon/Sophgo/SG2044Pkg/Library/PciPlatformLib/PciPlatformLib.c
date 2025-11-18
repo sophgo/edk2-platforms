@@ -564,7 +564,6 @@ InitPlatformFromPcd (
   PCIE_REG                          PcieRegEntry;
   PCIE_RANGES                       PcieRangeEntry;
 
-
   SetMem (SG2044PciRoot, sizeof (SG2044_PCIE_ROOT), 0);
 
   PcieRcConfig = (PCIE_HOST_BRIDGE_TABLE *)PcdGetPtr (PcdPcieHostBridgeTable);
@@ -581,7 +580,6 @@ InitPlatformFromPcd (
     CopyMem(&PcieRegEntry, PcieRcConfig->PcieReg[Segment], sizeof(PcieRegEntry));
     CopyMem(&PcieSupportEntry, PcieRcConfig->PcieSupportFlag[Segment], sizeof(PcieSupportEntry));
     CopyMem(&PcieBusEntry, PcieRcConfig->RootBusConfig[Segment], sizeof(PcieBusEntry));
-    CopyMem(&PcieRangeEntry, PcieRcConfig->PcieRanges[Segment], sizeof(PcieRangeEntry));
 
     DEBUG ((DEBUG_VERBOSE, "!!!!!!!!!!!!!!!!!!!!!!!!!!PCIe%d:\n"
           "DOMAIN                                [%08x]\n"
@@ -614,37 +612,6 @@ InitPlatformFromPcd (
           PcieRegEntry.AtuBase, PcieRegEntry.AtuBase + PcieRegEntry.AtuSize,
           PcieRegEntry.CfgBase, PcieRegEntry.CfgBase + PcieRegEntry.CfgSize));
 
-    DEBUG ((DEBUG_VERBOSE,
-          "Pmem32PciRange                        [%016lx - %016lx]\n"
-          "Pmem32CpuRange                        [%016lx - %016lx]\n",
-          PcieRangeEntry.Pmem32PciAddr, PcieRangeEntry.Pmem32PciAddr + PcieRangeEntry.Pmem32Size - 1,
-          PcieRangeEntry.Pmem32CpuAddr, PcieRangeEntry.Pmem32CpuAddr + PcieRangeEntry.Pmem32Size - 1));
-
-    DEBUG ((DEBUG_VERBOSE,
-          "Mem32PciRange                         [%016lx - %016lx]\n"
-          "Mem32CpuRange                         [%016lx - %016lx]\n",
-          PcieRangeEntry.Mem32PciAddr, PcieRangeEntry.Mem32PciAddr + PcieRangeEntry.Mem32Size - 1,
-          PcieRangeEntry.Mem32CpuAddr, PcieRangeEntry.Mem32CpuAddr + PcieRangeEntry.Mem32Size - 1));
-
-    DEBUG ((DEBUG_VERBOSE,
-          "Pmem64PciRange                        [%016lx - %016lx]\n"
-          "Pmem64CpuRange                        [%016lx - %016lx]\n",
-          PcieRangeEntry.Pmem64PciAddr, PcieRangeEntry.Pmem64PciAddr + PcieRangeEntry.Pmem64Size - 1,
-          PcieRangeEntry.Pmem64CpuAddr, PcieRangeEntry.Pmem64CpuAddr + PcieRangeEntry.Pmem64Size - 1));
-
-    DEBUG ((DEBUG_VERBOSE,
-          "Mem64PciRange                         [%016lx - %016lx]\n"
-          "Mem64CpuRange                         [%016lx - %016lx]\n",
-          PcieRangeEntry.Mem64PciAddr, PcieRangeEntry.Mem64PciAddr + PcieRangeEntry.Mem64Size - 1,
-          PcieRangeEntry.Mem64CpuAddr, PcieRangeEntry.Mem64CpuAddr + PcieRangeEntry.Mem64Size - 1));
-
-    DEBUG ((DEBUG_VERBOSE,
-          "IoPciRange                            [%016lx - %016lx]\n"
-          "IoCpuRange                            [%016lx - %016lx]\n",
-          PcieRangeEntry.IoPciAddr, PcieRangeEntry.IoPciAddr + PcieRangeEntry.IoSize - 1,
-          PcieRangeEntry.IoCpuAddr, PcieRangeEntry.IoCpuAddr + PcieRangeEntry.IoSize - 1));
-
-
     //Init DwPcie parameters
     DwPcie->DbiBase = PcieRegEntry.DbiBase;
     DwPcie->DbiSize = PcieRegEntry.DbiSize;
@@ -673,21 +640,61 @@ InitPlatformFromPcd (
     PciRoot->Bus.Base                  = PcieBusEntry.RootBusBase;
     PciRoot->Bus.Limit                 = PcieBusEntry.RootBusLimit;
     PciRoot->Bus.Translation           = PcieBusEntry.RootBusTranslation;
-    PciRoot->PMem.Base                 = PcieRangeEntry.Pmem32PciAddr;
-    PciRoot->PMem.Limit                = PcieRangeEntry.Pmem32PciAddr + PcieRangeEntry.Pmem32Size - 1;
-    PciRoot->PMem.Translation          = PcieRangeEntry.Pmem32PciAddr - PcieRangeEntry.Pmem32CpuAddr;
-    PciRoot->Mem.Base                  = PcieRangeEntry.Mem32PciAddr;
-    PciRoot->Mem.Limit                 = PcieRangeEntry.Mem32PciAddr + PcieRangeEntry.Mem32Size - 1;
-    PciRoot->Mem.Translation           = PcieRangeEntry.Mem32PciAddr - PcieRangeEntry.Mem32CpuAddr;
-    PciRoot->PMemAbove4G.Base          = PcieRangeEntry.Pmem64PciAddr;
-    PciRoot->PMemAbove4G.Limit         = PcieRangeEntry.Pmem64PciAddr + PcieRangeEntry.Pmem64Size - 1;
-    PciRoot->PMemAbove4G.Translation   = PcieRangeEntry.Pmem64PciAddr - PcieRangeEntry.Pmem64CpuAddr;
-    PciRoot->MemAbove4G.Base           = PcieRangeEntry.Mem64PciAddr;
-    PciRoot->MemAbove4G.Limit          = PcieRangeEntry.Mem64PciAddr + PcieRangeEntry.Mem64Size - 1;
-    PciRoot->MemAbove4G.Translation    = PcieRangeEntry.Mem64PciAddr - PcieRangeEntry.Mem64CpuAddr;
-    PciRoot->Io.Base                   = PcieRangeEntry.IoPciAddr;
-    PciRoot->Io.Limit                  = PcieRangeEntry.IoPciAddr + PcieRangeEntry.IoSize - 1;
-    PciRoot->Io.Translation            = PcieRangeEntry.IoPciAddr - PcieRangeEntry.IoCpuAddr;
+    if (PcieSupportEntry.Pmem32Support) {
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem32Ranges[Segment], sizeof(PCIE_RANGES));
+      PciRoot->PMem.Base                 = PcieRangeEntry.PciAddr;
+      PciRoot->PMem.Limit                = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
+      PciRoot->PMem.Translation          = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+      DEBUG ((DEBUG_VERBOSE,
+          "Pmem32PciRange                        [%016lx - %016lx]\n"
+          "Pmem32CpuRange                        [%016lx - %016lx]\n",
+          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
+          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    }
+    if (PcieSupportEntry.Mem32Support) {
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem32Ranges[Segment], sizeof(PCIE_RANGES));
+      PciRoot->Mem.Base                  = PcieRangeEntry.PciAddr;
+      PciRoot->Mem.Limit                 = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
+      PciRoot->Mem.Translation           = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+      DEBUG ((DEBUG_VERBOSE,
+          "Mem32PciRange                         [%016lx - %016lx]\n"
+          "Mem32CpuRange                         [%016lx - %016lx]\n",
+          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
+          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    }
+    if (PcieSupportEntry.Pmem64Support) {
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem64Ranges[Segment], sizeof(PCIE_RANGES));
+      PciRoot->PMemAbove4G.Base          = PcieRangeEntry.PciAddr;
+      PciRoot->PMemAbove4G.Limit         = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
+      PciRoot->PMemAbove4G.Translation   = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+      DEBUG ((DEBUG_VERBOSE,
+          "Pmem64PciRange                         [%016lx - %016lx]\n"
+          "Pmem64CpuRange                         [%016lx - %016lx]\n",
+          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
+          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    }
+    if (PcieSupportEntry.Mem64Support) {
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem64Ranges[Segment], sizeof(PCIE_RANGES));
+      PciRoot->MemAbove4G.Base           = PcieRangeEntry.PciAddr;
+      PciRoot->MemAbove4G.Limit          = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
+      PciRoot->MemAbove4G.Translation    = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+      DEBUG ((DEBUG_VERBOSE,
+          "Mem64PciRange                         [%016lx - %016lx]\n"
+          "Mem64CpuRange                         [%016lx - %016lx]\n",
+          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
+          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    }
+    if (PcieSupportEntry.IoSupport) {
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieIoRanges[Segment], sizeof(PCIE_RANGES));
+      PciRoot->Io.Base                   = PcieRangeEntry.PciAddr;
+      PciRoot->Io.Limit                  = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
+      PciRoot->Io.Translation            = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+      DEBUG ((DEBUG_VERBOSE,
+          "IoPciRange                         [%016lx - %016lx]\n"
+          "IoCpuRange                         [%016lx - %016lx]\n",
+          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
+          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    }
   }
   mSG2044PciRoot.Count = PcieRcConfig->NumOfControllers;
   return mSG2044PciRoot.Count;

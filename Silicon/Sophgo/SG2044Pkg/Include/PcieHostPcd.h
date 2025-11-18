@@ -11,28 +11,34 @@
 #define PCIE_RANGES_IO_FLAG         (0x01000000)
 
 #pragma pack(push, 1)
+// typedef struct {
+
+//   UINT64   Pmem32CpuAddr;
+//   UINT64   Pmem32PciAddr;
+//   UINT64   Pmem32Size;
+
+//   UINT64   Mem32CpuAddr;
+//   UINT64   Mem32PciAddr;
+//   UINT64   Mem32Size;
+
+//   UINT64   Pmem64CpuAddr;
+//   UINT64   Pmem64PciAddr;
+//   UINT64   Pmem64Size;
+
+//   UINT64   Mem64CpuAddr;
+//   UINT64   Mem64PciAddr;
+//   UINT64   Mem64Size;
+
+//   UINT64   IoCpuAddr;
+//   UINT64   IoPciAddr;
+//   UINT64   IoSize;
+
+// }PCIE_RANGES;
+
 typedef struct {
-
-  UINT64   Pmem32CpuAddr;
-  UINT64   Pmem32PciAddr;
-  UINT64   Pmem32Size;
-
-  UINT64   Mem32CpuAddr;
-  UINT64   Mem32PciAddr;
-  UINT64   Mem32Size;
-
-  UINT64   Pmem64CpuAddr;
-  UINT64   Pmem64PciAddr;
-  UINT64   Pmem64Size;
-
-  UINT64   Mem64CpuAddr;
-  UINT64   Mem64PciAddr;
-  UINT64   Mem64Size;
-
-  UINT64   IoCpuAddr;
-  UINT64   IoPciAddr;
-  UINT64   IoSize;
-
+  UINT64   CpuAddr;
+  UINT64   PciAddr;
+  UINT64   RangeSize;
 }PCIE_RANGES;
 
 typedef struct {
@@ -66,7 +72,11 @@ typedef struct {
   UINT8  PcieDomain[SG2044_PCIE_MAX_ROOT][sizeof(UINT32)];
   UINT8  RootBusConfig[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_BUS_CONFIG)];
   UINT8  PcieReg[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_REG)];
-  UINT8  PcieRanges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
+  UINT8  PciePmem32Ranges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
+  UINT8  PcieMem32Ranges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
+  UINT8  PciePmem64Ranges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
+  UINT8  PcieMem64Ranges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
+  UINT8  PcieIoRanges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
 }PCIE_HOST_BRIDGE_TABLE;
 #pragma pack(pop)
 

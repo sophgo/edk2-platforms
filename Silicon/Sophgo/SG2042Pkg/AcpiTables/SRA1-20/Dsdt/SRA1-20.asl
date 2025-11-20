@@ -14,6 +14,7 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2042    ",
                  EFI_ACPI_RISCV_OEM_REVISION) {
   include ("Cpu.asl")
   include ("CommonDevices.asl")
+  include ("PowerButton.asl")
   include ("Uart.asl")
   include ("Mmc.asl")
   include ("Intc.asl")

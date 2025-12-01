@@ -324,6 +324,10 @@ MangoPcieHostBridgeLibConstructor (
   //
   NoBarNbits = 0x30;
 
+  // workaround: ensure the PCIe switch is powered on and fully initialized before enumeration
+  // 8s delay to allow the switch to become ready, at least 6s.
+  gBS->Stall (8000000);
+
   //
   // Get the PCIe RC count
   //

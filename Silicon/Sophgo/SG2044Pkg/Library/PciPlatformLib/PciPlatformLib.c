@@ -23,6 +23,8 @@
 #include <IndustryStandard/Pci22.h>
 #include <Include/PcieHostPcd.h>
 
+#define NO_MAPPING ((UINT64)~0ULL)
+
 /* designware controller specific variables */
 #define DW_PCIE_ATU_LOWER_BASE      0x0008
 #define DW_PCIE_ATU_UPPER_BASE      0x000c
@@ -52,14 +54,42 @@
 #define DW_PCIE_MISC_CONTROL_1                  0x8bc
 #define DW_PCIE_DBI_RO_WR_EN                    BIT0
 
+//PCIE CTRL REG
+#define PCIE_CTRL_REG_OFFSET                                0x0c00
+#define PCIE_CTRL_SFT_RST_SIG_REG                           0x050
+#define PCIE_CTRL_REMAPPING_EN_REG                          0x060
+#define PCIE_CTRL_HNI_UP_START_ADDR_REG                     0x064
+#define PCIE_CTRL_HNI_UP_END_ADDR_REG                       0x068
+#define PCIE_CTRL_HNI_DW_ADDR_REG                           0x06c
+#define PCIE_CTRL_SN_UP_START_ADDR_REG                      0x070
+#define PCIE_CTRL_SN_UP_END_ADDR_REG                        0x074
+#define PCIE_CTRL_SN_DW_ADDR_REG                            0x078
+#define PCIE_CTRL_AXI_MSI_GEN_CTRL_REG                      0x07c
+#define PCIE_CTRL_AXI_MSI_GEN_LOWER_ADDR_REG                0x088
+#define PCIE_CTRL_AXI_MSI_GEN_UPPER_ADDR_REG                0x08c
+#define PCIE_CTRL_AXI_MSI_GEN_USER_DATA_REG                 0x090
+#define PCIE_CTRL_AXI_MSI_GEN_MASK_IRQ_REG                  0x094
+#define PCIE_CTRL_IRQ_EN_REG                                0x0a0
+
+
 typedef struct {
   UINTN   DbiBase;
   UINTN   DbiSize;
+  UINTN   CtrBase;
+  UINTN   CtrSize;
   UINTN   AtuBase;
   UINTN   AtuSize;
   UINTN   CfgBase;
   UINTN   CfgSize;
 } DW_PCIE;
+
+
+typedef struct {
+  UINT32   StartAddr32Bit;
+  UINT32   EndAddr32Bit;
+  UINT64   StartAddr64Bit;
+  UINT64   EndAddr64Bit;
+} SLAVE_MAP_ADDR_PCIE;
 
 /* edk2 related */
 #pragma pack(1)
@@ -83,6 +113,7 @@ typedef struct {
   PCI_ROOT_BRIDGE                   PciRoot[SG2044_PCIE_MAX_ROOT];
   DW_PCIE                           DwPcie[SG2044_PCIE_MAX_ROOT];
   EFI_PCI_ROOT_BRIDGE_DEVICE_PATH   PciDevicePath[SG2044_PCIE_MAX_ROOT];
+  SLAVE_MAP_ADDR_PCIE               SlaveMapAddrPcie[SG2044_PCIE_MAX_ROOT];
   UINTN                             Count;
 } SG2044_PCIE_ROOT;
 
@@ -175,6 +206,17 @@ DwPcieDbiRead32 (
     )
 {
   return MmioRead32 (Pcie->DbiBase + Offset);
+}
+
+STATIC
+VOID
+DwPcieCtrWrite32 (
+    IN  DW_PCIE *Pcie,
+    IN  UINT32 Offset,
+    IN  UINT32 Value
+    )
+{
+  MmioWrite32 (Pcie->CtrBase + Offset, Value);
 }
 
 STATIC
@@ -377,6 +419,26 @@ DwPcieEnableMaster (
   DwPcieDbiWrite32(Pcie, DW_PCIE_MISC_CONTROL_1, Value);
 }
 
+VOID
+DwPcieSetSlaveMap (
+    IN  DW_PCIE           *Pcie,
+    IN  SLAVE_MAP_ADDR_PCIE *SlaveMapAddrPcie
+    )
+{
+  //64 bit start address
+  DwPcieCtrWrite32 (Pcie, PCIE_CTRL_REG_OFFSET + PCIE_CTRL_HNI_UP_START_ADDR_REG, (UINT32)((SlaveMapAddrPcie->StartAddr64Bit >> 16) & 0xFFFFFFFF));
+  DwPcieCtrWrite32 (Pcie, PCIE_CTRL_REG_OFFSET + PCIE_CTRL_HNI_UP_END_ADDR_REG, (UINT32)((SlaveMapAddrPcie->EndAddr64Bit >> 16) & 0xFFFFFFFF));
+
+  //32 bit end address
+  DwPcieCtrWrite32 (Pcie, PCIE_CTRL_REG_OFFSET + PCIE_CTRL_HNI_DW_ADDR_REG, (UINT32)((((SlaveMapAddrPcie->EndAddr32Bit >> 16) & 0xFFFF) << 16)
+        | ((SlaveMapAddrPcie->StartAddr32Bit >> 16) & 0xFFFF)));
+
+  DEBUG ((DEBUG_INFO, "Set Rc Ctr Reg [0x%lx], Slave Map: 64bit [0x%lx - 0x%lx], 32bit [0x%lx - 0x%lx]\n",
+        Pcie->CtrBase + PCIE_CTRL_REG_OFFSET,
+        SlaveMapAddrPcie->StartAddr64Bit, SlaveMapAddrPcie->EndAddr64Bit,
+        SlaveMapAddrPcie->StartAddr32Bit, SlaveMapAddrPcie->EndAddr32Bit));
+
+}
 typedef struct {
   UINT32    Flag;
   UINT64    PciAddr;
@@ -401,155 +463,7 @@ typedef struct {
 #define FDT_PCI_MEM_PREFETCH_MASK     (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
 #define FDT_PCI_MEM_PREFETCH          (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
 
-// STATIC
-// VOID
-// InitSlaveMappingFromFdt (
-//     IN  FDT_CLIENT_PROTOCOL *FdtClient,
-//     OUT PCI_ROOT_BRIDGE     *PciRoot,
-//     IN  INT32               Node
-//     )
-// {
-//   CONST VOID                *Prop;
-//   UINT32                    PropSize;
-//   EFI_STATUS                Status;
-//   FDT_PCI_RANGE             Range[5];
-//   UINT32                    RangeIndex;
-//   PCI_ROOT_BRIDGE_APERTURE  *Aperture;
 
-//   /* parse bus range */
-//   Status = FdtClient->GetNodeProperty (FdtClient, Node, "bus-range", &Prop, &PropSize);
-//   if (Status != EFI_SUCCESS)
-//     DEBUG ((DEBUG_WARN, "Cannot found ranges from dt, assume 0-255\n"));
-
-//   /* bus number always 0 for root port */
-//   PciRoot->Bus.Base         = 0;
-//   PciRoot->Bus.Limit        = 255;
-//   PciRoot->Bus.Translation  = 0;
-
-//   Status = FdtClient->GetNodeProperty (FdtClient, Node, "ranges", &Prop, &PropSize);
-
-//   if (Status != EFI_SUCCESS) {
-//     DEBUG ((DEBUG_ERROR, "Cannot found ranges from dt\n"));
-//     return;
-//   }
-
-//   if (PropSize > ARRAY_SIZE (Range) * FDT_PCI_RANGE_SIZE) {
-//     DEBUG ((DEBUG_WARN, "Too many range in dt, maybe a wrong config\n"));
-//     DEBUG ((DEBUG_WARN, "Only range[0] - range[%d] effect on\n", ARRAY_SIZE (Range)));
-//     PropSize = sizeof (Range);
-//   }
-
-//   /* get flag */
-//   for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex, Prop += FDT_PCI_RANGE_SIZE) {
-//     Range[RangeIndex].Flag = SwapBytes32 (*(UINT32 *)Prop);
-//     /* platform must support unaligned access */
-//     Range[RangeIndex].PciAddr =
-//       SwapBytes64 (*(UINT64 *)(Prop + 4));
-//     Range[RangeIndex].CpuAddr =
-//       SwapBytes64 (*(UINT64 *)(Prop + FDT_PCI_ADDRESS_CELLS * 4));
-//     Range[RangeIndex].Size =
-//       SwapBytes64 (*(UINT64 *)(Prop +  (FDT_PCI_ADDRESS_CELLS + FDT_PCI_PARENT_ADDRESS_CELLS) * 4));
-//   }
-
-//   for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex) {
-//     switch (Range[RangeIndex].Flag & (FDT_PCI_MEM_TYPE_MASK | FDT_PCI_MEM_PREFETCH_MASK)) {
-//       case FDT_PCI_MEM_TYPE_IO:
-//         Aperture = &PciRoot->Io;
-//         break;
-//       case FDT_PCI_MEM_TYPE_MEM32:
-//         Aperture = &PciRoot->Mem;
-//         break;
-//       case FDT_PCI_MEM_TYPE_MEM32 | FDT_PCI_MEM_PREFETCH:
-//         Aperture = &PciRoot->PMem;
-//         break;
-//       case FDT_PCI_MEM_TYPE_MEM64:
-//         Aperture = &PciRoot->MemAbove4G;
-//         break;
-//       case FDT_PCI_MEM_TYPE_MEM64 | FDT_PCI_MEM_PREFETCH:
-//         Aperture = &PciRoot->PMemAbove4G;
-//         break;
-//       default:
-//         DEBUG ((DEBUG_ERROR, "Undefined PCI memory type\n"));
-//         continue;
-//     }
-//     Aperture->Base           = Range[RangeIndex].PciAddr;
-//     Aperture->Limit          = Range[RangeIndex].PciAddr + Range[RangeIndex].Size - 1;
-//     Aperture->Translation    = Range[RangeIndex].PciAddr - Range[RangeIndex].CpuAddr;
-//   }
-// }
-
-// STATIC
-// RETURN_STATUS
-// FdtGetResourceByName (
-//     IN  FDT_CLIENT_PROTOCOL *FdtClient,
-//     IN  INT32               Node,
-//     IN  CONST CHAR8         *ResourceName,
-//     OUT UINTN               *Base,
-//     OUT UINTN               *Size
-//     )
-// {
-//   CONST CHAR8  *NameList;
-//   UINT32      NameIndex;
-//   UINT32      NameListSize;
-//   UINT32      ResourceIndex;
-//   CONST VOID  *ResourceProp;
-//   UINT32      ResourcePropSize;
-//   UINT32      ResourceOffset;
-//   UINT32      ResourcePropElementSize;
-//   EFI_STATUS  Status;
-
-//   Status = FdtClient->GetNodeProperty(FdtClient, Node, "reg-names",
-//       (CONST VOID **)&NameList, &NameListSize);
-
-//   if (Status != EFI_SUCCESS) {
-//     DEBUG ((DEBUG_ERROR, "No reg-names property\n"));
-//     return EFI_NOT_FOUND;
-//   }
-
-//   for (NameIndex = 0, ResourceIndex = 0; NameIndex < NameListSize; ++NameIndex, ++ResourceIndex) {
-//     if (AsciiStrCmp(NameList + NameIndex, ResourceName) != 0) {
-//       /* to next string */
-//       for (; NameIndex < NameListSize; ++NameIndex) {
-//         if (NameList[NameIndex] == 0)
-//           break;
-//       }
-//     } else {
-//       break;
-//     }
-//   }
-
-//   /* not found */
-//   if (NameIndex >= NameListSize) {
-//     DEBUG ((DEBUG_ERROR, "Resource %a not found\n", ResourceName));
-//     return EFI_NOT_FOUND;
-//   }
-
-//   /* found */
-//   Status = FdtClient->GetNodeProperty(FdtClient, Node, "reg", &ResourceProp, &ResourcePropSize);
-
-//   if (Status != EFI_SUCCESS) {
-//     DEBUG ((DEBUG_ERROR, "No reg property\n"));
-//     return EFI_NOT_FOUND;
-//   }
-
-//   ResourcePropElementSize = (FDT_PCI_PARENT_ADDRESS_CELLS + FDT_PCI_PARENT_SIZE_CELLS) * 4;
-//   ResourceOffset = ResourcePropElementSize * ResourceIndex;
-
-//   if (ResourceOffset + ResourcePropElementSize > ResourcePropSize) {
-//     DEBUG ((DEBUG_ERROR, "Not enough reg properties\n"));
-//     return EFI_OUT_OF_RESOURCES;
-//   }
-
-//   if (Base != NULL)
-//     *Base = SwapBytes64(*(UINT64 *)(ResourceProp + ResourceOffset));
-
-//   if (Size != NULL)
-//     *Size = SwapBytes64(*(UINT64 *)(ResourceProp + ResourceOffset + FDT_PCI_PARENT_ADDRESS_CELLS * 4));
-
-//   return EFI_SUCCESS;
-// }
-
-#if 1
 UINT32
 InitPlatformFromPcd (
     OUT   SG2044_PCIE_ROOT *SG2044PciRoot
@@ -559,6 +473,7 @@ InitPlatformFromPcd (
   PCIE_HOST_BRIDGE_TABLE            *PcieRcConfig;
   PCI_ROOT_BRIDGE                   *PciRoot;
   DW_PCIE                           *DwPcie;
+  SLAVE_MAP_ADDR_PCIE               *SlaveMapAddrPcie;
   PCIE_BUS_CONFIG                   PcieBusEntry;
   PCIE_SUPPORT_FLAG                 PcieSupportEntry;
   PCIE_REG                          PcieRegEntry;
@@ -576,58 +491,27 @@ InitPlatformFromPcd (
   for (Segment = 0; Segment < PcieRcConfig->NumOfControllers; Segment++) {
     PciRoot = &SG2044PciRoot->PciRoot[Segment];
     DwPcie = &SG2044PciRoot->DwPcie[Segment];
+    SlaveMapAddrPcie = &SG2044PciRoot->SlaveMapAddrPcie[Segment];
+
+    CopyMem(&SlaveMapAddrPcie->StartAddr32Bit, PcieRcConfig->Pcie32BitSpaceStartAddr[Segment], sizeof(SlaveMapAddrPcie->StartAddr32Bit));
+    CopyMem(&SlaveMapAddrPcie->EndAddr32Bit, PcieRcConfig->Pcie32BitSpaceEndAddr[Segment], sizeof(SlaveMapAddrPcie->EndAddr32Bit));
+    CopyMem(&SlaveMapAddrPcie->StartAddr64Bit, PcieRcConfig->Pcie64BitSpaceStartAddr[Segment], sizeof(SlaveMapAddrPcie->StartAddr64Bit));
+    CopyMem(&SlaveMapAddrPcie->EndAddr64Bit, PcieRcConfig->Pcie64BitSpaceEndAddr[Segment], sizeof(SlaveMapAddrPcie->EndAddr64Bit));
 
     CopyMem(&PcieRegEntry, PcieRcConfig->PcieReg[Segment], sizeof(PcieRegEntry));
     CopyMem(&PcieSupportEntry, PcieRcConfig->PcieSupportFlag[Segment], sizeof(PcieSupportEntry));
     CopyMem(&PcieBusEntry, PcieRcConfig->RootBusConfig[Segment], sizeof(PcieBusEntry));
 
-    DEBUG ((DEBUG_VERBOSE, "!!!!!!!!!!!!!!!!!!!!!!!!!!PCIe%d:\n"
-          "DOMAIN                                [%08x]\n"
-          "BUSBASE                               [%016lx]\n"
-          "BUSLIMIT                              [%016lx]\n"
-          "BUSTRANSL                             [%016lx]\n",
-          Segment,
-          *(UINT32 *)PcieRcConfig->PcieDomain[Segment],
-          PcieBusEntry.RootBusBase,
-          PcieBusEntry.RootBusLimit,
-          PcieBusEntry.RootBusTranslation));
-
-    DEBUG ((DEBUG_VERBOSE,
-          "Mem32Support                          [%u]\n"
-          "Pmem32Support                         [%u]\n"
-          "Mem64Support                          [%u]\n"
-          "Pmem64Support                         [%u]\n"
-          "IoSupport                             [%u]\n",
-          (UINT32)(PcieSupportEntry.Mem32Support ? 1 : 0),
-          (UINT32)(PcieSupportEntry.Pmem32Support ? 1 : 0),
-          (UINT32)(PcieSupportEntry.Mem64Support ? 1 : 0),
-          (UINT32)(PcieSupportEntry.Pmem64Support ? 1 : 0),
-          (UINT32)(PcieSupportEntry.IoSupport ? 1 : 0)));
-
-    DEBUG ((DEBUG_VERBOSE,
-          "DBI                                   [%016lx - %016lx]\n"
-          "ATU                                   [%016lx - %016lx]\n"
-          "Config                                [%016lx - %016lx]\n",
-          PcieRegEntry.DbiBase, PcieRegEntry.DbiBase + PcieRegEntry.DbiSize,
-          PcieRegEntry.AtuBase, PcieRegEntry.AtuBase + PcieRegEntry.AtuSize,
-          PcieRegEntry.CfgBase, PcieRegEntry.CfgBase + PcieRegEntry.CfgSize));
-
     //Init DwPcie parameters
     DwPcie->DbiBase = PcieRegEntry.DbiBase;
     DwPcie->DbiSize = PcieRegEntry.DbiSize;
+    DwPcie->CtrBase = PcieRegEntry.CtrBase;
+    DwPcie->CtrSize = PcieRegEntry.CtrSize;
     DwPcie->AtuBase = PcieRegEntry.AtuBase;
     DwPcie->AtuSize = PcieRegEntry.AtuSize;
     DwPcie->CfgBase = PcieRegEntry.CfgBase;
     DwPcie->CfgSize = PcieRegEntry.CfgSize;
 
-    DEBUG ((DEBUG_INFO, "PCIe%d:\n"
-          "DBI    [%016lx - %016lx]\n"
-          "ATU    [%016lx - %016lx]\n"
-          "Config [%016lx - %016lx]\n",
-        Segment,
-        DwPcie->DbiBase, DwPcie->DbiBase + DwPcie->DbiSize,
-        DwPcie->AtuBase, DwPcie->AtuBase + DwPcie->AtuSize,
-        DwPcie->CfgBase, DwPcie->CfgBase + DwPcie->CfgSize));
     //Init PciRoot parameters
     PciRoot->Supports                  = 0;
     PciRoot->Attributes                = 0;
@@ -636,7 +520,8 @@ InitPlatformFromPcd (
     PciRoot->ResourceAssigned          = FALSE;
     PciRoot->AllocationAttributes      = EFI_PCI_HOST_BRIDGE_MEM64_DECODE;
     PciRoot->Segment                   = /* PcieRcConfig->PcieDomain[Segment] */ Segment;
-      //slave mapping
+
+    //slave mapping
     PciRoot->Bus.Base                  = PcieBusEntry.RootBusBase;
     PciRoot->Bus.Limit                 = PcieBusEntry.RootBusLimit;
     PciRoot->Bus.Translation           = PcieBusEntry.RootBusTranslation;
@@ -650,6 +535,9 @@ InitPlatformFromPcd (
           "Pmem32CpuRange                        [%016lx - %016lx]\n",
           PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
           PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    } else {
+      PciRoot->PMem.Base                 = NO_MAPPING;
+      PciRoot->PMem.Limit                = 0;
     }
     if (PcieSupportEntry.Mem32Support) {
       CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem32Ranges[Segment], sizeof(PCIE_RANGES));
@@ -661,6 +549,9 @@ InitPlatformFromPcd (
           "Mem32CpuRange                         [%016lx - %016lx]\n",
           PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
           PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    } else {
+      PciRoot->Mem.Base                  = NO_MAPPING;
+      PciRoot->Mem.Limit                 = 0;
     }
     if (PcieSupportEntry.Pmem64Support) {
       CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem64Ranges[Segment], sizeof(PCIE_RANGES));
@@ -672,6 +563,9 @@ InitPlatformFromPcd (
           "Pmem64CpuRange                         [%016lx - %016lx]\n",
           PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
           PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    } else {
+      PciRoot->PMemAbove4G.Base          = NO_MAPPING;
+      PciRoot->PMemAbove4G.Limit         = 0;
     }
     if (PcieSupportEntry.Mem64Support) {
       CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem64Ranges[Segment], sizeof(PCIE_RANGES));
@@ -683,6 +577,9 @@ InitPlatformFromPcd (
           "Mem64CpuRange                         [%016lx - %016lx]\n",
           PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
           PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    } else {
+      PciRoot->MemAbove4G.Base           = NO_MAPPING;
+      PciRoot->MemAbove4G.Limit          = 0;
     }
     if (PcieSupportEntry.IoSupport) {
       CopyMem(&PcieRangeEntry, PcieRcConfig->PcieIoRanges[Segment], sizeof(PCIE_RANGES));
@@ -694,12 +591,15 @@ InitPlatformFromPcd (
           "IoCpuRange                         [%016lx - %016lx]\n",
           PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
           PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+    } else {
+      PciRoot->Io.Base                   = NO_MAPPING;
+      PciRoot->Io.Limit                  = 0;
     }
   }
   mSG2044PciRoot.Count = PcieRcConfig->NumOfControllers;
   return mSG2044PciRoot.Count;
 }
-#endif
+
 
 VOID
 SetupPciRoot (
@@ -801,6 +701,19 @@ SetPciMemoryAttribute (
 
   Status = Cpu->SetMemoryAttributes (
       Cpu,
+      DwPcie->CtrBase,
+      DwPcie->CtrSize,
+      EFI_MEMORY_UC
+      );
+
+  if (EFI_ERROR(Status)) {
+    DEBUG ((DEBUG_ERROR, "Cannot add designware PCIe CTR space %016lx - %016lx\n",
+          DwPcie->CtrBase, DwPcie->CtrBase + DwPcie->CtrSize));
+    return EFI_INVALID_PARAMETER;
+  }
+
+  Status = Cpu->SetMemoryAttributes (
+      Cpu,
       DwPcie->AtuBase,
       DwPcie->AtuSize,
       EFI_MEMORY_UC
@@ -885,6 +798,9 @@ PciPlatformInit (
   for (PciRootIter = 0; PciRootIter < PciRootCount; ++PciRootIter) {
 
     SetPciMemoryAttribute (&mSG2044PciRoot.PciRoot[PciRootIter], &mSG2044PciRoot.DwPcie[PciRootIter]);
+
+    //pcie slave map (from fsbl)
+    DwPcieSetSlaveMap (&mSG2044PciRoot.DwPcie[PciRootIter], &mSG2044PciRoot.SlaveMapAddrPcie[PciRootIter]);
 
     SetupPciRoot (&mSG2044PciRoot.PciRoot[PciRootIter], &mSG2044PciRoot.DwPcie[PciRootIter],
         SystemMemoryStart, SystemMemorySize);

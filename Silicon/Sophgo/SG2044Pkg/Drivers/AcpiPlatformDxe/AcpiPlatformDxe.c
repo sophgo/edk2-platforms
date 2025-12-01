@@ -591,6 +591,7 @@ AcpiPatchPCIeFromPcd (
   }
 
   for (Index = 0; Index < PcieRcNum; Index++) {
+    SetMem (&PciRoot, sizeof (PCI_INFO), 0);
     GetPciRootInfoFromPcd(PcieRcConfig, Index, &PciRoot);
     ShowPciRoot(&PciRoot);
     AsciiSPrint (NodePath, sizeof (NodePath), "\\_SB.PCI%1X", PciRoot.Segment);

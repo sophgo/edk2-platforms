@@ -27,7 +27,7 @@ Scope(_SB)
     }
 
     Name (_CRS, ResourceTemplate () {
-     Interrupt (ResourceConsumer, Level, ActiveHigh, Exclusive,,,) { 96 }
+     Interrupt (ResourceConsumer, Level, ActiveHigh, Shared,,,) { 96 }
     })
 
     // SWPORTA_DDR
@@ -85,9 +85,9 @@ Scope(_SB)
       And (Local0, 0xFFFFFFFB, Local0)
       Store (Local0, SWPO)
 
-      // Set low active
+      // Set high active
       Store (POLA, Local0)
-      And (Local0, 0xFFFFFFFB, Local0)
+      Or (Local0, 0x4, Local0)
       Store (Local0, POLA)
 
       // Set edge sensitive

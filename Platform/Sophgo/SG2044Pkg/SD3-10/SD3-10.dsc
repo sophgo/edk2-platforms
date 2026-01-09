@@ -1044,6 +1044,12 @@
   Drivers/ASpeed/ASpeedGopBinPkg/ASpeedAst2500GopDxe.inf
 
   #
+  # Sietium GPU GOP driver
+  #
+  Drivers/Sietium/SietiumGopDxe.inf
+
+
+  #
   # iPXE Application
   #
   Silicon/Sophgo/SG2044/iPXE/iPXE.inf

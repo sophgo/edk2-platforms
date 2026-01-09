@@ -186,6 +186,11 @@ INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 INF  Drivers/ASpeed/ASpeedGopBinPkg/ASpeedAst2500GopDxe.inf
 
 #
+# Sietium GPU GOP driver
+#
+INF  Drivers/Sietium/SietiumGopDxe.inf
+
+#
 # iPXE Application
 #
 INF  Silicon/Sophgo/SG2044/iPXE/iPXE.inf

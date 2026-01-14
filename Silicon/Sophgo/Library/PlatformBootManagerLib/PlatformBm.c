@@ -26,6 +26,14 @@ EFI_GUID  mAutoCreateBootOptionGuid = {
   0x8108ac4e, 0x9f11, 0x4d59, { 0x85, 0x0e, 0xe2, 0x1a, 0x52, 0x2c, 0x59, 0xb2 }
 };
 
+extern VOID *
+BmGetNextLoadOptionBuffer (
+  IN  EFI_BOOT_MANAGER_LOAD_OPTION_TYPE  Type,
+  IN  EFI_DEVICE_PATH_PROTOCOL           *FilePath,
+  OUT EFI_DEVICE_PATH_PROTOCOL           **FullPath,
+  OUT UINTN                              *FileSize
+  );
+
 STATIC PLATFORM_SERIAL_CONSOLE mSerialConsole = {
   //
   // VENDOR_DEVICE_PATH SerialDxe
@@ -397,7 +405,11 @@ CheckBootOptionsStatus (
   EFI_DEVICE_PATH_PROTOCOL        *TempPath;
   BOOLEAN                         InvalidFound;
   BOOLEAN                         HasValidAutoCreatedBlockDevice;
+  UINTN                           FileSize;
+  EFI_DEVICE_PATH_PROTOCOL        *CurFullPath;
+  VOID                            *FileBuffer;
 
+  CurFullPath = NULL;
   InvalidFound = FALSE;
   HasValidAutoCreatedBlockDevice = FALSE;
   BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
@@ -408,13 +420,18 @@ CheckBootOptionsStatus (
     Status2 = gBS->LocateDevicePath (&gEfiLoadFileProtocolGuid, &TempPath, &Handle2);
 
     if (EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
-      // Found invalid boot option
-      InvalidFound = TRUE;
-      DEBUG ((DEBUG_INFO, "Removing invalid boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
-      EfiBootManagerDeleteLoadOptionVariable(
-        BootOptions[BootOptionIndex].OptionNumber,
-        LoadOptionTypeBoot
-        );
+      FileBuffer  = BmGetNextLoadOptionBuffer (BootOptions[BootOptionIndex].OptionType, BootOptions[BootOptionIndex].FilePath, &CurFullPath, &FileSize);
+      if (FileBuffer != NULL) {
+        FreePool(FileBuffer);
+      } else {
+          // Found invalid boot option
+          InvalidFound = TRUE;
+          DEBUG ((DEBUG_INFO, "Removing invalid boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
+          EfiBootManagerDeleteLoadOptionVariable(
+            BootOptions[BootOptionIndex].OptionNumber,
+            LoadOptionTypeBoot
+          );
+      }
     } else if (!EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
       // For valid block devices (not LoadFile devices), check if any are auto-created
       if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex])) {

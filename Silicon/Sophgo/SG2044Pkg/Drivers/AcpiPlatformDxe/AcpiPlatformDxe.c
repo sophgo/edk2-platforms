@@ -521,7 +521,7 @@ SetDsdtPcieCrs (
   Mem->Minimum = FdtRegion->PciAddr;
   Mem->Length = FdtRegion->Size;
   Mem->Maximum = FdtRegion->PciAddr + FdtRegion->Size - 1;
-  Mem->Translation = FdtRegion->PciAddr - FdtRegion->CpuAddr;
+  Mem->Translation = FdtRegion->CpuAddr - FdtRegion->PciAddr;
 }
 
 /**

@@ -16,7 +16,7 @@ SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE38, PlatformIpmiDevice) = {
       sizeof (SMBIOS_TABLE_TYPE38),            // Length
       SMBIOS_HANDLE_PI_RESERVED                // Handle
     },
-    IPMIDeviceInfoInterfaceTypeSSIF,           // Interface Type
+    IPMIDeviceInfoInterfaceTypeUnknown,        // Interface Type
     0x00,                                      // IPMI Specification Revision
     0x10,                                      // I2C Slave Address
     0xFF,                                      // NV Storage Device Address

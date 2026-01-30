@@ -99,7 +99,7 @@ UpdateBmcInfoForm(
 
   VersionStringId      = HiiSetString(PrivateData->HiiHandle, 0, PrivateData->BmcConfigData.FmVersion, NULL);
   IpmiVerStringId      = HiiSetString(PrivateData->HiiHandle, 0, PrivateData->BmcConfigData.IpmiVersion, NULL);
-  IpmiInfTypeId        = HiiSetString(PrivateData->HiiHandle, 0, L"SSIF", NULL);
+  IpmiInfTypeId        = HiiSetString(PrivateData->HiiHandle, 0, L"UART", NULL);
 
   BootSelectorId       = HiiSetString(PrivateData->HiiHandle, 0, PrivateData->BmcConfigData.BootDeviceSelector, NULL);
   BootInitiatorId      = HiiSetString(PrivateData->HiiHandle, 0, PrivateData->BmcConfigData.BootInitiator, NULL);

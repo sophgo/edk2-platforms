@@ -62,7 +62,7 @@
 #string STR_IPMI_VERSION_PROMPT               #language en-US "BMC IPMI Version      :"
 #string STR_IPMI_VERSION_HELP                 #language en-US "BmcIpmiVersion"
 #string STR_IPMIINF_PROMPT                    #language en-US "IPMI Interface Type   :"
-#string STR_IPMIINF_HELP                      #language en-US "SSIF"
+#string STR_IPMIINF_HELP                      #language en-US "UART"
 
 #string STR_BOOT1_PROMPT                      #language en-US "BOOT1                 :"
 #string STR_BOOT1_HELP                        #language en-US "BootDeviceSelector"

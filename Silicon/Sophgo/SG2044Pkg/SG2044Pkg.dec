@@ -91,7 +91,7 @@
 
 # sophgo,sg2044-cppc
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCppcMinFrequency|1000000000|UINT64|0x00002001
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCppcMaxFrequency|2500000000|UINT64|0x00002002
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCppcMaxFrequency|2600000000|UINT64|0x00002002
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCppcStep|25000000|UINT64|0x00002003
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdClusterNum|4|UINT8|0x00002004
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuNumPerCluster|4|UINT8|0x00002005

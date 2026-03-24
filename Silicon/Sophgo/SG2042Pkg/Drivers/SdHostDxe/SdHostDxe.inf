@@ -47,4 +47,3 @@
 [FixedPcd]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSDIOBase              ## CONSUMES
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency               ## CONSUMES
-  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode             ## CONSUMES

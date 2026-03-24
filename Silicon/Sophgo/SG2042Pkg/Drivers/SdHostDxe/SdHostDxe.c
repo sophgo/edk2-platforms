@@ -408,24 +408,12 @@ SdHostInitialize (
 {
   EFI_STATUS  Status;
   EFI_HANDLE  Handle;
-  UINTN       Base;
 
   DEBUG ((DEBUG_MMCHOST_SD, "SdHost: Initialize\n"));
 
   Handle            = NULL;
-  Base              = SDIO_BASE;
 
-  if(PcdGet32 (PcdCpuRiscVMmuMaxSatpMode) > 0UL){
-    for (INT32 I = 39; I < 64; I++) {
-      if (Base & (1ULL << 38)) {
-        Base |= (1ULL << I);
-      } else {
-        Base &= ~(1ULL << I);
-      }
-    }
-  }
-
-  DwcParams.RegBase  = Base;
+  DwcParams.RegBase  = SDIO_BASE;
   DwcParams.ClkRate  = 50 * 1000 * 1000;
   DwcParams.BusWidth = MMC_BUS_WIDTH_4;
   DwcParams.Flags    = 0;

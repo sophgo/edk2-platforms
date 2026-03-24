@@ -45,4 +45,3 @@
 [Pcd]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask     ## CONSUMES
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042PhyAddrToVirAddr  ## CONSUMES
-  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode               ## CONSUMES

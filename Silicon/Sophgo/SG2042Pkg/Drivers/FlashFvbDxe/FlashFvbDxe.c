@@ -986,7 +986,6 @@ FvbVirtualNotifyEvent (
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor->Info);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor->BounceBuf);
 
-  mFvbDevice->Nor->SpiBase = mFvbDevice->Nor->SpiBase & 0x7fffffffff;
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor->SpiBase);
   EfiConvertPointer (0x0, (VOID**)&mFvbDevice->Nor);
 

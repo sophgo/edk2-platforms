@@ -45,8 +45,5 @@
   gFdtClientProtocolGuid          ## CONSUMES
   gSophgoI2cMasterProtocolGuid    ## PRODUCES
 
-[Pcd]
-  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode             ## CONSUMES
-
 [Depex]
   TRUE

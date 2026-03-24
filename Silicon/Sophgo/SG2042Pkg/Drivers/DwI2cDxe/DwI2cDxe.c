@@ -790,7 +790,6 @@ SetI2cMemoryRuntime (
 {
   EFI_STATUS             Status;
   UINT32                 Index;
-  UINTN                  Base;
 
   for (Index = 0; Index < I2cNum; Index++) {
     Status = gDS->AddMemorySpace(
@@ -815,18 +814,6 @@ SetI2cMemoryRuntime (
               __func__, __LINE__, Status));
       return Status;
     }
-
-    Base = I2cInformation[Index].Base;
-    if (PcdGet32 (PcdCpuRiscVMmuMaxSatpMode) > 0UL) {
-      for (INT32 I = 39; I < 64; I++) {
-        if (Base & (1ULL << 38)) {
-          Base |= (1ULL << I);
-        } else {
-          Base &= ~(1ULL << I);
-        }
-      }
-      I2cInformation[Index].Base = Base;
-    }
   }
 
   return EFI_SUCCESS;
@@ -844,11 +831,9 @@ I2cVirtualNotifyEvent (
   DW_I2C *I2c;
 
   for (Loop = 0; Loop < mI2cNum; ++Loop) {
-    mI2cInfo[Loop].Base = mI2cInfo[Loop].Base & 0x7fffffffff;
     EfiConvertPointer(0x0, (VOID **)&mI2cInfo[Loop].Base);
 
     I2c = (DW_I2C *)mI2cInfo[Loop].Dev;
-    I2c->Regs = (VOID *)((UINTN)I2c->Regs & 0x7fffffffff);
     EfiConvertPointer(0x0, (VOID **)&I2c->Regs);
   }
 

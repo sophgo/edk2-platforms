@@ -313,7 +313,6 @@ MangoPcieHostBridgeLibConstructor (
   UINT32  DeviceId;
   UINT32  NoBarNbits;
   UINT8   PcieEnableCount;
-  UINT64  PhyAddrToVirAddr;
 
   VendorId = 0x17CD;
   DeviceId = 0x2042;
@@ -334,15 +333,6 @@ MangoPcieHostBridgeLibConstructor (
   GetPcieEnableCount ();
 
   PcieEnableCount = PcdGet8 (PcdMangoPcieEnableMask);
-  PhyAddrToVirAddr = PcdGet64 (PcdSG2042PhyAddrToVirAddr);
-
-  if (PcdGet32 (PcdCpuRiscVMmuMaxSatpMode) == 8) {
-    //
-    // only for Sv39 mode
-    //
-    PhyAddrToVirAddr = 0xffffff8000000000;
-    PatchPcdSet64 (PcdSG2042PhyAddrToVirAddr, PhyAddrToVirAddr);
-  }
 
   DEBUG ((DEBUG_INFO, "Mango PCIe HostBridgeLib constructor:\n"));
   for (PortIndex = 0; PortIndex < PCIE_MAX_PORT; PortIndex++) {
@@ -355,7 +345,7 @@ MangoPcieHostBridgeLibConstructor (
       PcieHostInitRootPort (
         VendorId,
         DeviceId,
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress + PhyAddrToVirAddr
+        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress
       );
 
       //
@@ -363,14 +353,14 @@ MangoPcieHostBridgeLibConstructor (
       //
       PcieHostNoBarMatchInboundConfig (
         NoBarNbits,
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress + PhyAddrToVirAddr
+        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress
       );
 
       //
       // Outbound: Region 0 for Slave address (configure space access)
       //
       PcieHostSetOutboundRegionForConfigureSpaceAccess (
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress + PhyAddrToVirAddr,
+        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress,
         mPciResource[PortIndex][LinkIndex].PciSlvAddress,
         mPciResource[PortIndex][LinkIndex].BusBase
       );
@@ -380,14 +370,12 @@ MangoPcieHostBridgeLibConstructor (
       // TBD: Workaround for SG2042 to map the IO below 4G to Above 4G.
       //
       PcieHostSetOutboundRegion (
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress + PhyAddrToVirAddr,
+        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress,
         mPciResource[PortIndex][LinkIndex].BusBase,
         1,
         FALSE,
         mPciResource[PortIndex][LinkIndex].IoBase,
-        mPciResource[PortIndex][LinkIndex].IoBase -
-        // mPciResource[PortIndex][LinkIndex].IoTranslation,
-        mPciResource[PortIndex][LinkIndex].Mmio32Translation,
+        mPciResource[PortIndex][LinkIndex].IoBase - mPciResource[PortIndex][LinkIndex].Mmio32Translation,
         mPciResource[PortIndex][LinkIndex].IoSize
       );
 
@@ -395,14 +383,12 @@ MangoPcieHostBridgeLibConstructor (
       // Outbound: Mem32
       //
       PcieHostSetOutboundRegion (
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress + PhyAddrToVirAddr,
+        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress,
         mPciResource[PortIndex][LinkIndex].BusBase,
         2,
         TRUE,
         mPciResource[PortIndex][LinkIndex].Mmio32Base,
-        mPciResource[PortIndex][LinkIndex].Mmio32Base -
-        mPciResource[PortIndex][LinkIndex].Mmio32Translation,
-        // mPciResource[PortIndex][LinkIndex].Mmio32Base,
+        mPciResource[PortIndex][LinkIndex].Mmio32Base - mPciResource[PortIndex][LinkIndex].Mmio32Translation,
         mPciResource[PortIndex][LinkIndex].Mmio32Size
       );
 
@@ -410,13 +396,12 @@ MangoPcieHostBridgeLibConstructor (
       // Outbound: MemAbove4G
       //
       PcieHostSetOutboundRegion (
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress + PhyAddrToVirAddr,
+        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress,
         mPciResource[PortIndex][LinkIndex].BusBase,
         3,
         TRUE,
         mPciResource[PortIndex][LinkIndex].Mmio64Base,
-        mPciResource[PortIndex][LinkIndex].Mmio64Base -
-        mPciResource[PortIndex][LinkIndex].Mmio64Translation,
+        mPciResource[PortIndex][LinkIndex].Mmio64Base - mPciResource[PortIndex][LinkIndex].Mmio64Translation,
         mPciResource[PortIndex][LinkIndex].Mmio64Size
       );
 

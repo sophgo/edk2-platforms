@@ -45,7 +45,6 @@
 [Pcd]
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base                            ## CONSUMES
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base                            ## CONSUMES
-  gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode             ## CONSUMES
 
 [Depex]
   TRUE

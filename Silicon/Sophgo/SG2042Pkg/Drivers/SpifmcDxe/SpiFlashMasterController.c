@@ -510,9 +510,8 @@ SpifmcEntryPoint (
   )
 {
   EFI_STATUS  Status;
-  INT32       Index, Loop, I;
+  INT32       Index, Loop;
   SPI_NOR     *Nor;
-  UINTN       Base;
 
   mSpiMasterInstance = AllocateRuntimeZeroPool (sizeof (SPI_MASTER));
   if (mSpiMasterInstance == NULL) {
@@ -569,17 +568,7 @@ SpifmcEntryPoint (
       return EFI_OUT_OF_RESOURCES;
     }
 
-    Base = mNorFlashInstance[Index].SpiBase;
-    if (PcdGet32 (PcdCpuRiscVMmuMaxSatpMode) > 0UL) {
-      for (I = 39; I < 64; I++) {
-        if (Base & (1ULL << 38)) {
-          Base |= (1ULL << I);
-        } else {
-          Base &= ~(1ULL << I);
-        }
-      }
-    }
-    mNorFlashInstance[Index].SpiBase = Base;
+    mNorFlashInstance[Index].SpiBase = mNorFlashInstance[Index].SpiBase;
 
     SpifmcInit (Nor);
     DEBUG ((DEBUG_VERBOSE, "%a[%d] SPI Base Address = 0x%llx\n",

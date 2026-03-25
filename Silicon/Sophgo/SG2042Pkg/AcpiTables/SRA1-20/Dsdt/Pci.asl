@@ -86,7 +86,7 @@ Scope(_SB)
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
     Name (_SEG, 0)         // Segment of this Root complex
     Name (_BBN, 0)         // Base Bus Number
-    Name (_CCA, 0)
+    Name (_CCA, 1)
 
     Name (_DEP, Package () {
       \_SB.INT0
@@ -226,7 +226,7 @@ Scope(_SB)
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
     Name (_SEG, 1)         // Segment of this Root complex
     Name (_BBN, 0x80)      // Base Bus Number
-    Name (_CCA, 0)
+    Name (_CCA, 1)
 
     Name (_DEP, Package () {
       \_SB.INT1

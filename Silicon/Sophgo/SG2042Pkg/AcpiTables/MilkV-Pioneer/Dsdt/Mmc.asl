@@ -15,7 +15,7 @@ Scope(_SB)
   {
     Name (_HID, "SOPH0005")
     Name (_UID, 0x1)
-    Name (_CCA, 0x0)           // _CCA: Cache Coherency Attribute
+    Name (_CCA, 1)                      // _CCA: Cache Coherency Attribute
     Method (_STA)
     {
       Return(0xf)

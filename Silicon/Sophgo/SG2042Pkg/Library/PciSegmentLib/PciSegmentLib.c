@@ -173,8 +173,8 @@ PciMapBus (
   IN UINT8                 Device,
   IN UINT8                 Function,
   IN UINT32                Register,
-  IN UINT64                VirtualCfgAddr,
-  IN UINT64                VirtualSlvAddr,
+  IN UINT64                CfgAddr,
+  IN UINT64                SlvAddr,
   IN MANGO_PCI_RESOURCE    *PciResource
 )
 {
@@ -196,7 +196,7 @@ PciMapBus (
       return 0xFFFFFFFF;
     }
 
-    return VirtualCfgAddr + PCIE_RP_BASE + Register;
+    return CfgAddr + PCIE_RP_BASE + Register;
   }
 
   //
@@ -211,14 +211,14 @@ PciMapBus (
   //
   // Check that the link is up
   //
-  if (!(PcieIsLinkUp((UINTN)VirtualCfgAddr))) {
+  if (!(PcieIsLinkUp((UINTN)CfgAddr))) {
     return 0xFFFFFFFF;
   }
 
   //
   // Clear AXI link-down status
   //
-  MmioWrite32 ((UINTN)(VirtualCfgAddr + PCIE_AT_LINKDOWN), 0x0);
+  MmioWrite32 ((UINTN)(CfgAddr + PCIE_AT_LINKDOWN), 0x0);
 
   //
   // Update Output registers for AXI region 0
@@ -226,7 +226,7 @@ PciMapBus (
   Addr0 = PCIE_AT_OB_REGION_PCI_ADDR0_NBITS(12) |
           PCIE_AT_OB_REGION_PCI_ADDR0_DEVFN(DevFn) |
           PCIE_AT_OB_REGION_PCI_ADDR0_BUS(Bus);
-  MmioWrite32 ((UINTN)(VirtualCfgAddr + PCIE_AT_OB_REGION_PCI_ADDR0(0)), Addr0);
+  MmioWrite32 ((UINTN)(CfgAddr + PCIE_AT_OB_REGION_PCI_ADDR0(0)), Addr0);
 
   //
   // Configuration Type 0 or Type 1 access
@@ -244,9 +244,9 @@ PciMapBus (
     Desc0 |= PCIE_AT_OB_REGION_DESC0_TYPE_CONF_TYPE1;
   }
 
-  MmioWrite32 ((UINTN)(VirtualCfgAddr + PCIE_AT_OB_REGION_DESC0(0)), Desc0);
+  MmioWrite32 ((UINTN)(CfgAddr + PCIE_AT_OB_REGION_DESC0(0)), Desc0);
 
-  return VirtualSlvAddr + Register;
+  return SlvAddr + Register;
 }
 
 /**
@@ -272,9 +272,6 @@ PciSegmentLibReadWorker (
   UINT8                 Function;
   UINT32                Register;
   UINT64                MmioAddress;
-  UINT64                VirtualCfgAddr;
-  UINT64                VirtualSlvAddr;
-  UINT64                PhyAddrToVirAddr;
   MANGO_PCI_RESOURCE    *PciResource;
 
   EXTRACT_PCIE_ADDRESS (Address, Segment, Bus, Device, Function, Register);
@@ -284,17 +281,13 @@ PciSegmentLibReadWorker (
     return 0xFFFFFFFF;
   }
 
-  PhyAddrToVirAddr = PcdGet64 (PcdSG2042PhyAddrToVirAddr);
-  VirtualCfgAddr = PciResource->ConfigSpaceAddress + PhyAddrToVirAddr;
-  VirtualSlvAddr = PciResource->PciSlvAddress + PhyAddrToVirAddr;
-
   MmioAddress = PciMapBus (Segment,
                            Bus,
                            Device,
                            Function,
                            Register,
-                           VirtualCfgAddr,
-                           VirtualSlvAddr,
+                           PciResource->ConfigSpaceAddress,
+                           PciResource->PciSlvAddress,
                            PciResource);
 
   if (MmioAddress == 0xFFFFFFFF) {
@@ -340,9 +333,6 @@ PciSegmentLibWriteWorker (
   UINT8                 Function;
   UINT32                Register;
   UINT64                MmioAddress;
-  UINT64                VirtualCfgAddr;
-  UINT64                VirtualSlvAddr;
-  UINT64                PhyAddrToVirAddr;
   MANGO_PCI_RESOURCE    *PciResource;
 
   EXTRACT_PCIE_ADDRESS (Address, Segment, Bus, Device, Function, Register);
@@ -352,17 +342,13 @@ PciSegmentLibWriteWorker (
     return 0xFFFFFFFF;
   }
 
-  PhyAddrToVirAddr = PcdGet64 (PcdSG2042PhyAddrToVirAddr);
-  VirtualCfgAddr = PciResource->ConfigSpaceAddress + PhyAddrToVirAddr;
-  VirtualSlvAddr = PciResource->PciSlvAddress + PhyAddrToVirAddr;
-
   MmioAddress = PciMapBus (Segment,
                            Bus,
                            Device,
                            Function,
                            Register,
-                           VirtualCfgAddr,
-                           VirtualSlvAddr,
+                           PciResource->ConfigSpaceAddress,
+                           PciResource->PciSlvAddress,
                            PciResource);
 
   if (MmioAddress == 0xFFFFFFFF) {

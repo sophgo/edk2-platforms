@@ -31,4 +31,3 @@
 
 [Pcd]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042PhyAddrToVirAddr

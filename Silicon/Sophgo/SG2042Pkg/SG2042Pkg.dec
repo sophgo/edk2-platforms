@@ -84,7 +84,6 @@
 
 [PcdsPatchableInModule, PcdsDynamic]
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask|0x0|UINT8|0x0000103A
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSG2042PhyAddrToVirAddr|0x0|UINT64|0x00001005
 
 [UserExtensions.TianoCore."ExtraFiles"]
   SG2042PkgExtra.uni

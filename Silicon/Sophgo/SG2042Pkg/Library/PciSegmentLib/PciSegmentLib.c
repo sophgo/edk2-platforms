@@ -49,15 +49,18 @@ PciSegmentLibGetResource (
   IN  UINT32     Segment
   )
 {
+  UINTN SocketIndex;
   UINTN PortIndex;
   UINTN LinkIndex;
 
-  for (PortIndex = 0; PortIndex < PCIE_MAX_PORT; PortIndex++) {
-    for (LinkIndex = 0; LinkIndex < PCIE_MAX_LINK; LinkIndex++) {
-      if (Segment == mPciResource[PortIndex][LinkIndex].Segment) {
-        return &mPciResource[PortIndex][LinkIndex];
+  for (SocketIndex = 0; SocketIndex < PCIE_MAX_SOCKET; SocketIndex++) {
+    for (PortIndex = 0; PortIndex < PCIE_MAX_PORT; PortIndex++) {
+      for (LinkIndex = 0; LinkIndex < PCIE_MAX_LINK; LinkIndex++) {
+        if (Segment == mPciResource[SocketIndex][PortIndex][LinkIndex].Segment) {
+          return &mPciResource[SocketIndex][PortIndex][LinkIndex];
+        }
       }
-    } 
+    }
   }
 
   ASSERT (FALSE);

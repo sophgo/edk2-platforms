@@ -28,6 +28,3 @@
   DebugLib
   IoLib
   UefiLib
-
-[Pcd]
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoPcieEnableMask

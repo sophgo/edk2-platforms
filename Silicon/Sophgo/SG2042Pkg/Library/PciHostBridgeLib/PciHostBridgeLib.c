@@ -162,33 +162,38 @@ PciHostBridgeGetRootBridges (
   )
 {
   EFI_STATUS                  Status;
+  UINTN                       SocketIndex;
   UINTN                       PortIndex;
   UINTN                       LinkIndex;
-  UINT8                       PcieEnableCount;
+  UINT8                       PcieEnableMask;
   PCI_ROOT_BRIDGE             *Bridges;
 
   //
   // Set default value to 0 in case we got any error
   //
   *Count = 0;
-  PcieEnableCount = PcdGet8 (PcdMangoPcieEnableMask);
+  PcieEnableMask = PcdGet8 (PcdMangoPcieEnableMask);
 
-  Bridges = AllocatePool (PcieEnableCount * sizeof (PCI_ROOT_BRIDGE));
+  Bridges = AllocatePool (PCIE_MAX_SOCKET * PCIE_MAX_PORT * PCIE_MAX_LINK * sizeof (PCI_ROOT_BRIDGE));
   if (Bridges == NULL) {
     DEBUG ((DEBUG_ERROR, "[%a:%d] - AllocatePool failed!\n", __func__, __LINE__));
     return NULL;
   }
 
-  for (PortIndex = 0; PortIndex < PCIE_MAX_PORT; PortIndex++) {
-    for (LinkIndex = 0; LinkIndex < PCIE_MAX_LINK; LinkIndex++) {
-      if (!((PcieEnableCount >> ((PCIE_MAX_PORT * PortIndex) + LinkIndex)) & 0x01)) {
-        continue;
+  for (SocketIndex = 0; SocketIndex < PCIE_MAX_SOCKET; SocketIndex++) {
+    for (PortIndex = 0; PortIndex < PCIE_MAX_PORT; PortIndex++) {
+      for (LinkIndex = 0; LinkIndex < PCIE_MAX_LINK; LinkIndex++) {
+        if (!((PcieEnableMask >> ((PCIE_MAX_PORT * PCIE_MAX_LINK * SocketIndex) +
+				  (PCIE_MAX_LINK * PortIndex) +
+				  LinkIndex)) & 0x01)) {
+          continue;
+        }
+        Status = ConstructRootBridge (&Bridges[*Count], &mPciResource[SocketIndex][PortIndex][LinkIndex]);
+        if (EFI_ERROR (Status)) {
+          continue;
+        }
+        (*Count)++;
       }
-      Status = ConstructRootBridge (&Bridges[*Count], &mPciResource[PortIndex][LinkIndex]);
-      if (EFI_ERROR (Status)) {
-        continue;
-      }
-      (*Count)++;
     }
   }
 

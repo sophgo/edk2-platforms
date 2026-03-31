@@ -195,7 +195,7 @@ PcieHostSetOutboundRegion (
 
 STATIC
 EFI_STATUS
-GetPcieEnableCount (
+GetPcieEnableMask (
   VOID
   )
 {
@@ -205,13 +205,13 @@ GetPcieEnableCount (
   INT32                Node;
   CONST VOID           *Prop;
   UINT32               PropSize;
-  UINT32               Num;
+  UINT32               SegmentIndex;
+  UINT16               SocketIndex;
   UINT16               PortIndex;
   UINT16               LinkIndex;
-  UINT8                PcieEnableCount;
+  UINT8                PcieEnableMask;
 
-  Num = 0;
-  PcieEnableCount = PcdGet8 (PcdMangoPcieEnableMask);
+  PcieEnableMask = PcdGet8 (PcdMangoPcieEnableMask);
 
   Status = gBS->LocateProtocol (
       &gFdtClientProtocolGuid,
@@ -226,7 +226,7 @@ GetPcieEnableCount (
                                      &Node
                                      );
 
-    !EFI_ERROR (FindNodeStatus) && Num < PCIE_MAX_PORT * PCIE_MAX_LINK;
+    !EFI_ERROR (FindNodeStatus);
 
     FindNodeStatus = FdtClient->FindNextCompatibleNode (
                                      FdtClient,
@@ -238,14 +238,40 @@ GetPcieEnableCount (
     Status = FdtClient->GetNodeProperty (
                                 FdtClient,
                                 Node,
-                                "reg",
+                                "linux,pci-domain",
                                 &Prop,
                                 &PropSize
                                 );
-
-    if (SwapBytes64 (((CONST UINT64 *) Prop)[0]) >= (1UL << 39)) {
-      break;
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+        "%a: Get linux,pci-domain failed (Status = %r)\n",
+        __func__,
+        Status
+        ));
+      return Status;
     }
+
+    SegmentIndex = SwapBytes32 (((CONST UINT32 *) Prop)[0]);
+
+    Status = FdtClient->GetNodeProperty (
+                                FdtClient,
+                                Node,
+                                "socket-id",
+                                &Prop,
+                                &PropSize
+                                );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+        "%a: Get socket-id failed (Status = %r)\n",
+        __func__,
+        Status
+        ));
+      return Status;
+    }
+
+    SocketIndex = SwapBytes16 (((CONST UINT16 *) Prop)[0]);
 
     Status = FdtClient->GetNodeProperty (
                                 FdtClient,
@@ -285,16 +311,32 @@ GetPcieEnableCount (
 
     LinkIndex = SwapBytes16 (((CONST UINT16 *) Prop)[0]);
 
-    PcieEnableCount |= 1 << (PortIndex * 2 + LinkIndex);
+    /* Check validation */
+    if (SocketIndex >= PCIE_MAX_SOCKET || PortIndex >= PCIE_MAX_PORT || LinkIndex >= PCIE_MAX_LINK) {
+      DEBUG (( DEBUG_ERROR, "Invalid PCIe controller [%d:%d:%d]\n",
+               SocketIndex, PortIndex, LinkIndex ));
+      return EFI_OUT_OF_RESOURCES;
+    }
+
+    DEBUG (( DEBUG_INFO, "Find PCIe controller controller [%d, %d:%d:%d]\n",
+	     SegmentIndex, SocketIndex, PortIndex, LinkIndex ));
+
+    if (SegmentIndex != LinkIndex + PortIndex * PCIE_MAX_LINK + SocketIndex * PCIE_MAX_PORT * PCIE_MAX_LINK) {
+      DEBUG (( DEBUG_ERROR, "Invalid linux,pci-domain number %d of controller [%d:%d:%d]\n",
+               SegmentIndex, SocketIndex, PortIndex, LinkIndex ));
+      return EFI_INVALID_PARAMETER;
+    }
+
+    PcieEnableMask |= 1 << (PortIndex * 2 + LinkIndex);
   }
 
-  PcdSet8S (PcdMangoPcieEnableMask, PcieEnableCount);
+  PcdSet8S (PcdMangoPcieEnableMask, PcieEnableMask);
 
   DEBUG ((
-    DEBUG_INFO,
+    DEBUG_ERROR,
     "%a(): PcdMangoPcieEnableMask = 0x%x\n",
     __func__,
-    PcieEnableCount
+    PcieEnableMask
     ));
 
   return EFI_SUCCESS;
@@ -307,12 +349,13 @@ MangoPcieHostBridgeLibConstructor (
   IN EFI_SYSTEM_TABLE *SystemTable
   )
 {
+  UINT32  SocketIndex;
   UINT32  PortIndex;
   UINT32  LinkIndex;
   UINT32  VendorId;
   UINT32  DeviceId;
   UINT32  NoBarNbits;
-  UINT8   PcieEnableCount;
+  UINT8   PcieEnableMask;
 
   VendorId = 0x17CD;
   DeviceId = 0x2042;
@@ -330,88 +373,91 @@ MangoPcieHostBridgeLibConstructor (
   //
   // Get the PCIe RC count
   //
-  GetPcieEnableCount ();
+  GetPcieEnableMask ();
 
-  PcieEnableCount = PcdGet8 (PcdMangoPcieEnableMask);
+  PcieEnableMask = PcdGet8 (PcdMangoPcieEnableMask);
 
   DEBUG ((DEBUG_INFO, "Mango PCIe HostBridgeLib constructor:\n"));
-  for (PortIndex = 0; PortIndex < PCIE_MAX_PORT; PortIndex++) {
-    for (LinkIndex = 0; LinkIndex < PCIE_MAX_LINK; LinkIndex++) {
-      if (!((PcieEnableCount >>
-            ((PCIE_MAX_PORT * PortIndex) + LinkIndex)) & 0x01)) {
-        continue;
+  for (SocketIndex = 0; SocketIndex < PCIE_MAX_SOCKET; SocketIndex++) {
+    for (PortIndex = 0; PortIndex < PCIE_MAX_PORT; PortIndex++) {
+      for (LinkIndex = 0; LinkIndex < PCIE_MAX_LINK; LinkIndex++) {
+        if (!((PcieEnableMask >>
+	       ((PCIE_MAX_PORT * PCIE_MAX_LINK * SocketIndex) + (PCIE_MAX_LINK * PortIndex) + LinkIndex)) & 0x01)) {
+          continue;
+        }
+
+        PcieHostInitRootPort (
+                              VendorId,
+                              DeviceId,
+                              mPciResource[SocketIndex][PortIndex][LinkIndex].ConfigSpaceAddress
+                             );
+
+        //
+        // Inbound: no bar match
+        //
+        PcieHostNoBarMatchInboundConfig (
+                                         NoBarNbits,
+                                         mPciResource[SocketIndex][PortIndex][LinkIndex].ConfigSpaceAddress
+                                        );
+
+        //
+        // Outbound: Region 0 for Slave address (configure space access)
+        //
+        PcieHostSetOutboundRegionForConfigureSpaceAccess (
+                                                          mPciResource[SocketIndex][PortIndex][LinkIndex].ConfigSpaceAddress,
+                                                          mPciResource[SocketIndex][PortIndex][LinkIndex].PciSlvAddress,
+                                                          mPciResource[SocketIndex][PortIndex][LinkIndex].BusBase
+                                                         );
+
+        //
+        // Outbound: IO
+        // TBD: Workaround for SG2042 to map the IO below 4G to Above 4G.
+        //
+        PcieHostSetOutboundRegion (
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].ConfigSpaceAddress,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].BusBase,
+                                   1,
+                                   FALSE,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].IoBase,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].IoBase - mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio32Translation,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].IoSize
+                                  );
+
+        //
+        // Outbound: Mem32
+        //
+        PcieHostSetOutboundRegion (
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].ConfigSpaceAddress,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].BusBase,
+                                   2,
+                                   TRUE,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio32Base,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio32Base - mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio32Translation,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio32Size
+                                  );
+
+        //
+        // Outbound: MemAbove4G
+        //
+        PcieHostSetOutboundRegion (
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].ConfigSpaceAddress,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].BusBase,
+                                   3,
+                                   TRUE,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio64Base,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio64Base - mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio64Translation,
+                                   mPciResource[SocketIndex][PortIndex][LinkIndex].Mmio64Size
+                                  );
+
+        DEBUG ((
+                DEBUG_ERROR,
+                "%a: PCIe Socket %d, Port %d, Link %d initialization success.\n",
+                __func__,
+                SocketIndex,
+                PortIndex,
+                LinkIndex
+               ));
       }
-
-      PcieHostInitRootPort (
-        VendorId,
-        DeviceId,
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress
-      );
-
-      //
-      // Inbound: no bar match
-      //
-      PcieHostNoBarMatchInboundConfig (
-        NoBarNbits,
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress
-      );
-
-      //
-      // Outbound: Region 0 for Slave address (configure space access)
-      //
-      PcieHostSetOutboundRegionForConfigureSpaceAccess (
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress,
-        mPciResource[PortIndex][LinkIndex].PciSlvAddress,
-        mPciResource[PortIndex][LinkIndex].BusBase
-      );
-
-      //
-      // Outbound: IO
-      // TBD: Workaround for SG2042 to map the IO below 4G to Above 4G.
-      //
-      PcieHostSetOutboundRegion (
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress,
-        mPciResource[PortIndex][LinkIndex].BusBase,
-        1,
-        FALSE,
-        mPciResource[PortIndex][LinkIndex].IoBase,
-        mPciResource[PortIndex][LinkIndex].IoBase - mPciResource[PortIndex][LinkIndex].Mmio32Translation,
-        mPciResource[PortIndex][LinkIndex].IoSize
-      );
-
-      //
-      // Outbound: Mem32
-      //
-      PcieHostSetOutboundRegion (
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress,
-        mPciResource[PortIndex][LinkIndex].BusBase,
-        2,
-        TRUE,
-        mPciResource[PortIndex][LinkIndex].Mmio32Base,
-        mPciResource[PortIndex][LinkIndex].Mmio32Base - mPciResource[PortIndex][LinkIndex].Mmio32Translation,
-        mPciResource[PortIndex][LinkIndex].Mmio32Size
-      );
-
-      //
-      // Outbound: MemAbove4G
-      //
-      PcieHostSetOutboundRegion (
-        mPciResource[PortIndex][LinkIndex].ConfigSpaceAddress,
-        mPciResource[PortIndex][LinkIndex].BusBase,
-        3,
-        TRUE,
-        mPciResource[PortIndex][LinkIndex].Mmio64Base,
-        mPciResource[PortIndex][LinkIndex].Mmio64Base - mPciResource[PortIndex][LinkIndex].Mmio64Translation,
-        mPciResource[PortIndex][LinkIndex].Mmio64Size
-      );
-
-      DEBUG ((
-        DEBUG_INFO,
-        "%a: PCIe Port %d, Link %d initialization success.\n",
-        __func__,
-        PortIndex,
-        LinkIndex
-      ));
     }
   }
 

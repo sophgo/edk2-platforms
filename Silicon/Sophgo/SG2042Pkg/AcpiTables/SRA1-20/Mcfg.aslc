@@ -39,15 +39,15 @@ EFI_ACPI_PCI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE Mcfg = {
     // PCIe ECAM
     {
       0x4800000000,                                         // Base Address
-      0x0,                                                  // Segment Group Number
+      0x2,                                                  // Segment Group Number
       0x0,                                                  // Start Bus Number
-      0x3f,                                                 // End Bus Number
+      0xff,                                                 // End Bus Number
       0x00000000,                                           // Reserved
     },
     {
       0xC000000000,                                         // Base Address
-      0x1,                                                  // Segment Group Number
-      0x80,                                                 // Start Bus Number
+      0x4,                                                  // Segment Group Number
+      0x0,                                                  // Start Bus Number
       0xff,                                                 // End Bus Number
       0x00000000,                                           // Reserved
     }

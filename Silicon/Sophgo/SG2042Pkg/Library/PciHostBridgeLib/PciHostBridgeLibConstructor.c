@@ -327,7 +327,7 @@ GetPcieEnableMask (
       return EFI_INVALID_PARAMETER;
     }
 
-    PcieEnableMask |= 1 << (PortIndex * 2 + LinkIndex);
+    PcieEnableMask |= 1 << (SocketIndex * PCIE_MAX_PORT * PCIE_MAX_LINK + PortIndex * PCIE_MAX_LINK + LinkIndex);
   }
 
   PcdSet8S (PcdMangoPcieEnableMask, PcieEnableMask);
@@ -340,6 +340,22 @@ GetPcieEnableMask (
     ));
 
   return EFI_SUCCESS;
+}
+
+STATIC
+VOID
+ShowPciResource(MANGO_PCI_RESOURCE *Res)
+{
+  DEBUG (( DEBUG_INFO, "-------------------------------\n" ));
+  DEBUG (( DEBUG_INFO, "Controller Address: 0x%010lx\n", Res->ConfigSpaceAddress ));
+  DEBUG (( DEBUG_INFO, "Slave Address: 0x%010lx\n", Res->PciSlvAddress ));
+  DEBUG (( DEBUG_INFO, "Segment: %d\n", Res->Segment ));
+  DEBUG (( DEBUG_INFO, "Bus Number: %d - %d\n", Res->BusBase, Res->BusBase + Res->BusSize - 1 ));
+  DEBUG (( DEBUG_INFO, "IO [0x%010lx : 0x%010lx : 0x%010lx]\n", Res->IoBase, Res->IoSize, Res->IoTranslation ));
+  DEBUG (( DEBUG_INFO, "Mem32 [0x%010lx : 0x%010lx : 0x%010lx]\n", Res->Mmio32Base, Res->Mmio32Size, Res->Mmio32Translation ));
+  DEBUG (( DEBUG_INFO, "Mem64 [0x%010lx : 0x%010lx : 0x%010lx]\n", Res->Mmio64Base, Res->Mmio64Size, Res->Mmio64Translation ));
+  DEBUG (( DEBUG_INFO, "-------------------------------\n" ));
+
 }
 
 EFI_STATUS
@@ -385,6 +401,8 @@ MangoPcieHostBridgeLibConstructor (
 	       ((PCIE_MAX_PORT * PCIE_MAX_LINK * SocketIndex) + (PCIE_MAX_LINK * PortIndex) + LinkIndex)) & 0x01)) {
           continue;
         }
+
+        ShowPciResource (&mPciResource[SocketIndex][PortIndex][LinkIndex]);
 
         PcieHostInitRootPort (
                               VendorId,
@@ -450,9 +468,8 @@ MangoPcieHostBridgeLibConstructor (
                                   );
 
         DEBUG ((
-                DEBUG_ERROR,
-                "%a: PCIe Socket %d, Port %d, Link %d initialization success.\n",
-                __func__,
+                DEBUG_INFO,
+                "PCIe Socket %d, Port %d, Link %d initialization success.\n",
                 SocketIndex,
                 PortIndex,
                 LinkIndex

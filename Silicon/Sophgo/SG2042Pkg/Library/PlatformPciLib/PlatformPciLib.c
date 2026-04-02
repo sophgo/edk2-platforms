@@ -95,7 +95,7 @@ MANGO_PCI_RESOURCE mPciResource[PCIE_MAX_SOCKET][PCIE_MAX_PORT][PCIE_MAX_LINK] =
       {
         MANGO_SOCKET1_PCIE0_SLV0_BASE,          // PciSlvAddress
         MANGO_SOCKET1_PCIE0_LINK0_CFG_BASE,     // ConfigSpaceAddress
-        0,                              // Segment
+        4,                              // Segment
         MANGO_SOCKET1_PCIE0_LINK0_REGION1_BASE, // BusBase
         MANGO_SOCKET1_PCIE0_LINK0_REGION1_SIZE, // BusSize
         0,                              // IoTranslation
@@ -112,7 +112,7 @@ MANGO_PCI_RESOURCE mPciResource[PCIE_MAX_SOCKET][PCIE_MAX_PORT][PCIE_MAX_LINK] =
       {
         MANGO_SOCKET1_PCIE0_SLV1_BASE,          // PciRegAddress
         MANGO_SOCKET1_PCIE0_LINK1_CFG_BASE,     // ConfigSpaceAddress
-        1,                              // Segment
+        5,                              // Segment
         MANGO_SOCKET1_PCIE0_LINK1_REGION1_BASE, // BusBase
         MANGO_SOCKET1_PCIE0_LINK1_REGION1_SIZE, // BusSize
         0,                              // IoTranslation
@@ -132,7 +132,7 @@ MANGO_PCI_RESOURCE mPciResource[PCIE_MAX_SOCKET][PCIE_MAX_PORT][PCIE_MAX_LINK] =
       {
         MANGO_SOCKET1_PCIE1_SLV0_BASE,          // PciRegAddress
         MANGO_SOCKET1_PCIE1_LINK0_CFG_BASE,     // ConfigSpaceAddress
-        2,                              // Segment
+        6,                              // Segment
         MANGO_SOCKET1_PCIE1_LINK0_REGION1_BASE, // BusBase
         MANGO_SOCKET1_PCIE1_LINK0_REGION1_SIZE, // BusSize
         0,                              // IoTranslation
@@ -149,7 +149,7 @@ MANGO_PCI_RESOURCE mPciResource[PCIE_MAX_SOCKET][PCIE_MAX_PORT][PCIE_MAX_LINK] =
       {
         MANGO_SOCKET1_PCIE1_SLV1_BASE,          // PciRegAddress
         MANGO_SOCKET1_PCIE1_LINK1_CFG_BASE,     // ConfigSpaceAddress
-        3,                              // Segment
+        7,                              // Segment
         MANGO_SOCKET1_PCIE1_LINK1_REGION1_BASE, // BusBase
         MANGO_SOCKET1_PCIE1_LINK1_REGION1_SIZE, // BusSize
         0,                              // IoTranslation

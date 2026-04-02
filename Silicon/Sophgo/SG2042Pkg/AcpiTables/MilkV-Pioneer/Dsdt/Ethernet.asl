@@ -12,7 +12,7 @@ Scope(_SB)
   Device (ETH0) {
     Name (_HID, "SOPH0006")
     Name (_UID, Zero)
-    Name (_CCA, 1)
+    Name (_CCA, 0)
     Method (_STA)                                       // _STA: Device status
     {
       Return (0xF)

@@ -80,7 +80,7 @@ Scope(_SB)
   LNK_DEVICE(2, RCA1, 346)
 
   // PCIe Root bus
-  Device (PCI0)
+  Device (PCI2)
   {
     Name (_HID, "PNP0A08") // PCI Express Root Bridge
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
@@ -93,7 +93,7 @@ Scope(_SB)
     })
 
     Method (_PXM, 0, NotSerialized) {
-      Return (3)  // proximity domain 3
+      Return (2)  // proximity domain
     }
 
     Name(_DSD, Package () {
@@ -178,10 +178,10 @@ Scope(_SB)
         )
     })
 
-    Device (RES0)
+    Device (RES2)
     {
       Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
-      Name (_UID, 0x0)  // Unique ID
+      Name (_UID, 0x2)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
         QWordMemory (ResourceProducer, PosDecode, MinFixed, MaxFixed, NonCacheable, ReadWrite,
@@ -197,10 +197,10 @@ Scope(_SB)
       }
     }
 
-  } // Device(PCI0)
+  } // Device(PCI2)
 
   // PCIe Root bus
-  Device (PCI1)
+  Device (PCI4)
   {
     Name (_HID, "PNP0A08") // PCI Express Root Bridge
     Name (_CID, "PNP0A03") // Compatible PCI Root Bridge
@@ -214,7 +214,7 @@ Scope(_SB)
 
 
     Method (_PXM, 0, NotSerialized) {
-      Return (7)  // proximity domain 7
+      Return (4)
     }
 
     Name (_DSD, Package () {
@@ -296,10 +296,10 @@ Scope(_SB)
         , ,)
     })
 
-    Device (RES1)
+    Device (RES4)
     {
       Name (_HID, "SOPH0000" /* PNP Motherboard Resources */)  // _HID: Hardware ID
-      Name (_UID, 0x1)  // Unique ID
+      Name (_UID, 0x4)  // Unique ID
       Name (_CRS, ResourceTemplate ()  // _CRS: Current Resource Settings
       {
         QWordMemory (
@@ -318,7 +318,7 @@ Scope(_SB)
       }
     }
 
-  } // Device(PCI1)
+  } // Device(PCI4)
 
 }
 

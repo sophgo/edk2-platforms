@@ -19,6 +19,14 @@ EFI_GUID  mBootMenuFile = {
   0xEEC25BDC, 0x67F2, 0x4D95, { 0xB1, 0xD5, 0xF8, 0x1B, 0x20, 0x39, 0xD1, 0x1D }
 };
 
+extern VOID *
+BmGetNextLoadOptionBuffer (
+  IN  EFI_BOOT_MANAGER_LOAD_OPTION_TYPE  Type,
+  IN  EFI_DEVICE_PATH_PROTOCOL           *FilePath,
+  OUT EFI_DEVICE_PATH_PROTOCOL           **FullPath,
+  OUT UINTN                              *FileSize
+  );
+
 STATIC PLATFORM_SERIAL_CONSOLE mSerialConsole = {
   //
   // VENDOR_DEVICE_PATH SerialDxe
@@ -466,37 +474,41 @@ CheckBootOptionsStatus (
   EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
   UINTN                           BootOptionCount;
   UINTN                           BootOptionIndex;
-  EFI_HANDLE                      Handle1;
-  EFI_HANDLE                      Handle2;
-  EFI_STATUS                      Status1;
-  EFI_STATUS                      Status2;
-  EFI_DEVICE_PATH_PROTOCOL        *TempPath;
+  EFI_HANDLE                      Handle;
+  EFI_STATUS                      Status;
+  EFI_DEVICE_PATH_PROTOCOL        *CopyOptionPath;
   BOOLEAN                         InvalidFound;
   BOOLEAN                         HasValidAutoCreatedBlockDevice;
+  UINTN                           FileSize;
+  EFI_DEVICE_PATH_PROTOCOL        *CurFullPath;
+  VOID                            *FileBuffer;
 
   InvalidFound = FALSE;
   HasValidAutoCreatedBlockDevice = FALSE;
   BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
 
   for (BootOptionIndex = 0; BootOptionIndex < BootOptionCount; ++BootOptionIndex) {
-    TempPath = DuplicateDevicePath(BootOptions[BootOptionIndex].FilePath);
-    Status1 = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &TempPath, &Handle1);
-    Status2 = gBS->LocateDevicePath (&gEfiLoadFileProtocolGuid, &TempPath, &Handle2);
-
-    if (EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
-      // Found invalid boot option
-      InvalidFound = TRUE;
-      DEBUG ((DEBUG_INFO, "Found invalid boot option Description: %s\n", BootOptions[BootOptionIndex].Description));
-      DEBUG ((DEBUG_INFO, "Removing invalid boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
-      EfiBootManagerDeleteLoadOptionVariable(
-        BootOptions[BootOptionIndex].OptionNumber,
-        LoadOptionTypeBoot
-        );
-    } else if (!EFI_ERROR (Status1) && EFI_ERROR (Status2)) {
-      // For valid block devices (not LoadFile devices), check if any are auto-created
-      if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex])) {
-        HasValidAutoCreatedBlockDevice = TRUE;
+    FileBuffer = NULL;
+    CurFullPath = NULL;
+    CopyOptionPath = NULL;
+    FileBuffer = BmGetNextLoadOptionBuffer (BootOptions[BootOptionIndex].OptionType, BootOptions[BootOptionIndex].FilePath, &CurFullPath, &FileSize);
+    if (FileBuffer != NULL) {
+      FreePool (FileBuffer);
+      CopyOptionPath = DuplicateDevicePath(BootOptions[BootOptionIndex].FilePath);
+      Status = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &CopyOptionPath, &Handle);
+      if (!EFI_ERROR (Status)) {
+        // For valid block devices (not LoadFile devices), check if any are auto-created
+        if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex]))
+          HasValidAutoCreatedBlockDevice = TRUE;
       }
+    } else {
+        // Found invalid boot option
+        InvalidFound = TRUE;
+        DEBUG ((DEBUG_INFO, "Removing invalid boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
+        EfiBootManagerDeleteLoadOptionVariable(
+          BootOptions[BootOptionIndex].OptionNumber,
+          LoadOptionTypeBoot
+        );
     }
   }
 

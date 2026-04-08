@@ -99,9 +99,9 @@ STATIC SMBIOS_TABLE_TYPE0 mSG2042EVBType0 = {
 };
 
 STATIC CHAR8 CONST *mSG2042EVBType0Strings[] = {
-  "EFI Development Kit II / Sophgo\0",            /* Vendor */
-  "V1.0\0",                                       /* BiosVersion */
-  __DATE__"\0",                                   /* BiosReleaseDate */
+  "SOPHGO\0",     /* Vendor */
+  "1.4.1\0",      /* BiosVersion */
+  __DATE__"\0",   /* BiosReleaseDate */
   NULL
 };
 
@@ -125,7 +125,7 @@ STATIC SMBIOS_TABLE_TYPE1 mSG2042EVBType1 = {
 
 STATIC CHAR8 CONST *mSG2042EVBType1Strings[] = {
   "SOPHGO\0",                              /* Manufacturer */
-  "Sophgo SG2042 EVB Board\0",             /* Product Name */
+  "SG2042\0",                              /* Product Name */
   "None\0",                                /* Version */
   "Not Set\0",                             /* Serial */
   NULL
@@ -154,7 +154,7 @@ STATIC SMBIOS_TABLE_TYPE2 mSG2042EVBType2 = {
 
 STATIC CHAR8 CONST *mSG2042EVBType2Strings[] = {
   "SOPHGO\0",                             /* Manufacturer */
-  "Sophgo SG2042 EVB Board\0",            /* Product Name */
+  "SG2042\0",                             /* Product Name */
   "None\0",                               /* Version */
   "Not Set\0",                            /* Serial */
   "Not Set\0",                            /* BaseBoardAssetTag */
@@ -209,8 +209,8 @@ STATIC SMBIOS_TABLE_TYPE4 mSG2042EVBType4 = {
   3,                                       // version
   {0,0,0,0,0,1},                           // voltage
   0,                                       // external clock
-  2200,                                    // max speed
-  0,                                       // current speed - requires update
+  2000,                                    // max speed
+  2000,                                    // current speed, speed when running BIOS
   0x41,                                    // status
   ProcessorUpgradeOther,
   SMBIOS_HANDLE_L1I,                       // l1 cache handle

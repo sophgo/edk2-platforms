@@ -100,7 +100,7 @@ STATIC SMBIOS_TABLE_TYPE0 mSG2042EVBType0 = {
 
 STATIC CHAR8 CONST *mSG2042EVBType0Strings[] = {
   "SOPHGO\0",     /* Vendor */
-  "1.4.1\0",      /* BiosVersion */
+  "1.4.2\0",      /* BiosVersion */
   __DATE__"\0",   /* BiosReleaseDate */
   NULL
 };

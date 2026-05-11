@@ -58,7 +58,6 @@
   MdePkg/MdePkg.dec
   Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
   Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
-  Silicon/RISC-V/ProcessorPkg/RiscVProcessorPkg.dec
   Silicon/Sophgo/Sophgo.dec
   EmbeddedPkg/EmbeddedPkg.dec
 
@@ -67,6 +66,7 @@
   BaseMemoryLib
   DebugLib
   HiiLib
+  HobLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
   UefiLib
@@ -102,6 +102,9 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductManufacturer
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductSN
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductUUID
+
+[Guids]
+  gFdtHobGuid
 
 [Depex]
   TRUE

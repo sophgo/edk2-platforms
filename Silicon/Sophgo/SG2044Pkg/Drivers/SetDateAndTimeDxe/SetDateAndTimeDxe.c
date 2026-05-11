@@ -351,9 +351,7 @@ SetDateAndTimeInit (
   EFI_STATUS                      Status;
   EFI_HII_HANDLE                  HiiHandle;
   EFI_HII_CONFIG_ROUTING_PROTOCOL *HiiConfigRouting;
-  CHAR16                    	  *NewString;
 
-  NewString        = NULL;
   PrivateData = AllocateZeroPool (sizeof (DATE_TIME_PRIVATE_DATA));
   if (PrivateData == NULL) {
     return EFI_OUT_OF_RESOURCES;

@@ -495,11 +495,8 @@ ReserveMemoryCallback (
   )
 {
   EFI_STATUS                     Status;
-  RESERVE_MEMORY_CALLBACK_DATA   *Private;
   UINTN                          VarSize;
   RESERVE_MEMORY_DATA            InputSize;
-
-  Private = RESERVE_MEMORY_CALLBACK_DATA_FROM_THIS (This);
 
   Status = EFI_SUCCESS;
   VarSize = sizeof (RESERVE_MEMORY_DATA);

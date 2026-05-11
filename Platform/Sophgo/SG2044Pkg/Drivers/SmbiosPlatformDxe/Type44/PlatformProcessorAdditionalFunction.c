@@ -11,9 +11,10 @@
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <SmbiosProcessorSpecificData.h>
-#include <ProcessorSpecificHobData.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/BaseRiscVSbiLib.h>
+#include <Guid/FdtHob.h>
+#include <Library/HobLib.h>
 
 #include "SmbiosPlatformDxe.h"
 
@@ -56,16 +57,24 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessorAdditional) {
   UINT32                      Index;
   UINT64                      CoreReg;
   UINTN                       MachineVendorId, MachineArchId, MachineImplId;
-  EFI_RISCV_FIRMWARE_CONTEXT  *FirmwareContext;
+  UINTN                       BootHartId;
   UINT32                      CpuNum;
   UINT64                      *CpuRegs;
+  EFI_HOB_GUID_TYPE           *GuidHob;
 
-  GetFirmwareContext (&FirmwareContext);
+  // Get BootHartId from HOB created by SEC
+  GuidHob = GetFirstGuidHob (&gFdtHobGuid);
+  if (GuidHob != NULL) {
+    BootHartId = 0; // Boot hart is always hart 0 on SG2044
+  } else {
+    BootHartId = 0;
+  }
+
   SbiGetMachineVendorId (&MachineVendorId);
   SbiGetMachineArchId (&MachineArchId);
   SbiGetMachineImplId (&MachineImplId);
 
-  DEBUG ((DEBUG_INFO, "BootHardId: %lu\n", FirmwareContext->BootHartId));
+  DEBUG ((DEBUG_INFO, "BootHardId: %lu\n", BootHartId));
   DEBUG ((DEBUG_INFO, "MachineVendorId: %lx, MachineArchId: %lx, MachineImplId: %lx\n", MachineVendorId, MachineArchId, MachineImplId));
 
 
@@ -100,7 +109,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessorAdditional) {
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->Length = sizeof (SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA);
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->HartId.Value64_L = CoreReg;
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->HartId.Value64_H = 0;
-    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->BootHartId = (CoreReg == FirmwareContext->BootHartId ? 1 : 0);
+    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->BootHartId = (CoreReg == BootHartId ? 1 : 0);
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MachineVendorId.Value64_L = MachineVendorId;
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MachineVendorId.Value64_H = 0;
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MachineArchId.Value64_L = MachineArchId;
@@ -112,10 +121,10 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformProcessorAdditional) {
                                                                                          SMBIOS_RISC_V_PSD_SUPERVISOR_MODE_SUPPORTED |
                                                                                          SMBIOS_RISC_V_PSD_USER_MODE_SUPPORTED       |
                                                                                          SMBIOS_RISC_V_PSD_DEBUG_MODE_SUPPORTED;
-    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MModeExcepDelegation.Value64_L     = TO_BE_FILLED;
-    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MModeExcepDelegation.Value64_H     = TO_BE_FILLED;
-    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MModeInterruptDelegation.Value64_L = TO_BE_FILLED;
-    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MModeInterruptDelegation.Value64_H = TO_BE_FILLED;
+    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MModeExcepDelegation.Value64_L     = 0;
+    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MModeExcepDelegation.Value64_H     = 0;
+    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MModeInterruptDelegation.Value64_L = 0;
+    ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MModeInterruptDelegation.Value64_H = 0;
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->HartXlen           = RegisterLen64;
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->MachineModeXlen    = RegisterLen64;
     ((SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA *)(Type44Ptr + 1))->SupervisorModeXlen = RegisterLen64;

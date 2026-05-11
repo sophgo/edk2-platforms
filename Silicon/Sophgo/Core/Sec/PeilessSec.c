@@ -13,6 +13,7 @@
 #include "PeilessSec.h"
 #include <Ppi/TemporaryRamSupport.h>
 #include <Ppi/SecHobData.h>
+#include <Guid/FdtHob.h>
 
 EFI_STATUS
 EFIAPI
@@ -206,7 +207,7 @@ SecStartup (
   )
 {
   EFI_HOB_HANDOFF_INFO_TABLE  *HobList;
-  EFI_RISCV_FIRMWARE_CONTEXT  FirmwareContext;
+  UINT64                      *FdtHobData;
   UINT64                      UefiMemoryBase;
   UINT64                      StackBase;
   UINT32                      StackSize;
@@ -225,10 +226,6 @@ SecStartup (
     BootHartId,
     DeviceTreeAddress
     ));
-
-  FirmwareContext.BootHartId          = BootHartId;
-  FirmwareContext.FlattenedDeviceTree = (UINT64)DeviceTreeAddress;
-  SetFirmwareContextPointer (&FirmwareContext);
 
   StackBase      = (UINT64)FixedPcdGet32 (PcdTemporaryRamBase);
   StackSize      = FixedPcdGet32 (PcdTemporaryRamSize);
@@ -260,6 +257,12 @@ SecStartup (
               (VOID *)StackBase // The top of the UEFI Memory is reserved for the stacks
               );
   PrePeiSetHobList (HobList);
+
+  // Pass FDT address via HOB instead of FirmwareContext
+  FdtHobData = BuildGuidHob (&gFdtHobGuid, sizeof *FdtHobData);
+  if (FdtHobData != NULL) {
+    *FdtHobData = (UINT64)(UINTN)DeviceTreeAddress;
+  }
 
   SecInitializePlatform ();
 

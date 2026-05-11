@@ -10,7 +10,7 @@
 #include "SmbiosPlatformDxe.h"
 
 SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE7, PlatformCache) = {
-  {                                         // Table 1
+  {                                         // Table 1 - L1I
     {                                       // Header
       EFI_SMBIOS_TYPE_CACHE_INFORMATION,    // Type
       sizeof (SMBIOS_TABLE_TYPE7),          // Length
@@ -18,19 +18,19 @@ SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE7, PlatformCache) = {
     },
     1,
     0x180,                                  // L1 enabled, WB
-    64,                                     // 64k I-cache max
-    64,                                     // 64k installed
-    {0,1},                                  // SRAM type
-    {0,1},                                  // SRAM type
+    {64, 0},                                // 64k I-cache max
+    {64, 0},                                // 64k installed
+    {0,1,0,0,0,0,0,0},                      // SRAM type
+    {0,1,0,0,0,0,0,0},                      // SRAM type
     0,                                      // speed unknown
     CacheErrorParity,                       // parity checking
     CacheTypeInstruction,                   // instruction cache
     CacheAssociativity2Way,                 // two way
     // SMBIOS 3.1.0 fields
-    64,                                     //64k I-cache max
-    64,                                     //64k installed
+    {64, 0},                                // 64k I-cache max
+    {64, 0},                                // 64k installed
   },
-  {                                         // Table 2
+  {                                         // Table 2 - L1D
     {                                       // Header
       EFI_SMBIOS_TYPE_CACHE_INFORMATION,    // Type
       sizeof (SMBIOS_TABLE_TYPE7),          // Length
@@ -38,19 +38,19 @@ SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE7, PlatformCache) = {
     },
     1,
     0x180,                                  // L1 enabled, WB
-    64,                                     // 64k D-cache max
-    64,                                     // 64k installed
-    {0,1},                                  // SRAM type
-    {0,1},                                  // SRAM type
+    {64, 0},                                // 64k D-cache max
+    {64, 0},                                // 64k installed
+    {0,1,0,0,0,0,0,0},                      // SRAM type
+    {0,1,0,0,0,0,0,0},                      // SRAM type
     0,                                      // speed unknown
     CacheErrorSingleBit,                    // ECC checking
     CacheTypeData,                          // data cache
     CacheAssociativity2Way,                 // two way
     // SMBIOS 3.1.0 fields
-    64,                                     // 64k D-cache max
-    64,                                     // 64k installed
+    {64, 0},                                // 64k D-cache max
+    {64, 0},                                // 64k installed
   },
-  {                                         // Table 3
+  {                                         // Table 3 - L2
     {                                       // Header
       EFI_SMBIOS_TYPE_CACHE_INFORMATION,    // Type
       sizeof (SMBIOS_TABLE_TYPE7),          // Length
@@ -58,19 +58,19 @@ SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE7, PlatformCache) = {
     },
     1,
     0x181,                                  // L2 enabled, WB
-    512,                                    // 512k D-cache max
-    512,                                    // 512k installed
-    {0,1},                                  // SRAM type
-    {0,1},                                  // SRAM type
+    {512, 0},                               // 512k D-cache max
+    {512, 0},                               // 512k installed
+    {0,1,0,0,0,0,0,0},                      // SRAM type
+    {0,1,0,0,0,0,0,0},                      // SRAM type
     0,                                      // speed unknown
     CacheErrorSingleBit,                    // ECC checking
     CacheTypeUnified,                       // instruction cache
     CacheAssociativity16Way,                // 16 way associative
     // SMBIOS 3.1.0 fields
-    512,                                    // 512k D-cache max
-    512,                                    // 512k installed
+    {512, 0},                               // 512k D-cache max
+    {512, 0},                               // 512k installed
   },
-  {                                         // Table 4
+  {                                         // Table 4 - L3
     {                                       // Header
       EFI_SMBIOS_TYPE_CACHE_INFORMATION,    // Type
       sizeof (SMBIOS_TABLE_TYPE7),          // Length
@@ -78,17 +78,17 @@ SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE7, PlatformCache) = {
     },
     1,
     0x182,                                  // L3 enabled, WB
-    1024,                                   // 1M cache max
-    1024,                                   // 1M installed
-    {0,1},                                  // SRAM type
-    {0,1},                                  // SRAM type
+    {1024, 0},                              // 1M cache max (1K granularity)
+    {1024, 0},                              // 1M installed
+    {0,1,0,0,0,0,0,0},                      // SRAM type
+    {0,1,0,0,0,0,0,0},                      // SRAM type
     0,                                      // speed unknown
     CacheErrorSingleBit,                    // ECC checking
     CacheTypeUnified,                       // instruction cache
     CacheAssociativity8Way,                 // 8 way associative
     // SMBIOS 3.1.0 fields
-    1024,                                   // 1M cache max
-    1024,                                   // 1M installed
+    {1024, 0},                              // 1M cache max
+    {1024, 0},                              // 1M installed
   },
   {                                         // Null-terminated table
     {

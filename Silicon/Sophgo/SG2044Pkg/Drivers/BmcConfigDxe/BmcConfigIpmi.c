@@ -458,7 +458,6 @@ IpmiGetUserName (
   IN  UINTN             UserNameMaxLen
   )
 {
-  EFI_STATUS                  Status;
   IPMI_GET_USER_NAME_RESPONSE GetUserNameResponse;
   IPMI_GET_USER_NAME_REQUEST  GetUserNameRequest;
   UINT32                       DataSize;
@@ -468,7 +467,7 @@ IpmiGetUserName (
   GetUserNameRequest.UserId.Uint8 = UserId;
   DataSize = sizeof (IPMI_GET_USER_NAME_RESPONSE);
 
-  Status = IpmiSubmitCommand (
+  IpmiSubmitCommand (
               IPMI_NETFN_APP,
               IPMI_APP_GET_USER_NAME,
               (UINT8 *)&GetUserNameRequest,
@@ -553,7 +552,6 @@ GetBmcBasicInfo (
 {
   EFI_STATUS                   Status;
   IPMI_GET_DEVICE_ID_RESPONSE  DeviceId;
-  UINTN                        StrLen;
 
   Status = IpmiGetDeviceId (&DeviceId);
   if (  !EFI_ERROR (Status)
@@ -569,7 +567,7 @@ GetBmcBasicInfo (
       sizeof (BmcData->FmVersion),
       sizeof (BmcData->IpmiVersion)));
 
-    StrLen = UnicodeSPrint (
+    UnicodeSPrint (
       BmcData->FmVersion,
       sizeof (BmcData->FmVersion),
       L"%d.%02d",
@@ -580,7 +578,7 @@ GetBmcBasicInfo (
     //
     // IPMI Version
     //
-    StrLen = UnicodeSPrint (
+    UnicodeSPrint (
       BmcData->IpmiVersion,
       sizeof (BmcData->IpmiVersion),
       L"%d.%d",

@@ -14,7 +14,6 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PcdLib.h>
 #include <Include/Library/PrePiLib.h>
-#include <libfdt.h>
 #include <Guid/FdtHob.h>
 #include <Library/BaseRiscVSbiLib.h>
 #include <Library/ResourcePublicationLib.h>

@@ -659,7 +659,6 @@ ShowCenteredPopup (
   UINTN     StartRow;
   UINTN     LineCount;
   CHAR16    *CurrentChar;
-  CHAR16    *LineStart;
   UINTN     CurrentLineLength;
 
   //
@@ -684,7 +683,6 @@ ShowCenteredPopup (
   MaxLineLength = 0;
   CurrentLineLength = 0;
   CurrentChar = (CHAR16*)Message;
-  LineStart = CurrentChar;
 
   while (*CurrentChar != L'\0') {
     if (*CurrentChar == L'\n') {
@@ -693,7 +691,6 @@ ShowCenteredPopup (
         MaxLineLength = CurrentLineLength;
       }
       CurrentLineLength = 0;
-      LineStart = CurrentChar + 1;
     } else {
       CurrentLineLength++;
     }

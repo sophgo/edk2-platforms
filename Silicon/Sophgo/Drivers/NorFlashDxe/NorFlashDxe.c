@@ -931,9 +931,6 @@ SpiNorEntryPoint (
   )
 {
   EFI_STATUS            Status;
-  UINT32                Index;
-
-  Index = 0;
 
   //
   // Locate SPI Master protocol

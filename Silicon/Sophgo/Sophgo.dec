@@ -76,6 +76,7 @@
   gSophgoTokenSpaceGuid.PcdTopBaseAddress|0x0|UINT64|0x00001021
   gSophgoTokenSpaceGuid.PcdPeiPermanentMemBase|0x0|UINT64|0x00001022
   gSophgoTokenSpaceGuid.PcdPeiPermanentMemSize|0x0|UINT64|0x00001023
+  gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVPeiFvBase|0x0|UINT32|0x00001024
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

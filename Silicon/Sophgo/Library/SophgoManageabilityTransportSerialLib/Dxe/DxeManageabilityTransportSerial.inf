@@ -25,7 +25,7 @@
   ../Common/ManageabilityTransportSerial.h
 
 [Packages]
-  Features/ManageabilityPkg/ManageabilityPkg.dec
+  ManageabilityPkg/ManageabilityPkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
   Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec

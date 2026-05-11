@@ -302,9 +302,6 @@ DriverCallback(
   )
 {
   EFI_STATUS                       Status;
-  NET_PRIVATE_DATA                *Private;
-
-  Private = BMC_PRIVATE_DATA_FROM_THIS(This);
 
   if (Action == EFI_BROWSER_ACTION_FORM_OPEN) {
     if (!IsFormatOpen) {

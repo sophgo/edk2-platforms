@@ -241,9 +241,7 @@ PassWordToggleRestore (
   )
 {
   EFI_STATUS Status;
-  UINTN      VarSize;
 
-  VarSize = sizeof (PASSWORD_TOGGLE_DATA);
   PassWordToggleData.PasswordCheckEnabled = 0;
   PassWordToggleData.IsFirst = 0;
   PassWordToggleData.UserPriv = 0;

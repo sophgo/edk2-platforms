@@ -828,10 +828,7 @@ PlatformBootManagerAfterConsole (
   )
 {
   EFI_STATUS                    Status;
-  UINTN                         FirmwareVerLength;
   EFI_EVENT                     AfterConsoleEvent;
-
-  FirmwareVerLength = StrLen (PcdGetPtr (PcdFirmwareVersionString));
   //
   // Show the splash screen.
   //

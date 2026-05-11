@@ -11,6 +11,7 @@
 #define __SG2044_ACPI_HEADER__
 
 #include <IndustryStandard/Acpi.h>
+#include <IndustryStandard/Acpi66.h>
 
 //
 // ACPI table information used to initialize tables.
@@ -58,6 +59,7 @@
 
 ///
 /// Sophgo Serial Port Console Redirection Table Format Revision 4
+/// Uses fixed-size NameSpaceString[16] for static initialization
 ///
 #pragma pack(1)
 typedef struct {
@@ -86,60 +88,32 @@ typedef struct {
   UINT16                                    NameSpaceStrLength;
   UINT16                                    NameSpaceStrOffset;
   CHAR8                                     NameSpaceString[16];
-} EFI_ACPI_4_0_SERIAL_PORT_CONSOLE_REDIRECTION_SOPHGO_TABLE;
+} SG2044_SPCR_TABLE;
 #pragma pack(0)
 
 //
 // "RHCT" RISC-V Hart Capabilities Table
+// Uses edk2's EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE for the header
+// (defined in IndustryStandard/Acpi66.h)
 //
-#define EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE_SIGNATURE  SIGNATURE_32('R', 'H', 'C', 'T')
-//
-// RHCT Revision (as defined in ACPI 6.5 spec.)
-//
-#define EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE_REVISION  0x01
 #define MAX_ISA_LENGTH 256
-//
-// RISC-V Hart Capabilities Table header definition.  The rest of the table
-// must be defined in a platform specific manner.
-//
-typedef struct {
-  EFI_ACPI_DESCRIPTION_HEADER    Header;
-  UINT32                         Flags;
-  UINT64                         TimeBaseFreq;
-  UINT32                         NumNodes;
-  UINT32                         OffsetNodes;
-} EFI_ACPI_6_6_RISCV_HART_CAPABILITIES_TABLE_HEADER;
 
-// ISA string node structure
+// ISA string node structure (fixed-size for static initialization)
 typedef struct {
   UINT16     Type;
   UINT16     Length;
   UINT16     Revision;
   UINT16     ISALen;
   CHAR8      ISAStr[MAX_ISA_LENGTH];
-} EFI_ACPI_6_6_ISA_STRING_NODE_STRUCTURE;
+} SG2044_RHCT_ISA_STRING_NODE;
 
-// CMO node structure
-typedef struct {
-  UINT16     Type;
-  UINT16     Length;
-  UINT16     Revision;
-  UINT8      Reserved;
-  UINT8      CBOMBlkSize;
-  UINT8      CBOPBlkSize;
-  UINT8      CBOZBlkSize;
-} EFI_ACPI_6_6_CMO_NODE_STRUCTURE;
+// CMO node - uses edk2's EFI_ACPI_6_6_RHCT_CMO_NODE (Acpi66.h)
+// Positional init: { {Type, Length, Revision}, Reserved, CbomBlockSize, CbopBlockSize, CbozBlockSize }
 
-// MMU node structure
-typedef struct {
-  UINT16     Type;
-  UINT16     Length;
-  UINT16     Revision;
-  UINT8      Reserved;
-  UINT8      MMUType;
-} EFI_ACPI_6_6_MMU_NODE_STRUCTURE;
+// MMU node - uses edk2's EFI_ACPI_6_6_RHCT_MMU_NODE (Acpi66.h)
+// Positional init: { {Type, Length, Revision}, Reserved, MmuType }
 
-// Hart Info Node Structure
+// Hart Info Node Structure (fixed-size for static initialization)
 typedef struct {
   UINT16     Type;
   UINT16     Length;
@@ -147,17 +121,17 @@ typedef struct {
   UINT16     NumOffset;
   UINT32     AcpiProcessorUid;
   UINT32     Offsets[3];
-} EFI_ACPI_6_6_HART_INFO_NODE_STRUCTURE;
+} SG2044_RHCT_HART_INFO_NODE;
 
 // RHCT Node[N] starts at offset 56
 #define RHCT_NODE_ARRAY_OFFSET     56
-#define RHCT_ISA_STRING_NODE_SIZE  sizeof(EFI_ACPI_6_6_ISA_STRING_NODE_STRUCTURE)
-#define RHCT_CMO_NODE_SIZE         sizeof(EFI_ACPI_6_6_CMO_NODE_STRUCTURE)
+#define RHCT_ISA_STRING_NODE_SIZE  sizeof(SG2044_RHCT_ISA_STRING_NODE)
+#define RHCT_CMO_NODE_SIZE         sizeof(EFI_ACPI_6_6_RHCT_CMO_NODE)
 
-// EFI_ACPI_6_6_HART_INFO_NODE_INIT
-#define EFI_ACPI_6_6_HART_INFO_NODE_INIT(AcpiProcessorUid) {                   \
+// SG2044_RHCT_HART_INFO_NODE_INIT
+#define SG2044_RHCT_HART_INFO_NODE_INIT(AcpiProcessorUid) {                   \
     65535,                                                                     \
-    sizeof (EFI_ACPI_6_6_HART_INFO_NODE_STRUCTURE),                            \
+    sizeof (SG2044_RHCT_HART_INFO_NODE),                                       \
     1,                                                                         \
     3,                                                                         \
     AcpiProcessorUid,                                                          \
@@ -298,24 +272,11 @@ typedef struct {
       (((CoreId) & 0xFF) << 4) | ((CacheType) & 0xF)                           \
     )
 
-// RINTC Structure
-typedef struct {
-  UINT8     Type;
-  UINT8     Length;
-  UINT8     Version;
-  UINT8     Reserved;
-  UINT32    Flags;
-  UINT64    HartId;
-  UINT32    AcpiProcessorUid;
-  UINT32    ExternalInterruptId;
-  UINT64    IMSICBaseAddress;
-  UINT32    IMSICSize;
-} EFI_ACPI_6_6_RINTC_STRUCTURE;
-
 #define ACPI_BUILD_INTC_ID(socket, index) ((socket << 24) | (index))
 #define ACPI_BUILD_IMSIC_BASE(base, index) (base + index * 0x4)
 
-// EFI_ACPI_6_6_RINTC_STRUCTURE
+// EFI_ACPI_6_6_RINTC_STRUCTURE (uses edk2 Acpi66.h definition)
+// Fields: Type, Length, Version, Reserved, Flags, HartId, Uid, ExtIntcId, ImsicAddr, ImsicSize
 #define EFI_ACPI_6_6_RINTC_STRUCTURE_INIT(Flags, HartId, AcpiCpuUid,               \
   ExternalInterruptId, IMSICBase, IMSICSize) {                                     \
     0x18,                                   /* Type */                             \
@@ -323,64 +284,36 @@ typedef struct {
     1,                                      /* Version */                          \
     EFI_ACPI_RESERVED_BYTE,                 /* Reserved */                         \
     Flags,                                  /* Flags */                            \
-    HartId,                                 /* Hart ID */                          \
-    AcpiCpuUid,                             /* AcpiProcessorUid */                 \
-    ExternalInterruptId,                    /* External Interrupt Controller ID */ \
-    IMSICBase,                              /* IMSIC Base address */               \
-    IMSICSize,                              /* IMSIC Size */                       \
+    HartId,                                 /* HartId */                           \
+    AcpiCpuUid,                             /* Uid */                              \
+    ExternalInterruptId,                    /* ExtIntcId */                        \
+    IMSICBase,                              /* ImsicAddr */                        \
+    IMSICSize                               /* ImsicSize */                        \
   }
 
 //
-// PLIC Structure
+// PLIC Structure (uses edk2 Acpi66.h definition)
+// Fields: Type, Length, Version, Id, HwId[8], NumIrqs, MaxPrio, Flags, Size, BaseAddr, GsiBase
 //
-typedef struct {
-  UINT8     Type;
-  UINT8     Length;
-  UINT8     Version;
-  UINT8     PlicId;
-  UINT8     HardwareId[8];
-  UINT16    TotalExtIntSrcsSup;
-  UINT16    MaxPriority;
-  UINT32    Flags;
-  UINT32    PLICSize;
-  UINT64    PLICBase;
-  UINT32    SystemVectorBase;
-} EFI_ACPI_6_6_PLIC_STRUCTURE;
-
-// EFI_ACPI_6_6_PLIC_STRUCTURE
 #define EFI_ACPI_6_6_PLIC_STRUCTURE_INIT(PlicId, HwId, TotalExtIntSrcsSup,     \
   MaxPriority, PLICSize, PLICBase, SystemVectorBase) {                         \
     0x1B,                                 /* Type */                           \
     sizeof (EFI_ACPI_6_6_PLIC_STRUCTURE), /* Length */                         \
     1,                                    /* Version */                        \
-    PlicId,                               /* PlicId */                         \
-    {0, 0, 0, 0, 0, 0, 0, HwId},          /* Hardware ID */                    \
-    TotalExtIntSrcsSup,                   /* Total External Interrupt Sources Supported */   \
-    MaxPriority,                          /* Maximum interrupt priority */     \
+    PlicId,                               /* Id */                             \
+    {0, 0, 0, 0, 0, 0, 0, HwId},          /* HwId */                          \
+    TotalExtIntSrcsSup,                   /* NumIrqs */                        \
+    MaxPriority,                          /* MaxPrio */                        \
     0,                                    /* Flags */                          \
-    PLICSize,                             /* PLIC Size */                      \
-    PLICBase,                             /* PLIC Address */                   \
-    SystemVectorBase                      /* Global System Interrupt Vector Base */         \
+    PLICSize,                             /* Size */                           \
+    PLICBase,                             /* BaseAddr */                       \
+    SystemVectorBase                      /* GsiBase */                        \
   }
 
 //
-// IMSIC Structure
+// IMSIC Structure (uses edk2 Acpi66.h definition)
+// Fields: Type, Length, Version, Reserved, Flags, NumIds, NumGuestIds, GuestIndexBits, HartIndexBits, GroupIndexBits, GroupIndexShift
 //
-typedef struct {
-  UINT8     Type;
-  UINT8     Length;
-  UINT8     Version;
-  UINT8     Reserved;
-  UINT32    Flags;
-  UINT16    NumId;
-  UINT16    NumGuestId;
-  UINT8     GuestIndexBits;
-  UINT8     HartIndexBits;
-  UINT8     GroupIndexBits;
-  UINT8     GroupIndexShift;
-} EFI_ACPI_6_6_IMSIC_STRUCTURE;
-
-// EFI_ACPI_6_6_IMSIC_STRUCTURE
 #define EFI_ACPI_6_6_IMSIC_STRUCTURE_INIT(NumId, NumGuestId, GuestIndexBits,                         \
   HartIndexBits, GroupIndexBits, GroupIndexShift) {                                                  \
     0x19,                                   /* Type */                                               \
@@ -388,12 +321,12 @@ typedef struct {
     1,                                      /* Version */                                            \
     EFI_ACPI_RESERVED_BYTE,                 /* Reserved */                                           \
     0,                                      /* Flags */                                              \
-    NumId,                                  /* Number of supervisor mode Interrupt Identitieses */   \
-    NumGuestId,                             /* Number of guest mode Interrupt Identities */          \
-    GuestIndexBits,                         /* Guest Index Bits */                                   \
-    HartIndexBits,                          /* Hart Index Bits */                                    \
-    GroupIndexBits,                         /* Group Index Bits */                                   \
-    GroupIndexShift                         /* Group Index Shift */                                  \
+    NumId,                                  /* NumIds */                                              \
+    NumGuestId,                             /* NumGuestIds */                                         \
+    GuestIndexBits,                         /* GuestIndexBits */                                     \
+    HartIndexBits,                          /* HartIndexBits */                                      \
+    GroupIndexBits,                         /* GroupIndexBits */                                     \
+    GroupIndexShift                         /* GroupIndexShift */                                    \
   }
 
 #pragma pack(1)

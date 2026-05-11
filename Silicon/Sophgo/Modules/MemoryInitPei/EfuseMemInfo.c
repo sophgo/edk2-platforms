@@ -40,7 +40,6 @@
 #define PUBKEY_HASH 0x830
 
 #define GB(n)	((n) * 1024 * 1024 * 1024)
-#define MT(n)	((n) * 1000 * 1000)
 
 typedef struct {
   UINTN   Regs;
@@ -54,14 +53,7 @@ STATIC  UINT32           mNumberOfControllers;
 
 // static const char *vendor[] = { "Micron", "Hynix", "CXMT", "" };
 static const UINT64 capacity[] = { GB(16UL), GB(8UL), 0, 0 };
-static const UINT64 data_rate[] = { MT(8533UL), MT(9600UL), 0, 0 };
 static const UINT64 channel_number[] = {8, 4, 0, 0};
-static const UINT64 channel_map[] = {
-	(1 << 1) | (1 << 2) | (1 << 5) | (1 << 6),
-	(1 << 0) | (1 << 3) | (1 << 4) | (1 << 7),
-	0,
-	0,
-};
 
 STATIC
 VOID
@@ -247,9 +239,7 @@ GetMemSizeFromEfusePei (
   UINT32                *EfuseCellWidth;
   UINT32                 Index;
   UINT64                 Capacity = 0;
-  UINT64                 DataRate = 0;
   UINT64                 ChannelNum = 0;
-  UINT64                 ChannelMap = 0;
   EFI_STATUS             Status;
 
   if (MemSize == NULL) {
@@ -303,13 +293,7 @@ GetMemSizeFromEfusePei (
       // return EFI_NOT_FOUND;
     } else {
       Capacity = capacity[(Flags >> 2) & 0x03];
-      DataRate = data_rate[(Flags >> 4) & 0x03];
       ChannelNum = channel_number[(Flags >> 6) & 0x03];
-      if (ChannelNum == 4) {
-        ChannelMap = channel_map[(Flags >> 10) & 0x03];
-      } else {
-        ChannelMap = 0xFF;
-      }
 
       *MemSize = Capacity * ChannelNum;
       DEBUG ((DEBUG_VERBOSE, "Efuse: Memory Capacity = %lu GB\n", *MemSize / (1024 * 1024 * 1024)));

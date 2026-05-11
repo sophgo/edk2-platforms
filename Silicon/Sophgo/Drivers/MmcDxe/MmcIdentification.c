@@ -647,13 +647,9 @@ MmcIdentificationMode (
   )
 {
   EFI_STATUS              Status;
-  UINTN                   CmdArg;
-  BOOLEAN                 IsHCS;
   EFI_MMC_HOST_PROTOCOL   *MmcHost;
 
   MmcHost = MmcHostInstance->MmcHost;
-  CmdArg  = 0;
-  IsHCS   = FALSE;
 
   if (MmcHost == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -701,11 +697,8 @@ InitializeMmcDevice (
   )
 {
   EFI_STATUS              Status;
-  EFI_MMC_HOST_PROTOCOL   *MmcHost;
-  UINTN                   BlockCount;
 
-  BlockCount = 1;
-  MmcHost    = MmcHostInstance->MmcHost;
+  (void)MmcHostInstance->MmcHost;
 
   Status = MmcIdentificationMode (MmcHostInstance);
   if (EFI_ERROR (Status)) {

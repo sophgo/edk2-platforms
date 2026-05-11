@@ -63,13 +63,11 @@ UpdateBmcInfoForm(
     NET_PRIVATE_DATA *PrivateData
   )
 {
-  EFI_STATUS Status;
   VOID *StartOpCodeHandle;
   VOID *EndOpCodeHandle;
   EFI_IFR_GUID_LABEL *StartLabel;
   EFI_IFR_GUID_LABEL *EndLabel;
-  EFI_STRING_ID VersionStringId, IpmiVerStringId, IpmiInfTypeId,
-                BootSelectorId, BootInitiatorId, BootIsPersistentId;
+  EFI_STRING_ID VersionStringId, IpmiVerStringId, IpmiInfTypeId;
 
 
   StartOpCodeHandle = HiiAllocateOpCodeHandle();
@@ -101,11 +99,6 @@ UpdateBmcInfoForm(
   IpmiVerStringId      = HiiSetString(PrivateData->HiiHandle, 0, PrivateData->BmcConfigData.IpmiVersion, NULL);
   IpmiInfTypeId        = HiiSetString(PrivateData->HiiHandle, 0, L"UART", NULL);
 
-  BootSelectorId       = HiiSetString(PrivateData->HiiHandle, 0, PrivateData->BmcConfigData.BootDeviceSelector, NULL);
-  BootInitiatorId      = HiiSetString(PrivateData->HiiHandle, 0, PrivateData->BmcConfigData.BootInitiator, NULL);
-  BootIsPersistentId   = HiiSetString(PrivateData->HiiHandle, 0, PrivateData->BmcConfigData.BootIsPersistent, NULL);
-
-
   if (IpmiInfTypeId == 0 || VersionStringId == 0 || IpmiVerStringId == 0)
   {
     DEBUG((DEBUG_ERROR, "Failed to set dynamic strings.\n"));
@@ -121,7 +114,7 @@ UpdateBmcInfoForm(
   // HiiCreateTextOpCode(StartOpCodeHandle, STRING_TOKEN(STR_BOOT2_PROMPT), STRING_TOKEN(STR_BOOT2_HELP), BootInitiatorId);
   // HiiCreateTextOpCode(StartOpCodeHandle, STRING_TOKEN(STR_BOOT3_PROMPT), STRING_TOKEN(STR_BOOT3_HELP), BootIsPersistentId);
 
-  Status = HiiUpdateForm(
+  HiiUpdateForm(
       PrivateData->HiiHandle,
       &gBmcConfigFormSetGuid,
       BASIC_INFO_FORM_ID,

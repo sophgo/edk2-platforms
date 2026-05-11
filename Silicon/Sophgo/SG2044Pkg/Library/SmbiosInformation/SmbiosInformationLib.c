@@ -139,31 +139,15 @@ AllocSmbiosData (
         UINT8 RawLevel = (UINT8)(Type7->CacheConfiguration & 0x7);
         UINT32 CacheSizeInKB = 0;
 
-        if (Record->Length >= TYPE07_LENGTH && Type7->InstalledSize2 != 0) {
-          UINT32 InstalledSizeInBytes = Type7->InstalledSize2;
-          if (InstalledSizeInBytes & SIZE_2GB) {
-            CacheSizeInKB = ((InstalledSizeInBytes & 0x7FFFFFFF) << 6);
+        if (Record->Length >= TYPE07_LENGTH && Type7->InstalledSize2.Size != 0) {
+          UINT32 InstalledSizeInBytes = Type7->InstalledSize2.Size;
+          if (Type7->InstalledSize2.Granularity64K) {
+            CacheSizeInKB = (InstalledSizeInBytes << 6);
           } else {
             CacheSizeInKB = InstalledSizeInBytes;
           }
         }
-        CHAR16 *LevelStr;
-        switch (RawLevel) {
-          case 0: LevelStr = L"L1"; break;
-          case 1: LevelStr = L"L2"; break;
-          case 2: LevelStr = L"L3"; break;
-          default: LevelStr = L"Unknown"; break;
-        }
-
         UINT8 CacheType = Type7->SystemCacheType;
-        CHAR16 *CacheTypeStr = L"Unknown";
-        if (CacheType == CacheTypeInstruction) {
-          CacheTypeStr = L"Instruction";
-        } else if (CacheType == CacheTypeData) {
-          CacheTypeStr = L"Data";
-        } else if (CacheType == CacheTypeUnified) {
-          CacheTypeStr = L"Unified";
-        }
 
         if (RawLevel == 0) {
           if (CacheType == CacheTypeInstruction) {

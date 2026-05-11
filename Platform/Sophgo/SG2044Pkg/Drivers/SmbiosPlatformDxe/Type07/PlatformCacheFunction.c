@@ -30,12 +30,8 @@ UpdateCacheSize(
   SMBIOS_TABLE_TYPE7  *InputData
   )
 {
-  // EFI_STATUS Status;
   UINT64     Value;
-  UINT16     InstalledSizeValue;
-  UINT32     InstalledSizeValue2;
   UINT32     Bytes;
-  UINT16     Bytes16;
   UINT32     Bytes32;
 
   if (!StrCmp(UnicodeStr, L"L1 Instruction Cache")) {
@@ -52,30 +48,34 @@ UpdateCacheSize(
 
   Bytes = Value / 1024;
   Bytes32 = Bytes / 64;
-  InstalledSizeValue2 = Bytes32;
 
   if (Bytes <= MAX_INSTALLEDSIZE_1k) {
-    Bytes16 = Bytes;
-    InstalledSizeValue = Bytes16;
-    InputData->InstalledSize = InstalledSizeValue;
-    InputData->MaximumCacheSize = InstalledSizeValue;
-    InputData->MaximumCacheSize2 = InstalledSizeValue;
-    InputData->InstalledSize2 = InstalledSizeValue;
+    InputData->InstalledSize.Size = (UINT16)Bytes;
+    InputData->InstalledSize.Granularity64K = 0;
+    InputData->MaximumCacheSize.Size = (UINT16)Bytes;
+    InputData->MaximumCacheSize.Granularity64K = 0;
+    InputData->MaximumCacheSize2.Size = Bytes;
+    InputData->MaximumCacheSize2.Granularity64K = 0;
+    InputData->InstalledSize2.Size = Bytes;
+    InputData->InstalledSize2.Granularity64K = 0;
   } else if (Bytes < MAX_INSTALLEDSIZE_64K) {
-    Bytes16 = (UINT16)Bytes32;
-    InstalledSizeValue = Bytes16;
-    InstalledSizeValue |= (1 << INSTALLEDSIZE_GRANULARITY_BIT);
-    InstalledSizeValue2 |= (1 << INSTALLEDSIZE2_GRANULARITY_BIT);
-    InputData->InstalledSize = InstalledSizeValue;
-    InputData->MaximumCacheSize = InstalledSizeValue;
-    InputData->MaximumCacheSize2 = InstalledSizeValue2;
-    InputData->InstalledSize2 = InstalledSizeValue2;
+    InputData->InstalledSize.Size = (UINT16)Bytes32;
+    InputData->InstalledSize.Granularity64K = 1;
+    InputData->MaximumCacheSize.Size = (UINT16)Bytes32;
+    InputData->MaximumCacheSize.Granularity64K = 1;
+    InputData->MaximumCacheSize2.Size = Bytes32;
+    InputData->MaximumCacheSize2.Granularity64K = 1;
+    InputData->InstalledSize2.Size = Bytes32;
+    InputData->InstalledSize2.Granularity64K = 1;
   } else {
-    InputData->InstalledSize = 0xFFFF;
-    InputData->MaximumCacheSize = 0xFFFF;
-    InstalledSizeValue2 |= (1 << INSTALLEDSIZE2_GRANULARITY_BIT);
-    InputData->InstalledSize2  = InstalledSizeValue2;
-    InputData->MaximumCacheSize2 = InstalledSizeValue2;
+    InputData->InstalledSize.Size = 0x7FFF;
+    InputData->InstalledSize.Granularity64K = 1;
+    InputData->MaximumCacheSize.Size = 0x7FFF;
+    InputData->MaximumCacheSize.Granularity64K = 1;
+    InputData->InstalledSize2.Size = Bytes32;
+    InputData->InstalledSize2.Granularity64K = 1;
+    InputData->MaximumCacheSize2.Size = Bytes32;
+    InputData->MaximumCacheSize2.Granularity64K = 1;
   }
   return EFI_SUCCESS;
 }
@@ -95,33 +95,6 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformCache) {
       return Status;
     }
     UnicodeStr = HiiGetString(mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], NULL);
-    // if (!StrCmp(UnicodeStr, L"L1 Instruction Cache")) {
-    //   Status = UpdateCacheSize(UnicodeStr, "l1-i-cache-size", InputData);
-    //   if (Status == RETURN_UNSUPPORTED) {
-    //     return Status;
-    //   }
-    // }
-
-    // if (!StrCmp(UnicodeStr, L"L1 Data Cache")) {
-    //   Status = UpdateCacheSize(UnicodeStr, "l1-d-cache-size", InputData);
-    //   if (Status == RETURN_UNSUPPORTED) {
-    //     return Status;
-    //   }
-    // }
-
-    // if (!StrCmp(UnicodeStr, L"L2 Cache")) {
-    //   Status = UpdateCacheSize(UnicodeStr, "l2-cache-size", InputData);
-    //   if (Status == RETURN_UNSUPPORTED) {
-    //     return Status;
-    //   }
-    // }
-
-    // if (!StrCmp(UnicodeStr, L"L3 Cache (SLC)")) {
-    //   Status = UpdateCacheSize(UnicodeStr, "l3-cache-size", InputData);
-    //   if (Status == RETURN_UNSUPPORTED) {
-    //     return Status;
-    //   }
-    // }
 
     Status = UpdateCacheSize(UnicodeStr, InputData);
 

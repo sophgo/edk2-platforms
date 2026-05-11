@@ -34,7 +34,6 @@
   MdePkg/MdePkg.dec
   UefiCpuPkg/UefiCpuPkg.dec
   Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
-  Silicon/RISC-V/ProcessorPkg/RiscVProcessorPkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -61,6 +60,7 @@
 
 [Guids]
   gEfiFirmwarePerformanceGuid           ## PRODUCES
+  gFdtHobGuid                           ## PRODUCES
 
 [Ppis]
   gEfiTemporaryRamSupportPpiGuid        ## PRODUCES

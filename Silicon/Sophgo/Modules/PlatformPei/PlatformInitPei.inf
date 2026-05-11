@@ -1,0 +1,45 @@
+#/** @file
+#
+#  Copyright (c) 2025, SOPHGO Technologies Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+#**/
+
+[Defines]
+  INF_VERSION                   = 0x00010005
+  BASE_NAME                      = PlatformInitPei
+  FILE_GUID                      = 6F03E4C4-576D-40A3-8076-BA45E26611B2
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = PeiPlatformInitialization
+
+
+[Sources]
+  PlatformInitPei.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  EmbeddedPkg/EmbeddedPkg.dec
+  Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
+  Silicon/Sophgo/Sophgo.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+
+[LibraryClasses]
+  PcdLib
+  DebugLib
+  HobLib
+  RiscVSbiLib
+  PeimEntryPoint
+  PeiResourcePublicationLib
+
+[FixedPcd]
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdBaseAddress                       ## CONSUMES
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdRegSize                           ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdPeiPermanentMemBase
+  gSophgoTokenSpaceGuid.PcdPeiPermanentMemSize
+
+[Depex]
+  TRUE

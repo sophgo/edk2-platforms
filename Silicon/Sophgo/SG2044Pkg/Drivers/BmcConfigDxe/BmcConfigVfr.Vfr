@@ -1,0 +1,381 @@
+/** @file
+  VFR file for BmcLanConfig driver.
+  This file defines the formset, form, and labels required for dynamic
+  insertion of time and date controls.
+
+  Copyright (c) 2025  Sophgo Corporation. All rights reserved.<BR>
+**/
+#include "BmcConfigNv.h"
+
+formset
+  guid      = BMC_FORMSET_GUID,
+  title     = STRING_TOKEN(STR_BMC_CONFIG_TITLE),
+  help      = STRING_TOKEN(STR_BMC_CONFIG_HELP),
+  classguid = BMC_FORMSET_GUID,
+
+  varstore BMC_DATA,
+    varid = VAR_BMC_VARID,
+    name  = BMCConfigData,
+    guid  = gEfiSophgoGlobalVariableGuid;
+
+ form formid = BMC_FORM_ID,
+       title = STRING_TOKEN(STR_BMC_FORM_TITLE);
+       goto NETWORK_SET_FORM_ID,
+             prompt  = STRING_TOKEN(STR_NETWORK_SET_PROMPT),
+             help    = STRING_TOKEN(STR_NETWORK_SET_HELP),
+             flags   = INTERACTIVE,
+             key     = NETWORK_SET_FORM_ID;
+       goto MAC_ADDR_FORM_ID,
+             prompt  = STRING_TOKEN(STR_MAC_SET_PROMPT),
+             help    = STRING_TOKEN(STR_MAC_SET_HELP),
+             flags   = INTERACTIVE,
+             key     = MAC_ADDR_FORM_ID;
+       goto BASIC_INFO_FORM_ID,
+             prompt  = STRING_TOKEN(STR_BMC_BASIC_INFO_PROMPT),
+             help    = STRING_TOKEN(STR_BMC_BASIC_INFO_HELP),
+             flags   = INTERACTIVE,
+             key     = BASIC_INFO_FORM_ID;
+       goto BMC_USER_FORM_ID,
+             prompt  = STRING_TOKEN(STR_MAC_USER_MANAGER_PROMPT),
+             help    = STRING_TOKEN(STR_MAC_USER_MANAGER_HELP),
+             flags   = INTERACTIVE,
+             key     = BMC_USER_FORM_ID;
+
+  endform;
+  form formid = NETWORK_SET_FORM_ID,
+     title = STRING_TOKEN(STR_BMC_SET_FORM_TITLE);
+     oneof varid        = BMCConfigData.EnableDHCP,
+           questionid   = DHCP_QUESTION_ID,
+           prompt       = STRING_TOKEN(STR_DHCP_PROMPT),
+           help         = STRING_TOKEN(STR_DHCP_HELP),
+           flags        = INTERACTIVE,
+           option text  = STRING_TOKEN(STR_DHCP_ENABLED), value = 0x02,  flags = 0;
+           option text  = STRING_TOKEN(STR_DHCP_DISABLED), value = 0x01, flags = 0;
+     endoneof;
+     suppressif ideqval BMCConfigData.EnableDHCP == 2;
+      label LABEL_SET;
+      label LABEL_END;
+      endif;
+      /*text
+       help     = STRING_TOKEN(STR_REFRESH_HELP),
+       text     = STRING_TOKEN(STR_REFRESH_PROMPT),
+       flags    = INTERACTIVE,
+       key      = REFRESH_QUESTION_ID;*/
+  endform;
+  form formid = MAC_ADDR_FORM_ID,
+      title = STRING_TOKEN(STR_MAC_SET_TITLE);
+      label LABEL_MAC_START;
+      label LABEL_MAC_END;
+      /*text
+       help     = STRING_TOKEN(STR_REFRESH_HELP),
+       text     = STRING_TOKEN(STR_REFRESH_PROMPT),
+       flags    = INTERACTIVE,
+       key      = MAC_ADDR_REFRESH_ID;*/
+  endform;
+  form formid = BASIC_INFO_FORM_ID,
+      title = STRING_TOKEN(STR_BMC_BASIC_INFO_TITLE);
+      label LABEL_INFO_START;
+      label LABEL_INFO_END;
+      /*text
+       help     = STRING_TOKEN(STR_REFRESH_HELP),
+       text     = STRING_TOKEN(STR_REFRESH_PROMPT),
+       flags    = INTERACTIVE,
+       key      = BASIC_INFO_REFRESH_ID;*/
+  endform;
+  form formid = BMC_USER_FORM_ID,
+      title = STRING_TOKEN(STR_MAC_USER_MANAGER_PROMPT);
+      subtitle text  = STRING_TOKEN(STR_BMC_USER_TOTAL_NUM);
+
+      /*text
+       help   = STRING_TOKEN(STR_EMPTY),
+       text   = STRING_TOKEN(STR_BMC_ADMIN_NAME),
+       text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_0);
+
+      password
+       varid    = BMCConfigData.UserConfigData.UserEntry[0].Password,
+       prompt   = STRING_TOKEN(STR_BMC_ADMIN_PASSWORD),
+       help     = STRING_TOKEN(STR_EMPTY),
+       flags    = INTERACTIVE,
+       key      = KEY_PASSWORD_0,
+       minsize  = MIN_LEN_USER_PASSWORD,
+       maxsize  = MAX_LEN_USER_PASSWORD,
+      endpassword;*/
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[1].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_1);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[1].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_1,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[2].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_2);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[2].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_2,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[3].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_3);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[3].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_3,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[4].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_4);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[4].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_4,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[5].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_5);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[5].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_5,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[6].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_6);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[6].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_6,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[7].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_7);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[7].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_7,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[8].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_8);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[8].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_8,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[9].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_9);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[9].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_9,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[10].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_10);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[10].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_10,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[11].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_11);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[11].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_11,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[12].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_12);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[12].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_12,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[13].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_13);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[13].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_13,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[14].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_14);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[14].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_14,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      suppressif ideqval BMCConfigData.UserConfigData.UserEntry[15].Flag == 0;
+       subtitle text  = STRING_TOKEN(STR_EMPTY);
+       text
+        help   = STRING_TOKEN(STR_EMPTY),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME),
+        text   = STRING_TOKEN(STR_BMC_USER_NAME_VAL_15);
+
+       password
+        varid    = BMCConfigData.UserConfigData.UserEntry[15].Password,
+        prompt   = STRING_TOKEN(STR_BMC_USER_PASSWORD),
+        help     = STRING_TOKEN(STR_EMPTY),
+        flags    = INTERACTIVE,
+        key      = KEY_PASSWORD_15,
+        minsize  = MIN_LEN_USER_PASSWORD,
+        maxsize  = MAX_LEN_USER_PASSWORD,
+       endpassword;
+      endif;
+
+      /*text
+       help     = STRING_TOKEN(STR_REFRESH_HELP),
+       text     = STRING_TOKEN(STR_REFRESH_PROMPT),
+       flags    = INTERACTIVE,
+       key      = USER_REFRESH_ID;*/
+
+  endform;
+endformset;

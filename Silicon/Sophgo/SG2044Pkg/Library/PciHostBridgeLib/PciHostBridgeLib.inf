@@ -1,0 +1,31 @@
+## @file
+#
+# Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+#
+# SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001000A
+  BASE_NAME                      = PciHostBridgeLib
+  FILE_GUID                      = 7FA975E8-8DC8-42C6-9F87-218F66FEE5FD
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PciHostBridgeLib|DXE_DRIVER
+  CONSTRUCTOR                    = PciHostBridgeLibConstructor
+
+[Sources]
+  PciHostBridgeLib.c
+
+[Packages]
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  MemoryAllocationLib
+

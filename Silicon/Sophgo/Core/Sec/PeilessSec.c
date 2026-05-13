@@ -14,6 +14,8 @@
 #include <Ppi/TemporaryRamSupport.h>
 #include <Ppi/SecHobData.h>
 #include <Guid/FdtHob.h>
+#include <Library/FdtLib.h>
+#include <Guid/RiscVSecHobData.h>
 
 EFI_STATUS
 EFIAPI
@@ -212,6 +214,11 @@ SecStartup (
   UINT64                      StackBase;
   UINT32                      StackSize;
   EFI_SEC_PEI_HAND_OFF        SecCoreData;
+  UINT32                      FdtSize;
+  UINTN                       FdtPages;
+  VOID                        *FdtCopy;
+  RISCV_SEC_HANDOFF_DATA      SecHandoffData;
+  const EFI_GUID              SecHobDataGuid = RISCV_SEC_HANDOFF_HOB_GUID;
 
   SerialPortInitialize ();
   //
@@ -258,11 +265,26 @@ SecStartup (
               );
   PrePeiSetHobList (HobList);
 
-  // Pass FDT address via HOB instead of FirmwareContext
-  FdtHobData = BuildGuidHob (&gFdtHobGuid, sizeof *FdtHobData);
-  if (FdtHobData != NULL) {
-    *FdtHobData = (UINT64)(UINTN)DeviceTreeAddress;
+  // Copy FDT to SEC heap via AllocatePages to protect it from PEI
+  // memory overwrites. The FDT may reside inside the PEI permanent
+  // memory range and get overwritten when PEI allocates heap memory.
+  // This follows the OVMF RiscVVirt PlatformSecLib pattern.
+  FdtSize  = FdtTotalSize (DeviceTreeAddress);
+  FdtPages = EFI_SIZE_TO_PAGES (FdtSize);
+  FdtCopy  = AllocatePages (FdtPages);
+
+  if (FdtCopy != NULL) {
+    FdtOpenInto (DeviceTreeAddress, FdtCopy, EFI_PAGES_TO_SIZE (FdtPages));
+    FdtHobData = BuildGuidHob (&gFdtHobGuid, sizeof *FdtHobData);
+    if (FdtHobData != NULL) {
+      *FdtHobData = (UINT64)(UINTN)FdtCopy;
+    }
   }
+
+  // Build SEC handoff HOB for CpuDxeRiscV64 to retrieve BootHartId
+  SecHandoffData.BootHartId = BootHartId;
+  SecHandoffData.FdtPointer = FdtCopy;
+  BuildGuidDataHob (&SecHobDataGuid, &SecHandoffData, sizeof (SecHandoffData));
 
   SecInitializePlatform ();
 

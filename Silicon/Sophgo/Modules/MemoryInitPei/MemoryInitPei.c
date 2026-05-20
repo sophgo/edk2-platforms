@@ -180,23 +180,6 @@ AddReservedMemoryBaseSizeHob (
 }
 
 /**
-  Build memory map I/O resource using the base address
-  and the top address of memory range.
-
-  @param  MemoryBase     Memory map I/O range base address.
-  @param  MemoryLimit    The top address of memory map I/O range
-
-**/
-VOID
-AddIoMemoryRangeHob (
-  EFI_PHYSICAL_ADDRESS  MemoryBase,
-  EFI_PHYSICAL_ADDRESS  MemoryLimit
-  )
-{
-  AddIoMemoryBaseSizeHob (MemoryBase, (UINT64)(MemoryLimit - MemoryBase));
-}
-
-/**
   Create memory range resource HOB using the memory base
   address and size.
 
@@ -225,23 +208,6 @@ AddMemoryBaseSizeHob (
 }
 
 /**
-  Create memory range resource HOB using memory base
-  address and top address of the memory range.
-
-  @param  MemoryBase     Memory range base address.
-  @param  MemoryLimit    Memory range size.
-
-**/
-VOID
-AddMemoryRangeHob (
-  EFI_PHYSICAL_ADDRESS  MemoryBase,
-  EFI_PHYSICAL_ADDRESS  MemoryLimit
-  )
-{
-  AddMemoryBaseSizeHob (MemoryBase, (UINT64)(MemoryLimit - MemoryBase));
-}
-
-/**
   Publish system RAM and reserve memory regions.
 
 **/
@@ -255,6 +221,8 @@ InitializeRamRegions (
   UINT64                MemBaseAddress;
   UINT64                MemSizeEfuse;
   UINT64                ReservedMemSize;
+  UINT64                FwMemBase;
+  UINT64                FwMemSize;
 
   Status = GetMemSizeFromEfusePei (&MemSizeEfuse);
   if (EFI_ERROR (Status)) {
@@ -275,19 +243,23 @@ InitializeRamRegions (
     MemSize = MemSizeEfuse - ReservedMemSize;
   }
 
-  MemSize = FixedPcdGet64 (PcdEfiMemoryBottom) > FixedPcdGet64 (PcdMemoryBaseAddress) ?
-        (MemSize - (FixedPcdGet64 (PcdEfiMemoryBottom) - FixedPcdGet64 (PcdMemoryBaseAddress))) : MemSize;
+  FwMemSize = FixedPcdGet64 (PcdEfiMemoryBottom) > FixedPcdGet64 (PcdMemoryBaseAddress) ?
+        (FixedPcdGet64 (PcdEfiMemoryBottom) - FixedPcdGet64 (PcdMemoryBaseAddress)) : 0;
 
-  MemBaseAddress = FixedPcdGet64 (PcdEfiMemoryBottom) > FixedPcdGet64 (PcdMemoryBaseAddress) ?
-        FixedPcdGet64 (PcdEfiMemoryBottom) : FixedPcdGet64 (PcdMemoryBaseAddress);
+  FwMemBase = FixedPcdGet64 (PcdMemoryBaseAddress);
+  MemBaseAddress = FixedPcdGet64 (PcdMemoryBaseAddress);
 
   DEBUG ((DEBUG_INFO, "Publish System RAM:\n"));
   ShowMemValue("MemBaseAddr     ", MemBaseAddress);
   ShowMemValue("MemSize         ", MemSize);
-  ShowMemValue("MemSizeTotal    ", MemSizeEfuse);
+  ShowMemValue("FwBaseAddr      ", FwMemBase);
+  ShowMemValue("FwSize          ", FwMemSize);
+  ShowMemValue("TotalMemSize    ", MemSizeEfuse);
   ShowMemValue("MemSizeReserved ", ReservedMemSize);
 
-  AddMemoryRangeHob (MemBaseAddress, MemSize);
+  // Reserve firmware region first, then add remaining memory as system memory
+  AddReservedMemoryBaseSizeHob (FwMemBase, FwMemSize);
+  AddMemoryBaseSizeHob (MemBaseAddress + FwMemSize, MemSize - FwMemSize);
 }
 
 

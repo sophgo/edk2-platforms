@@ -211,6 +211,42 @@ UpdateCacheSize(
   IN CHAR16           *UnicodeStr,
   SMBIOS_TABLE_TYPE7  *InputData
   );
+
+/**
+  Retrieve the machine vendor ID via SBI call.
+
+  Calls SBI_EXT_BASE_GET_MVENDORID to read the RISC-V machine vendor ID
+  (mvendorid) CSR.
+
+  @param[out]  MachineVendorId  Pointer to receive the machine vendor ID.
+**/
+VOID SbiGetMachineVendorId (
+  OUT UINTN  *MachineVendorId
+  );
+
+/**
+  Retrieve the machine architecture ID via SBI call.
+
+  Calls SBI_EXT_BASE_GET_MARCHID to read the RISC-V machine architecture ID
+  (marchid) CSR.
+
+  @param[out]  MachineArchId  Pointer to receive the machine architecture ID.
+**/
+VOID SbiGetMachineArchId (
+  OUT UINTN  *MachineArchId
+  );
+
+/**
+  Retrieve the machine implementation ID via SBI call.
+
+  Calls SBI_EXT_BASE_GET_MIMPID to read the RISC-V machine implementation ID
+  (mimpid) CSR.
+
+  @param[out]  MachineImplId  Pointer to receive the machine implementation ID.
+**/
+VOID SbiGetMachineImplId (
+  OUT UINTN  *MachineImplId
+  );
 //
 // Data Table Array
 //

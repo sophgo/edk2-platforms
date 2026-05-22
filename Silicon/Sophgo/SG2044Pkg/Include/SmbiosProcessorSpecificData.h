@@ -43,22 +43,11 @@ typedef struct {
 /// RISC-V processor specific data for SMBIOS type 44
 ///
 typedef struct {
-  UINT16           Revision;
-  UINT8            Length;
-  RISCV_UINT128    HartId;
-  UINT8            BootHartId;
-  RISCV_UINT128    MachineVendorId;
-  RISCV_UINT128    MachineArchId;
-  RISCV_UINT128    MachineImplId;
-  UINT32           InstSetSupported;
-  UINT8            PrivilegeModeSupported;
-  RISCV_UINT128    MModeExcepDelegation;
-  RISCV_UINT128    MModeInterruptDelegation;
-  UINT8            HartXlen;
-  UINT8            MachineModeXlen;
-  UINT8            Reserved;
-  UINT8            SupervisorModeXlen;
-  UINT8            UserModeXlen;
+  UINT16    Revision;
+  UINT64    HartId;
+  UINT64    MachineVendorId;
+  UINT64    MachineArchId;
+  UINT64    MachineImplId;
 } SMBIOS_RISC_V_PROCESSOR_SPECIFIC_DATA;
 
 #pragma pack()

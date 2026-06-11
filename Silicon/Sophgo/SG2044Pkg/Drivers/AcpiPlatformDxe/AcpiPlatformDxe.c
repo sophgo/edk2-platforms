@@ -28,6 +28,7 @@
 #include <Guid/VendorGlobalVariables.h>
 #include "SG2044AcpiHeader.h"
 #include <Include/PcieHostPcd.h>
+#include <IndustryStandard/SerialPortConsoleRedirectionTable.h>
 
 //
 // Constants and definitions
@@ -1081,6 +1082,30 @@ AcpiPlatformDxeEntryPoint (
     TableHeader = (EFI_ACPI_DESCRIPTION_HEADER*) CurrentTable;
     TableSize = TableHeader->Length;
     ASSERT (Size >= TableSize);
+
+    //
+    // Skip SPCR table if serial port is not enabled via Setup option
+    //
+    if (TableHeader->Signature == EFI_ACPI_6_5_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_SIGNATURE) {
+      UINTN    VarSize;
+      UINT8    EnableSerialPort;
+
+      VarSize = sizeof (EnableSerialPort);
+      Status = gRT->GetVariable (
+                      EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                      &gEfiSophgoGlobalVariableGuid,
+                      NULL,
+                      &VarSize,
+                      &EnableSerialPort
+                      );
+      if (!EFI_ERROR (Status) && EnableSerialPort == 0) {
+        DEBUG ((DEBUG_INFO, "SPCR table skipped: serial port not enabled\n"));
+        gBS->FreePool (CurrentTable);
+        Instance++;
+        CurrentTable = NULL;
+        continue;
+      }
+    }
 
     //
     // Checksum ACPI table

@@ -1,0 +1,29 @@
+///** @file
+//
+//  String definitions for Debug Config formset.
+//
+//  Copyright (c) 2026, SOPHGO Technology Inc. All rights reserved.
+//
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+//**/
+
+/=#
+
+#langdef   en-US "English"
+#langdef   fr-FR "Français"
+
+#string STR_DEBUG_CONFIG_TITLE         #language en-US  "Debug"
+                                       #language fr-FR  "Debug"
+#string STR_DEBUG_CONFIG_HELP          #language en-US  "Debug configuration"
+                                       #language fr-FR  "Configuration de débogage"
+
+#string STR_ENABLE_SERIAL_PORT_PROMPT  #language en-US  "Enable Serial Port"
+                                       #language fr-FR  "Activer le port série"
+#string STR_ENABLE_SERIAL_PORT_HELP    #language en-US  "Enable or disable serial port console redirection (SPCR) table. When enabled, BIOS will pass the SPCR ACPI table to the OS."
+                                       #language fr-FR  "Activer ou désactiver la redirection du port série (SPCR). Si activé, le BIOS transmettra la table ACPI SPCR à l'OS."
+
+#string STR_DISABLE                    #language en-US  "Disable"
+                                       #language fr-FR  "Désactiver"
+#string STR_ENABLE                     #language en-US  "Enable"
+                                       #language fr-FR  "Activer"

@@ -66,6 +66,7 @@
   gPasswordRestoreProtocolGuid                  ## CONSUMES
   gPassWordToggleRestoreProtocolGuid            ## CONSUMES ## PRODUCES
   gReserveMemoryRestoreProtocolGuid             ## CONSUMES
+  gDebugConfigRestoreProtocolGuid               ## CONSUMES
 
 [FeaturePcd]
 

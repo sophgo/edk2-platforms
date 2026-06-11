@@ -1,0 +1,59 @@
+## @file
+#
+#  Debug Config DXE driver for SG2044 platform.
+#
+#  Copyright (c) 2026, SOPHGO Technology Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DebugConfigDxe
+  MODULE_UNI_FILE                = DebugConfigDxe.uni
+  FILE_GUID                      = A2C7D8E1-4F3B-5A90-B1C6-7E2D9F04358A
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DebugConfigDriverEntryPoint
+  UNLOAD_IMAGE                   = DebugConfigDriverUnload
+
+[Sources]
+  DebugConfigDxe.c
+  DebugConfigDxe.h
+  DebugConfigVfr.vfr
+  DebugConfigStrings.uni
+  DebugConfigNv.h
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiRuntimeServicesTableLib
+  BaseMemoryLib
+  DebugLib
+  HiiLib
+  UefiLib
+  DevicePathLib
+  UefiHiiServicesLib
+  PrintLib
+
+[Guids]
+  gEfiIfrFrontPageGuid                          ## CONSUMES ## GUID
+  gEfiSophgoGlobalVariableGuid                  ## CONSUMES ## GUID
+
+[Protocols]
+  gEfiDevicePathProtocolGuid
+  gEfiHiiConfigRoutingProtocolGuid              ## CONSUMES
+  gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
+  gDebugConfigRestoreProtocolGuid               ## PRODUCES
+
+[Depex]
+  gEfiHiiConfigRoutingProtocolGuid  AND
+  gEfiHiiDatabaseProtocolGuid

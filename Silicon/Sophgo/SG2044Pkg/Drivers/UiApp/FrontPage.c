@@ -120,7 +120,8 @@ RestoreFactoryDefaults (
     &gSetDateAndTimeRestoreProtocolGuid,
     &gPasswordRestoreProtocolGuid,
     &gPassWordToggleRestoreProtocolGuid,
-    &gReserveMemoryRestoreProtocolGuid
+    &gReserveMemoryRestoreProtocolGuid,
+    &gDebugConfigRestoreProtocolGuid
   };
 
   for (UINTN i = 0; i < ARRAY_SIZE (ModuleGuids); i++) {

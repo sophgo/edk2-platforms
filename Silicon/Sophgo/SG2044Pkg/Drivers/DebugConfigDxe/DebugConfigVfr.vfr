@@ -1,0 +1,34 @@
+///**
+//Debug Config formset.
+//
+//Copyright (c) 2026, SOPHGO Technology Inc. All rights reserved.
+//
+//SPDX-License-Identifier: BSD-2-Clause-Patent
+//**/
+#include "DebugConfigNv.h"
+
+formset
+  guid      = DEBUG_CONFIG_FORMSET_GUID,
+  title     = STRING_TOKEN (STR_DEBUG_CONFIG_TITLE),
+  help      = STRING_TOKEN (STR_DEBUG_CONFIG_HELP),
+  classguid = gEfiIfrFrontPageGuid,
+
+  varstore DEBUG_CONFIG_DATA,
+    varid   = VARSTORE_ID_DEBUG_CONFIG,
+    name    = DebugConfigData,
+    guid    = gEfiSophgoGlobalVariableGuid;
+
+  form formid  = FORM_DEBUG_CONFIG_ID,
+    title   = STRING_TOKEN (STR_DEBUG_CONFIG_TITLE);
+
+    oneof varid = DEBUG_CONFIG_DATA.EnableSerialPort,
+        prompt = STRING_TOKEN (STR_ENABLE_SERIAL_PORT_PROMPT),
+        help   = STRING_TOKEN (STR_ENABLE_SERIAL_PORT_HELP),
+        flags  = INTERACTIVE,
+        option text = STRING_TOKEN(STR_DISABLE), value = 0, flags = 0;
+        option text = STRING_TOKEN(STR_ENABLE), value = 1, flags = 0;
+        default value = 0,
+    endoneof;
+
+  endform;
+endformset;

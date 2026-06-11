@@ -69,6 +69,14 @@ extern EFI_GUID  gEfiSophgoGlobalVariableGuid;
 #define EFI_RESERVE_MEMORYSIZE_VARIABLE_NAME  L"ReservedMemorySize"
 
 //
+// Variable name for storing the debug configuration data.
+// This NVRAM variable holds a DEBUG_CONFIG_DATA structure, which contains a UINT8 value
+// indicating whether serial port console redirection (SPCR) is enabled.
+// The variable name must be a Unicode string (CHAR16 array).
+//
+#define EFI_DEBUG_CONFIG_VARIABLE_NAME     L"DebugConfigData"
+
+//
 // Allows the OS to request the firmware to enable certain features and to take certain actions.
 // Its attribute is NV+BS+RT.
 //

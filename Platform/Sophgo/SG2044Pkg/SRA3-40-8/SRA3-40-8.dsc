@@ -274,7 +274,7 @@
   # RISC-V Architectural Libraries
   RiscVSbiLib|MdePkg/Library/BaseRiscVSbiLib/BaseRiscVSbiLib.inf
   RiscVMmuLib|UefiCpuPkg/Library/BaseRiscVMmuLib/BaseRiscVMmuLib.inf
-  
+
   TimeBaseLib|EmbeddedPkg/Library/TimeBaseLib/TimeBaseLib.inf
 
   # Flattened Device Tree (FDT) access library
@@ -767,7 +767,7 @@
 
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Pcie32BitSpaceStartAddr[4]|{0x00,0x00,0x00,0x20}
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Pcie32BitSpaceEndAddr[4]|{0xFF,0xFF,0xFF,0x27}
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Pcie64BitSpaceStartAddr[4]|{0x00,0x00,0x00,0x00,078,0x00,0x00,0x00}
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Pcie64BitSpaceStartAddr[4]|{0x00,0x00,0x00,0x00,0x78,0x00,0x00,0x00}
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Pcie64BitSpaceEndAddr[4]|{0xFF,0xFF,0xFF,0xFF,0x79,0x00,0x00,0x00}
 
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Pcie32BitSpaceStartAddr[5]|{0x00,0x00,0x00,0x28}

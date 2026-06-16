@@ -16,7 +16,6 @@ DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2042    ",
   include ("CommonDevices.asl")
   include ("Uart.asl")
   include ("Mmc.asl")
-  include ("Ethernet.asl")
   include ("Intc.asl")
   include ("Pci.asl")
 

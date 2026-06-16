@@ -45,15 +45,15 @@ EFI_ACPI_PCI_MEMORY_MAPPED_CONFIGURATION_SPACE_ACCESS_DESCRIPTION_TABLE Mcfg = {
       0x00000000,                                           // Reserved
     },
     {
-      0x4400000000,                                         // Base Address
-      0x1,                                                  // Segment Group Number
+      0x4800000000,                                         // Base Address
+      0x2,                                                  // Segment Group Number
       0x0,                                                  // Start Bus Number
       0xff,                                                 // End Bus Number
       0x00000000,                                           // Reserved
     },
     {
-      0x4800000000,                                         // Base Address
-      0x2,                                                  // Segment Group Number
+      0x4C00000000,                                         // Base Address
+      0x3,                                                  // Segment Group Number
       0x0,                                                  // Start Bus Number
       0xff,                                                 // End Bus Number
       0x00000000,                                           // Reserved

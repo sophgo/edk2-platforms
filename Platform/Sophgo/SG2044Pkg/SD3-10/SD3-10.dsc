@@ -420,6 +420,10 @@
   #   TRUE  - S3 performance data will be supported in ACPI FPDT table.
   #   FALSE - S3 performance data will not be supported in ACPI FPDT table.
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwarePerformanceDataTableS3Support|FALSE
+  #
+  # No CSM on RISC-V: do not downgrade PMem64 BARs to PMem32 for devices with Option ROM.
+  #
+  gEfiMdeModulePkgTokenSpaceGuid.PcdPciDegradeResourceForOptionRom|FALSE
 
 [PcdsFixedAtBuild]
   gEfiMdeModulePkgTokenSpaceGuid.PcdStatusCodeUseMemory|FALSE

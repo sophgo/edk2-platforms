@@ -2,7 +2,7 @@
 #
 #  Flash layout on SOPHGO SG2044 RISC-V platform
 #
-#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.
+#  Copyright (c) 2026, SOPHGO Inc. All rights reserved.
 #
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
 #
@@ -13,7 +13,7 @@
 # Build the variable store and the firmware code as one unified flash device
 # image.
 #
-[FD.SRA3-40]
+[FD.SD3-12]
 BaseAddress   = $(FW_BASE_ADDRESS)
 Size          = $(FW_SIZE)
 ErasePolarity = 1
@@ -147,13 +147,6 @@ INF  SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
 INF  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
 INF  MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf
 
-!if $(INTEL_GIG_UNDI_ENABLE) == TRUE
-INF  Silicon/Sophgo/SG2044/iPXE/IntelGigUndiRv64/GigUndiDxe.inf
-INF  Silicon/Sophgo/SG2044/iPXE/IntelXGigUndiRv64/XGigUndiDxe.inf
-INF  Silicon/Sophgo/SG2044/iPXE/IntelIceUndiRv64/IceUndiDxe.inf
-INF  Silicon/Sophgo/SG2044/iPXE/IntelI40eUndiRv64/I40eUndiDxe.inf
-!endif
-
 #
 # NVMe Support
 #
@@ -260,7 +253,7 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/DebugConfigDxe/DebugConfigDxe.inf
   INF Silicon/Sophgo/SG2044Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
   INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
   INF MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
-  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SRA3-40/SRA3-40-AcpiTables.inf
+  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SD3-12/SD3-12-AcpiTables.inf
 !endif
 
 #
@@ -270,7 +263,6 @@ INF Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
 INF ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/IpmiBootDxe/IpmiBootDxe.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfigDxe/BmcConfig.inf
-INF Silicon/Sophgo/SG2044Pkg/Drivers/HostHwInfoReportToBmcDxe/HostHwInfoReportToBmcDxe.inf
 
 #
 # TPM2 Dxe

@@ -147,6 +147,13 @@ INF  SecurityPkg/Hash2DxeCrypto/Hash2DxeCrypto.inf
 INF  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
 INF  MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf
 
+!if $(INTEL_GIG_UNDI_ENABLE) == TRUE
+INF  Silicon/Sophgo/SG2044/iPXE/IntelGigUndiRv64/GigUndiDxe.inf
+INF  Silicon/Sophgo/SG2044/iPXE/IntelXGigUndiRv64/XGigUndiDxe.inf
+INF  Silicon/Sophgo/SG2044/iPXE/IntelIceUndiRv64/IceUndiDxe.inf
+INF  Silicon/Sophgo/SG2044/iPXE/IntelI40eUndiRv64/I40eUndiDxe.inf
+!endif
+
 #
 # NVMe Support
 #
@@ -263,6 +270,7 @@ INF Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
 INF ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/IpmiBootDxe/IpmiBootDxe.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfigDxe/BmcConfig.inf
+INF Silicon/Sophgo/SG2044Pkg/Drivers/HostHwInfoReportToBmcDxe/HostHwInfoReportToBmcDxe.inf
 
 #
 # TPM2 Dxe

@@ -37,15 +37,25 @@
   #
   # Network definition
   #
-  DEFINE NETWORK_SNP_ENABLE       = FALSE
+  DEFINE NETWORK_ENABLE           = TRUE
+  DEFINE NETWORK_SNP_ENABLE       = TRUE
+  DEFINE NETWORK_IP4_ENABLE       = TRUE
   DEFINE NETWORK_IP6_ENABLE       = FALSE
   DEFINE NETWORK_TLS_ENABLE       = FALSE
   DEFINE NETWORK_HTTP_BOOT_ENABLE = FALSE
   DEFINE NETWORK_ISCSI_ENABLE     = FALSE
+  DEFINE NETWORK_PXE_BOOT_ENABLE  = FALSE
 
   DEFINE FLASH_ENABLE             = TRUE
   DEFINE ETH_ENABLE               = FALSE
   DEFINE ACPI_ENABLE              = TRUE
+
+  #
+  # Prebuilt Intel UNDI drivers (native RISCV64 PE32): Gigabit, 10G (ixgbe/X540),
+  # ICE (E8xx), and I40e/700-series. Paths under Silicon/Sophgo/SG2044/iPXE/.
+  # Enable with: -D INTEL_GIG_UNDI_ENABLE=TRUE or define TRUE below.
+  #
+  DEFINE INTEL_GIG_UNDI_ENABLE    = TRUE
 
   #
   # BMC
@@ -1057,6 +1067,13 @@
       NULL|Silicon/Sophgo/SG2044Pkg/Library/PciPlatformLib/PciPlatformLib.inf
   }
 
+!if $(INTEL_GIG_UNDI_ENABLE) == TRUE
+  Silicon/Sophgo/SG2044/iPXE/IntelGigUndiRv64/GigUndiDxe.inf
+  Silicon/Sophgo/SG2044/iPXE/IntelXGigUndiRv64/XGigUndiDxe.inf
+  Silicon/Sophgo/SG2044/iPXE/IntelIceUndiRv64/IceUndiDxe.inf
+  Silicon/Sophgo/SG2044/iPXE/IntelI40eUndiRv64/I40eUndiDxe.inf
+!endif
+
   #
   # NVMe Support
   #
@@ -1122,6 +1139,7 @@
   Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
   ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfigDxe/BmcConfig.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/HostHwInfoReportToBmcDxe/HostHwInfoReportToBmcDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/IpmiBootDxe/IpmiBootDxe.inf
 
   #

@@ -1,0 +1,52 @@
+## @file
+#  Host hardware inventory: DEBUG dump + OEM IPMI report to BMC (merged DXE).
+#
+#  Copyright (c) 2026 SOPHGO Technologies Inc. All rights reserved.
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010006
+  BASE_NAME                      = HostHwInfoReportToBmcDxe
+  FILE_GUID                      = F3E2D1C0-B4A5-4678-9012-3456789ABCDE
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = HostHwInfoReportToBmcDriverEntryPoint
+
+[Sources]
+  HostHwInfoReportToBmcDxe.c
+  HostHwInfoReportToBmcOem.c
+  NvmeInventory.c
+  NicInventory.c
+  PhysicalSlotLocation.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[Pcd]
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  DevicePathLib
+  IpmiLib
+  MemoryAllocationLib
+  PcdLib
+  PrintLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+  UefiLib
+
+[Protocols]
+  gEfiDevicePathProtocolGuid                     ## CONSUMES
+  gEfiNvmExpressPassThruProtocolGuid             ## CONSUMES
+  gEfiPciIoProtocolGuid                          ## CONSUMES
+  gEfiSimpleNetworkProtocolGuid                  ## CONSUMES
+  gIpmiProtocolGuid                              ## CONSUMES
+
+[Depex]
+  gIpmiProtocolGuid

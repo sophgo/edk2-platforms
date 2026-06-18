@@ -260,7 +260,7 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/DebugConfigDxe/DebugConfigDxe.inf
   INF Silicon/Sophgo/SG2044Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
   INF MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
   INF MdeModulePkg/Universal/Acpi/FirmwarePerformanceDataTableDxe/FirmwarePerformanceDxe.inf
-  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SG2044AcpiTables.inf
+  INF RuleOverride=ACPITABLE Silicon/Sophgo/SG2044Pkg/AcpiTables/SRA3-40-8/SRA3-40-8-AcpiTables.inf
 !endif
 
 #

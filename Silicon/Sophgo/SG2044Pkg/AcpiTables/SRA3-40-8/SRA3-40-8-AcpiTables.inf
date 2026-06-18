@@ -10,7 +10,7 @@
 
 [Defines]
   INF_VERSION                    = 0x0001001A
-  BASE_NAME                      = SG2044EvbAcpiTables
+  BASE_NAME                      = SRA3-40-8-AcpiTables
   FILE_GUID                      = 7E374E25-8E01-4FEE-87F2-390C23C606CD
   MODULE_TYPE                    = USER_DEFINED
   VERSION_STRING                 = 1.0
@@ -22,7 +22,7 @@
   Madt.aslc
   Rhct.aslc
   Pptt.aslc
-  Dsdt/SG2044Dsdt.asl
+  Dsdt/SRA3-40-8-Dsdt.asl
   Ssdt.asl
 
 [Packages]

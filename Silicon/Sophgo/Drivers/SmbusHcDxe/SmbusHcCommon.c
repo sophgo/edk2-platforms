@@ -130,9 +130,10 @@ SmbusHcCommonExecute (
         return EFI_INVALID_PARAMETER;
       }
 
-      DataLen = *Length;
-      CopyMem (&WriteTemp[0], Buffer, *Length);
-      DEBUG ((DEBUG_VERBOSE, "W %d: ", DataLen));
+      WriteTemp[0] = *Length;
+      CopyMem (&WriteTemp[1], Buffer, *Length);
+      DataLen = (*Length) + 1;
+      DEBUG ((DEBUG_VERBOSE, "W %d: ", *Length));
       DEBUG ((DEBUG_VERBOSE, "Addr 0x%x: ", SlaveAddress.SmbusDeviceAddress));
       for (Idx = 0; Idx < DataLen; Idx++) {
         DEBUG ((DEBUG_VERBOSE, "0x%x ", WriteTemp[Idx]));

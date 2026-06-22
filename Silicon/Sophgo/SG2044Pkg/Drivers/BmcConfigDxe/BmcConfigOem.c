@@ -7,12 +7,12 @@ SendBiosFmVersionToBmc (
   )
 {
 	CHAR16      BiosFmVersion[16];
-  CHAR8       AsciiBiosFmVersion[16];
-  UINT8       Commanddata[SMBIOS_OEM_IPMI_CMD_MAX_LEN];
-  UINT8       Commanddatasize;
-  UINT8       Response[20];
-  UINT32       Responsesize;
-  EFI_STATUS  Status;
+	CHAR8       AsciiBiosFmVersion[16];
+	UINT8       Commanddata[SMBIOS_OEM_IPMI_CMD_MAX_LEN];
+	UINT8       Commanddatasize;
+	UINT8       Response[20];
+	UINT32       Responsesize;
+	EFI_STATUS  Status;
 
 	Status = GetBiosFmVersion(BiosFmVersion);
 
@@ -23,28 +23,29 @@ SendBiosFmVersionToBmc (
 			__func__,
 			Status));
 	} else {
-    UnicodeStrToAsciiStrS(BiosFmVersion, AsciiBiosFmVersion, StrLen(BiosFmVersion) + 1);
+		UnicodeStrToAsciiStrS(BiosFmVersion, AsciiBiosFmVersion, StrLen(BiosFmVersion) + 1);
 
 		ZeroMem (Commanddata, 20);
 		ZeroMem (Response, 20);
 		CopyMem (&Commanddata[0], &AsciiBiosFmVersion[0], AsciiStrLen(AsciiBiosFmVersion));
 		Commanddatasize =  AsciiStrLen(AsciiBiosFmVersion);
 		Responsesize    = 10;
+		DEBUG ((DEBUG_INFO, "%s: Commanddatasize is %d\n", __func__, Commanddatasize));
 		Status = IpmiSubmitCommand (
-							SMBIOS_OEM_IPMI_NETFN,
-							SMBIOS_OEM_BIOS_FW_VERSION_CMD,
-							(UINT8 *) &Commanddata[0],
-							Commanddatasize,
-							(UINT8 *) &Response,
-							(UINT32 *) &Responsesize
-							);
+			SMBIOS_OEM_IPMI_NETFN,
+			SMBIOS_OEM_BIOS_FW_VERSION_CMD,
+			(UINT8 *) &Commanddata[0],
+			Commanddatasize,
+			(UINT8 *) &Response,
+			(UINT32 *) &Responsesize
+			);
 		if (EFI_ERROR(Status)) {
 			DEBUG((
 				DEBUG_ERROR,
 				"%a: IpmiSubmitCommand-%r\n",
 				__func__,
 				Status));
-		}
+	}
   }
   return Status;
 }
@@ -58,11 +59,11 @@ SendCpuInfoToBmc (
 	UINT8       Commanddata[SMBIOS_OEM_IPMI_CMD_MAX_LEN];
 	CHAR16      CpuSerialNumber[CPU_SERIALNUM_MAX_LEN];
 	CHAR16      CpuSpeed;
-  UINT8       Commanddatasize;
-  UINT8       Response[20];
-  UINT32      Responsesize;
+	UINT8       Commanddatasize;
+	UINT8       Response[20];
+	UINT32      Responsesize;
 	UINT8       Index, CpuManufacturerLen, CpuBrandNameLen;
-  EFI_STATUS  Status;
+  	EFI_STATUS  Status;
 
 	Index = 0;
 	CpuManufacturerLen   = AsciiStrLen(CPU_MANUFACTURER) + 1;
@@ -102,15 +103,15 @@ SendCpuInfoToBmc (
 
 		Commanddatasize = Index;
 		Responsesize    = 10;
-
+		DEBUG ((DEBUG_INFO, "%s: Commanddatasize is %d\n", __func__, Commanddatasize));
 		Status = IpmiSubmitCommand (
-            SMBIOS_OEM_IPMI_NETFN,           // NetFunction
-            SMBIOS_OEM_CPU_IPMI_CMD,     // Command
-            (UINT8 *) &Commanddata[0],  // *CommandData
-            Commanddatasize,            // CommandDataSize
-            (UINT8 *) &Response,        // *ResponseData
-            (UINT32 *) &Responsesize     // *ResponseDataSize
-            );
+			SMBIOS_OEM_IPMI_NETFN,           // NetFunction
+			SMBIOS_OEM_CPU_IPMI_CMD,     // Command
+			(UINT8 *) &Commanddata[0],  // *CommandData
+			Commanddatasize,            // CommandDataSize
+			(UINT8 *) &Response,        // *ResponseData
+			(UINT32 *) &Responsesize     // *ResponseDataSize
+			);
 		if (EFI_ERROR(Status)) {
 			DEBUG((
 				DEBUG_ERROR,
@@ -131,15 +132,15 @@ SendDdrInfoToBmc (
 {
 	CHAR16      MemoryManufacturer[MEM_MANUFACTURER_MAX_LEN];
 	UINT8       MemoryType;
-  UINT32      MemorySize;//MB
+  	UINT32      MemorySize;//MB
 	UINT16      MemorySpeed;//MT/s
-  UINT8       MemoryRank;
+  	UINT8       MemoryRank;
 	UINT8       Commanddata[SMBIOS_OEM_IPMI_CMD_MAX_LEN];
-  UINT8       Commanddatasize;
-  UINT8       Response[20];
-  UINT32      Responsesize;
+	UINT8       Commanddatasize;
+	UINT8       Response[20];
+	UINT32      Responsesize;
 	UINT8       Index;
-  EFI_STATUS  Status;
+  	EFI_STATUS  Status;
 
 	Status = GetMemoryInfo(MemoryManufacturer, &MemoryType, &MemorySize, &MemoryRank, &MemorySpeed);
 
@@ -164,15 +165,15 @@ SendDdrInfoToBmc (
 
 		Commanddatasize = Index;
 		Responsesize    = 10;
-
+		DEBUG ((DEBUG_INFO, "%s: Commanddatasize is %d\n", __func__, Commanddatasize));
 		Status = IpmiSubmitCommand (
-							SMBIOS_OEM_IPMI_NETFN,           // Net Function
-							SMBIOS_OEM_DDR_IPMI_CMD,     // Command
-							(UINT8 *) &Commanddata[0],  // *CommandData
-							Commanddatasize,            // CommandDataSize
-							(UINT8 *) &Response,        // *ResponseData
-							(UINT32 *) &Responsesize     // *ResponseDataSize
-							);
+			SMBIOS_OEM_IPMI_NETFN,           // Net Function
+			SMBIOS_OEM_DDR_IPMI_CMD,     // Command
+			(UINT8 *) &Commanddata[0],  // *CommandData
+			Commanddatasize,            // CommandDataSize
+			(UINT8 *) &Response,        // *ResponseData
+			(UINT32 *) &Responsesize     // *ResponseDataSize
+			);
 		if (EFI_ERROR(Status)) {
 			DEBUG((
 				DEBUG_ERROR,

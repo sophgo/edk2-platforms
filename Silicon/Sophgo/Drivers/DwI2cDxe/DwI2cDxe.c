@@ -674,10 +674,10 @@ I2cSmbusWrite (
   )
 {
   I2C_MSG  Msg;
-  UINT8    Buf[18];
+  UINT8    Buf[34];
 
-  if (Len > 17) {
-    DEBUG ((DEBUG_ERROR, "%a: write %d bytes exceeds 17!\n", __func__, Len));
+  if (Len > 33) {
+    DEBUG ((DEBUG_ERROR, "%a: write %d bytes exceeds 33!\n", __func__, Len));
     return EFI_INVALID_PARAMETER;
   }
 

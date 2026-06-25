@@ -64,6 +64,7 @@
   gEfiHiiConfigAccessProtocolGuid               ## PRODUCES
   gEfiHiiStringProtocolGuid                  ## CONSUMES
   gEfiHiiPackageListProtocolGuid             ## CONSUMES
+  gSophgoSmbiosPlatformReadyProtocolGuid       ## CONSUMES
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdServerNamePrefix
@@ -72,4 +73,5 @@
   gEfiHiiConfigRoutingProtocolGuid  AND
   gEfiHiiDatabaseProtocolGuid       AND
   gSophgoI2cMasterProtocolGuid      AND
-  gIpmiProtocolGuid
+  gIpmiProtocolGuid                 AND
+  gSophgoSmbiosPlatformReadyProtocolGuid

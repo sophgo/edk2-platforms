@@ -1,0 +1,33 @@
+## @file
+#  Library that reads BMC Builtin FRU via IPMI and caches serial numbers.
+#
+#  Copyright (c) 2026, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = IpmiFruInfoLib
+  FILE_GUID                      = 7A3B2C91-4E5F-6A8B-9C0D-1E2F3A4B5C6D
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = IpmiFruInfoLib
+
+[Sources]
+  IpmiFruInfoLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  BaseLib
+  BaseMemoryLib
+  DebugLib
+  IpmiCommandLib
+  MemoryAllocationLib
+  PrintLib
+  TimerLib

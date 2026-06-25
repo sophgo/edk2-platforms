@@ -117,7 +117,7 @@ IpmiSerialParseIncomingBuffer (
   UINT8   CtxEscape;
 
   if ((BufferSize == 0) || (Buffer == NULL)) {
-    DEBUG ((DEBUG_ERROR, "Buffer Data insufficient. \n"));
+    DEBUG ((DEBUG_INFO, "Buffer Data insufficient. \n"));
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -125,7 +125,7 @@ IpmiSerialParseIncomingBuffer (
       (BufferSize > *ResponseDataSize) ||
       (ResponseData == NULL))
   {
-    DEBUG ((DEBUG_ERROR, "Response Data insufficient. \n"));
+    DEBUG ((DEBUG_INFO, "Response Data insufficient. \n"));
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -229,7 +229,7 @@ SerialTransportWrite (
       ((RequestData != NULL) && (RequestDataSize == 0))
       )
   {
-    DEBUG ((DEBUG_ERROR, "%a: Mismatched values of RequestData or RequestDataSize.\n", __func__));
+    DEBUG ((DEBUG_INFO, "%a: Mismatched values of RequestData or RequestDataSize.\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -238,7 +238,7 @@ SerialTransportWrite (
       ((TransmitHeader != NULL) && (TransmitHeaderSize == 0))
       )
   {
-    DEBUG ((DEBUG_ERROR, "%a: Mismatched values of TransmitHeader or TransmitHeaderSize.\n", __func__));
+    DEBUG ((DEBUG_INFO, "%a: Mismatched values of TransmitHeader or TransmitHeaderSize.\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -247,7 +247,7 @@ SerialTransportWrite (
       ((TransmitTrailer != NULL) && (TransmitTrailerSize == 0))
       )
   {
-    DEBUG ((DEBUG_ERROR, "%a: Mismatched values of TransmitTrailer or TransmitTrailerSize.\n", __func__));
+    DEBUG ((DEBUG_INFO, "%a: Mismatched values of TransmitTrailer or TransmitTrailerSize.\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -293,7 +293,7 @@ SerialTransportWrite (
   RequestLength = BufferLength + EscapedCharacterCount + 2; // start + stop byte
   Request       = AllocateZeroPool (RequestLength);
   if (Request == NULL) {
-    DEBUG ((DEBUG_ERROR, "Out Of Resource \n"));
+    DEBUG ((DEBUG_INFO, "Out Of Resource \n"));
     return EFI_OUT_OF_RESOURCES;
   }
 
@@ -326,7 +326,7 @@ SerialTransportWrite (
     }
 
     if (++RetryCount > IPMI_SERIAL_RETRY_COUNT) {
-      DEBUG ((DEBUG_ERROR, "%a: Write Request error %r\n", __func__, Status));
+      DEBUG ((DEBUG_INFO, "%a: Write Request error %r\n", __func__, Status));
       break;
     }
 
@@ -394,7 +394,7 @@ SerialReadResponse (
                                               &BufferSize
                                               );
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "Parse Response Error\n"));
+    DEBUG ((DEBUG_INFO, "Parse Response Error\n"));
     return Status;
   }
 
@@ -409,7 +409,7 @@ SerialReadResponse (
 
   // Header checksum verify
   if (CalculateCheckSum8 (Buffer, IPMI_SERIAL_CONNECTION_HEADER_LENGTH) != 0) {
-    DEBUG ((DEBUG_ERROR, "Bad checksum - header\n"));
+    DEBUG ((DEBUG_INFO, "Bad checksum - header\n"));
     return EFI_PROTOCOL_ERROR;
   }
 
@@ -419,7 +419,7 @@ SerialReadResponse (
                           BufferSize - IPMI_SERIAL_CONNECTION_HEADER_LENGTH
                           ) != 0)
   {
-    DEBUG ((DEBUG_ERROR, "Bad checksum - data byte\n"));
+    DEBUG ((DEBUG_INFO, "Bad checksum - data byte\n"));
     return EFI_PROTOCOL_ERROR;
   }
 
@@ -457,13 +457,13 @@ SerialTransportRead (
   EFI_STATUS  Status;
 
   if ((DataByte == NULL) || (*Length == 0)) {
-    DEBUG ((DEBUG_ERROR, "%a: Either DataByte is NULL or Length is 0.\n", __func__));
+    DEBUG ((DEBUG_INFO, "%a: Either DataByte is NULL or Length is 0.\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
 
   Status = SerialReadResponse (DataByte, Length);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: Read Response error %r\n", __func__, Status));
+    DEBUG ((DEBUG_INFO, "%a: Read Response error %r\n", __func__, Status));
     *Length = 0;
     return Status;
   }
@@ -503,7 +503,7 @@ SerialCheckResponseData (
     if (!EFI_ERROR (Status)) {
       DEBUG ((DEBUG_MANAGEABILITY_INFO, "Cc: %02x %s.\n", *((UINT8 *)ResponseData), CompletionCodeStr));
     } else if (Status == EFI_NOT_FOUND) {
-      DEBUG ((DEBUG_ERROR, "Cc: %02x not defined in IpmiCompletionCodeMapping or invalid.\n", *((UINT8 *)ResponseData)));
+      DEBUG ((DEBUG_INFO, "Cc: %02x not defined in IpmiCompletionCodeMapping or invalid.\n", *((UINT8 *)ResponseData)));
     }
   }
 
@@ -557,17 +557,17 @@ SerialTransportSendCommand (
   EFI_STATUS  Status;
 
   if ((RequestData != NULL) && (RequestDataSize == 0)) {
-    DEBUG ((DEBUG_ERROR, "%a: Mismatched values of RequestData and RequestDataSize\n", __func__));
+    DEBUG ((DEBUG_INFO, "%a: Mismatched values of RequestData and RequestDataSize\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
 
   if ((ResponseData != NULL) && ((ResponseDataSize != NULL) && (*ResponseDataSize == 0))) {
-    DEBUG ((DEBUG_ERROR, "%a: Mismatched values of ResponseData and ResponseDataSize\n", __func__));
+    DEBUG ((DEBUG_INFO, "%a: Mismatched values of ResponseData and ResponseDataSize\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
 
   if (AdditionalStatus == NULL) {
-    DEBUG ((DEBUG_ERROR, "%a: AdditionalStatus is NULL.\n", __func__));
+    DEBUG ((DEBUG_INFO, "%a: AdditionalStatus is NULL.\n", __func__));
     return EFI_INVALID_PARAMETER;
   }
 
@@ -594,7 +594,7 @@ SerialTransportSendCommand (
                                    RequestDataSize
                                    );
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "Serial Write Failed with Status(%r)\n", Status));
+      DEBUG ((DEBUG_INFO, "Serial Write Failed with Status(%r)\n", Status));
       return Status;
     }
   }
@@ -602,7 +602,7 @@ SerialTransportSendCommand (
   if ((ResponseData != NULL) && (ResponseDataSize != NULL) && (*ResponseDataSize != 0)) {
     Status = SerialTransportRead (ResponseData, ResponseDataSize);
     if (EFI_ERROR (Status)) {
-      DEBUG ((DEBUG_ERROR, "Serial response read Failed with Status(%r)\n", Status));
+      DEBUG ((DEBUG_INFO, "Serial response read Failed with Status(%r)\n", Status));
     }
 
     // Print out the response payloads.
@@ -610,7 +610,7 @@ SerialTransportSendCommand (
       HelperManageabilityDebugPrint ((VOID *)ResponseData, (UINT32)*ResponseDataSize, "Serial Response Data:\n");
       Status = SerialCheckResponseData (ResponseData, *ResponseDataSize, AdditionalStatus);
     } else {
-      DEBUG ((DEBUG_ERROR, "No response, can't determine Completion Code.\n"));
+      DEBUG ((DEBUG_INFO, "No response, can't determine Completion Code.\n"));
     }
   } else {
     *ResponseDataSize = 0;

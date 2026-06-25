@@ -18,6 +18,7 @@
 #include <Library/PcdLib.h>
 
 #include "SmbiosPlatformDxe.h"
+#include "SmbiosPlatformFru.h"
 
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformSystem) {
   EFI_STATUS          Status;
@@ -44,6 +45,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformSystem) {
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStrFromPcd, NULL);
     UnicodeStrFromPcd = FixedPcdGetPtr(PcdProductSN);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[3], UnicodeStrFromPcd, NULL);
+    SmbiosPlatformDxeSetHiiStringFromFru (InputStrToken->TokenArray[3], FruProductSerialNumber);
     UnicodeStrFromPcd = FixedPcdGetPtr(PcdProductName);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[4], UnicodeStrFromPcd, NULL);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[5], L"SG2044", NULL);

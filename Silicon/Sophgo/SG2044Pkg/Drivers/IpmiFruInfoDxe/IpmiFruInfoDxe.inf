@@ -1,0 +1,37 @@
+## @file
+#  Read BMC FRU serial numbers and DEBUG-print them at DXE init.
+#
+#  Copyright (c) 2026, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = IpmiFruInfoDxe
+  FILE_GUID                      = 8B4C3D92-5F6A-7B8C-9D0E-1F2A3B4C5D6E
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = IpmiFruInfoDxeEntry
+
+[Sources]
+  IpmiFruInfoDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+
+[LibraryClasses]
+  DebugLib
+  IpmiFruInfoLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gIpmiProtocolGuid                              ## CONSUMES
+  gIpmiFruInfoProtocolGuid                       ## PRODUCES
+
+[Depex]
+  gIpmiProtocolGuid

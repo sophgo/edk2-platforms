@@ -18,6 +18,8 @@
 [Sources]
   Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe.h
   Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe.c
+  Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformFru.h
+  Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformFru.c
   SmbiosPlatformDxeDataTable.c
   SmbiosPlatformDxeStrings.uni
   Type00/PlatformBiosData.c
@@ -76,6 +78,7 @@
 
 [Protocols]
   gEfiSmbiosProtocolGuid                            ## CONSUMED
+  gIpmiFruInfoProtocolGuid                          ## CONSUMED
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdMisa
@@ -107,4 +110,4 @@
   gFdtHobGuid
 
 [Depex]
-  TRUE
+  gIpmiFruInfoProtocolGuid

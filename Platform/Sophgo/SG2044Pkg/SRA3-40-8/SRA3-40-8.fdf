@@ -268,6 +268,7 @@ INF  Silicon/Sophgo/SG2044Pkg/Drivers/DebugConfigDxe/DebugConfigDxe.inf
 #
 INF Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
 INF ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
+INF Silicon/Sophgo/SG2044Pkg/Drivers/IpmiFruInfoDxe/IpmiFruInfoDxe.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/IpmiBootDxe/IpmiBootDxe.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfigDxe/BmcConfig.inf
 INF Silicon/Sophgo/SG2044Pkg/Drivers/HostHwInfoReportToBmcDxe/HostHwInfoReportToBmcDxe.inf

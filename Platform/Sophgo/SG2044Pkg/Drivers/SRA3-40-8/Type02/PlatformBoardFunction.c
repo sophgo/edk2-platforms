@@ -19,6 +19,7 @@
 #include <Library/PcdLib.h>
 
 #include "SmbiosPlatformDxe.h"
+#include "SmbiosPlatformFru.h"
 
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBoard) {
   EFI_STATUS          Status;
@@ -58,12 +59,14 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBoard) {
     UnicodeStrFromPcd = FixedPcdGetPtr(PcdBoardVersion);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStrFromPcd, NULL);
 
-    if (UpdateSmbiosFromEfuse(0, EFUSE_CPU_SERIAL_NUM_OFFSET, 4, &SerialNum) == 0) {
-      HashValue = CalculateCrc32 (&SerialNum, sizeof (SerialNum));
-      UnicodeSPrint (SerialNumStr, sizeof (SerialNumStr), L"%02X-%02X-%02X-%02X",
-          (HashValue >> 24) & 0xFF, (HashValue >> 16) & 0xFF,
-          (HashValue >> 8) & 0xFF, HashValue & 0xFF);
-      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[3], SerialNumStr, NULL);
+    if (!SmbiosPlatformDxeSetHiiStringFromFru (InputStrToken->TokenArray[3], FruBoardSerialNumber)) {
+      if (UpdateSmbiosFromEfuse (0, EFUSE_CPU_SERIAL_NUM_OFFSET, 4, &SerialNum) == 0) {
+        HashValue = CalculateCrc32 (&SerialNum, sizeof (SerialNum));
+        UnicodeSPrint (SerialNumStr, sizeof (SerialNumStr), L"%02X-%02X-%02X-%02X",
+            (HashValue >> 24) & 0xFF, (HashValue >> 16) & 0xFF,
+            (HashValue >> 8) & 0xFF, HashValue & 0xFF);
+        HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[3], SerialNumStr, NULL);
+      }
     }
 
     SmbiosPlatformDxeCreateTable (

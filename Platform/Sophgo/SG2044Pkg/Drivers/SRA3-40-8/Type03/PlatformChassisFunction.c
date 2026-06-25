@@ -17,6 +17,7 @@
 #include <Library/IniParserLib.h>
 
 #include "SmbiosPlatformDxe.h"
+#include "SmbiosPlatformFru.h"
 
 SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformChassis) {
   EFI_STATUS          Status;
@@ -39,8 +40,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformChassis) {
     InputData->NumberofPowerCords = 2;
 
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], L"v1.0", NULL);
-
-    // cluster SN
+    SmbiosPlatformDxeSetHiiStringFromFru (InputStrToken->TokenArray[2], FruChassisSerialNumber);
 
     InputData->Height = 4;
 

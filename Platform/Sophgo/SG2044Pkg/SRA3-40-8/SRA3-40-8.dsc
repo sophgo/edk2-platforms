@@ -246,6 +246,7 @@
   SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
   IpmiLib|MdeModulePkg/Library/DxeIpmiLibIpmiProtocol/DxeIpmiLibIpmiProtocol.inf
   IpmiCommandLib|ManageabilityPkg/Library/IpmiCommandLib/IpmiCommandLib.inf
+  IpmiFruInfoLib|Silicon/Sophgo/SG2044Pkg/Library/IpmiFruInfo/IpmiFruInfoLib.inf
   # ManageabilityTransportLib|ManageabilityPkg/Library/ManageabilityTransportSsifLib/Dxe/DxeManageabilityTransportSsif.inf
   ManageabilityTransportLib|edk2-platforms/Silicon/Sophgo/Library/SophgoManageabilityTransportSerialLib/Dxe/DxeManageabilityTransportSerial.inf
   SophgoNs16550Lib|edk2-platforms/Silicon/Sophgo/Library/SophgoNs16550Lib/SophgoNs16550.inf
@@ -1138,6 +1139,7 @@
   #
   Silicon/Sophgo/Drivers/SmbusHcDxe/SmbusHcDxe.inf
   ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/IpmiFruInfoDxe/IpmiFruInfoDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfigDxe/BmcConfig.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/HostHwInfoReportToBmcDxe/HostHwInfoReportToBmcDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/IpmiBootDxe/IpmiBootDxe.inf

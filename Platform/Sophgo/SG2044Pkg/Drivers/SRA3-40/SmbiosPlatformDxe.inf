@@ -79,6 +79,7 @@
 [Protocols]
   gEfiSmbiosProtocolGuid                            ## CONSUMED
   gIpmiFruInfoProtocolGuid                          ## CONSUMED
+  gSophgoSmbiosPlatformReadyProtocolGuid              ## PRODUCES
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdMisa

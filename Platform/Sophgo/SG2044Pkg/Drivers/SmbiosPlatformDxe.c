@@ -25,6 +25,8 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/IniParserLib.h>
 
+#include <Protocol/SmbiosPlatformReady.h>
+
 #include "SmbiosPlatformDxe.h"
 
 #define SIZE_OF_HII_DATABASE_DEFAULT_STRINGS \
@@ -33,6 +35,7 @@ ADDITIONAL_STR_INDEX_MAX * SMBIOS_UNICODE_STRING_MAX_LENGTH
 STATIC EFI_HANDLE           mSmbiosPlatformDxeImageHandle;
 STATIC EFI_STRING           mDefaultHiiDatabaseStr;
 STATIC EFI_SMBIOS_PROTOCOL  *mPlatformDxeSmbios = NULL;
+STATIC UINT8                mSmbiosPlatformReadyMarker;
 
 EFI_HII_HANDLE  mSmbiosPlatformDxeHiiHandle;
 
@@ -124,7 +127,25 @@ SmbiosPlatformDxeEntry (
   //
   FreePool (mDefaultHiiDatabaseStr);
 
-  return Status;
+  Status = gBS->InstallProtocolInterface (
+                  &ImageHandle,
+                  &gSophgoSmbiosPlatformReadyProtocolGuid,
+                  EFI_NATIVE_INTERFACE,
+                  &mSmbiosPlatformReadyMarker
+                  );
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "[%a]: failed to install SmbiosPlatformReady protocol %r\n",
+      __func__,
+      Status
+      ));
+    return Status;
+  }
+
+  DEBUG ((DEBUG_INFO, "[%a]: platform SMBIOS tables ready\n", __func__));
+
+  return EFI_SUCCESS;
 }
 
 /**

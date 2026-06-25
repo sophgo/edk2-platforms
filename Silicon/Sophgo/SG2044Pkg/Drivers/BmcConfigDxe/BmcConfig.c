@@ -423,7 +423,10 @@ BmcConfigEntry(
     return EFI_SUCCESS;
   }
 
-  SendSmbiosOemToBmc();
+  //
+  // DEPEX waits for SmbiosPlatformDxe; platform Type 0/4/17 tables exist here.
+  //
+  SendSmbiosOemToBmc ();
 
   PrivateData = AllocateZeroPool(sizeof(NET_PRIVATE_DATA));
   if (PrivateData == NULL)

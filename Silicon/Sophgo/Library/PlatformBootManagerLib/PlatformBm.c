@@ -401,8 +401,10 @@ CheckBootOptionsStatus (
   EFI_HANDLE                      Handle;
   EFI_STATUS                      Status;
   EFI_DEVICE_PATH_PROTOCOL        *CopyOptionPath;
+  EFI_DEVICE_PATH_PROTOCOL        *RemainingPath;
   BOOLEAN                         InvalidFound;
   BOOLEAN                         HasValidAutoCreatedBlockDevice;
+  BOOLEAN                         BlockDevicePresent;
   UINTN                           FileSize;
   EFI_DEVICE_PATH_PROTOCOL        *CurFullPath;
   VOID                            *FileBuffer;
@@ -415,18 +417,38 @@ CheckBootOptionsStatus (
     FileBuffer = NULL;
     CurFullPath = NULL;
     CopyOptionPath = NULL;
+
+    // Determine whether the underlying block device still physically exists,
+    // independent of whether it carries a bootable EFI file.
+    BlockDevicePresent = FALSE;
+    CopyOptionPath = DuplicateDevicePath (BootOptions[BootOptionIndex].FilePath);
+    if (CopyOptionPath != NULL) {
+      RemainingPath = CopyOptionPath;
+      Status = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &RemainingPath, &Handle);
+      if (!EFI_ERROR (Status)) {
+        BlockDevicePresent = TRUE;
+      }
+      FreePool (CopyOptionPath);
+    }
+
     FileBuffer = BmGetNextLoadOptionBuffer (BootOptions[BootOptionIndex].OptionType, BootOptions[BootOptionIndex].FilePath, &CurFullPath, &FileSize);
     if (FileBuffer != NULL) {
       FreePool (FileBuffer);
-      CopyOptionPath = DuplicateDevicePath(BootOptions[BootOptionIndex].FilePath);
-      Status = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &CopyOptionPath, &Handle);
-      if (!EFI_ERROR (Status)) {
+      if (BlockDevicePresent) {
         // For valid block devices (not LoadFile devices), check if any are auto-created
         if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex]))
           HasValidAutoCreatedBlockDevice = TRUE;
       }
+    } else if (BlockDevicePresent && IsAutoCreateBootOption (&BootOptions[BootOptionIndex])) {
+        // The block device still exists but currently has no bootable EFI file
+        // (e.g. an empty disk without \EFI\BOOT\BOOTRISCV64.EFI). This is NOT an
+        // invalid option: auto enumeration would simply recreate it on the next
+        // boot, causing an endless delete/re-enumerate cycle. Keep it as a valid
+        // auto-created block device instead of deleting it.
+        HasValidAutoCreatedBlockDevice = TRUE;
+        DEBUG ((DEBUG_INFO, "Keeping auto-created boot option %d: block device present but no boot file\n", BootOptions[BootOptionIndex].OptionNumber));
     } else {
-        // Found invalid boot option
+        // Found invalid boot option (underlying device is gone or unreachable)
         InvalidFound = TRUE;
         DEBUG ((DEBUG_INFO, "Removing invalid boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
         EfiBootManagerDeleteLoadOptionVariable(

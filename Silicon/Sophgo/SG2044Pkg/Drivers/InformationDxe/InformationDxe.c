@@ -253,6 +253,12 @@ InformationInit(
     ParsedData->ExtendedSpeed = 0;
     ParsedData->MemoryRank = 0;
     ParsedData->ExtendSize = 0;
+  } else {
+    // SG2044 L1 cache is Unified in SMBios: Split evenly into I-cache and
+    // D-cache halves so the display fields show per-subcache sizes correctly.
+    UINT32 L1TotalSize = ParsedData->L1ICacheSize;
+    ParsedData->L1ICacheSize = L1TotalSize / 2;
+    ParsedData->L1DCacheSize = L1TotalSize / 2;
   }
   FillInformationData(&gInformationData);
   SyncToVarStore(&gInformationData);
@@ -331,4 +337,3 @@ InformationUnload(
 
   return EFI_SUCCESS;
 }
-

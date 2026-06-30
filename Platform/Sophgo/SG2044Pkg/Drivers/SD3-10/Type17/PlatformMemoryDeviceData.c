@@ -27,7 +27,7 @@ SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE17, PlatformMemoryDevice) = {
     0,                                // Bank 0
     MemoryTypeLpddr5,                 // DDR4
     {0,0,0,0,0,0,0,0,0,0,0,0,0,0,1},  // unbuffered
-    8533,                             // DRAM speed - requires update
+    0xFFFF,                           // DRAM speed - requires update
     2,                                // varies between diffrent production runs
     0,                                // serial
     0,                                // asset tag

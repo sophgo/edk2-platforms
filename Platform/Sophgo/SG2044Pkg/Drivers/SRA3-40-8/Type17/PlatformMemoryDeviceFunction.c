@@ -69,7 +69,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformMemoryDevice) {
       }
 
       Value = FixedPcdGet64(PcdDdrRate);
-      InputData->Speed = Value / 1000000;
+      InputData->ExtendedSpeed = Value / 1000000;
       InputData->ConfiguredMemoryClockSpeed = Value / 1000000;
 
       Value = FixedPcdGet64(PcdDdrRank);

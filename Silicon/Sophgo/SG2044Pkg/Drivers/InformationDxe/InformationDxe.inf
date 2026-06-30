@@ -54,6 +54,7 @@
 [Protocols]
   gEfiSmbiosProtocolGuid                        ## CONSUMES
   gEfiHiiConfigAccessProtocolGuid               ## CONSUMES
+  gSophgoSmbiosPlatformReadyProtocolGuid        ## CONSUMES
 
 [FeaturePcd]
 
@@ -72,4 +73,5 @@
 
 [Depex]
   gEfiHiiConfigRoutingProtocolGuid  AND
-  gEfiHiiDatabaseProtocolGuid
+  gEfiHiiDatabaseProtocolGuid       AND
+  gSophgoSmbiosPlatformReadyProtocolGuid

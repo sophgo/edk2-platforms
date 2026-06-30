@@ -57,7 +57,9 @@
   gEfiHiiStringProtocolGuid                     ## CONSUMES
   gEfiHiiPackageListProtocolGuid                ## CONSUMES
   gReserveMemoryRestoreProtocolGuid             ## PRODUCES
+  gSophgoSmbiosPlatformReadyProtocolGuid        ## CONSUMES
 
 [Depex]
   gEfiHiiConfigRoutingProtocolGuid  AND
-  gEfiHiiDatabaseProtocolGuid
+  gEfiHiiDatabaseProtocolGuid       AND
+  gSophgoSmbiosPlatformReadyProtocolGuid

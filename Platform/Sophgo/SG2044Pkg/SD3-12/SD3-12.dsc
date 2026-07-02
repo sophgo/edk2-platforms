@@ -235,8 +235,8 @@
   SmbusLib|MdePkg/Library/DxeSmbusLib/DxeSmbusLib.inf
   IpmiLib|MdeModulePkg/Library/DxeIpmiLibIpmiProtocol/DxeIpmiLibIpmiProtocol.inf
   IpmiCommandLib|ManageabilityPkg/Library/IpmiCommandLib/IpmiCommandLib.inf
-  # ManageabilityTransportLib|Features/ManageabilityPkg/Library/ManageabilityTransportSsifLib/Dxe/DxeManageabilityTransportSsif.inf
-  ManageabilityTransportLib|edk2-platforms/Silicon/Sophgo/Library/SophgoManageabilityTransportSerialLib/Dxe/DxeManageabilityTransportSerial.inf
+  ManageabilityTransportLib|ManageabilityPkg/Library/ManageabilityTransportSsifLib/Dxe/DxeManageabilityTransportSsif.inf
+  # ManageabilityTransportLib|edk2-platforms/Silicon/Sophgo/Library/SophgoManageabilityTransportSerialLib/Dxe/DxeManageabilityTransportSerial.inf
   SophgoNs16550Lib|edk2-platforms/Silicon/Sophgo/Library/SophgoNs16550Lib/SophgoNs16550.inf
 
 !if $(TPM2_ENABLE) == TRUE
@@ -441,6 +441,8 @@
   gEfiMdePkgTokenSpaceGuid.PcdMaximumAsciiStringLength|1000000
   gEfiMdePkgTokenSpaceGuid.PcdMaximumLinkedListLength|1000000
 
+  # ssif bmc slave addr
+  gEfiMdePkgTokenSpaceGuid.PcdIpmiSsifSmbusSlaveAddr|0x20
 
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdVpdBaseAddress|0x0
@@ -550,7 +552,7 @@
   # gSophgoTokenSpaceGuid.PcdMCUI2cBus|1
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum0|2
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum1|3
-  gSophgoTokenSpaceGuid.PcdSsifI2cBusNum|3
+  gSophgoTokenSpaceGuid.PcdSsifI2cBusNum|0
 
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
 
@@ -826,6 +828,10 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdTcg2HashAlgorithmBitmap|3
 !endif
 
+# ssif
+  gManageabilityPkgTokenSpaceGuid.PcdSendSmbiosOnChanged|FALSE
+  gManageabilityPkgTokenSpaceGuid.PcdBmcSmbiosBlobTransferId|"/smbios"
+
 ################################################################################
 #
 # Components Section - list of all EDK II Modules needed by this Platform.
@@ -1082,6 +1088,8 @@
   ManageabilityPkg/Universal/IpmiProtocol/Dxe/IpmiProtocolDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/BmcConfigDxe/BmcConfig.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/IpmiBootDxe/IpmiBootDxe.inf
+  ManageabilityPkg/Universal/IpmiSmbiosTransferDxe/IpmiSmbiosTransferDxe.inf
+  ManageabilityPkg/Universal/IpmiBlobTransferDxe/IpmiBlobTransferDxe.inf
 
   #
   # FAT filesystem + GPT/MBR partitioning + UDF filesystem

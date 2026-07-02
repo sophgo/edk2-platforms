@@ -23,53 +23,67 @@
 //
 typedef struct _SOPHGO_I2C_MASTER_PROTOCOL SOPHGO_I2C_MASTER_PROTOCOL;
 
+/**
+  I2C read operation — write data to the I2C slave then read data bytes back.
+
+  This performs a combined I2C transaction: first writes WriteLen bytes
+  (typically a register address), then reads ReadLen bytes from the slave.
+
+  @param[in]   This       The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
+  @param[in]   I2c        I2c bus number.
+  @param[in]   Addr       I2c slave address.
+  @param[in]   WriteLen   Number of bytes to write before reading.
+  @param[in]   WriteData  Data to write before reading (e.g. register offset).
+  @param[in]   ReadLen    Number of bytes to read.
+  @param[out]  ReadData   Buffer to store the read data.
+
+  @retval  EFI_SUCCESS              Read data success.
+  @retval  EFI_NOT_FOUND            Unable to find i2c slave with the given address.
+  @retval  EFI_DEVICE_ERROR         There was an error during the transmission.
+  @retval  EFI_TIMEOUT              Waiting for bus busy timedout or transfer timeout.
+
+**/
 typedef
 EFI_STATUS
-(EFIAPI *I2C_SMBUS_READ_BYTE) (
+(EFIAPI *I2C_MASTER_READ) (
   IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
   IN  INT32                       I2c,
   IN  UINT8                       Addr,
-  IN  UINT8                       Cmd,
-  OUT UINT8                       *Data
+  IN  UINT32                      WriteLen,
+  IN  UINT8                       *WriteData,
+  IN  UINT32                      ReadLen,
+  OUT UINT8                       *ReadData
   );
 
-typedef
-EFI_STATUS
-(EFIAPI *I2C_SMBUS_WRITE_BYTE) (
-  IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
-  IN  INT32                       I2c,
-  IN  UINT8                       Addr,
-  IN  UINT8                       Cmd,
-  IN  UINT8                       Data
-  );
+/**
+  I2C write operation — write data bytes to the I2C slave.
 
-typedef
-EFI_STATUS
-(EFIAPI *I2C_SMBUS_READ) (
-  IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
-  IN  INT32                       I2c,
-  IN  UINT8                       Addr,
-  IN  UINT8                       Cmd,
-  IN  UINT32                      Len,
-  OUT UINT8                       *Data
-  );
+  @param[in]  This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
+  @param[in]  I2c   I2c bus number.
+  @param[in]  Addr  I2c slave address.
+  @param[in]  Len   Number of bytes to write.
+  @param[in]  Data  Data to be written.
 
+  @retval  EFI_SUCCESS              Write data success.
+  @retval  EFI_NOT_FOUND            Unable to find i2c slave with the given address.
+  @retval  EFI_DEVICE_ERROR         There was an error during the transmission.
+  @retval  EFI_TIMEOUT              Waiting for bus busy timedout or transfer timeout.
+  @retval  EFI_INVALID_PARAMETER    Invalid function parameter.
+
+**/
 typedef
 EFI_STATUS
-(EFIAPI *I2C_SMBUS_WRITE) (
+(EFIAPI *I2C_MASTER_WRITE) (
   IN        SOPHGO_I2C_MASTER_PROTOCOL  *This,
   IN        INT32                       I2c,
   IN        UINT8                       Addr,
-  IN        UINT8                       Cmd,
   IN        UINT32                      Len,
   IN CONST  UINT8                       *Data
   );
 
 struct _SOPHGO_I2C_MASTER_PROTOCOL {
-  I2C_SMBUS_READ_BYTE   ReadByte;
-  I2C_SMBUS_WRITE_BYTE  WriteByte;
-  I2C_SMBUS_READ        Read;
-  I2C_SMBUS_WRITE       Write;
+  I2C_MASTER_READ   Read;
+  I2C_MASTER_WRITE  Write;
 };
 
 extern EFI_GUID  gSophgoI2cMasterProtocolGuid;

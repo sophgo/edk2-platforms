@@ -130,9 +130,24 @@ SmbusHcCommonExecute (
         return EFI_INVALID_PARAMETER;
       }
 
-      DataLen = *Length;
-      CopyMem (&WriteTemp[0], Buffer, *Length);
-      DEBUG ((DEBUG_VERBOSE, "W %d: ", DataLen));
+      WriteTemp[0] = Command;
+      WriteTemp[1] = *Length;
+      CopyMem (&WriteTemp[2], Buffer, *Length);
+      DataLen = (*Length) + 2;
+
+      //
+      // PEC handling
+      //
+      if (PecCheck) {
+        CrcTemp[0] = I2C_WRITE_ADDRESS (SlaveAddress.SmbusDeviceAddress);
+        Pec        = CalculatePec (0, &CrcTemp[0], 1);
+        Pec        = CalculatePec (Pec, WriteTemp, DataLen);
+        DEBUG ((DEBUG_VERBOSE, "WriteBlock PEC = 0x%x\n", Pec));
+        WriteTemp[DataLen] = Pec;
+        DataLen           += 1;
+      }
+
+      DEBUG ((DEBUG_VERBOSE, "W %d: ", *Length));
       DEBUG ((DEBUG_VERBOSE, "Addr 0x%x: ", SlaveAddress.SmbusDeviceAddress));
       for (Idx = 0; Idx < DataLen; Idx++) {
         DEBUG ((DEBUG_VERBOSE, "0x%x ", WriteTemp[Idx]));
@@ -141,7 +156,7 @@ SmbusHcCommonExecute (
       Status = mI2cMasterProtocol->Write (mI2cMasterProtocol,
                                       I2C_BUS_NUMBER,
                                       SlaveAddress.SmbusDeviceAddress,
-                                      Command, DataLen, WriteTemp);
+                                      DataLen, WriteTemp);
 
       if (EFI_ERROR (Status)) {
         if (Status != EFI_TIMEOUT) {
@@ -154,11 +169,12 @@ SmbusHcCommonExecute (
     case EfiSmbusReadBlock:
 
       WriteTemp[0] = Command;
-      DataLen = *Length;
+      DataLen = *Length + 2; // +1 byte for Data Length +1 byte for PEC
       Status = mI2cMasterProtocol->Read (mI2cMasterProtocol,
                                      I2C_BUS_NUMBER,
                                      SlaveAddress.SmbusDeviceAddress,
-                                     WriteTemp[0], DataLen, ReadTemp);
+                                     1, WriteTemp,
+                                     DataLen, ReadTemp);
 
       if (EFI_ERROR (Status)) {
         if (Status != EFI_TIMEOUT) {

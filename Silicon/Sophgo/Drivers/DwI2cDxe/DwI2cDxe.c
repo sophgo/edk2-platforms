@@ -470,56 +470,15 @@ I2cXfer (
 }
 
 /**
-  I2c smbus read 1 byte data command.
+  I2C read operation — write data to the slave then read data bytes back.
 
-  @param[in]   This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
-  @param[in]   I2c   I2c bus number.
-  @param[in]   Addr  I2c slave address.
-  @param[in]   Cmd   Smbus command.
-  @param[out]  Data  Buffer used to store the read data.
-
-  @retval  EFI_SUCCESS              Read data success.
-  @retval  EFI_NOT_FOUND            Unable to find i2c slave with the given address.
-  @retval  EFI_DEVICE_ERROR         There was an error during the transmission.
-  @retval  EFI_TIMEOUT              Waiting for bus busy timedout or transfer timeout.
-
-**/
-EFI_STATUS
-EFIAPI
-I2cSmbusReadByte (
-  IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
-  IN  INT32                       I2c,
-  IN  UINT8                       Addr,
-  IN  UINT8                       Cmd,
-  OUT UINT8                       *Data
-  )
-{
-  I2C_MSG  Msg[2];
-
-  SetMem ((VOID *)Msg, sizeof (Msg), 0);
-
-  Msg[0].Addr  = Addr;
-  Msg[0].Flags = 0;
-  Msg[0].Len   = 1;
-  Msg[0].Buf   = &Cmd;
-
-  Msg[1].Addr  = Addr;
-  Msg[1].Flags = I2C_M_RD;
-  Msg[1].Len   = 1;
-  Msg[1].Buf   = Data;
-
-  return I2cXfer (I2c, Msg, 2);
-}
-
-/**
-  I2c smbus read specified byte length data command.
-
-  @param[in]   This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
-  @param[in]   I2c   I2c bus number.
-  @param[in]   Addr  I2c slave address.
-  @param[in]   Len   Byte size of the data to be written.
-  @param[in]   Cmd   Smbus command.
-  @param[out]  Data  Buffer used to store the read data.
+  @param[in]   This       The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
+  @param[in]   I2c        I2c bus number.
+  @param[in]   Addr       I2c slave address.
+  @param[in]   WriteLen   Number of bytes to write before reading.
+  @param[in]   WriteData  Data to write before reading (e.g. register offset).
+  @param[in]   ReadLen    Number of bytes to read.
+  @param[out]  ReadData   Buffer to store the read data.
 
   @retval  EFI_SUCCESS              Read data success.
   @retval  EFI_NOT_FOUND            Unable to find i2c slave with the given address.
@@ -529,13 +488,14 @@ I2cSmbusReadByte (
 **/
 EFI_STATUS
 EFIAPI
-I2cSmbusRead (
+I2cMasterRead (
   IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
   IN  INT32                       I2c,
   IN  UINT8                       Addr,
-  IN  UINT8                       Cmd,
-  IN  UINT32                      Len,
-  OUT UINT8                       *Data
+  IN  UINT32                      WriteLen,
+  IN  UINT8                       *WriteData,
+  IN  UINT32                      ReadLen,
+  OUT UINT8                       *ReadData
   )
 {
   I2C_MSG  Msg[2];
@@ -544,68 +504,25 @@ I2cSmbusRead (
 
   Msg[0].Addr  = Addr;
   Msg[0].Flags = 0;
-  Msg[0].Len   = 1;
-  Msg[0].Buf   = &Cmd;
+  Msg[0].Len   = WriteLen;
+  Msg[0].Buf   = WriteData;
 
   Msg[1].Addr  = Addr;
   Msg[1].Flags = I2C_M_RD;
-  Msg[1].Len   = Len;
-  Msg[1].Buf   = Data;
+  Msg[1].Len   = ReadLen;
+  Msg[1].Buf   = ReadData;
 
   return I2cXfer (I2c, Msg, 2);
 }
 
 /**
-  I2c smbus write 1 byte data command.
+  I2C write operation — write data bytes to the I2C slave.
 
   @param[in]  This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]  I2c   I2c bus number.
   @param[in]  Addr  I2c slave address.
-  @param[in]  Cmd   Smbus command.
-  @param[in]  Data  Data to be writen.
-
-  @retval  EFI_SUCCESS         Write data success.
-  @retval  EFI_NOT_FOUND       Unable to find i2c slave with the given address.
-  @retval  EFI_DEVICE_ERROR    There was an error during the transmission.
-  @retval  EFI_TIMEOUT         Waiting for bus busy timedout or transfer timeout.
-
-**/
-EFI_STATUS
-EFIAPI
-I2cSmbusWriteByte (
-  IN  SOPHGO_I2C_MASTER_PROTOCOL  *This,
-  IN  INT32                       I2c,
-  IN  UINT8                       Addr,
-  IN  UINT8                       Cmd,
-  IN  UINT8                       Data
-  )
-{
-  I2C_MSG  Msg;
-  UINT8    Buf[2];
-
-  SetMem ((VOID *)(&Msg), sizeof (Msg), 0);
-
-  Buf[0]    = Cmd;
-  Buf[1]    = Data;
-
-  Msg.Addr  = Addr;
-  Msg.Flags = 0;
-  Msg.Len   = 2;
-  Msg.Buf   = Buf;
-
-  return I2cXfer (I2c, &Msg, 1);
-}
-
-/**
-  I2c smbus write multiple bytes to the device,
-  maximum 16 bytes in a single operation.
-
-  @param[in]  This        The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
-  @param[in]  I2c         I2c bus number.
-  @param[in]  Addr        I2c slave address.
-  @param[in]  EepromAddr  The address to write data in.
-  @param[in]  DataLen     The bytes of data to be writen.
-  @param[in]  Data        Data to be writen.
+  @param[in]  Len   Number of bytes to write.
+  @param[in]  Data  Data to be written.
 
   @retval  EFI_SUCCESS              Write data success.
   @retval  EFI_NOT_FOUND            Unable to find i2c slave with the given address.
@@ -616,79 +533,22 @@ I2cSmbusWriteByte (
 **/
 EFI_STATUS
 EFIAPI
-I2cSmbusWriteBlockData (
+I2cMasterWrite (
   IN        SOPHGO_I2C_MASTER_PROTOCOL  *This,
   IN        INT32                       I2c,
   IN        UINT8                       Addr,
-  IN        UINT32                      EepromAddr,
-  IN        UINT32                      DataLen,
-  IN CONST  UINT8                       *Data)
-{
-  I2C_MSG  Msg;
-  UINT8    Buf[18];
-
-  if (DataLen > 16) {
-    DEBUG ((DEBUG_ERROR, "%a: write %d bytes exceeds 16!\n", __func__, DataLen));
-    return EFI_INVALID_PARAMETER;
-  }
-
-  SetMem ((VOID *)(&Msg), sizeof (Msg), 0);
-  CopyMem ((VOID *)(Buf + 2), (CONST VOID *)Data, DataLen);
-  Buf[0] = (EepromAddr >> 8) & 0xff;
-  Buf[1] = EepromAddr & 0xff;
-
-  Msg.Addr  = Addr;
-  Msg.Flags = 0;
-  Msg.Len   = DataLen + 2;
-  Msg.Buf   = Buf;
-
-  return I2cXfer (I2c, &Msg, 1);
-}
-
-/**
-  I2c smbus write specified byte length data command.
-
-  @param[in]  This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
-  @param[in]  I2c   I2c bus number.
-  @param[in]  Addr  I2c slave address.
-  @param[in]  Cmd   Smbus command.
-  @param[in]  Len   Byte size of the data to be written.
-  @param[in]  Data  Buffer used to store the written data.
-
-  @retval  EFI_SUCCESS              Write data success.
-  @retval  EFI_NOT_FOUND            Unable to find i2c slave with the given address.
-  @retval  EFI_DEVICE_ERROR         There was an error during the transmission.
-  @retval  EFI_TIMEOUT              Waiting for bus busy timedout or transfer timeout.
-  @retval  EFI_INVALID_PARAMETER    Invalid function parameter.
-
-**/
-EFI_STATUS
-EFIAPI
-I2cSmbusWrite (
-  IN        SOPHGO_I2C_MASTER_PROTOCOL  *This,
-  IN        INT32                       I2c,
-  IN        UINT8                       Addr,
-  IN        UINT8                       Cmd,
   IN        UINT32                      Len,
   IN CONST  UINT8                       *Data
   )
 {
   I2C_MSG  Msg;
-  UINT8    Buf[18];
-
-  if (Len > 17) {
-    DEBUG ((DEBUG_ERROR, "%a: write %d bytes exceeds 17!\n", __func__, Len));
-    return EFI_INVALID_PARAMETER;
-  }
 
   SetMem ((VOID *)(&Msg), sizeof (Msg), 0);
-  CopyMem ((VOID *)(Buf + 1), (CONST VOID *)Data, Len);
-  Buf[0] = Cmd;
 
   Msg.Addr  = Addr;
   Msg.Flags = 0;
-  Msg.Len   = Len + 1;
-  Msg.Buf   = Buf;
+  Msg.Len   = Len;
+  Msg.Buf   = (UINT8 *)Data;
 
   return I2cXfer (I2c, &Msg, 1);
 }
@@ -837,10 +697,8 @@ DwI2cEntryPoint (
     goto ErrorI2cInit;
   }
 
-  mI2cMasterProtocol->ReadByte  = I2cSmbusReadByte;
-  mI2cMasterProtocol->WriteByte = I2cSmbusWriteByte;
-  mI2cMasterProtocol->Read      = I2cSmbusRead;
-  mI2cMasterProtocol->Write     = I2cSmbusWrite;
+  mI2cMasterProtocol->Read  = I2cMasterRead;
+  mI2cMasterProtocol->Write = I2cMasterWrite;
 
   Status = gBS->InstallMultipleProtocolInterfaces (
                   &ImageHandle,

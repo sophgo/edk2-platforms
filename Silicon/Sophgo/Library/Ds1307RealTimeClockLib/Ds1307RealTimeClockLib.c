@@ -20,11 +20,13 @@
 #include <Library/UefiRuntimeLib.h>
 #include <Library/PcdLib.h>
 #include <Include/DwI2c.h>
+#include <Library/BaseMemoryLib.h>
 
 #define DS1307_ADDR         0x68
 #define INS5609_ADDR        0x32
 
 #define DS1307_SEC_BIT_CH   0x80  /* Clock Halt (in Register 0) */
+#define DS1307_DATA_REG     0x0
 
 //
 // TIME MASKS
@@ -74,11 +76,12 @@ RtcRead (
   )
 {
   EFI_STATUS   Status;
+  UINT8        RegAddr = DS1307_DATA_REG;
 
   Status = mI2cMasterProtocol->Read (mI2cMasterProtocol,
                                      mI2cBusNum,
                                      mSlaveAddr,
-                                     0, Length, Data);
+                                     1, &RegAddr, Length, Data);
 
   return Status;
 }
@@ -94,15 +97,19 @@ STATIC
 EFI_STATUS
 RtcWrite (
   IN   UINT32  Length,
-  OUT  UINT8   *Data
+  IN   UINT8   *Data
   )
 {
   EFI_STATUS   Status;
+  UINT8        Buf[Length + 1];
+
+  Buf[0] = DS1307_DATA_REG;
+  CopyMem (&Buf[1], Data, Length);
 
   Status = mI2cMasterProtocol->Write (mI2cMasterProtocol,
                                       mI2cBusNum,
                                       mSlaveAddr,
-                                      0, Length, Data);
+                                      Length + 1, Buf);
 
   return Status;
 }
@@ -132,7 +139,7 @@ LibGetTime (
 
   Status = RtcRead (7, TimeBcd);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: I2c smbus read error, Status: %r.\n", __func__, Status));
+    DEBUG ((DEBUG_ERROR, "%a: I2c read error, Status: %r.\n", __func__, Status));
     return EFI_DEVICE_ERROR;
   } else if (TimeBcd[0] & DS1307_SEC_BIT_CH) {
     DEBUG ((DEBUG_ERROR, "%a: Error, RTC oscillator has stopped!\n", __func__));
@@ -193,7 +200,7 @@ LibSetTime (
 
   Status = RtcRead (1, &Second);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: I2c smbus read error, Status: %r.\n", __func__, Status));
+    DEBUG ((DEBUG_ERROR, "%a: I2c read error, Status: %r.\n", __func__, Status));
     return EFI_DEVICE_ERROR;
   } else if (Second & DS1307_SEC_BIT_CH) {
     DEBUG ((DEBUG_ERROR, "%a: Error, RTC oscillator has stopped\n", __func__));
@@ -214,7 +221,7 @@ LibSetTime (
 
   Status = RtcWrite (7, TimeBcd);
   if (EFI_ERROR (Status)) {
-    DEBUG ((DEBUG_ERROR, "%a: I2c smbus write error, Status: %r.\n", __func__, Status));
+    DEBUG ((DEBUG_ERROR, "%a: I2c write error, Status: %r.\n", __func__, Status));
     return EFI_DEVICE_ERROR;
   }
 
@@ -289,30 +296,36 @@ FindOneRtcSlave (
   EFI_STATUS Status;
   UINT32     SlaveIndex, BusIndex;
   UINT8      Data = 0;
+  UINT8      Buf[2];
   UINT32     I2cBusNums[2];
 
   gBS->SetMem (I2cBusNums, sizeof (I2cBusNums), 0);
   I2cBusNums[0] = FixedPcdGet32 (PcdRtcI2cBusNum0);
   I2cBusNums[1] = FixedPcdGet32 (PcdRtcI2cBusNum1);
+  gBS->SetMem (Buf, sizeof (Buf), 0);
+  Buf[0] = DS1307_DATA_REG;
 
   for (BusIndex = 0; BusIndex < sizeof (I2cBusNums) / sizeof (I2cBusNums[0]); ++BusIndex){
     for (SlaveIndex = 0; SlaveIndex < sizeof (mRtcSlaveAddrs) / sizeof (mRtcSlaveAddrs[0]); ++SlaveIndex) {
-      Status = mI2cMasterProtocol->ReadByte (mI2cMasterProtocol,
-                                             I2cBusNums[BusIndex],
-                                             mRtcSlaveAddrs[SlaveIndex],
-                                             0, &Data);
+      Status = mI2cMasterProtocol->Read (mI2cMasterProtocol,
+                                         I2cBusNums[BusIndex],
+                                         mRtcSlaveAddrs[SlaveIndex],
+                                         1, Buf, 1, &Data);
       if (!EFI_ERROR (Status)) {
         mI2cBusNum = I2cBusNums[BusIndex];
         mSlaveAddr = mRtcSlaveAddrs[SlaveIndex];
+        DEBUG ((DEBUG_INFO, "%a: RTC found on I2cBus %d, SlaveAddr 0x%02x, read Data 0x%02x\n",
+                __func__, mI2cBusNum, mSlaveAddr, Data));
         //
         // Enable the oscillator (CH bit = 0) in the initial state
         //
         if (Data & DS1307_SEC_BIT_CH) {
           Data &= ~DS1307_SEC_BIT_CH;
-          Status = mI2cMasterProtocol->WriteByte (mI2cMasterProtocol,
-                                                  mI2cBusNum,
-                                                  mSlaveAddr,
-                                                  0, Data);
+          Buf[1] = Data;
+          Status = mI2cMasterProtocol->Write (mI2cMasterProtocol,
+                                              mI2cBusNum,
+                                              mSlaveAddr,
+                                              2, Buf);
         }
         return Status;
       }

@@ -56,18 +56,18 @@ MCUFlashSetOffset (
   )
 {
   EFI_STATUS Status = EFI_SUCCESS;
-  UINT8 Data[4];
+  UINT8 Data[5];
 
-  Data[0] = (Offset >> 24) & 0xFF;
-  Data[1] = (Offset >> 16) & 0xFF;
-  Data[2] = (Offset >> 8) & 0xFF;
-  Data[3] = Offset & 0xFF;
+  Data[0] = REG_FLASH_OFFSET;
+  Data[1] = (Offset >> 24) & 0xFF;
+  Data[2] = (Offset >> 16) & 0xFF;
+  Data[3] = (Offset >> 8) & 0xFF;
+  Data[4] = Offset & 0xFF;
 
   Status = I2cMasterProtocol->Write(
     I2cMasterProtocol,
     MCUI2cBus,
     MCU_SLAVE_ADDR,
-    REG_FLASH_OFFSET,
     sizeof(Data),
     Data
     );
@@ -91,6 +91,7 @@ MCUFlashSetBlockData (
   EFI_STATUS Status = EFI_SUCCESS;
   UINT8 SmbusBlockMax = 16;
   UINT8 Reg, Slen, Left, Off = 0;
+  UINT8 Buf[SmbusBlockMax + 1];
 
   Reg = REG_FLASH_DATA;
 
@@ -101,13 +102,15 @@ MCUFlashSetBlockData (
     else
       Slen = Left;
 
+    Buf[0] = Reg;
+    CopyMem (&Buf[1], (UINT8 *)Buffer + Off, Slen);
+
     Status = I2cMasterProtocol->Write(
       I2cMasterProtocol,
       MCUI2cBus,
       MCU_SLAVE_ADDR,
-      Reg,
-      Slen,
-      (UINT8 *)Buffer + Off
+      Slen + 1,
+      Buf
       );
     if (EFI_ERROR(Status)) {
       Print (L"\rMCU flash set block data failed\n");
@@ -148,7 +151,8 @@ MCUFlashGetBlockData (
       I2cMasterProtocol,
       MCUI2cBus,
       MCU_SLAVE_ADDR,
-      Reg,
+      1,
+      &Reg,
       Slen,
       (UINT8 *)Buffer + Off
       );
@@ -172,18 +176,20 @@ MCUFlashUnlock (
   )
 {
   EFI_STATUS Status = EFI_SUCCESS;
+  UINT8      Buf[2];
 
-  Status = I2cMasterProtocol->WriteByte(
+  Buf[0] = REG_FLASH_CMD;
+  Buf[1] = FLASH_CMD_UNLOCK;
+  Status = I2cMasterProtocol->Write(
     I2cMasterProtocol,
     MCUI2cBus,
     MCU_SLAVE_ADDR,
-    REG_FLASH_CMD,
-    FLASH_CMD_UNLOCK
+    2,
+    Buf
     );
 
   if (EFI_ERROR(Status))
     Print (L"\rMCU flash unlock failed\n");
-
 
   return Status;
 }
@@ -196,13 +202,16 @@ MCUFlashLock (
   )
 {
   EFI_STATUS Status = EFI_SUCCESS;
+  UINT8      Buf[2];
 
-  Status = I2cMasterProtocol->WriteByte(
+  Buf[0] = REG_FLASH_CMD;
+  Buf[1] = FLASH_CMD_LOCK;
+  Status = I2cMasterProtocol->Write(
     I2cMasterProtocol,
     MCUI2cBus,
     MCU_SLAVE_ADDR,
-    REG_FLASH_CMD,
-    FLASH_CMD_LOCK
+    2,
+    Buf
     );
 
   if (EFI_ERROR(Status))
@@ -220,6 +229,7 @@ MCUFlashErasePage (
   )
 {
   EFI_STATUS Status = EFI_SUCCESS;
+  UINT8      Buf[2];
 
   if (Offset & FLASH_PAGE_MASK) {
     Print (L"\rOffset should page aligned when erase page\n");
@@ -232,12 +242,14 @@ MCUFlashErasePage (
     Offset
     );
 
-  Status = I2cMasterProtocol->WriteByte(
+  Buf[0] = REG_FLASH_CMD;
+  Buf[1] = FLASH_CMD_ERASE;
+  Status = I2cMasterProtocol->Write(
     I2cMasterProtocol,
     MCUI2cBus,
     MCU_SLAVE_ADDR,
-    REG_FLASH_CMD,
-    FLASH_CMD_ERASE
+    2,
+    Buf
     );
 
   return Status;
@@ -407,12 +419,15 @@ MCUFirmwareCheck (
   EFI_STATUS Status = EFI_SUCCESS;
   UINT8 BoardTypeInFile = 0;
   UINT8 BoardType = 0;
+  UINT8 RegAddr = REG_BOARD_TYPE;
 
-  Status = I2cMasterProtocol->ReadByte(
+  Status = I2cMasterProtocol->Read(
     I2cMasterProtocol,
     MCUI2cBus,
     MCU_SLAVE_ADDR,
-    REG_BOARD_TYPE,
+    1,
+    &RegAddr,
+    1,
     &BoardType
     );
 

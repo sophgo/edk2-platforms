@@ -18,6 +18,12 @@
 #include <Library/PcdLib.h>
 #include "SG2044AcpiHeader.h"
 
+#define SG2044_ISA_STRING                                                   \
+  "rv64imafdcv_zicbom_zicbop_zicboz_zicntr_zicond_zicsr"                  \
+  "_zifencei_zawrs_zba_zbb_zbc_zbs_zca_zcb_zcd_zfa_zfbfmin"               \
+  "_zfh_zfhmin_zihintntl_zihintpause_zihpm"                                \
+  "_zvfbfmin_zvfbfwma_zvfh_zvfhmin_sscofpmf_sstc_svinval_svnapot_svpbmt"
+
 // Multiple APIC Description Table
 #pragma pack (1)
 
@@ -48,8 +54,8 @@ STATIC SG2044_RHCT_TABLE Rhct = {
     0,
     OFFSET_OF (SG2044_RHCT_TABLE, CMONode) - OFFSET_OF (SG2044_RHCT_TABLE, ISAStrNode),                     // 8 + N + P: Size of this structure.
     1,
-    MAX_ISA_LENGTH,
-    "rv64imafdcv_zicbom_zicboz_zicntr_zicond_zicsr_zifencei_zihintntl_zihintpause_zihpm_zawrs_zfa_zfh_zfhmin_zca_zcb_zcd_zba_zbb_zbc_zbs_zve32f_zve32x_zve64d_zve64f_zve64x_zvfh_zvfhmin_sscofpmf_sstc_svinval_svnapot_svpbmt"
+    sizeof (SG2044_ISA_STRING),
+    SG2044_ISA_STRING
   },
   {
     {1, 10, 1},

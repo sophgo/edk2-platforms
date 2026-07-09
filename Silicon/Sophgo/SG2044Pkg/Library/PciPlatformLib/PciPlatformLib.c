@@ -469,7 +469,7 @@ InitPlatformFromPcd (
     OUT   SG2044_PCIE_ROOT *SG2044PciRoot
     )
 {
-  UINT32                            Segment;
+  UINT32                            Index;
   PCIE_HOST_BRIDGE_TABLE            *PcieRcConfig;
   PCI_ROOT_BRIDGE                   *PciRoot;
   DW_PCIE                           *DwPcie;
@@ -488,19 +488,19 @@ InitPlatformFromPcd (
     return 0;
   }
 
-  for (Segment = 0; Segment < PcieRcConfig->NumOfControllers; Segment++) {
-    PciRoot = &SG2044PciRoot->PciRoot[Segment];
-    DwPcie = &SG2044PciRoot->DwPcie[Segment];
-    SlaveMapAddrPcie = &SG2044PciRoot->SlaveMapAddrPcie[Segment];
+  for (Index = 0; Index < PcieRcConfig->NumOfControllers; Index++) {
+    PciRoot = &SG2044PciRoot->PciRoot[Index];
+    DwPcie = &SG2044PciRoot->DwPcie[Index];
+    SlaveMapAddrPcie = &SG2044PciRoot->SlaveMapAddrPcie[Index];
 
-    CopyMem(&SlaveMapAddrPcie->StartAddr32Bit, PcieRcConfig->Pcie32BitSpaceStartAddr[Segment], sizeof(SlaveMapAddrPcie->StartAddr32Bit));
-    CopyMem(&SlaveMapAddrPcie->EndAddr32Bit, PcieRcConfig->Pcie32BitSpaceEndAddr[Segment], sizeof(SlaveMapAddrPcie->EndAddr32Bit));
-    CopyMem(&SlaveMapAddrPcie->StartAddr64Bit, PcieRcConfig->Pcie64BitSpaceStartAddr[Segment], sizeof(SlaveMapAddrPcie->StartAddr64Bit));
-    CopyMem(&SlaveMapAddrPcie->EndAddr64Bit, PcieRcConfig->Pcie64BitSpaceEndAddr[Segment], sizeof(SlaveMapAddrPcie->EndAddr64Bit));
+    CopyMem(&SlaveMapAddrPcie->StartAddr32Bit, PcieRcConfig->Pcie32BitSpaceStartAddr[Index], sizeof(SlaveMapAddrPcie->StartAddr32Bit));
+    CopyMem(&SlaveMapAddrPcie->EndAddr32Bit, PcieRcConfig->Pcie32BitSpaceEndAddr[Index], sizeof(SlaveMapAddrPcie->EndAddr32Bit));
+    CopyMem(&SlaveMapAddrPcie->StartAddr64Bit, PcieRcConfig->Pcie64BitSpaceStartAddr[Index], sizeof(SlaveMapAddrPcie->StartAddr64Bit));
+    CopyMem(&SlaveMapAddrPcie->EndAddr64Bit, PcieRcConfig->Pcie64BitSpaceEndAddr[Index], sizeof(SlaveMapAddrPcie->EndAddr64Bit));
 
-    CopyMem(&PcieRegEntry, PcieRcConfig->PcieReg[Segment], sizeof(PcieRegEntry));
-    CopyMem(&PcieSupportEntry, PcieRcConfig->PcieSupportFlag[Segment], sizeof(PcieSupportEntry));
-    CopyMem(&PcieBusEntry, PcieRcConfig->RootBusConfig[Segment], sizeof(PcieBusEntry));
+    CopyMem(&PcieRegEntry, PcieRcConfig->PcieReg[Index], sizeof(PcieRegEntry));
+    CopyMem(&PcieSupportEntry, PcieRcConfig->PcieSupportFlag[Index], sizeof(PcieSupportEntry));
+    CopyMem(&PcieBusEntry, PcieRcConfig->RootBusConfig[Index], sizeof(PcieBusEntry));
 
     //Init DwPcie parameters
     DwPcie->DbiBase = PcieRegEntry.DbiBase;
@@ -519,14 +519,25 @@ InitPlatformFromPcd (
     PciRoot->NoExtendedConfigSpace     = FALSE;
     PciRoot->ResourceAssigned          = FALSE;
     PciRoot->AllocationAttributes      = EFI_PCI_HOST_BRIDGE_MEM64_DECODE;
-    PciRoot->Segment                   = /* PcieRcConfig->PcieDomain[Segment] */ Segment;
+    //
+    // Report the real PCIe domain number (as consumed by the OS via ACPI
+    // MCFG/DSDT _SEG) rather than the controller loop index, so the UEFI PCI
+    // segment matches what Linux enumerates. The domain comes from the same
+    // PcieDomain PCD that AcpiPlatformDxe uses to build the ACPI tables.
+    // Index remains the packed controller index used for all the DwPcie[] and
+    // range PCD arrays; only the reported Segment carries the real domain.
+    //
+    PciRoot->Segment                   = PcieRcConfig->PcieDomain[Index][0]        |
+                                         (PcieRcConfig->PcieDomain[Index][1] << 8) |
+                                         (PcieRcConfig->PcieDomain[Index][2] << 16)|
+                                         (PcieRcConfig->PcieDomain[Index][3] << 24);
 
     //slave mapping
     PciRoot->Bus.Base                  = PcieBusEntry.RootBusBase;
     PciRoot->Bus.Limit                 = PcieBusEntry.RootBusLimit;
     PciRoot->Bus.Translation           = PcieBusEntry.RootBusTranslation;
     if (PcieSupportEntry.Pmem32Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem32Ranges[Segment], sizeof(PCIE_RANGES));
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem32Ranges[Index], sizeof(PCIE_RANGES));
       PciRoot->PMem.Base                 = PcieRangeEntry.PciAddr;
       PciRoot->PMem.Limit                = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
       PciRoot->PMem.Translation          = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
@@ -540,7 +551,7 @@ InitPlatformFromPcd (
       PciRoot->PMem.Limit                = 0;
     }
     if (PcieSupportEntry.Mem32Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem32Ranges[Segment], sizeof(PCIE_RANGES));
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem32Ranges[Index], sizeof(PCIE_RANGES));
       PciRoot->Mem.Base                  = PcieRangeEntry.PciAddr;
       PciRoot->Mem.Limit                 = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
       PciRoot->Mem.Translation           = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
@@ -554,7 +565,7 @@ InitPlatformFromPcd (
       PciRoot->Mem.Limit                 = 0;
     }
     if (PcieSupportEntry.Pmem64Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem64Ranges[Segment], sizeof(PCIE_RANGES));
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem64Ranges[Index], sizeof(PCIE_RANGES));
       PciRoot->PMemAbove4G.Base          = PcieRangeEntry.PciAddr;
       PciRoot->PMemAbove4G.Limit         = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
       PciRoot->PMemAbove4G.Translation   = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
@@ -568,7 +579,7 @@ InitPlatformFromPcd (
       PciRoot->PMemAbove4G.Limit         = 0;
     }
     if (PcieSupportEntry.Mem64Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem64Ranges[Segment], sizeof(PCIE_RANGES));
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem64Ranges[Index], sizeof(PCIE_RANGES));
       PciRoot->MemAbove4G.Base           = PcieRangeEntry.PciAddr;
       PciRoot->MemAbove4G.Limit          = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
       PciRoot->MemAbove4G.Translation    = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
@@ -582,7 +593,7 @@ InitPlatformFromPcd (
       PciRoot->MemAbove4G.Limit          = 0;
     }
     if (PcieSupportEntry.IoSupport) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieIoRanges[Segment], sizeof(PCIE_RANGES));
+      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieIoRanges[Index], sizeof(PCIE_RANGES));
       PciRoot->Io.Base                   = PcieRangeEntry.PciAddr;
       PciRoot->Io.Limit                  = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
       PciRoot->Io.Translation            = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
@@ -833,7 +844,13 @@ PciPlatformInit (
     CopyMem (mSG2044PciRoot.PciRoot[PciRootIter].DevicePath, &EfiPciRootBridgeDevicePathTemplate,
         sizeof (EFI_PCI_ROOT_BRIDGE_DEVICE_PATH));
 
-    mSG2044PciRoot.PciDevicePath[PciRootIter].AcpiDevicePath.UID = PciRootIter;
+    //
+    // Match the ACPI device-path UID to the PCIe domain (== DSDT _UID/_SEG),
+    // not the controller loop index, so the device path lines up with the OS
+    // view. PciRoot[].Segment already holds the domain (see InitPlatformFromPcd).
+    //
+    mSG2044PciRoot.PciDevicePath[PciRootIter].AcpiDevicePath.UID =
+      mSG2044PciRoot.PciRoot[PciRootIter].Segment;
   }
 
   return EFI_SUCCESS;
@@ -849,6 +866,36 @@ PciPlatformGetRoot (
   return mSG2044PciRoot.PciRoot;
 }
 
+/**
+  Translate a PCIe segment (domain) number encoded in a config-space address
+  into the packed controller index used by the DwPcie[]/PciRoot[] arrays.
+
+  PciRoot[].Segment carries the real domain (which may be sparse, e.g. 0,2,4,6,8),
+  while the internal arrays are packed by controller order (0..Count-1). This
+  keeps config-space access working after the reported segment was aligned to
+  the OS/ACPI domain numbering.
+
+  @param  Segment   The PCIe domain number from the config-space address.
+
+  @return The controller index, or MAX_UINT32 if no controller owns the domain.
+**/
+STATIC
+UINT32
+PciSegmentToControllerIndex (
+  IN  UINT32  Segment
+  )
+{
+  UINT32  Index;
+
+  for (Index = 0; Index < mSG2044PciRoot.Count; Index++) {
+    if (mSG2044PciRoot.PciRoot[Index].Segment == Segment) {
+      return Index;
+    }
+  }
+
+  return MAX_UINT32;
+}
+
 UINT32
 EFIAPI
 PciSegmentRead (
@@ -857,6 +904,7 @@ PciSegmentRead (
   )
 {
   UINT32    Segment;
+  UINT32    Index;
   UINT32    Bus;
   UINT32    Device;
   UINT32    Function;
@@ -874,15 +922,16 @@ PciSegmentRead (
   Function = GET_FUNCTION (Address);
   Offset = GET_OFFSET (Address);
 
-  if (Segment > mSG2044PciRoot.Count) {
+  Index = PciSegmentToControllerIndex (Segment);
+  if (Index == MAX_UINT32) {
     DEBUG ((DEBUG_ERROR, "Invalid PCIe segment %d\n", Segment));
     return 0xffffffff;
   }
 
   /* Find PCIe controller */
-  DwPcie = &mSG2044PciRoot.DwPcie[Segment];
+  DwPcie = &mSG2044PciRoot.DwPcie[Index];
 
-  if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base) {
+  if (Bus == mSG2044PciRoot.PciRoot[Index].Bus.Base) {
     /* host root complex */
     if (Device != 0)
       return 0xffffffff;
@@ -896,7 +945,7 @@ PciSegmentRead (
     PciAddr = DwPcieAtuPciAddr (Bus, Device, Function);
 
     /* devices direct linked with root complex */
-    if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base + 1) {
+    if (Bus == mSG2044PciRoot.PciRoot[Index].Bus.Base + 1) {
       if (Device != 0)
         return 0xffffffff;
 
@@ -941,6 +990,7 @@ PciSegmentWrite (
   )
 {
   UINT32    Segment;
+  UINT32    Index;
   UINT32    Bus;
   UINT32    Device;
   UINT32    Function;
@@ -957,15 +1007,16 @@ PciSegmentWrite (
   Function = GET_FUNCTION (Address);
   Offset = GET_OFFSET (Address);
 
-  if (Segment > mSG2044PciRoot.Count) {
+  Index = PciSegmentToControllerIndex (Segment);
+  if (Index == MAX_UINT32) {
     DEBUG ((DEBUG_ERROR, "Invalid PCIe segment %d\n", Segment));
     return Value;
   }
 
   /* Find PCIe controller */
-  DwPcie = &mSG2044PciRoot.DwPcie[Segment];
+  DwPcie = &mSG2044PciRoot.DwPcie[Index];
 
-  if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base) {
+  if (Bus == mSG2044PciRoot.PciRoot[Index].Bus.Base) {
     /* host root complex */
     CfgBase = DwPcie->DbiBase;
   } else {
@@ -975,7 +1026,7 @@ PciSegmentWrite (
 
     PciAddr = DwPcieAtuPciAddr (Bus, Device, Function);
 
-    if (Bus == mSG2044PciRoot.PciRoot[Segment].Bus.Base + 1)
+    if (Bus == mSG2044PciRoot.PciRoot[Index].Bus.Base + 1)
       Type = DW_PCIE_ATU_TYPE_CFG0;
     else
       Type = DW_PCIE_ATU_TYPE_CFG1;

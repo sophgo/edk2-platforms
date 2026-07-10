@@ -30,7 +30,13 @@ HostHwInfoReportToBmcGetPlatformType (
     return BMC_HW_INFO_PLATFORM_TYPE_SRA3_40_8;
   }
 
-  if (StrCmp (ProductName, L"SRA3-40") == 0) {
+  //
+  // SRA3-40-LB is a large-BAR clone of SRA3-40 with identical PCIe slot
+  // topology, so it reports as SRA3-40 and reuses the same slot mapping.
+  //
+  if ((StrCmp (ProductName, L"SRA3-40") == 0) ||
+      (StrCmp (ProductName, L"SRA3-40-LB") == 0))
+  {
     return BMC_HW_INFO_PLATFORM_TYPE_SRA3_40;
   }
 

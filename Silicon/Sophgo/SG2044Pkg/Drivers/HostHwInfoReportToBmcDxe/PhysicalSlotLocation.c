@@ -24,7 +24,11 @@ typedef struct {
   UINTN    PciCount;
 } PCIE_SLOT_TOPOLOGY;
 
-#define SRA3_40_PCIE_ROOT_COMPLEX_UID_3  3
+//
+// Switch root complex on SRA3-40: C2C1 Wrapper1, PCIe domain 6
+// (RootUid == PCIe domain; see PciPlatformLib).
+//
+#define SRA3_40_SWITCH_ROOT_COMPLEX_UID  6
 #define SRA3_40_SWITCH_PCI_DEV           0x04
 #define SRA3_40_SLOT_PCI_INDEX           4
 
@@ -101,14 +105,19 @@ Sra340MapPcieRootUid (
   IN UINT32  RootUid
   )
 {
+  //
+  // RootUid is the ACPI device-path UID, which equals the PCIe domain number
+  // (see PciPlatformLib). On SRA3-40 the enabled controllers are domains
+  // 0/2/4/6/8; domain 6 (C2C1 W1) is the switch root handled separately.
+  //
   switch (RootUid) {
     case 0:
       return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_PCIE1;
-    case 1:
-      return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_PCIE2;
     case 2:
-      return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_PCIE3;
+      return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_PCIE2;
     case 4:
+      return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_PCIE3;
+    case 8:
       return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_PCIE4;
     default:
       return BMC_HW_INFO_PHYSICAL_SLOT_UNKNOWN;
@@ -167,7 +176,7 @@ Sra340ResolvePhysicalSlot (
     return BMC_HW_INFO_PHYSICAL_SLOT_UNKNOWN;
   }
 
-  if (Topo->RootUid == SRA3_40_PCIE_ROOT_COMPLEX_UID_3) {
+  if (Topo->RootUid == SRA3_40_SWITCH_ROOT_COMPLEX_UID) {
     return Sra340MapPcieRoot3Path (Topo);
   }
 
@@ -178,6 +187,10 @@ Sra340ResolvePhysicalSlot (
 // SRA3-40-8 (platform_type = 1)
 //
 
+//
+// Switch root complex on SRA3-40-8: PCIe domain 6
+// (RootUid == PCIe domain; see PciPlatformLib).
+//
 #define SRA3_40_8_PCIE_ROOT_SWITCH_UID   6
 #define SRA3_40_8_SWITCH_BRANCH_PCI_DEV  0x04
 #define SRA3_40_8_SLOT_PCI_INDEX         4
@@ -188,6 +201,11 @@ Sra3408MapPcieRootUid (
   IN UINT32  RootUid
   )
 {
+  //
+  // RootUid is the ACPI device-path UID, which equals the PCIe domain number
+  // (see PciPlatformLib). On SRA3-40-8 the enabled controllers are domains
+  // 0/1/2/3/4/5/6/8/9; domain 6 is the switch root handled separately.
+  //
   switch (RootUid) {
     case 0:
       return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_8_PCIE1;
@@ -201,9 +219,9 @@ Sra3408MapPcieRootUid (
       return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_8_PCIE5;
     case 5:
       return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_8_PCIE6;
-    case 7:
-      return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_8_PCIE7;
     case 8:
+      return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_8_PCIE7;
+    case 9:
       return BMC_HW_INFO_PHYSICAL_SLOT_SRA3_40_8_PCIE8;
     default:
       return BMC_HW_INFO_PHYSICAL_SLOT_UNKNOWN;

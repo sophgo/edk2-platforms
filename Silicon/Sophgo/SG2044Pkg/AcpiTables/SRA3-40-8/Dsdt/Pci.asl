@@ -243,9 +243,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x4000000000,                       // Range Minimum
-          0x4000000FFF,                       // Range Maximum
+          0x400FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
 
       })
@@ -413,9 +413,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x4800000000,                       // Range Minimum
-          0x4800000FFF,                       // Range Maximum
+          0x480FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {
@@ -581,9 +581,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x5000000000,                       // Range Minimum
-          0x5000000FFF,                       // Range Maximum
+          0x500FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {
@@ -749,9 +749,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x5800000000,                       // Range Minimum
-          0x5800000FFF,                       // Range Maximum
+          0x580FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {
@@ -917,9 +917,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x7800000000,                       // Range Minimum
-          0x7800000FFF,                       // Range Maximum
+          0x780FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {
@@ -1085,9 +1085,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x7A00000000,                       // Range Minimum
-          0x7A00000FFF,                       // Range Maximum
+          0x7A0FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {
@@ -1253,9 +1253,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x7C00000000,                       // Range Minimum
-          0x7C00000FFF,                       // Range Maximum
+          0x7C0FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {
@@ -1421,9 +1421,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x7E00000000,                       // Range Minimum
-          0x7E00000FFF,                       // Range Maximum
+          0x7E0FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {
@@ -1589,9 +1589,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x6000000000,                       // Range Minimum
-          0x6000000FFF,                       // Range Maximum
+          0x600FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {
@@ -1757,9 +1757,9 @@ Scope(_SB)
           NonCacheable, ReadWrite,
           0x0000000000,                       // Granularity
           0x6400000000,                       // Range Minimum
-          0x6400000FFF,                       // Range Maximum
+          0x640FFFFFFF,                       // Range Maximum
           0x0000000000,                       // Translation Offset
-          0x0000001000,                       // Length
+          0x0010000000,                       // Length
           , , , AddressRangeMemory, TypeStatic)
       })
       Method (_STA) {

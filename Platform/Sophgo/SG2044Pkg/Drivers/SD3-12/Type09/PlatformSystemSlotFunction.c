@@ -41,12 +41,15 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformSystemSlot) {
   NumberOfControllers = PcieRcConfig->NumOfControllers;
 
   for (Index = 0; Index < NumberOfControllers; ++Index) {
+    SlotID = PcieRcConfig->Controller[Index].Domain;
+    // Only RC 0/2/5 have physical slots on this board.
+    if (SlotID != 0 && SlotID != 2 && SlotID != 5) {
+      continue;
+    }
+
     TotalSize    = sizeof (SMBIOS_TABLE_TYPE9) + sizeof (SMBIOS_TABLE_TYPE9_EXTENDED);
     SmbiosRecord = NULL;
     SmbiosRecord = AllocateZeroPool (TotalSize);
-
-    SlotID = PcieRcConfig->Controller[Index].Domain;
-
     CopyMem (SmbiosRecord, InputData, sizeof (SMBIOS_TABLE_TYPE9));
 
     BoardSlotID = MapSlot (SlotID);

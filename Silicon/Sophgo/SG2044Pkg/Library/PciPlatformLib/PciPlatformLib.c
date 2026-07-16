@@ -105,9 +105,7 @@ typedef struct {
 #define GET_FUNCTION(Address)   (((Address) >> 12) & 0x07)
 #define GET_OFFSET(Address)     ((Address) & 0xFFF)
 
-/* platform specific variables */
-/* 40 lans total, 4 lan per controller */
-#define SG2044_PCIE_MAX_ROOT  (10)
+/* SG2044_PCIE_MAX_ROOT comes from Include/PcieHostPcd.h */
 
 typedef struct {
   PCI_ROOT_BRIDGE                   PciRoot[SG2044_PCIE_MAX_ROOT];
@@ -474,10 +472,7 @@ InitPlatformFromPcd (
   PCI_ROOT_BRIDGE                   *PciRoot;
   DW_PCIE                           *DwPcie;
   SLAVE_MAP_ADDR_PCIE               *SlaveMapAddrPcie;
-  PCIE_BUS_CONFIG                   PcieBusEntry;
-  PCIE_SUPPORT_FLAG                 PcieSupportEntry;
-  PCIE_REG                          PcieRegEntry;
-  PCIE_RANGES                       PcieRangeEntry;
+  PCIE_CONTROLLER                   *Ctrl;
 
   SetMem (SG2044PciRoot, sizeof (SG2044_PCIE_ROOT), 0);
 
@@ -492,25 +487,22 @@ InitPlatformFromPcd (
     PciRoot = &SG2044PciRoot->PciRoot[Index];
     DwPcie = &SG2044PciRoot->DwPcie[Index];
     SlaveMapAddrPcie = &SG2044PciRoot->SlaveMapAddrPcie[Index];
+    Ctrl = &PcieRcConfig->Controller[Index];
 
-    CopyMem(&SlaveMapAddrPcie->StartAddr32Bit, PcieRcConfig->Pcie32BitSpaceStartAddr[Index], sizeof(SlaveMapAddrPcie->StartAddr32Bit));
-    CopyMem(&SlaveMapAddrPcie->EndAddr32Bit, PcieRcConfig->Pcie32BitSpaceEndAddr[Index], sizeof(SlaveMapAddrPcie->EndAddr32Bit));
-    CopyMem(&SlaveMapAddrPcie->StartAddr64Bit, PcieRcConfig->Pcie64BitSpaceStartAddr[Index], sizeof(SlaveMapAddrPcie->StartAddr64Bit));
-    CopyMem(&SlaveMapAddrPcie->EndAddr64Bit, PcieRcConfig->Pcie64BitSpaceEndAddr[Index], sizeof(SlaveMapAddrPcie->EndAddr64Bit));
-
-    CopyMem(&PcieRegEntry, PcieRcConfig->PcieReg[Index], sizeof(PcieRegEntry));
-    CopyMem(&PcieSupportEntry, PcieRcConfig->PcieSupportFlag[Index], sizeof(PcieSupportEntry));
-    CopyMem(&PcieBusEntry, PcieRcConfig->RootBusConfig[Index], sizeof(PcieBusEntry));
+    SlaveMapAddrPcie->StartAddr32Bit = Ctrl->Space32Start;
+    SlaveMapAddrPcie->EndAddr32Bit   = Ctrl->Space32End;
+    SlaveMapAddrPcie->StartAddr64Bit = Ctrl->Space64Start;
+    SlaveMapAddrPcie->EndAddr64Bit   = Ctrl->Space64End;
 
     //Init DwPcie parameters
-    DwPcie->DbiBase = PcieRegEntry.DbiBase;
-    DwPcie->DbiSize = PcieRegEntry.DbiSize;
-    DwPcie->CtrBase = PcieRegEntry.CtrBase;
-    DwPcie->CtrSize = PcieRegEntry.CtrSize;
-    DwPcie->AtuBase = PcieRegEntry.AtuBase;
-    DwPcie->AtuSize = PcieRegEntry.AtuSize;
-    DwPcie->CfgBase = PcieRegEntry.CfgBase;
-    DwPcie->CfgSize = PcieRegEntry.CfgSize;
+    DwPcie->DbiBase = Ctrl->Reg.DbiBase;
+    DwPcie->DbiSize = Ctrl->Reg.DbiSize;
+    DwPcie->CtrBase = Ctrl->Reg.CtrBase;
+    DwPcie->CtrSize = Ctrl->Reg.CtrSize;
+    DwPcie->AtuBase = Ctrl->Reg.AtuBase;
+    DwPcie->AtuSize = Ctrl->Reg.AtuSize;
+    DwPcie->CfgBase = Ctrl->Reg.CfgBase;
+    DwPcie->CfgSize = Ctrl->Reg.CfgSize;
 
     //Init PciRoot parameters
     PciRoot->Supports                  = 0;
@@ -523,85 +515,77 @@ InitPlatformFromPcd (
     // Report the real PCIe domain number (as consumed by the OS via ACPI
     // MCFG/DSDT _SEG) rather than the controller loop index, so the UEFI PCI
     // segment matches what Linux enumerates. The domain comes from the same
-    // PcieDomain PCD that AcpiPlatformDxe uses to build the ACPI tables.
+    // Domain field that AcpiPlatformDxe uses to build the ACPI tables.
     // Index remains the packed controller index used for all the DwPcie[] and
-    // range PCD arrays; only the reported Segment carries the real domain.
+    // range arrays; only the reported Segment carries the real domain.
     //
-    PciRoot->Segment                   = PcieRcConfig->PcieDomain[Index][0]        |
-                                         (PcieRcConfig->PcieDomain[Index][1] << 8) |
-                                         (PcieRcConfig->PcieDomain[Index][2] << 16)|
-                                         (PcieRcConfig->PcieDomain[Index][3] << 24);
+    PciRoot->Segment                   = Ctrl->Domain;
 
     //slave mapping
-    PciRoot->Bus.Base                  = PcieBusEntry.RootBusBase;
-    PciRoot->Bus.Limit                 = PcieBusEntry.RootBusLimit;
-    PciRoot->Bus.Translation           = PcieBusEntry.RootBusTranslation;
-    if (PcieSupportEntry.Pmem32Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem32Ranges[Index], sizeof(PCIE_RANGES));
-      PciRoot->PMem.Base                 = PcieRangeEntry.PciAddr;
-      PciRoot->PMem.Limit                = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
-      PciRoot->PMem.Translation          = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+    PciRoot->Bus.Base                  = Ctrl->Bus.RootBusBase;
+    PciRoot->Bus.Limit                 = Ctrl->Bus.RootBusLimit;
+    PciRoot->Bus.Translation           = Ctrl->Bus.RootBusTranslation;
+    if (Ctrl->Flag.Pmem32Support) {
+      PciRoot->PMem.Base                 = Ctrl->Pmem32.PciAddr;
+      PciRoot->PMem.Limit                = Ctrl->Pmem32.PciAddr + Ctrl->Pmem32.RangeSize - 1;
+      PciRoot->PMem.Translation          = Ctrl->Pmem32.PciAddr - Ctrl->Pmem32.CpuAddr;
       DEBUG ((DEBUG_VERBOSE,
           "Pmem32PciRange                        [%016lx - %016lx]\n"
           "Pmem32CpuRange                        [%016lx - %016lx]\n",
-          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
-          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+          Ctrl->Pmem32.PciAddr, Ctrl->Pmem32.PciAddr + Ctrl->Pmem32.RangeSize - 1,
+          Ctrl->Pmem32.CpuAddr, Ctrl->Pmem32.CpuAddr + Ctrl->Pmem32.RangeSize - 1));
     } else {
       PciRoot->PMem.Base                 = NO_MAPPING;
       PciRoot->PMem.Limit                = 0;
     }
-    if (PcieSupportEntry.Mem32Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem32Ranges[Index], sizeof(PCIE_RANGES));
-      PciRoot->Mem.Base                  = PcieRangeEntry.PciAddr;
-      PciRoot->Mem.Limit                 = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
-      PciRoot->Mem.Translation           = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+    if (Ctrl->Flag.Mem32Support) {
+      PciRoot->Mem.Base                  = Ctrl->Mem32.PciAddr;
+      PciRoot->Mem.Limit                 = Ctrl->Mem32.PciAddr + Ctrl->Mem32.RangeSize - 1;
+      PciRoot->Mem.Translation           = Ctrl->Mem32.PciAddr - Ctrl->Mem32.CpuAddr;
       DEBUG ((DEBUG_VERBOSE,
           "Mem32PciRange                         [%016lx - %016lx]\n"
           "Mem32CpuRange                         [%016lx - %016lx]\n",
-          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
-          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+          Ctrl->Mem32.PciAddr, Ctrl->Mem32.PciAddr + Ctrl->Mem32.RangeSize - 1,
+          Ctrl->Mem32.CpuAddr, Ctrl->Mem32.CpuAddr + Ctrl->Mem32.RangeSize - 1));
     } else {
       PciRoot->Mem.Base                  = NO_MAPPING;
       PciRoot->Mem.Limit                 = 0;
     }
-    if (PcieSupportEntry.Pmem64Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem64Ranges[Index], sizeof(PCIE_RANGES));
-      PciRoot->PMemAbove4G.Base          = PcieRangeEntry.PciAddr;
-      PciRoot->PMemAbove4G.Limit         = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
-      PciRoot->PMemAbove4G.Translation   = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+    if (Ctrl->Flag.Pmem64Support) {
+      PciRoot->PMemAbove4G.Base          = Ctrl->Pmem64.PciAddr;
+      PciRoot->PMemAbove4G.Limit         = Ctrl->Pmem64.PciAddr + Ctrl->Pmem64.RangeSize - 1;
+      PciRoot->PMemAbove4G.Translation   = Ctrl->Pmem64.PciAddr - Ctrl->Pmem64.CpuAddr;
       DEBUG ((DEBUG_VERBOSE,
           "Pmem64PciRange                         [%016lx - %016lx]\n"
           "Pmem64CpuRange                         [%016lx - %016lx]\n",
-          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
-          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+          Ctrl->Pmem64.PciAddr, Ctrl->Pmem64.PciAddr + Ctrl->Pmem64.RangeSize - 1,
+          Ctrl->Pmem64.CpuAddr, Ctrl->Pmem64.CpuAddr + Ctrl->Pmem64.RangeSize - 1));
     } else {
       PciRoot->PMemAbove4G.Base          = NO_MAPPING;
       PciRoot->PMemAbove4G.Limit         = 0;
     }
-    if (PcieSupportEntry.Mem64Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem64Ranges[Index], sizeof(PCIE_RANGES));
-      PciRoot->MemAbove4G.Base           = PcieRangeEntry.PciAddr;
-      PciRoot->MemAbove4G.Limit          = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
-      PciRoot->MemAbove4G.Translation    = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+    if (Ctrl->Flag.Mem64Support) {
+      PciRoot->MemAbove4G.Base           = Ctrl->Mem64.PciAddr;
+      PciRoot->MemAbove4G.Limit          = Ctrl->Mem64.PciAddr + Ctrl->Mem64.RangeSize - 1;
+      PciRoot->MemAbove4G.Translation    = Ctrl->Mem64.PciAddr - Ctrl->Mem64.CpuAddr;
       DEBUG ((DEBUG_VERBOSE,
           "Mem64PciRange                         [%016lx - %016lx]\n"
           "Mem64CpuRange                         [%016lx - %016lx]\n",
-          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
-          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+          Ctrl->Mem64.PciAddr, Ctrl->Mem64.PciAddr + Ctrl->Mem64.RangeSize - 1,
+          Ctrl->Mem64.CpuAddr, Ctrl->Mem64.CpuAddr + Ctrl->Mem64.RangeSize - 1));
     } else {
       PciRoot->MemAbove4G.Base           = NO_MAPPING;
       PciRoot->MemAbove4G.Limit          = 0;
     }
-    if (PcieSupportEntry.IoSupport) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieIoRanges[Index], sizeof(PCIE_RANGES));
-      PciRoot->Io.Base                   = PcieRangeEntry.PciAddr;
-      PciRoot->Io.Limit                  = PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1;
-      PciRoot->Io.Translation            = PcieRangeEntry.PciAddr - PcieRangeEntry.CpuAddr;
+    if (Ctrl->Flag.IoSupport) {
+      PciRoot->Io.Base                   = Ctrl->Io.PciAddr;
+      PciRoot->Io.Limit                  = Ctrl->Io.PciAddr + Ctrl->Io.RangeSize - 1;
+      PciRoot->Io.Translation            = Ctrl->Io.PciAddr - Ctrl->Io.CpuAddr;
       DEBUG ((DEBUG_VERBOSE,
           "IoPciRange                         [%016lx - %016lx]\n"
           "IoCpuRange                         [%016lx - %016lx]\n",
-          PcieRangeEntry.PciAddr, PcieRangeEntry.PciAddr + PcieRangeEntry.RangeSize - 1,
-          PcieRangeEntry.CpuAddr, PcieRangeEntry.CpuAddr + PcieRangeEntry.RangeSize - 1));
+          Ctrl->Io.PciAddr, Ctrl->Io.PciAddr + Ctrl->Io.RangeSize - 1,
+          Ctrl->Io.CpuAddr, Ctrl->Io.CpuAddr + Ctrl->Io.RangeSize - 1));
     } else {
       PciRoot->Io.Base                   = NO_MAPPING;
       PciRoot->Io.Limit                  = 0;
@@ -612,6 +596,44 @@ InitPlatformFromPcd (
 }
 
 
+/**
+  Program one outbound iATU window, or skip it if the window is disabled.
+
+  A disabled window is reported by InitPlatformFromPcd as Base == NO_MAPPING
+  (see the per-window Flag handling there). Programming an iATU for such a
+  window would compute a bogus CpuAddr/Size, so simply skip it. This keeps the
+  set of enabled windows (including 64bit non-prefetchable) purely driven by the
+  per-controller PCD flags.
+
+  @param  DwPcie   The DesignWare controller.
+  @param  Index    The outbound iATU region index (fixed per window role).
+  @param  Type     The iATU type (DW_PCIE_ATU_TYPE_MEM / _IO).
+  @param  Window   The PCI_ROOT_BRIDGE aperture describing this window.
+**/
+STATIC
+VOID
+SetupOutboundWindow (
+    IN  DW_PCIE               *DwPcie,
+    IN  UINT32                Index,
+    IN  UINT32                Type,
+    IN  PCI_ROOT_BRIDGE_APERTURE *Window
+    )
+{
+  if (Window->Base == NO_MAPPING) {
+    DEBUG ((DEBUG_VERBOSE, "ATU%d: window disabled, skipped\n", Index));
+    return;
+  }
+
+  DwPcieSetAtuOutbound (
+      DwPcie,
+      Index,
+      Type,
+      Window->Base - Window->Translation,
+      Window->Base,
+      Window->Limit + 1 - Window->Base
+      );
+}
+
 VOID
 SetupPciRoot (
     IN  PCI_ROOT_BRIDGE   *PciRoot,
@@ -620,50 +642,11 @@ SetupPciRoot (
     IN  UINT64            SystemMemorySize
     )
 {
-  DwPcieSetAtuOutbound (
-      DwPcie,
-      1,
-      DW_PCIE_ATU_TYPE_IO,
-      PciRoot->Io.Base - PciRoot->Io.Translation,
-      PciRoot->Io.Base,
-      PciRoot->Io.Limit + 1 - PciRoot->Io.Base
-      );
-
-  DwPcieSetAtuOutbound (
-      DwPcie,
-      2,
-      DW_PCIE_ATU_TYPE_MEM,
-      PciRoot->PMem.Base - PciRoot->PMem.Translation,
-      PciRoot->PMem.Base,
-      PciRoot->PMem.Limit + 1 - PciRoot->PMem.Base
-      );
-
-  DwPcieSetAtuOutbound (
-      DwPcie,
-      3,
-      DW_PCIE_ATU_TYPE_MEM,
-      PciRoot->Mem.Base - PciRoot->Mem.Translation,
-      PciRoot->Mem.Base,
-      PciRoot->Mem.Limit + 1 - PciRoot->Mem.Base
-      );
-
-  DwPcieSetAtuOutbound (
-      DwPcie,
-      4,
-      DW_PCIE_ATU_TYPE_MEM,
-      PciRoot->PMemAbove4G.Base - PciRoot->PMemAbove4G.Translation,
-      PciRoot->PMemAbove4G.Base,
-      PciRoot->PMemAbove4G.Limit + 1 - PciRoot->PMemAbove4G.Base
-      );
-
-  DwPcieSetAtuOutbound (
-      DwPcie,
-      5,
-      DW_PCIE_ATU_TYPE_MEM,
-      PciRoot->MemAbove4G.Base - PciRoot->MemAbove4G.Translation,
-      PciRoot->MemAbove4G.Base,
-      PciRoot->MemAbove4G.Limit + 1 - PciRoot->MemAbove4G.Base
-      );
+  SetupOutboundWindow (DwPcie, 1, DW_PCIE_ATU_TYPE_IO,  &PciRoot->Io);
+  SetupOutboundWindow (DwPcie, 2, DW_PCIE_ATU_TYPE_MEM, &PciRoot->PMem);
+  SetupOutboundWindow (DwPcie, 3, DW_PCIE_ATU_TYPE_MEM, &PciRoot->Mem);
+  SetupOutboundWindow (DwPcie, 4, DW_PCIE_ATU_TYPE_MEM, &PciRoot->PMemAbove4G);
+  SetupOutboundWindow (DwPcie, 5, DW_PCIE_ATU_TYPE_MEM, &PciRoot->MemAbove4G);
 
   DwPcieSetAtuInbound (
       DwPcie,

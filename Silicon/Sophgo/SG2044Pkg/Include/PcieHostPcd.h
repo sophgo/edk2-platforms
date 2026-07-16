@@ -12,12 +12,19 @@
 
 #pragma pack(push, 1)
 
+//
+// One outbound MMIO/IO window: CPU-side base, PCI-side base and size.
+// PciAddr == CpuAddr means an identity-mapped window (Translation == 0).
+//
 typedef struct {
   UINT64   CpuAddr;
   UINT64   PciAddr;
   UINT64   RangeSize;
 }PCIE_RANGES;
 
+//
+// DesignWare controller register apertures (DBI / control / iATU / config).
+//
 typedef struct {
   UINT64 DbiBase;
   UINT64 DbiSize;
@@ -29,6 +36,12 @@ typedef struct {
   UINT64 CfgSize;
 }PCIE_REG;
 
+//
+// Per-window enable flags. A window with its flag set to FALSE is reported to
+// EDK2 as NO_MAPPING and skipped when programming the outbound iATU, so each
+// window (including 64bit non-prefetchable) is purely software configurable
+// from the PCD data below.
+//
 typedef struct {
   BOOLEAN Mem32Support;
   BOOLEAN Pmem32Support;
@@ -43,21 +56,30 @@ typedef struct {
   UINT64 RootBusTranslation;
 }PCIE_BUS_CONFIG;
 
+//
+// All configuration for a single PCIe controller, grouped together so the DSC
+// can assign it with named scalar fields (e.g. Controller[2].Reg.DbiBase) and
+// the C consumers can read typed members directly without byte-wise CopyMem.
+//
 typedef struct {
-  UINT8  NumOfControllers;
-  UINT8  PcieSupportFlag[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_SUPPORT_FLAG)];
-  UINT8  PcieDomain[SG2044_PCIE_MAX_ROOT][sizeof(UINT32)];
-  UINT8  RootBusConfig[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_BUS_CONFIG)];
-  UINT8  PcieReg[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_REG)];
-  UINT8  PciePmem32Ranges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
-  UINT8  PcieMem32Ranges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
-  UINT8  PciePmem64Ranges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
-  UINT8  PcieMem64Ranges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
-  UINT8  PcieIoRanges[SG2044_PCIE_MAX_ROOT][sizeof(PCIE_RANGES)];
-  UINT8  Pcie32BitSpaceStartAddr[SG2044_PCIE_MAX_ROOT][sizeof(UINT32)];
-  UINT8  Pcie32BitSpaceEndAddr[SG2044_PCIE_MAX_ROOT][sizeof(UINT32)];
-  UINT8  Pcie64BitSpaceStartAddr[SG2044_PCIE_MAX_ROOT][sizeof(UINT64)];
-  UINT8  Pcie64BitSpaceEndAddr[SG2044_PCIE_MAX_ROOT][sizeof(UINT64)];
+  UINT32             Domain;         // PCIe domain / ACPI _SEG (was PcieDomain)
+  PCIE_SUPPORT_FLAG  Flag;           // per-window enable flags
+  PCIE_BUS_CONFIG    Bus;            // root bus base/limit/translation
+  PCIE_REG           Reg;            // DesignWare register apertures
+  PCIE_RANGES        Pmem32;         // 32bit prefetchable window
+  PCIE_RANGES        Mem32;          // 32bit non-prefetchable window
+  PCIE_RANGES        Pmem64;         // 64bit prefetchable window
+  PCIE_RANGES        Mem64;          // 64bit non-prefetchable window
+  PCIE_RANGES        Io;             // IO window
+  UINT32             Space32Start;   // slave-map 32bit CPU region start
+  UINT32             Space32End;     // slave-map 32bit CPU region end
+  UINT64             Space64Start;   // slave-map 64bit CPU region start
+  UINT64             Space64End;     // slave-map 64bit CPU region end
+}PCIE_CONTROLLER;
+
+typedef struct {
+  UINT8            NumOfControllers;
+  PCIE_CONTROLLER  Controller[SG2044_PCIE_MAX_ROOT];
 }PCIE_HOST_BRIDGE_TABLE;
 #pragma pack(pop)
 

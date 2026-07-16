@@ -45,8 +45,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformSystemSlot) {
     SmbiosRecord = NULL;
     SmbiosRecord = AllocateZeroPool (TotalSize);
 
-    SlotID = PcieRcConfig->PcieDomain[Index][0] | (PcieRcConfig->PcieDomain[Index][1] << 8) |
-             (PcieRcConfig->PcieDomain[Index][2] << 16) | (PcieRcConfig->PcieDomain[Index][3] << 24);
+    SlotID = PcieRcConfig->Controller[Index].Domain;
 
     CopyMem (SmbiosRecord, InputData, sizeof (SMBIOS_TABLE_TYPE9));
 

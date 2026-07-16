@@ -378,53 +378,44 @@ GetPciRootInfoFromPcd(
     OUT PCI_INFO               *PciRoot
     )
 {
-  PCIE_BUS_CONFIG                   PcieBusEntry;
-  PCIE_SUPPORT_FLAG                 PcieSupportEntry;
-  PCIE_RANGES                       PcieRangeEntry;
+  PCIE_CONTROLLER                   *Ctrl;
 
-  PciRoot->Segment           = PcieRcConfig->PcieDomain[PcieRcIndex][0] | (PcieRcConfig->PcieDomain[PcieRcIndex][1] << 8) |
-             (PcieRcConfig->PcieDomain[PcieRcIndex][2] << 16) | (PcieRcConfig->PcieDomain[PcieRcIndex][3] << 24);
-    // CopyMem(&PcieRegEntry, PcieRcConfig->PcieReg[PcieRcIndex], sizeof(PcieRegEntry));
-    CopyMem(&PcieSupportEntry, PcieRcConfig->PcieSupportFlag[PcieRcIndex], sizeof(PcieSupportEntry));
-    CopyMem(&PcieBusEntry, PcieRcConfig->RootBusConfig[PcieRcIndex], sizeof(PcieBusEntry));
+  Ctrl = &PcieRcConfig->Controller[PcieRcIndex];
 
-    PciRoot->BusRange.Start                = PcieBusEntry.RootBusBase;
-    PciRoot->BusRange.End                  = PcieBusEntry.RootBusLimit;
+  PciRoot->Segment           = Ctrl->Domain;
 
-    if (PcieSupportEntry.Pmem32Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem32Ranges[PcieRcIndex], sizeof(PCIE_RANGES));
+    PciRoot->BusRange.Start                = Ctrl->Bus.RootBusBase;
+    PciRoot->BusRange.End                  = Ctrl->Bus.RootBusLimit;
+
+    if (Ctrl->Flag.Pmem32Support) {
       PciRoot->PMem32.Flag                   = PCIE_RANGES_PMEM32_FLAG;
-      PciRoot->PMem32.PciAddr                = PcieRangeEntry.PciAddr;
-      PciRoot->PMem32.CpuAddr                = PcieRangeEntry.CpuAddr;
-      PciRoot->PMem32.Size                   = PcieRangeEntry.RangeSize;
+      PciRoot->PMem32.PciAddr                = Ctrl->Pmem32.PciAddr;
+      PciRoot->PMem32.CpuAddr                = Ctrl->Pmem32.CpuAddr;
+      PciRoot->PMem32.Size                   = Ctrl->Pmem32.RangeSize;
     }
-    if (PcieSupportEntry.Mem32Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem32Ranges[PcieRcIndex], sizeof(PCIE_RANGES));
+    if (Ctrl->Flag.Mem32Support) {
       PciRoot->Mem32.Flag                    = PCIE_RANGES_MEM32_FLAG;
-      PciRoot->Mem32.PciAddr                 = PcieRangeEntry.PciAddr;
-      PciRoot->Mem32.CpuAddr                 = PcieRangeEntry.CpuAddr;
-      PciRoot->Mem32.Size                    = PcieRangeEntry.RangeSize;
+      PciRoot->Mem32.PciAddr                 = Ctrl->Mem32.PciAddr;
+      PciRoot->Mem32.CpuAddr                 = Ctrl->Mem32.CpuAddr;
+      PciRoot->Mem32.Size                    = Ctrl->Mem32.RangeSize;
     }
-    if (PcieSupportEntry.Pmem64Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PciePmem64Ranges[PcieRcIndex], sizeof(PCIE_RANGES));
+    if (Ctrl->Flag.Pmem64Support) {
       PciRoot->PMem64.Flag                   = PCIE_RANGES_PMEM64_FLAG;
-      PciRoot->PMem64.PciAddr                = PcieRangeEntry.PciAddr;
-      PciRoot->PMem64.CpuAddr                = PcieRangeEntry.CpuAddr;
-      PciRoot->PMem64.Size                   = PcieRangeEntry.RangeSize;
+      PciRoot->PMem64.PciAddr                = Ctrl->Pmem64.PciAddr;
+      PciRoot->PMem64.CpuAddr                = Ctrl->Pmem64.CpuAddr;
+      PciRoot->PMem64.Size                   = Ctrl->Pmem64.RangeSize;
     }
-    if (PcieSupportEntry.Mem64Support) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieMem64Ranges[PcieRcIndex], sizeof(PCIE_RANGES));
+    if (Ctrl->Flag.Mem64Support) {
       PciRoot->Mem64.Flag                    = PCIE_RANGES_MEM64_FLAG;
-      PciRoot->Mem64.PciAddr                 = PcieRangeEntry.PciAddr;
-      PciRoot->Mem64.CpuAddr                 = PcieRangeEntry.CpuAddr;
-      PciRoot->Mem64.Size                    = PcieRangeEntry.RangeSize;
+      PciRoot->Mem64.PciAddr                 = Ctrl->Mem64.PciAddr;
+      PciRoot->Mem64.CpuAddr                 = Ctrl->Mem64.CpuAddr;
+      PciRoot->Mem64.Size                    = Ctrl->Mem64.RangeSize;
     }
-    if (PcieSupportEntry.IoSupport) {
-      CopyMem(&PcieRangeEntry, PcieRcConfig->PcieIoRanges[PcieRcIndex], sizeof(PCIE_RANGES));
+    if (Ctrl->Flag.IoSupport) {
       PciRoot->Io.Flag                       = PCIE_RANGES_IO_FLAG;
-      PciRoot->Io.PciAddr                    = PcieRangeEntry.PciAddr;
-      PciRoot->Io.CpuAddr                    = PcieRangeEntry.CpuAddr;
-      PciRoot->Io.Size                       = PcieRangeEntry.RangeSize;
+      PciRoot->Io.PciAddr                    = Ctrl->Io.PciAddr;
+      PciRoot->Io.CpuAddr                    = Ctrl->Io.CpuAddr;
+      PciRoot->Io.Size                       = Ctrl->Io.RangeSize;
     }
 }
 #if 0

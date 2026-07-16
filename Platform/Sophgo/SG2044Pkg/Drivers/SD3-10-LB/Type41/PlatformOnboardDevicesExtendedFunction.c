@@ -54,8 +54,7 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformOnboardDevicesExtended) {
   }
 
   for (Index = 0; Index < NumberOfControllers; ++Index) {
-    SlotID = PcieRcConfig->PcieDomain[Index][0] | (PcieRcConfig->PcieDomain[Index][1] << 8) |
-             (PcieRcConfig->PcieDomain[Index][2] << 16) | (PcieRcConfig->PcieDomain[Index][3] << 24);
+    SlotID = PcieRcConfig->Controller[Index].Domain;
     BoardSlotID = MapSlot (SlotID);
     UnicodeSPrint (SlotDesignation, sizeof (SlotDesignation), L"SLOT%u", BoardSlotID);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], SlotDesignation, NULL);

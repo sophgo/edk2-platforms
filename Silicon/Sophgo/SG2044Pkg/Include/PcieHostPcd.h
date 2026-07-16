@@ -4,11 +4,6 @@
 /* platform specific variables */
 /* 40 lans total, 4 lan per controller */
 #define SG2044_PCIE_MAX_ROOT        (10)
-#define PCIE_RANGES_MEM32_FLAG      (0x02000000)
-#define PCIE_RANGES_PMEM32_FLAG     (0x42000000)
-#define PCIE_RANGES_MEM64_FLAG      (0x03000000)
-#define PCIE_RANGES_PMEM64_FLAG     (0x43000000)
-#define PCIE_RANGES_IO_FLAG         (0x01000000)
 
 #pragma pack(push, 1)
 

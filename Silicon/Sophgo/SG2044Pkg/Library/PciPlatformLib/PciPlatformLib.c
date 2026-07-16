@@ -437,30 +437,6 @@ DwPcieSetSlaveMap (
         SlaveMapAddrPcie->StartAddr32Bit, SlaveMapAddrPcie->EndAddr32Bit));
 
 }
-typedef struct {
-  UINT32    Flag;
-  UINT64    PciAddr;
-  UINT64    CpuAddr;
-  UINT64    Size;
-} FDT_PCI_RANGE;
-
-#define FDT_PCI_PARENT_ADDRESS_CELLS  2
-#define FDT_PCI_PARENT_SIZE_CELLS     2
-#define FDT_PCI_ADDRESS_CELLS         3
-#define FDT_PCI_SIZE_CELLS            2
-#define FDT_PCI_RANGE_SIZE            \
-  ((FDT_PCI_PARENT_ADDRESS_CELLS + FDT_PCI_ADDRESS_CELLS + FDT_PCI_SIZE_CELLS) * 4)
-
-#define FDT_PCI_MEM_TYPE_SHIFT  (24)
-#define FDT_PCI_MEM_TYPE_MASK   (0x03 << FDT_PCI_MEM_TYPE_SHIFT)
-#define FDT_PCI_MEM_TYPE_IO     (1 << FDT_PCI_MEM_TYPE_SHIFT)
-#define FDT_PCI_MEM_TYPE_MEM32  (2 << FDT_PCI_MEM_TYPE_SHIFT)
-#define FDT_PCI_MEM_TYPE_MEM64  (3 << FDT_PCI_MEM_TYPE_SHIFT)
-
-#define FDT_PCI_MEM_PREFETCH_SHIFT    (30)
-#define FDT_PCI_MEM_PREFETCH_MASK     (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
-#define FDT_PCI_MEM_PREFETCH          (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
-
 
 UINT32
 InitPlatformFromPcd (

@@ -303,25 +303,7 @@ DebugPrintQwordResource (
     ));
 }
 
-#define FDT_PCI_PARENT_ADDRESS_CELLS  2
-#define FDT_PCI_PARENT_SIZE_CELLS     2
-#define FDT_PCI_ADDRESS_CELLS         3
-#define FDT_PCI_SIZE_CELLS            2
-#define FDT_PCI_RANGE_SIZE            \
-  ((FDT_PCI_PARENT_ADDRESS_CELLS + FDT_PCI_ADDRESS_CELLS + FDT_PCI_SIZE_CELLS) * 4)
-
-#define FDT_PCI_MEM_TYPE_SHIFT  (24)
-#define FDT_PCI_MEM_TYPE_MASK   (0x03 << FDT_PCI_MEM_TYPE_SHIFT)
-#define FDT_PCI_MEM_TYPE_IO     (1 << FDT_PCI_MEM_TYPE_SHIFT)
-#define FDT_PCI_MEM_TYPE_MEM32  (2 << FDT_PCI_MEM_TYPE_SHIFT)
-#define FDT_PCI_MEM_TYPE_MEM64  (3 << FDT_PCI_MEM_TYPE_SHIFT)
-
-#define FDT_PCI_MEM_PREFETCH_SHIFT    (30)
-#define FDT_PCI_MEM_PREFETCH_MASK     (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
-#define FDT_PCI_MEM_PREFETCH          (1 << FDT_PCI_MEM_PREFETCH_SHIFT)
-
 typedef struct {
-  UINT32    Flag;
   UINT64    PciAddr;
   UINT64    CpuAddr;
   UINT64    Size;
@@ -388,120 +370,31 @@ GetPciRootInfoFromPcd(
     PciRoot->BusRange.End                  = Ctrl->Bus.RootBusLimit;
 
     if (Ctrl->Flag.Pmem32Support) {
-      PciRoot->PMem32.Flag                   = PCIE_RANGES_PMEM32_FLAG;
       PciRoot->PMem32.PciAddr                = Ctrl->Pmem32.PciAddr;
       PciRoot->PMem32.CpuAddr                = Ctrl->Pmem32.CpuAddr;
       PciRoot->PMem32.Size                   = Ctrl->Pmem32.RangeSize;
     }
     if (Ctrl->Flag.Mem32Support) {
-      PciRoot->Mem32.Flag                    = PCIE_RANGES_MEM32_FLAG;
       PciRoot->Mem32.PciAddr                 = Ctrl->Mem32.PciAddr;
       PciRoot->Mem32.CpuAddr                 = Ctrl->Mem32.CpuAddr;
       PciRoot->Mem32.Size                    = Ctrl->Mem32.RangeSize;
     }
     if (Ctrl->Flag.Pmem64Support) {
-      PciRoot->PMem64.Flag                   = PCIE_RANGES_PMEM64_FLAG;
       PciRoot->PMem64.PciAddr                = Ctrl->Pmem64.PciAddr;
       PciRoot->PMem64.CpuAddr                = Ctrl->Pmem64.CpuAddr;
       PciRoot->PMem64.Size                   = Ctrl->Pmem64.RangeSize;
     }
     if (Ctrl->Flag.Mem64Support) {
-      PciRoot->Mem64.Flag                    = PCIE_RANGES_MEM64_FLAG;
       PciRoot->Mem64.PciAddr                 = Ctrl->Mem64.PciAddr;
       PciRoot->Mem64.CpuAddr                 = Ctrl->Mem64.CpuAddr;
       PciRoot->Mem64.Size                    = Ctrl->Mem64.RangeSize;
     }
     if (Ctrl->Flag.IoSupport) {
-      PciRoot->Io.Flag                       = PCIE_RANGES_IO_FLAG;
       PciRoot->Io.PciAddr                    = Ctrl->Io.PciAddr;
       PciRoot->Io.CpuAddr                    = Ctrl->Io.CpuAddr;
       PciRoot->Io.Size                       = Ctrl->Io.RangeSize;
     }
 }
-#if 0
-STATIC
-VOID
-GetPciRootInfoFromFdt(
-    IN  FDT_CLIENT_PROTOCOL *FdtClient,
-    IN  INT32               Node,
-    OUT PCI_INFO           *PciRoot
-    )
-{
-  CONST VOID                *Prop;
-  UINT32                    PropSize;
-  EFI_STATUS                Status;
-  FDT_PCI_RANGE             Range[5];
-  UINT32                    RangeIndex;
-  FDT_PCI_RANGE             *Aperture;
-
-  /* get segment */
-  Status = FdtClient->GetNodeProperty (FdtClient, Node, "linux,pci-domain", &Prop, &PropSize);
-  if (Status != EFI_SUCCESS) {
-    DEBUG ((DEBUG_ERROR, "No segment property\n"));
-    ASSERT(FALSE);
-  }
-
-  PciRoot->Segment = SwapBytes32 (*(UINT32 *)Prop);
-
-  /* parse bus range */
-  Status = FdtClient->GetNodeProperty (FdtClient, Node, "bus-range", &Prop, &PropSize);
-  if (Status != EFI_SUCCESS)
-    DEBUG ((DEBUG_WARN, "Cannot found ranges from dt, assume 0-255\n"));
-
-  /* bus number always 0 for root port */
-  PciRoot->BusRange.Start   = 0;
-  PciRoot->BusRange.End     = 255;
-
-  Status = FdtClient->GetNodeProperty (FdtClient, Node, "ranges", &Prop, &PropSize);
-
-  if (Status != EFI_SUCCESS) {
-    DEBUG ((DEBUG_ERROR, "Cannot found ranges from dt\n"));
-    return;
-  }
-
-  if (PropSize > ARRAY_SIZE (Range) * FDT_PCI_RANGE_SIZE) {
-    DEBUG ((DEBUG_WARN, "Too many range in dt, maybe a wrong config\n"));
-    DEBUG ((DEBUG_WARN, "Only range[0] - range[%d] effect on\n", ARRAY_SIZE (Range)));
-    PropSize = sizeof (Range);
-  }
-
-  /* get flag */
-  for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex, Prop += FDT_PCI_RANGE_SIZE) {
-    Range[RangeIndex].Flag = SwapBytes32 (*(UINT32 *)Prop);
-    /* platform must support unaligned access */
-    Range[RangeIndex].PciAddr =
-      SwapBytes64 (*(UINT64 *)(Prop + 4));
-    Range[RangeIndex].CpuAddr =
-      SwapBytes64 (*(UINT64 *)(Prop + FDT_PCI_ADDRESS_CELLS * 4));
-    Range[RangeIndex].Size =
-      SwapBytes64 (*(UINT64 *)(Prop +  (FDT_PCI_ADDRESS_CELLS + FDT_PCI_PARENT_ADDRESS_CELLS) * 4));
-  }
-
-  for (RangeIndex = 0; RangeIndex < ARRAY_SIZE (Range); ++RangeIndex) {
-    switch (Range[RangeIndex].Flag & (FDT_PCI_MEM_TYPE_MASK | FDT_PCI_MEM_PREFETCH_MASK)) {
-      case FDT_PCI_MEM_TYPE_IO:
-        Aperture = &PciRoot->Io;
-        break;
-      case FDT_PCI_MEM_TYPE_MEM32:
-        Aperture = &PciRoot->Mem32;
-        break;
-      case FDT_PCI_MEM_TYPE_MEM32 | FDT_PCI_MEM_PREFETCH:
-        Aperture = &PciRoot->PMem32;
-        break;
-      case FDT_PCI_MEM_TYPE_MEM64:
-        Aperture = &PciRoot->Mem64;
-        break;
-      case FDT_PCI_MEM_TYPE_MEM64 | FDT_PCI_MEM_PREFETCH:
-        Aperture = &PciRoot->PMem64;
-        break;
-      default:
-        DEBUG ((DEBUG_ERROR, "Undefined PCI memory type\n"));
-        continue;
-    }
-    CopyMem(Aperture, &Range[RangeIndex], sizeof(*Aperture));
-  }
-}
-#endif
 
 STATIC
 VOID

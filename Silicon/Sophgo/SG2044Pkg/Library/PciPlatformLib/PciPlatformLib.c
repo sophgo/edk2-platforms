@@ -438,6 +438,63 @@ DwPcieSetSlaveMap (
 
 }
 
+/**
+  Assert that an enabled window's CPU-side range lies within one of the
+  controller's two slave-map regions.
+
+  On SG2044 each controller has exactly two CPU-side slave-map regions: one
+  32bit region [Space32Start, Space32End] and one 64bit region [Space64Start,
+  Space64End] (see DwPcieSetSlaveMap). The RC only forwards CPU addresses that
+  fall inside one of these two regions, so every enabled outbound window's CPU
+  range must be contained in one of them. Which region a given window uses is
+  not fixed by its "32/64bit" name and varies per board (e.g. on the -LB
+  variants controller 0's config and Io sit in the 32bit region, elsewhere Io
+  sits in the 64bit region), so accept either. A window contained in neither is
+  always a misconfigured PCD (e.g. a mistyped Space or range bound); catch it
+  early on DEBUG builds. The whole check compiles out of RELEASE.
+
+  @param  Name         Window name for the diagnostic.
+  @param  CpuAddr      Window CPU-side base.
+  @param  Size         Window size (0 / disabled windows are skipped by callers).
+  @param  Space32Start 32bit slave-map region start.
+  @param  Space32End   32bit slave-map region end.
+  @param  Space64Start 64bit slave-map region start.
+  @param  Space64End   64bit slave-map region end.
+**/
+STATIC
+VOID
+AssertWindowInSlaveMap (
+    IN  CONST CHAR8  *Name,
+    IN  UINT64       CpuAddr,
+    IN  UINT64       Size,
+    IN  UINT64       Space32Start,
+    IN  UINT64       Space32End,
+    IN  UINT64       Space64Start,
+    IN  UINT64       Space64End
+    )
+{
+  UINT64   CpuLimit;
+  BOOLEAN  In32;
+  BOOLEAN  In64;
+
+  if (Size == 0) {
+    return;
+  }
+
+  CpuLimit = CpuAddr + Size - 1;
+  In32 = (CpuAddr >= Space32Start) && (CpuLimit <= Space32End);
+  In64 = (CpuAddr >= Space64Start) && (CpuLimit <= Space64End);
+
+  if (!In32 && !In64) {
+    DEBUG ((DEBUG_ERROR,
+        "PCIe %a window CPU range [%016lx - %016lx] outside both slave-map "
+        "regions 32bit [%016lx - %016lx] / 64bit [%016lx - %016lx]\n",
+        Name, CpuAddr, CpuLimit,
+        Space32Start, Space32End, Space64Start, Space64End));
+    ASSERT (FALSE);
+  }
+}
+
 UINT32
 InitPlatformFromPcd (
     OUT   SG2044_PCIE_ROOT *SG2044PciRoot
@@ -505,6 +562,8 @@ InitPlatformFromPcd (
       PciRoot->PMem.Base                 = Ctrl->Pmem32.PciAddr;
       PciRoot->PMem.Limit                = Ctrl->Pmem32.PciAddr + Ctrl->Pmem32.RangeSize - 1;
       PciRoot->PMem.Translation          = Ctrl->Pmem32.PciAddr - Ctrl->Pmem32.CpuAddr;
+      AssertWindowInSlaveMap ("PMem32", Ctrl->Pmem32.CpuAddr, Ctrl->Pmem32.RangeSize,
+          Ctrl->Space32Start, Ctrl->Space32End, Ctrl->Space64Start, Ctrl->Space64End);
       DEBUG ((DEBUG_VERBOSE,
           "Pmem32PciRange                        [%016lx - %016lx]\n"
           "Pmem32CpuRange                        [%016lx - %016lx]\n",
@@ -518,6 +577,8 @@ InitPlatformFromPcd (
       PciRoot->Mem.Base                  = Ctrl->Mem32.PciAddr;
       PciRoot->Mem.Limit                 = Ctrl->Mem32.PciAddr + Ctrl->Mem32.RangeSize - 1;
       PciRoot->Mem.Translation           = Ctrl->Mem32.PciAddr - Ctrl->Mem32.CpuAddr;
+      AssertWindowInSlaveMap ("Mem32", Ctrl->Mem32.CpuAddr, Ctrl->Mem32.RangeSize,
+          Ctrl->Space32Start, Ctrl->Space32End, Ctrl->Space64Start, Ctrl->Space64End);
       DEBUG ((DEBUG_VERBOSE,
           "Mem32PciRange                         [%016lx - %016lx]\n"
           "Mem32CpuRange                         [%016lx - %016lx]\n",
@@ -531,6 +592,8 @@ InitPlatformFromPcd (
       PciRoot->PMemAbove4G.Base          = Ctrl->Pmem64.PciAddr;
       PciRoot->PMemAbove4G.Limit         = Ctrl->Pmem64.PciAddr + Ctrl->Pmem64.RangeSize - 1;
       PciRoot->PMemAbove4G.Translation   = Ctrl->Pmem64.PciAddr - Ctrl->Pmem64.CpuAddr;
+      AssertWindowInSlaveMap ("PMem64", Ctrl->Pmem64.CpuAddr, Ctrl->Pmem64.RangeSize,
+          Ctrl->Space32Start, Ctrl->Space32End, Ctrl->Space64Start, Ctrl->Space64End);
       DEBUG ((DEBUG_VERBOSE,
           "Pmem64PciRange                         [%016lx - %016lx]\n"
           "Pmem64CpuRange                         [%016lx - %016lx]\n",
@@ -544,6 +607,8 @@ InitPlatformFromPcd (
       PciRoot->MemAbove4G.Base           = Ctrl->Mem64.PciAddr;
       PciRoot->MemAbove4G.Limit          = Ctrl->Mem64.PciAddr + Ctrl->Mem64.RangeSize - 1;
       PciRoot->MemAbove4G.Translation    = Ctrl->Mem64.PciAddr - Ctrl->Mem64.CpuAddr;
+      AssertWindowInSlaveMap ("Mem64", Ctrl->Mem64.CpuAddr, Ctrl->Mem64.RangeSize,
+          Ctrl->Space32Start, Ctrl->Space32End, Ctrl->Space64Start, Ctrl->Space64End);
       DEBUG ((DEBUG_VERBOSE,
           "Mem64PciRange                         [%016lx - %016lx]\n"
           "Mem64CpuRange                         [%016lx - %016lx]\n",
@@ -557,6 +622,8 @@ InitPlatformFromPcd (
       PciRoot->Io.Base                   = Ctrl->Io.PciAddr;
       PciRoot->Io.Limit                  = Ctrl->Io.PciAddr + Ctrl->Io.RangeSize - 1;
       PciRoot->Io.Translation            = Ctrl->Io.PciAddr - Ctrl->Io.CpuAddr;
+      AssertWindowInSlaveMap ("Io", Ctrl->Io.CpuAddr, Ctrl->Io.RangeSize,
+          Ctrl->Space32Start, Ctrl->Space32End, Ctrl->Space64Start, Ctrl->Space64End);
       DEBUG ((DEBUG_VERBOSE,
           "IoPciRange                         [%016lx - %016lx]\n"
           "IoCpuRange                         [%016lx - %016lx]\n",

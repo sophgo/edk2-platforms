@@ -512,9 +512,9 @@
   gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiLoaderData|0
 
   #
-  # SiFive’s Sv48 implementation provides a 48-bit virtual address space
-  # using 47-bits of physical address space.
-  # The max physical address is 0xFFFFFFFFFF in the SoC System map.
+  # Sv48 (a RISC-V privileged-architecture paging mode) provides a 48-bit
+  # virtual address space. The SG2044 SoC uses 47 bits of physical address
+  # space; the max physical address is 0xFFFFFFFFFF in the SoC system map.
   #
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize|47
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|40

@@ -677,10 +677,10 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuL3CacheSizeBytes|0x4000000
   # [board]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SD3"
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion|L"1.2"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion|L"1.1"
   # [product]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName|L"SD3-12"
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductVersion|L"1.2"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductVersion|L"1.1"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductManufacturer|L"SOPHGO"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductSN|L"TYUI7890"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductUUID|L"123e4567-e89b-12d3-a456-426614174000"

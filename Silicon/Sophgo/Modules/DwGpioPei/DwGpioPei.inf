@@ -1,0 +1,40 @@
+## @file
+#  PEI driver for the Designware APB GPIO controller.
+#
+#  Publishes SOPHGO_GPIO_PPI (PEI counterpart of SOPHGO_GPIO_PROTOCOL). The
+#  register-level logic is shared with DwGpioDxe via DwGpioLib; PEI runs with
+#  the MMU off, so no GCD mapping is required.
+#
+#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DwGpioPei
+  FILE_GUID                      = 3B6C1E77-2A48-4F0D-9E15-7C2B84D6A031
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = DwGpioPeiEntryPoint
+
+[Sources]
+  DwGpioPei.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[LibraryClasses]
+  PeimEntryPoint
+  PeiServicesLib
+  DebugLib
+  DwGpioLib
+
+[Ppis]
+  gSophgoGpioPpiGuid              ## PRODUCES
+
+[Depex]
+  TRUE

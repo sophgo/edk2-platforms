@@ -1,0 +1,38 @@
+## @file
+#  Register-level library for the Designware APB GPIO controller.
+#
+#  Phase-independent (BASE) helpers shared by DwGpioDxe (protocol) and
+#  DwGpioPei (PPI). Reads the controller layout from fixed-at-build PCDs, so
+#  it needs no constructor and works in both PEI and DXE.
+#
+#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = DwGpioLib
+  FILE_GUID                      = 8F0A2D5B-9C41-49E6-8D3A-1B7F2E6C4A90
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = DwGpioLib
+
+[Sources]
+  DwGpioLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[LibraryClasses]
+  BaseLib
+  DebugLib
+  IoLib
+  PcdLib
+
+[FixedPcd]
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdGpioControllerCount
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdGpioBaseAddresses

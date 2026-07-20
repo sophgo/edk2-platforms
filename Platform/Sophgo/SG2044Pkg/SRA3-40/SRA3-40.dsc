@@ -313,6 +313,7 @@
   # Random Generator Library
   #
   TrngLib|Silicon/Sophgo/Library/TrngLib/TrngLib.inf
+  DwGpioLib|Silicon/Sophgo/Library/DwGpioLib/DwGpioLib.inf
   RngLib|Silicon/Sophgo/Library/RngLib/RngLib.inf
 
   ResetSystemLib|OvmfPkg/RiscVVirt/Library/ResetSystemLib/BaseResetSystemLib.inf

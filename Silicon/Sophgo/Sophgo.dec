@@ -91,3 +91,4 @@
 [LibraryClasses]
   TrngLib|Silicon/Sophgo/Include/Library/TrngLib.h
   IpmiFruInfoLib|Silicon/Sophgo/Include/Library/IpmiFruInfoLib.h
+  DwGpioLib|Silicon/Sophgo/Include/Library/DwGpioLib.h

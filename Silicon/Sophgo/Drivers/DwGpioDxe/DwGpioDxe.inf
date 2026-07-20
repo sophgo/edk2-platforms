@@ -27,19 +27,19 @@
 
 [LibraryClasses]
   UefiDriverEntryPoint
-  BaseLib
-  BaseMemoryLib
   DebugLib
-  IoLib
   MemoryAllocationLib
   DxeServicesTableLib
+  UefiBootServicesTableLib
+  PcdLib
+  DwGpioLib
 
 [Guids]
 
 [Protocols]
   gSophgoGpioProtocolGuid         ## PRODUCES
 
-[Pcd]
+[FixedPcd]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdGpioControllerCount
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdGpioBaseAddresses
 

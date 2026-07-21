@@ -17,7 +17,6 @@
 #include <Library/UefiBootServicesTableLib.h>
 #include <Library/DebugLib.h>
 #include <Library/PcdLib.h>
-#include <Library/IniParserLib.h>
 #include <Library/AcpiLib.h>
 #include <Library/PrintLib.h>
 #include <Library/SmbiosInformationLib.h>

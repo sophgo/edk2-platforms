@@ -34,8 +34,6 @@
 #include <Library/DebugLib.h>
 #include <Library/HiiLib.h>
 #include <Library/FileHandleLib.h>
-#include <Library/IniParserLib.h>
-#include <Library/IniParserLib/IniParserUtil.h>
 #include <Library/DevicePathLib.h>
 #include <Library/PrintLib.h>
 #include <Library/CustomizedDisplayLib/Colors.h>

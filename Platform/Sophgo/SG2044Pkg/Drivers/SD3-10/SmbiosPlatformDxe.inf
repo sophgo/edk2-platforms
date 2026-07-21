@@ -68,7 +68,6 @@
   UefiBootServicesTableLib
   UefiDriverEntryPoint
   UefiLib
-  IniParserLib
   ConfigUtilsLib
   RiscVSbiLib
 

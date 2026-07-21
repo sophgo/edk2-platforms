@@ -14,7 +14,6 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
-#include <Library/IniParserLib.h>
 #include <Library/PcdLib.h>
 
 #include "SmbiosPlatformDxe.h"

@@ -23,7 +23,6 @@
 #include <Library/MemoryAllocationLib.h>
 #include <Library/PrintLib.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include <Library/IniParserLib.h>
 
 #include <Protocol/SmbiosPlatformReady.h>
 

@@ -217,7 +217,6 @@
   FdtLib|MdePkg/Library/BaseFdtLib/BaseFdtLib.inf
   VariableFlashInfoLib|MdeModulePkg/Library/BaseVariableFlashInfoLib/BaseVariableFlashInfoLib.inf
   VariablePolicyHelperLib|MdeModulePkg/Library/VariablePolicyHelperLib/VariablePolicyHelperLib.inf
-  IniParserLib|Silicon/Sophgo/Library/IniParserLib/IniParserLib.inf
   ConfigUtilsLib|Silicon/Sophgo/Library/ConfigUtilsLib/ConfigUtilsLib.inf
   SmbiosInformationLib|Silicon/Sophgo/SG2044Pkg/Library/SmbiosInformation/SmbiosInformationLib.inf
 !ifdef $(SOURCE_DEBUG_ENABLE)
@@ -309,7 +308,6 @@
   # Ds1307 RTC Library
   RealTimeClockLib|Silicon/Sophgo/Library/Ds1307RealTimeClockLib/Ds1307RealTimeClockLib.inf
 
-  IniParserLib|Silicon/Sophgo/Library/IniParserLib/IniParserLib.inf
 
   EfuseLib|Silicon/Sophgo/Library/EfuseLib/EfuseLib.inf
 
@@ -559,7 +557,6 @@
   gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x80000
   gSophgoTokenSpaceGuid.PcdFdOffset|0x600000
 !endif
-  gSophgoTokenSpaceGuid.PcdIniFileRamAddress|0x89000000
   gSophgoTokenSpaceGuid.PcdIniFileMaxSize|8192
   gSophgoTokenSpaceGuid.PcdMisa|0x00B4112F
   gSophgoTokenSpaceGuid.PcdMCUI2cBus|1
@@ -591,7 +588,6 @@
 !if $(ETH_ENABLE) == TRUE
   gSophgoTokenSpaceGuid.PcdPhyResetGpio|TRUE
   gSophgoTokenSpaceGuid.PcdPhyResetGpioPin|28
-  gSophgoTokenSpaceGuid.PcdDwMac4DefaultMacAddress|0x12345678ABCD
 !endif
 
 [PcdsFixedAtBuild.common]

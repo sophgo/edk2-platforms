@@ -21,11 +21,44 @@
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
-#include <Library/IniParserLib.h>
+#include <Library/RngLib.h>
 #include <Protocol/FdtClient.h>
 
 #include "DwMac4SnpDxe.h"
 #include "DwMac4DxeUtil.h"
+
+/**
+  Generate a random locally-administered unicast MAC address.
+
+  Uses the hardware TRNG via RngLib. On TRNG failure, falls back to a fixed
+  locally-administered unicast address (02:00:00:00:00:00).
+
+  @param[out] Mac  Buffer receiving the 6-byte MAC in wire byte order.
+**/
+STATIC
+VOID
+DwMac4GenerateRandomMac (
+  OUT EFI_MAC_ADDRESS  *Mac
+  )
+{
+  UINT64  Rand;
+
+  if (GetRandomNumber64 (&Rand)) {
+    CopyMem (Mac->Addr, &Rand, NET_ETHER_ADDR_LEN);
+    //
+    // Locally administered (bit1=1), unicast (bit0=0)
+    //
+    Mac->Addr[0] = (UINT8) ((Mac->Addr[0] & 0xFC) | 0x02);
+  } else {
+    DEBUG ((
+      DEBUG_WARN,
+      "%a: TRNG failed, using fallback MAC 02:00:00:00:00:00\n",
+      __func__
+      ));
+    SetMem (Mac->Addr, NET_ETHER_ADDR_LEN, 0x00);
+    Mac->Addr[0] = 0x02;
+  }
+}
 
 STATIC
 SOPHGO_SIMPLE_NETWORK_DEVICE_PATH PathTemplate = {
@@ -589,19 +622,12 @@ SnpStationAddress (
   //
   if (Reset) {
     //
-    // Try parse conf.ini first to get mac address
+    // Generate a random locally-administered MAC for the permanent address.
     //
-    if (IsIniFileExist ()) {
-      MacAddrIniParser ();
-      NewMac = (EFI_MAC_ADDRESS *) (MacConfig.Mac0Addr);
-    } else {
-      DEBUG ((
-        DEBUG_WARN,
-        "%a() Warning: using driver-default MAC address\n",
-        __func__
-        ));
-      NewMac = (EFI_MAC_ADDRESS *) (FixedPcdGet64 (PcdDwMac4DefaultMacAddress));
-    }
+    EFI_MAC_ADDRESS  RandomMac;
+
+    DwMac4GenerateRandomMac (&RandomMac);
+    NewMac = &RandomMac;
   } else {
     //
     // Otherwise use the specified new MAC address
@@ -1563,8 +1589,6 @@ DwMac4SnpDxeEntry (
   EFI_SIMPLE_NETWORK_PROTOCOL       *Snp;
   EFI_SIMPLE_NETWORK_MODE           *SnpMode;
   SOPHGO_SIMPLE_NETWORK_DEVICE_PATH *DevicePath;
-  UINT64                            DefaultMacAddress;
-  EFI_MAC_ADDRESS                   *SwapMacAddressPtr;
   EFI_HANDLE                        Handle;
   INT32                             Node;
   CONST VOID                        *Prop;
@@ -1739,29 +1763,9 @@ DwMac4SnpDxeEntry (
   SetMem (&SnpMode->BroadcastAddress, sizeof (EFI_MAC_ADDRESS), 0xFF);
 
   //
-  // Set current address.
-  // Try parse conf.ini first to get mac address
+  // Generate a random locally-administered unicast MAC.
   //
-  if (IsIniFileExist ()) {
-    MacAddrIniParser ();
-    DefaultMacAddress = MacConfig.Mac0Addr;
-  } else {
-    DEBUG ((DEBUG_WARN, "%a() Warning: using driver-default MAC address\n", __func__));
-    DefaultMacAddress = FixedPcdGet64 (PcdDwMac4DefaultMacAddress);
-  }
-
-  CopyMem (&Snp->Mode->CurrentAddress, &DefaultMacAddress, NET_ETHER_ADDR_LEN);
-
-  //
-  // Swap PCD human readable form to correct endianess
-  //
-  SwapMacAddressPtr = (EFI_MAC_ADDRESS *) &DefaultMacAddress;
-  SnpMode->CurrentAddress.Addr[0] = SwapMacAddressPtr->Addr[5];
-  SnpMode->CurrentAddress.Addr[1] = SwapMacAddressPtr->Addr[4];
-  SnpMode->CurrentAddress.Addr[2] = SwapMacAddressPtr->Addr[3];
-  SnpMode->CurrentAddress.Addr[3] = SwapMacAddressPtr->Addr[2];
-  SnpMode->CurrentAddress.Addr[4] = SwapMacAddressPtr->Addr[1];
-  SnpMode->CurrentAddress.Addr[5] = SwapMacAddressPtr->Addr[0];
+  DwMac4GenerateRandomMac (&SnpMode->CurrentAddress);
 
   //
   // Assign fields for device path

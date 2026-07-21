@@ -10,8 +10,6 @@
 #include <Library/DebugLib.h>
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
-#include <Library/IniParserLib.h>
-#include <Library/IniParserLib/IniParserUtil.h>
 #include "Spifmc.h"
 #include "SpiNorFlash.h"
 #include "EfuseLib.h"

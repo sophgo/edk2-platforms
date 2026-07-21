@@ -34,7 +34,6 @@
   DebugLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
-  IniParserLib
   AcpiLib
   SmbiosInformationLib
 

@@ -58,6 +58,12 @@
 #define PCIE_CTRL_REG_OFFSET                                0x0c00
 #define PCIE_CTRL_SFT_RST_SIG_REG                           0x050
 #define PCIE_CTRL_REMAPPING_EN_REG                          0x060
+//
+// REMAPPING_EN bit0 = hni_to_pcie_up4g_en, bit1 = hni_to_pcie_dw4g_en. SERVER
+// (CCN) mode needs both set so the HNI slave map actually forwards CPU MMIO to
+// PCIe. Mirrors FSBL pcie_config_slv_mapping() (val |= 0x3).
+//
+#define PCIE_CTRL_REMAP_EN_HNI_TO_PCIE_MASK                 0x3
 #define PCIE_CTRL_HNI_UP_START_ADDR_REG                     0x064
 #define PCIE_CTRL_HNI_UP_END_ADDR_REG                       0x068
 #define PCIE_CTRL_HNI_DW_ADDR_REG                           0x06c
@@ -215,6 +221,16 @@ DwPcieCtrWrite32 (
     )
 {
   MmioWrite32 (Pcie->CtrBase + Offset, Value);
+}
+
+STATIC
+UINT32
+DwPcieCtrRead32 (
+    IN  DW_PCIE *Pcie,
+    IN  UINT32 Offset
+    )
+{
+  return MmioRead32 (Pcie->CtrBase + Offset);
 }
 
 STATIC
@@ -423,6 +439,8 @@ DwPcieSetSlaveMap (
     IN  SLAVE_MAP_ADDR_PCIE *SlaveMapAddrPcie
     )
 {
+  UINT32  Value;
+
   //64 bit start address
   DwPcieCtrWrite32 (Pcie, PCIE_CTRL_REG_OFFSET + PCIE_CTRL_HNI_UP_START_ADDR_REG, (UINT32)((SlaveMapAddrPcie->StartAddr64Bit >> 16) & 0xFFFFFFFF));
   DwPcieCtrWrite32 (Pcie, PCIE_CTRL_REG_OFFSET + PCIE_CTRL_HNI_UP_END_ADDR_REG, (UINT32)((SlaveMapAddrPcie->EndAddr64Bit >> 16) & 0xFFFFFFFF));
@@ -430,6 +448,18 @@ DwPcieSetSlaveMap (
   //32 bit end address
   DwPcieCtrWrite32 (Pcie, PCIE_CTRL_REG_OFFSET + PCIE_CTRL_HNI_DW_ADDR_REG, (UINT32)((((SlaveMapAddrPcie->EndAddr32Bit >> 16) & 0xFFFF) << 16)
         | ((SlaveMapAddrPcie->StartAddr32Bit >> 16) & 0xFFFF)));
+
+  //
+  // Enable HNI-to-PCIe up-4G and dw-4G address remapping (bit0|bit1). FSBL's
+  // pcie_config_slv_mapping() used to set this in SERVER mode; now that RC
+  // bring-up has moved out of FSBL, the RC slave map is only live once EDK2
+  // sets these enable bits. Without them the address window above is programmed
+  // but inert, so device BAR MMIO reads back all-ones. RMW to preserve the
+  // other remap-enable bits.
+  //
+  Value  = DwPcieCtrRead32 (Pcie, PCIE_CTRL_REG_OFFSET + PCIE_CTRL_REMAPPING_EN_REG);
+  Value |= PCIE_CTRL_REMAP_EN_HNI_TO_PCIE_MASK;
+  DwPcieCtrWrite32 (Pcie, PCIE_CTRL_REG_OFFSET + PCIE_CTRL_REMAPPING_EN_REG, Value);
 
   DEBUG ((DEBUG_INFO, "Set Rc Ctr Reg [0x%lx], Slave Map: 64bit [0x%lx - 0x%lx], 32bit [0x%lx - 0x%lx]\n",
         Pcie->CtrBase + PCIE_CTRL_REG_OFFSET,

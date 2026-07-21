@@ -1,0 +1,48 @@
+## @file
+#  PEIM that brings up the SG2044 PCIe RC host links.
+#
+#  Ports the FSBL sg2044_pcie_init() RC bring-up sequence (the
+#  #ifndef CONFIG_DRIVER_PCIE_SLT version) into PEI. PERST is driven through
+#  SOPHGO_GPIO_PPI (produced by DwGpioPei), hence the depex on that PPI.
+#  The slave-map programming done by FSBL is intentionally NOT done here --
+#  the EDK2 DesignWare PCIe DXE driver (DwPcieSetSlaveMap) owns that, fed
+#  from the same PcdPcieHostBridgeTable.
+#
+#  Copyright (c) 2024, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PcieInitPei
+  FILE_GUID                      = 7F3C2A18-9B4D-4E6F-8A1C-3D5E7F9B2C18
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = PcieInitPeiEntryPoint
+
+[Sources]
+  PcieInitPei.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/Sophgo.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[LibraryClasses]
+  PeimEntryPoint
+  PeiServicesLib
+  DebugLib
+  IoLib
+  TimerLib
+  BaseLib
+
+[Ppis]
+  gSophgoGpioPpiGuid              ## CONSUMES
+
+[Pcd]
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable
+
+[Depex]
+  gSophgoGpioPpiGuid

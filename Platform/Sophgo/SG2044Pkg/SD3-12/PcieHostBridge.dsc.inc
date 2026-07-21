@@ -237,3 +237,63 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].Space32End|0x1FFFFFFF
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].Space64Start|0x6000000000
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].Space64End|0x67FFFFFFFF
+
+  # ---- PcieInitPei bring-up data (PEI PHY/link training) ----
+  # Per-controller CtrlInit: C2cId/WrapperId/PhyId locate the controller in
+  # the SoC C2C/wrapper/PHY hierarchy (FSBL numbering, c2c in {0,1,4}; CXP=4).
+  # GenSpeed=5 (PCIE_GEN_5). LaneCount=8 (x8) or 4 (x4+x4 split). PERST is not
+  # stored here -- it is driven by the SoC-fixed perst_gpio[10] table replicated
+  # in PcieInitPei (FSBL sg2260_pcie.c:1558), indexed c2c*4+wrapper*2+phy with
+  # c2c==4 folded to 2, so PerstGpio is left at 0.
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[0].CtrlInit.C2cId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[0].CtrlInit.WrapperId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[0].CtrlInit.PhyId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[0].CtrlInit.GenSpeed|5
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[0].CtrlInit.LaneCount|8
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[0].CtrlInit.PerstGpio|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[1].CtrlInit.C2cId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[1].CtrlInit.WrapperId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[1].CtrlInit.PhyId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[1].CtrlInit.GenSpeed|5
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[1].CtrlInit.LaneCount|8
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[1].CtrlInit.PerstGpio|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[2].CtrlInit.C2cId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[2].CtrlInit.WrapperId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[2].CtrlInit.PhyId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[2].CtrlInit.GenSpeed|5
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[2].CtrlInit.LaneCount|4
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[2].CtrlInit.PerstGpio|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[3].CtrlInit.C2cId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[3].CtrlInit.WrapperId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[3].CtrlInit.PhyId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[3].CtrlInit.GenSpeed|5
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[3].CtrlInit.LaneCount|4
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[3].CtrlInit.PerstGpio|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[4].CtrlInit.C2cId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[4].CtrlInit.WrapperId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[4].CtrlInit.PhyId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[4].CtrlInit.GenSpeed|5
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[4].CtrlInit.LaneCount|8
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[4].CtrlInit.PerstGpio|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].CtrlInit.C2cId|2
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].CtrlInit.WrapperId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].CtrlInit.PhyId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].CtrlInit.GenSpeed|5
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].CtrlInit.LaneCount|8
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Controller[5].CtrlInit.PerstGpio|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.NumOfPhys|5
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[0].C2cId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[0].WrapperId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[0].SerdesMode|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[1].C2cId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[1].WrapperId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[1].SerdesMode|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[2].C2cId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[2].WrapperId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[2].SerdesMode|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[3].C2cId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[3].WrapperId|1
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[3].SerdesMode|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[4].C2cId|2
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[4].WrapperId|0
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.Phy[4].SerdesMode|0

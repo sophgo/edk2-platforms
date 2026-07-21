@@ -770,6 +770,7 @@
 
   Silicon/Sophgo/Modules/CpuPei/CpuPei.inf
   Silicon/Sophgo/Modules/DwGpioPei/DwGpioPei.inf
+  Silicon/Sophgo/SG2044Pkg/Modules/PcieInitPei/PcieInitPei.inf
   Silicon/Sophgo/Modules/MemoryInitPei/MemoryInitPei.inf {
     <LibraryClasses>
     PcdLib|MdePkg/Library/BasePcdLibNull/BasePcdLibNull.inf

@@ -49,7 +49,6 @@
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x0|UINT64|0x00001002
   gSophgoTokenSpaceGuid.PcdSDIOSourceClockFrequency|0x0|UINT32|0x00001004
   gSophgoTokenSpaceGuid.PcdSDIOTransmissionClockFrequency|0x0|UINT32|0x00001005
-  gSophgoTokenSpaceGuid.PcdIniFileMaxSize|0x0|UINT32|0x00001007
   gSophgoTokenSpaceGuid.PcdMisa|0x0|UINT32|0x00001008
   gSophgoTokenSpaceGuid.PcdTrngBase|0x0|UINT64|0x00001009
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|FALSE|BOOLEAN|0x0000100A

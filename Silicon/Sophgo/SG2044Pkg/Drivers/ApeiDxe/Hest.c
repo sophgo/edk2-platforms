@@ -20,14 +20,10 @@ BOOLEAN         mPcieConfigParsed = FALSE;
 
 
 /**
-  Parse PCIe Root Complex configuration from conf.ini.
+  Parse PCIe Root Complex configuration from PcdPcieHostBridgeTable PCD.
 
-  This function reads PCIe configuration from conf.ini to support different PCIe topologies.
-  Each RC section contains:
-  - width: Number of lanes per port (4 or 8)
-  - Memory and IO window configurations
-
-  If no PCIe sections found in conf.ini, default to 5 ports.
+  This function reads PCIe configuration from the per-variant PCD to support
+  different PCIe topologies.
 
   @retval EFI_SUCCESS          Configuration parsed successfully
   @retval EFI_OUT_OF_RESOURCES Too many RCs configured

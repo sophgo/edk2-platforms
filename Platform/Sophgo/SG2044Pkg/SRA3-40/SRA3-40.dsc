@@ -553,7 +553,6 @@
   gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x80000
   gSophgoTokenSpaceGuid.PcdFdOffset|0x600000
 !endif
-  gSophgoTokenSpaceGuid.PcdIniFileMaxSize|8192
   gSophgoTokenSpaceGuid.PcdMisa|0x00B4112F
   gSophgoTokenSpaceGuid.PcdMCUI2cBus|1
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum0|2

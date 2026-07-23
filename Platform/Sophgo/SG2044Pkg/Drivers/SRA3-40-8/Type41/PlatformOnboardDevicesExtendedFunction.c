@@ -7,19 +7,9 @@
 
 **/
 
-#include <Library/BaseLib.h>
-#include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include <Library/UefiBootServicesTableLib.h>
-#include <Library/DebugLib.h>
-#include <Library/HiiLib.h>
-#include <Library/PrintLib.h>
 
 #include "SmbiosPlatformDxe.h"
-
-#include <Include/PcieHostPcd.h>
-
-#define TYPE41_DEVICE_TYPE_OTHERS 0x81
 
 /**
   This function adds SMBIOS Table (Type 41) records.
@@ -36,33 +26,11 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformOnboardDevicesExtended) {
   STR_TOKEN_INFO                    *InputStrToken;
   SMBIOS_TABLE_TYPE41               *InputData;
   SMBIOS_TABLE_TYPE41               *Type41Record;
-  UINT32                            Index, SlotID, InstanceNum, NumberOfControllers;
-  CHAR16                            SlotDesignation[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  PCIE_HOST_BRIDGE_TABLE            *PcieRcConfig;
-
 
   InputData     = (SMBIOS_TABLE_TYPE41 *)RecordData;
   InputStrToken = (STR_TOKEN_INFO *)StrToken;
 
-  InstanceNum = 0;
-  PcieRcConfig  = (PCIE_HOST_BRIDGE_TABLE *)PcdGetPtr (PcdPcieHostBridgeTable);
-  NumberOfControllers = PcieRcConfig->NumOfControllers;
-
-  if (PcieRcConfig == NULL) {
-    DEBUG ((DEBUG_ERROR, "[%a] No PCIe host bridge configuration found\n", __func__));
-    return EFI_NOT_FOUND;
-  }
-
-  for (Index = 0; Index < NumberOfControllers; ++Index) {
-    SlotID = PcieRcConfig->Controller[Index].Domain;
-    UnicodeSPrint (SlotDesignation, sizeof (SlotDesignation), L"SLOT%u", SlotID);
-    HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], SlotDesignation, NULL);
-    InputData->DeviceType = TYPE41_DEVICE_TYPE_OTHERS;
-    InputData->DeviceTypeInstance = InstanceNum;
-    InputData->SegmentGroupNum = (UINT16) SlotID;
-    InputData->BusNum = 0;
-    InputData->DevFuncNum = 0;
-
+  while (InputData->Hdr.Type != NULL_TERMINATED_TYPE) {
     SmbiosPlatformDxeCreateTable (
       (VOID *)&Type41Record,
       (VOID *)&InputData,
@@ -80,7 +48,8 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformOnboardDevicesExtended) {
     }
 
     FreePool (Type41Record);
-    InstanceNum++;
+    InputData++;
+    InputStrToken++;
   }
 
   return EFI_SUCCESS;

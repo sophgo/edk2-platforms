@@ -46,8 +46,6 @@
   Type19/PlatformMemoryArrayMappedAddressFunction.c
   Type32/PlatformSystemBootData.c
   Type32/PlatformSystemBootFunction.c
-  Type41/PlatformOnboardDevicesExtendedData.c
-  Type41/PlatformOnboardDevicesExtendedFunction.c
   Type44/PlatformProcessorAdditionalData.c
   Type44/PlatformProcessorAdditionalFunction.c
 

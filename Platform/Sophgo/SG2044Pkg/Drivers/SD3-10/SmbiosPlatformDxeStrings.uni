@@ -26,4 +26,3 @@
 #include "Type11/PlatformOemString.uni"
 #include "Type13/PlatformLanguage.uni"
 #include "Type17/PlatformMemoryDevice.uni"
-#include "Type41/PlatformOnboardDevicesExtended.uni"

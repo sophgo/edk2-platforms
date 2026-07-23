@@ -7,50 +7,9 @@
 
 **/
 
-#include <Library/BaseLib.h>
-#include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
-#include <Library/UefiBootServicesTableLib.h>
-#include <Library/DebugLib.h>
-#include <Library/HiiLib.h>
-#include <Library/PrintLib.h>
 
 #include "SmbiosPlatformDxe.h"
-
-#include <Include/PcieHostPcd.h>
-
-#define TYPE41_DEVICE_TYPE_OTHERS 0x81
-
-/**
-  Map an SRM3-70 PCIe controller domain (segment) to its board slot silkscreen.
-
-  See the matching helper in the SRM3-70 Type09 driver for the rationale; the
-  A/B suffix distinguishes the front/rear halves of a physically shared PCIe
-  connector, and the mapping covers the odd-numbered domains that the shared
-  MapSlot() does not.
-
-  @param  Domain   The PCIe controller domain (segment) number.
-
-  @retval CHAR16*  The board slot designation string.
-**/
-STATIC
-CHAR16 *
-MapSlotName (
-  IN UINT32  Domain
-  )
-{
-  switch (Domain) {
-    case 0:  return L"PCIe2A";
-    case 1:  return L"PCIe2B";
-    case 2:  return L"PCIe0";
-    case 4:  return L"M.2";
-    case 5:  return L"PCIe1";
-    case 6:  return L"OCP0A";
-    case 7:  return L"OCP0B";
-    case 8:  return L"PCIeSW";
-    default: return L"UNKNOWN";
-  }
-}
 
 /**
   This function adds SMBIOS Table (Type 41) records.
@@ -67,33 +26,11 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformOnboardDevicesExtended) {
   STR_TOKEN_INFO                    *InputStrToken;
   SMBIOS_TABLE_TYPE41               *InputData;
   SMBIOS_TABLE_TYPE41               *Type41Record;
-  UINT32                            Index, SlotID, InstanceNum, NumberOfControllers;
-  CHAR16                            SlotDesignation[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  PCIE_HOST_BRIDGE_TABLE            *PcieRcConfig;
-
 
   InputData     = (SMBIOS_TABLE_TYPE41 *)RecordData;
   InputStrToken = (STR_TOKEN_INFO *)StrToken;
 
-  InstanceNum = 0;
-  PcieRcConfig  = (PCIE_HOST_BRIDGE_TABLE *)PcdGetPtr (PcdPcieHostBridgeTable);
-  NumberOfControllers = PcieRcConfig->NumOfControllers;
-
-  if (PcieRcConfig == NULL) {
-    DEBUG ((DEBUG_ERROR, "[%a] No PCIe host bridge configuration found\n", __func__));
-    return EFI_NOT_FOUND;
-  }
-
-  for (Index = 0; Index < NumberOfControllers; ++Index) {
-    SlotID = PcieRcConfig->Controller[Index].Domain;
-    UnicodeSPrint (SlotDesignation, sizeof (SlotDesignation), L"%s", MapSlotName (SlotID));
-    HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[0], SlotDesignation, NULL);
-    InputData->DeviceType = TYPE41_DEVICE_TYPE_OTHERS;
-    InputData->DeviceTypeInstance = InstanceNum;
-    InputData->SegmentGroupNum = (UINT16) SlotID;
-    InputData->BusNum = 0;
-    InputData->DevFuncNum = 0;
-
+  while (InputData->Hdr.Type != NULL_TERMINATED_TYPE) {
     SmbiosPlatformDxeCreateTable (
       (VOID *)&Type41Record,
       (VOID *)&InputData,
@@ -111,7 +48,8 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformOnboardDevicesExtended) {
     }
 
     FreePool (Type41Record);
-    InstanceNum++;
+    InputData++;
+    InputStrToken++;
   }
 
   return EFI_SUCCESS;

@@ -69,10 +69,6 @@ SMBIOS_PLATFORM_DXE_TABLE_EXTERNS (
   PlatformSystemBoot
   )
 SMBIOS_PLATFORM_DXE_TABLE_EXTERNS (
-  SMBIOS_TABLE_TYPE41,
-  PlatformOnboardDevicesExtended
-  )
-SMBIOS_PLATFORM_DXE_TABLE_EXTERNS (
   SMBIOS_TABLE_TYPE44,
   PlatformProcessorAdditional
   )
@@ -129,10 +125,6 @@ SMBIOS_PLATFORM_DXE_DATA_TABLE mSmbiosPlatformDxeDataTable[] = {
   // Type32
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
     PlatformSystemBoot
-    ),
-  // Type41
-  SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (
-    PlatformOnboardDevicesExtended
     ),
   // Type44
   SMBIOS_PLATFORM_DXE_TABLE_ENTRY_DATA_AND_FUNCTION (

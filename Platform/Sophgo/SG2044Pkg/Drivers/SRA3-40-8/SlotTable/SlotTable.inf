@@ -1,0 +1,29 @@
+## @file
+#
+#  SRA3-40-8 PCIe slot table.
+#  Provides PcieSlotInfoGetBoardTable() with 14 slot entries.
+#
+#  Copyright (c) 2023-2026, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = PcieSlotInfoLibSRA3408
+  FILE_GUID                      = CAE05708-959D-43AB-904A-7232CC8E2048
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PcieSlotInfoLib
+
+[Sources]
+  SlotTable.c
+  ../../../../../../Silicon/Sophgo/SG2044Pkg/Library/PcieSlotInfoLib/PcieSlotInfoLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib

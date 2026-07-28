@@ -1,0 +1,29 @@
+## @file
+#
+#  SD3-10-LB PCIe slot table.
+#  Provides PcieSlotInfoGetBoardTable() with 4 RC-direct slot entries.
+#
+#  Copyright (c) 2023-2026, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = PcieSlotInfoLibSD310LB
+  FILE_GUID                      = 19A20040-1939-4FFB-977C-9192E6FE0161
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PcieSlotInfoLib
+
+[Sources]
+  SlotTable.c
+  ../../../../../../Silicon/Sophgo/SG2044Pkg/Library/PcieSlotInfoLib/PcieSlotInfoLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib

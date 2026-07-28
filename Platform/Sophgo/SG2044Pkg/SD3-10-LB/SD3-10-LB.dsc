@@ -208,6 +208,7 @@
   VariablePolicyHelperLib|MdeModulePkg/Library/VariablePolicyHelperLib/VariablePolicyHelperLib.inf
   ConfigUtilsLib|Silicon/Sophgo/Library/ConfigUtilsLib/ConfigUtilsLib.inf
   SmbiosInformationLib|Silicon/Sophgo/SG2044Pkg/Library/SmbiosInformation/SmbiosInformationLib.inf
+  PcieSlotInfoLib|Platform/Sophgo/SG2044Pkg/Drivers/SD3-10-LB/SlotTable/SlotTable.inf
 !ifdef $(SOURCE_DEBUG_ENABLE)
   PeCoffExtraActionLib|SourceLevelDebugPkg/Library/PeCoffExtraActionLibDebug/PeCoffExtraActionLibDebug.inf
   DebugCommunicationLib|SourceLevelDebugPkg/Library/DebugCommunicationLibSerialPort/DebugCommunicationLibSerialPort.inf

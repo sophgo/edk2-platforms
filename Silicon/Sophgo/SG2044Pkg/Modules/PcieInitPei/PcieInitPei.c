@@ -43,6 +43,7 @@
 #include <Library/IoLib.h>
 #include <Library/TimerLib.h>
 #include <Library/BaseLib.h>
+#include <Library/PcieSlotInfoLib.h>
 #include <Ppi/SophgoGpio.h>
 #include <Include/PcieHostPcd.h>
 
@@ -691,6 +692,10 @@ PcieConfigLink (
 
 /**
   Port of pcie_config_rc_cap (sg2260_pcie.c line 476).
+
+  When SlotNumber is not PCIE_SLOT_NUMBER_NONE the root port feeds a
+  physical slot: set the "Slot Implemented" bit and program the
+  Physical Slot Number into the Slot Capabilities register.
 **/
 STATIC
 VOID
@@ -698,7 +703,8 @@ PcieConfigRcCap (
   IN  UINT32  C2cId,
   IN  UINT32  WrapperId,
   IN  UINT32  PhyId,
-  IN  UINT32  PcieLnCnt
+  IN  UINT32  PcieLnCnt,
+  IN  UINT16  SlotNumber
   )
 {
   UINTN   PcieDbiBase;
@@ -747,6 +753,31 @@ PcieConfigRcCap (
     Val  = MmioRead32 (PcieDbiBase + 0x330);
     Val &= 0x7fffffffu;
     MmioWrite32 (PcieDbiBase + 0x330, Val);
+  }
+
+  //
+  // Slot configuration, written deterministically in both directions
+  // (no reliance on reset defaults).  RMW is required on the word at
+  // 0x70: it also holds Cap ID / Next pointer / the rest of the PCIe
+  // Capabilities register (measured 0x0042: v2, Root Port).  SLTCAP
+  // (DBI 0x84) is written whole: measured reset is 0x00000000 on all
+  // controllers, and 0 in every other field is exactly the fixed,
+  // non-hotplug definition (no hotplug, no indicators, no slot power
+  // limit declared).
+  //
+  Val  = MmioRead32 (PcieDbiBase + 0x70);
+  if (SlotNumber != PCIE_SLOT_NUMBER_NONE) {
+    // root port feeds a physical slot: Slot Implemented = 1,
+    // Physical Slot Number[31:19] = SlotNumber.
+    Val |= 0x01000000u;
+    MmioWrite32 (PcieDbiBase + 0x70, Val);
+    MmioWrite32 (PcieDbiBase + 0x84, (UINT32)SlotNumber << 19);
+  } else {
+    // no slot on this port: Slot Implemented = 0, SLTCAP all zero
+    // (Physical Slot Number cleared along with everything else).
+    Val &= 0xfeffffffu;
+    MmioWrite32 (PcieDbiBase + 0x70, Val);
+    MmioWrite32 (PcieDbiBase + 0x84, 0);
   }
 
   // disable DBI_RO_WR_EN.
@@ -1287,13 +1318,15 @@ PcieInitController (
   IN CONST PCIE_CONTROLLER  *Controller
   )
 {
-  EFI_STATUS  Status;
-  UINT32      C2cId;
-  UINT32      WrapperId;
-  UINT32      PhyId;
-  UINT32      GenSpeed;
-  UINT32      LaneCount;
-  UINT32      SsMode;
+  EFI_STATUS        Status;
+  UINT32            C2cId;
+  UINT32            WrapperId;
+  UINT32            PhyId;
+  UINT32            GenSpeed;
+  UINT32            LaneCount;
+  UINT32            SsMode;
+  CONST BOARD_SLOT  *Slot;
+  UINT16            SlotNumber;
 
   if (Controller == NULL) {
     return EFI_INVALID_PARAMETER;
@@ -1369,7 +1402,18 @@ PcieInitController (
   PcieConfigEq (C2cId, WrapperId, PhyId);
   PcieConfigLink (C2cId, WrapperId, PhyId, LaneCount);
   PcieConfigRcBar (C2cId, WrapperId, PhyId);
-  PcieConfigRcCap (C2cId, WrapperId, PhyId, LaneCount);
+
+  //
+  // Physical slot number for the root port's config space: only
+  // RC-direct slots qualify (PcieSlotInfoByDomain ignores switch
+  // downstream slots).  Controllers whose lanes feed an onboard
+  // switch or device get PCIE_SLOT_NUMBER_NONE and are configured
+  // Slot Implemented = 0, SLTCAP = 0 explicitly.
+  //
+  Slot       = PcieSlotInfoByDomain (Controller->Domain);
+  SlotNumber = (Slot != NULL) ? Slot->SlotNumber : PCIE_SLOT_NUMBER_NONE;
+  PcieConfigRcCap (C2cId, WrapperId, PhyId, LaneCount, SlotNumber);
+
   PcieEnableLtssm (C2cId, WrapperId, PhyId);
 
   Status = PcieWaitLink (C2cId, WrapperId, PhyId);

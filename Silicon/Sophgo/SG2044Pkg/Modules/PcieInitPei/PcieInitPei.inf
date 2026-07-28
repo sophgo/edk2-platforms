@@ -37,6 +37,7 @@
   IoLib
   TimerLib
   BaseLib
+  PcieSlotInfoLib
 
 [Ppis]
   gSophgoGpioPpiGuid              ## CONSUMES

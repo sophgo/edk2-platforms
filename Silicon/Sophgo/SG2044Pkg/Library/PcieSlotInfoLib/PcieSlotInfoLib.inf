@@ -1,0 +1,29 @@
+## @file
+#
+#  PCIe slot information library.
+#  Provides platform BOARD_SLOT lookup by PCIe domain / device-path.
+#
+#  Copyright (c) 2023-2026, SOPHGO Inc. All rights reserved.<BR>
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x0001001B
+  BASE_NAME                      = PcieSlotInfoLib
+  FILE_GUID                      = E53F1A2D-7C84-4B96-BE02-9D3C4A8F07E1
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PcieSlotInfoLib
+
+[Sources]
+  PcieSlotInfoLib.c
+  PcieSlotInfoLibNullGetTable.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib

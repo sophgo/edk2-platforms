@@ -20,10 +20,10 @@
 #include <Library/PcieSlotInfoLib.h>
 
 STATIC CONST BOARD_SLOT  mSd310LbSlots[] = {
-  { 0, { 0x00 }, 1, 2, SlotTypePCIExpressGen5X8, "PCIE_SLOT2", SlotDataBusWidth8X },
-  { 4, { 0x00 }, 1, 3, SlotTypePCIExpressGen5X8, "PCIE_SLOT3", SlotDataBusWidth8X },
-  { 6, { 0x00 }, 1, 4, SlotTypePCIExpressGen5X8, "PCIE_SLOT4", SlotDataBusWidth8X },
-  { 8, { 0x00 }, 1, 5, SlotTypePCIExpressGen5X8, "PCIE_SLOT5", SlotDataBusWidth8X },
+  { 0, { 0x00 }, 1, 2, SlotTypePCIExpressGen5X8, "PCIE_SLOT2", SlotDataBusWidth8X, SlotDataBusWidth8X },
+  { 4, { 0x00 }, 1, 3, SlotTypePCIExpressGen5X8, "PCIE_SLOT3", SlotDataBusWidth8X, SlotDataBusWidth8X },
+  { 6, { 0x00 }, 1, 4, SlotTypePCIExpressGen5X8, "PCIE_SLOT4", SlotDataBusWidth8X, SlotDataBusWidth8X },
+  { 8, { 0x00 }, 1, 5, SlotTypePCIExpressGen5X8, "PCIE_SLOT5", SlotDataBusWidth8X, SlotDataBusWidth8X },
 };
 
 CONST BOARD_SLOT *

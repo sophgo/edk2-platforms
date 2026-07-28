@@ -95,6 +95,7 @@ Scope(_SB)
     Name (_SEG, 0)         // Segment of this Root complex
     Name (_BBN, 0)         // Base Bus Number
     Name (_CCA, 1)
+    Name (_SUN, 2)  // physical slot number (board slot table)
 
     Method (_STA) {
       Return (0xF)
@@ -771,6 +772,7 @@ Scope(_SB)
     Name (_SEG, 0x4)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
     Name (_CCA, 1)
+    Name (_SUN, 3)  // physical slot number (board slot table)
 
     Method (_STA) {
       Return (0xF)
@@ -1107,6 +1109,7 @@ Scope(_SB)
     Name (_SEG, 0x6)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
     Name (_CCA, 1)
+    Name (_SUN, 4)  // physical slot number (board slot table)
 
     Method (_STA) {
       Return (0xF)
@@ -1443,6 +1446,7 @@ Scope(_SB)
     Name (_SEG, 0x8)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
     Name (_CCA, 1)
+    Name (_SUN, 5)  // physical slot number (board slot table)
 
     Method (_STA) {
       Return (0xF)

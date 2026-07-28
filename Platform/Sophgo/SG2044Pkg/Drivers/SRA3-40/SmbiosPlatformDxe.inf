@@ -74,11 +74,14 @@
   UefiLib
   ConfigUtilsLib
   RiscVSbiLib
+  PcieSlotInfoLib
 
 [Protocols]
   gEfiSmbiosProtocolGuid                            ## CONSUMED
   gIpmiFruInfoProtocolGuid                          ## CONSUMED
   gSophgoSmbiosPlatformReadyProtocolGuid              ## PRODUCES
+  gEfiPciIoProtocolGuid                           ## CONSUMED
+  gEfiDevicePathProtocolGuid                      ## CONSUMED
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdMisa

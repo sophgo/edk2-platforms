@@ -20,15 +20,15 @@
 #include <Library/PcieSlotInfoLib.h>
 
 STATIC CONST BOARD_SLOT  mSrm370Slots[] = {
-  /* Domain, DevPath, PathLen, SlotNumber, SlotType, Designation, DataBusWidth */
-  { 0, { 0x00 }, 1, 2, SlotTypePCIExpressGen5X4, "PCIE2A", SlotDataBusWidth4X },
-  { 1, { 0x00 }, 1, 6, SlotTypePCIExpressGen5X4, "PCIE2B", SlotDataBusWidth4X },
-  { 2, { 0x00 }, 1, 0, SlotTypePCIExpressGen5X8, "PCIE0", SlotDataBusWidth8X },
-  { 4, { 0x00 }, 1, 5, SlotTypeM2Socket3, "M.2_0", SlotDataBusWidth4X },
-  { 5, { 0x00 }, 1, 1, SlotTypePCIExpressGen5X4, "PCIE1", SlotDataBusWidth4X },
-  { 6, { 0x00 }, 1, 3, SlotTypeOther, "MCIO0A", SlotDataBusWidth4X },
-  { 7, { 0x00 }, 1, 7, SlotTypeOther, "MCIO0B", SlotDataBusWidth4X },
-  { 8, { 0x00, 0x00, 0x08 }, 3, 4, SlotTypeOther, "MCIO1", SlotDataBusWidth8X },
+  /* Domain, DevPath, PathLen, SlotNumber, SlotType, Designation, DataBusWidth, PhysicalWidth */
+  { 0, { 0x00 }, 1, 2, SlotTypePCIExpressGen5X4, "PCIE2A", SlotDataBusWidth4X, SlotDataBusWidth4X },
+  { 1, { 0x00 }, 1, 6, SlotTypePCIExpressGen5X4, "PCIE2B", SlotDataBusWidth4X, SlotDataBusWidth4X },
+  { 2, { 0x00 }, 1, 0, SlotTypePCIExpressGen5X8, "PCIE0", SlotDataBusWidth8X, SlotDataBusWidth8X },
+  { 4, { 0x00 }, 1, 5, SlotTypeM2Socket3, "M.2_0", SlotDataBusWidth4X, SlotDataBusWidth4X },
+  { 5, { 0x00 }, 1, 1, SlotTypePCIExpressGen5X4, "PCIE1", SlotDataBusWidth4X, SlotDataBusWidth4X },
+  { 6, { 0x00 }, 1, 3, SlotTypeOther, "MCIO0A", SlotDataBusWidth4X, SlotDataBusWidth4X },
+  { 7, { 0x00 }, 1, 7, SlotTypeOther, "MCIO0B", SlotDataBusWidth4X, SlotDataBusWidth4X },
+  { 8, { 0x00, 0x00, 0x08 }, 3, 4, SlotTypeOther, "MCIO1", SlotDataBusWidth8X, SlotDataBusWidth8X },
 };
 
 CONST BOARD_SLOT *

@@ -7,11 +7,13 @@
   place of the Null instance.
 
   Per SG2044-PCIe-Memory-Mapping Confluence page.  Domains 0/2/4/8
-  are RC-direct; PCIE10/CON1/CON3/PCIE9 hang off the onboard PEX
+  are RC-direct; PCIE10/CON1/CON3/PCIE5 hang off the onboard PEX
   switch under domain 6.  CON1 is the baseboard M.2, CON3 the
   mainboard M.2, PCIE10 the MCIO-cabled RAID slot at the chassis
-  front, PCIE9 the factory 10GbE card slot (same as SRA3-40-8's
-  PCIE9).
+  front, PCIE5 the baseboard x8 slot (factory 10GbE card).
+
+  Switch-downstream SlotNumbers inherit the PEX switch factory PSNs
+  (units shipped; switch firmware is not modified).
 
   Copyright (c) 2023-2026, SOPHGO Inc. All rights reserved.
   SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -26,10 +28,10 @@ STATIC CONST BOARD_SLOT  mSra340Slots[] = {
   { 0, { 0x00 }, 1, 1, SlotTypePCIExpressGen5X16, "PCIE1", SlotDataBusWidth8X, SlotDataBusWidth16X },
   { 2, { 0x00 }, 1, 2, SlotTypePCIExpressGen5X16, "PCIE2", SlotDataBusWidth8X, SlotDataBusWidth16X },
   { 4, { 0x00 }, 1, 3, SlotTypePCIExpressGen5X16, "PCIE3", SlotDataBusWidth8X, SlotDataBusWidth16X },
-  { 6, { 0x00, 0x00, 0x00, 0x00, 0x10 }, 5, 10, SlotTypePCIExpressGen5X4, "PCIE10", SlotDataBusWidth4X, SlotDataBusWidth4X },
-  { 6, { 0x00, 0x00, 0x00, 0x00, 0x0C }, 5, 11, SlotTypeM2Socket3, "CON1", SlotDataBusWidth4X, SlotDataBusWidth4X },
-  { 6, { 0x00, 0x00, 0x00, 0x00, 0x08 }, 5, 13, SlotTypeM2Socket3, "CON3", SlotDataBusWidth4X, SlotDataBusWidth4X },
-  { 6, { 0x00, 0x00, 0x00, 0x00, 0x18 }, 5, 9, SlotTypePciExpressGen4X16, "PCIE9", SlotDataBusWidth4X, SlotDataBusWidth16X },
+  { 6, { 0x00, 0x00, 0x00, 0x00, 0x10 }, 5, 16, SlotTypePCIExpressGen5X8, "PCIE10", SlotDataBusWidth8X, SlotDataBusWidth8X },
+  { 6, { 0x00, 0x00, 0x00, 0x00, 0x0C }, 5, 12, SlotTypeM2Socket3, "CON1", SlotDataBusWidth4X, SlotDataBusWidth4X },
+  { 6, { 0x00, 0x00, 0x00, 0x00, 0x08 }, 5, 8, SlotTypeM2Socket3, "CON3", SlotDataBusWidth4X, SlotDataBusWidth4X },
+  { 6, { 0x00, 0x00, 0x00, 0x00, 0x18 }, 5, 24, SlotTypePciExpressGen4X16, "PCIE5", SlotDataBusWidth8X, SlotDataBusWidth16X },
   { 8, { 0x00 }, 1, 4, SlotTypePciExpressGen4X16, "PCIE4", SlotDataBusWidth8X, SlotDataBusWidth16X },
 };
 

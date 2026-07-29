@@ -1616,7 +1616,7 @@ Scope(_SB)
     Name (_SEG, 0x9)         // Segment of this Root complex
     Name (_BBN, 0x0)      // Base Bus Number
     Name (_CCA, 1)
-    Name (_SUN, 8)  // physical slot number (board slot table)
+    Name (_SUN, 9)  // physical slot number (board slot table)
 
     Method (_STA) {
       Return (0xF)

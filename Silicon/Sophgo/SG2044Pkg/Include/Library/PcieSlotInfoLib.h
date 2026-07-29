@@ -55,12 +55,16 @@ typedef struct {
 
   Each entry describes one physical connector (standard PCIe, M.2, OCP,
   MCIO, etc.) on the board.  The Domain + DevPath serve as the lookup
-  key; SlotNumber/Type/Designation/DataBusWidth are the slot attributes
-  consumed by config-space PSN, Type 9, and _SUN.
+  key; the remaining fields are slot attributes consumed by config-space
+  PSN, Type 9, and _SUN.
 
   DevPath always starts with the root port hop (Device 0), so a
   root-complex-direct slot has PathLen == 1; slots behind an onboard
   switch have PathLen > 1.
+
+  Type 9 fields (SlotLength / SlotHeight / SlotInformation /
+  Characteristics1 / Characteristics2 / SlotPitch) are explicit members,
+  filled per slot from the board mapping wiki -- no runtime derivation.
 **/
 typedef struct {
   UINT32         Domain;
@@ -72,6 +76,12 @@ typedef struct {
   CONST CHAR8               *Designation;  /* silk-screen label, e.g. "SLOT1" */
   MISC_SLOT_DATA_BUS_WIDTH  DataBusWidth;  /* electrical width, e.g. SlotDataBusWidth8X */
   MISC_SLOT_DATA_BUS_WIDTH  PhysicalWidth; /* physical slot width (Type 9 extended) */
+  MISC_SLOT_LENGTH          SlotLength;    /* Type 9 SlotLength: Long/Short/Unknown */
+  MISC_SLOT_HEIGHT          SlotHeight;    /* Type 9 extended SlotHeight: Full/LowProfile/None */
+  UINT8                     SlotInformation; /* Type 9 extended Gen (3/4/5; 0 for M.2/MCIO) */
+  UINT8                     Characteristics1; /* Type 9 Char1; all slots 0x04 (3.3V) */
+  UINT8                     Characteristics2; /* Type 9 Char2; all slots 0x04 (SMBus) */
+  UINT16                    SlotPitch;     /* Type 9 extended SlotPitch; 0 = unknown */
 } BOARD_SLOT;
 
 /**

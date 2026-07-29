@@ -217,6 +217,9 @@ PlatformSystemSlotOnReadyToBoot (
     SmbiosRecord->SegmentGroupNum  = Segment;
     SmbiosRecord->BusNum           = Bus;
     SmbiosRecord->DevFuncNum       = DevFunc;
+    SmbiosRecord->SlotLength       = Slot->SlotLength;
+    CopyMem (&SmbiosRecord->SlotCharacteristics1, &Slot->Characteristics1, sizeof (UINT8));
+    CopyMem (&SmbiosRecord->SlotCharacteristics2, &Slot->Characteristics2, sizeof (UINT8));
 
     AsciiStrToUnicodeStrS (Slot->Designation, SlotDesignation, ARRAY_SIZE (SlotDesignation));
     HiiSetString (
@@ -226,10 +229,10 @@ PlatformSystemSlotOnReadyToBoot (
       NULL
       );
 
-    SmbiosRecordExtended.SlotInformation   = 0;
+    SmbiosRecordExtended.SlotInformation   = Slot->SlotInformation;
     SmbiosRecordExtended.SlotPhysicalWidth = Slot->PhysicalWidth;
-    SmbiosRecordExtended.SlotPitch         = 0;
-    SmbiosRecordExtended.SlotHeight        = SlotHeightFullHeight;
+    SmbiosRecordExtended.SlotPitch         = Slot->SlotPitch;
+    SmbiosRecordExtended.SlotHeight        = Slot->SlotHeight;
 
     SmbiosRecord->Hdr.Length = sizeof (SMBIOS_TABLE_TYPE9) + sizeof (SMBIOS_TABLE_TYPE9_EXTENDED);
     CopyMem (

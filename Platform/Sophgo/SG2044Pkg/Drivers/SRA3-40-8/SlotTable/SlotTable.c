@@ -30,7 +30,7 @@ STATIC CONST BOARD_SLOT  mSra3408Slots[] = {
   { 3, { 0x00 }, 1, 4, SlotTypePCIExpressGen5X16, "PCIE4", SlotDataBusWidth4X, SlotDataBusWidth16X },
   { 4, { 0x00 }, 1, 5, SlotTypePCIExpressGen5X16, "PCIE5", SlotDataBusWidth4X, SlotDataBusWidth16X },
   { 5, { 0x00 }, 1, 6, SlotTypePCIExpressGen5X16, "PCIE6", SlotDataBusWidth4X, SlotDataBusWidth16X },
-  { 6, { 0x00, 0x00, 0x00, 0x00, 0x10 }, 5, 16, SlotTypePCIExpressGen5X8, "PCIE10", SlotDataBusWidth8X, SlotDataBusWidth8X },
+  { 6, { 0x00, 0x00, 0x00, 0x00, 0x10 }, 5, 16, SlotTypePciExpressGen4X8, "PCIE10", SlotDataBusWidth8X, SlotDataBusWidth8X },
   { 6, { 0x00, 0x00, 0x00, 0x00, 0x0C }, 5, 12, SlotTypeM2Socket3, "CON1", SlotDataBusWidth4X, SlotDataBusWidth4X },
   { 6, { 0x00, 0x00, 0x04, 0x00, 0x0C }, 5, 44, SlotTypeM2Socket3, "CON2", SlotDataBusWidth4X, SlotDataBusWidth4X },
   { 6, { 0x00, 0x00, 0x00, 0x00, 0x08 }, 5, 8, SlotTypeM2Socket3, "CON3", SlotDataBusWidth4X, SlotDataBusWidth4X },

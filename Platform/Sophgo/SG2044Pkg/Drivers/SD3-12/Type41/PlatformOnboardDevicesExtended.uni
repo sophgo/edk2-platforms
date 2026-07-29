@@ -12,6 +12,5 @@
 #string STR_PLATFORM_DXE_ONBOARD_USB_CONTROLLER_1       #language en-US  "USB Controller 1"
 #string STR_PLATFORM_DXE_ONBOARD_USB_CONTROLLER_2       #language en-US  "USB Controller 2"
 #string STR_PLATFORM_DXE_ONBOARD_VGA_CONTROLLER_1       #language en-US  "VGA Controller 1"
-#string STR_PLATFORM_DXE_ONBOARD_RTC_1                  #language en-US  "RTC 1"
 #string STR_PLATFORM_DXE_ONBOARD_ETHERNET_CONTROLLER_1  #language en-US  "Ethernet Controller 1"
 #string STR_PLATFORM_DXE_ONBOARD_ETHERNET_CONTROLLER_2  #language en-US  "Ethernet Controller 2"

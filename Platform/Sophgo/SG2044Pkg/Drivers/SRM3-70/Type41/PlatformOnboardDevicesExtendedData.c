@@ -34,7 +34,6 @@ SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE41, PlatformOnboardDevicesExten
   TYPE41_RECORD (OnBoardDeviceExtendedTypeOther,          1, 8, 0x04, 0x00), // Renesas USB controller 1
   TYPE41_RECORD (OnBoardDeviceExtendedTypeOther,          2, 8, 0x05, 0x00), // Renesas USB controller 2
   TYPE41_RECORD (OnBoardDeviceExtendedTypeVideo,          1, 8, 0x07, 0x00), // ASPEED VGA controller
-  TYPE41_RECORD (OnBoardDeviceExtendedTypeOther,          3, 8, 0x07, 0x08), // ASPEED RTC
   TYPE41_RECORD (OnBoardDeviceExtendedTypeEthernet,       1, 8, 0x08, 0x00), // Intel I210 Ethernet 1
   TYPE41_RECORD (OnBoardDeviceExtendedTypeEthernet,       2, 8, 0x09, 0x00), // Intel I210 Ethernet 2
   {
@@ -54,7 +53,6 @@ SMBIOS_PLATFORM_DXE_STRING_TOKEN_DATA (PlatformOnboardDevicesExtended) = {
   { { STRING_TOKEN (STR_PLATFORM_DXE_ONBOARD_USB_CONTROLLER_1) }, ADDITIONAL_STR_INDEX_1 },
   { { STRING_TOKEN (STR_PLATFORM_DXE_ONBOARD_USB_CONTROLLER_2) }, ADDITIONAL_STR_INDEX_1 },
   { { STRING_TOKEN (STR_PLATFORM_DXE_ONBOARD_VGA_CONTROLLER_1) }, ADDITIONAL_STR_INDEX_1 },
-  { { STRING_TOKEN (STR_PLATFORM_DXE_ONBOARD_RTC_1) }, ADDITIONAL_STR_INDEX_1 },
   { { STRING_TOKEN (STR_PLATFORM_DXE_ONBOARD_ETHERNET_CONTROLLER_1) }, ADDITIONAL_STR_INDEX_1 },
   { { STRING_TOKEN (STR_PLATFORM_DXE_ONBOARD_ETHERNET_CONTROLLER_2) }, ADDITIONAL_STR_INDEX_1 }
 };

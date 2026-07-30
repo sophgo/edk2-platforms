@@ -19,6 +19,7 @@
 
 #include <Protocol/Smbios.h>
 #include <IndustryStandard/SmBios.h>
+#include <Library/PcieSlotInfoLib.h>
 
 #define NULL_TERMINATED_TYPE   0xFF
 #define NULL_TERMINATED_TOKEN  0xFFFF
@@ -82,6 +83,26 @@ typedef struct {
   UINT8     TokenLen;
 } STR_TOKEN_INFO;
 #pragma pack()
+
+//
+// Type 41 onboard-device entry: SMBIOS record + device-path matching key.
+// Segment/Bus/DevFunc are zeroed (filled at ReadyToBoot via GetLocation);
+// Domain/DevPath/PathLen carry the static device-path key for matching.
+//
+#define TYPE41_ENABLED  (1 << 7)
+
+typedef struct {
+  SMBIOS_TABLE_TYPE41  Record;                            // Hdr/Designation/Type/Instance/Seg=0/Bus=0/DevFunc=0
+  UINT32               Domain;                            // == Segment
+  UINT8                DevPath[PCIE_SLOT_MAX_PCI_HOPS];  // Device numbers only, Fn always 0
+  UINTN                PathLen;
+} TYPE41_ONBOARD_ENTRY;
+
+#define TYPE41_REC_FIELD(DeviceType, Instance) \
+  { { EFI_SMBIOS_TYPE_ONBOARD_DEVICES_EXTENDED_INFORMATION,        \
+      sizeof (SMBIOS_TABLE_TYPE41), SMBIOS_HANDLE_PI_RESERVED },    \
+    ADDITIONAL_STR_INDEX_1, TYPE41_ENABLED | (DeviceType),         \
+    (Instance), 0, 0, 0 }
 
 //
 // SMBIOS table extern definitions.

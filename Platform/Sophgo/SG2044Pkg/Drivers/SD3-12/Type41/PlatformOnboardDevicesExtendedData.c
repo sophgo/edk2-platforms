@@ -7,41 +7,21 @@
 
 **/
 
-#include "SmbiosPlatformDxe.h"
-
-#define TYPE41_ENABLED  (1 << 7)
-
-#define TYPE41_RECORD(DeviceType, Instance, Segment, Bus, DevFunc) \
-  {                                                                \
-    {                                                              \
-      EFI_SMBIOS_TYPE_ONBOARD_DEVICES_EXTENDED_INFORMATION,        \
-      sizeof (SMBIOS_TABLE_TYPE41),                                \
-      SMBIOS_HANDLE_PI_RESERVED                                    \
-    },                                                             \
-    ADDITIONAL_STR_INDEX_1,                                        \
-    TYPE41_ENABLED | (DeviceType),                                 \
-    (Instance),                                                    \
-    (Segment),                                                     \
-    (Bus),                                                         \
-    (DevFunc)                                                      \
-  }
+#include "SmbiosPlatformDxe.h"  // TYPE41_ONBOARD_ENTRY / TYPE41_RECORD defined here
 
 //
 // Define data for SMBIOS Type 41 Table.
 //
-SMBIOS_PLATFORM_DXE_TABLE_DATA (SMBIOS_TABLE_TYPE41, PlatformOnboardDevicesExtended) = {
-  TYPE41_RECORD (OnBoardDeviceExtendedTypeSATAController, 1, 8, 0x03, 0x00), // ASMedia SATA controller
-  TYPE41_RECORD (OnBoardDeviceExtendedTypeOther,          1, 8, 0x04, 0x00), // Renesas USB controller 1
-  TYPE41_RECORD (OnBoardDeviceExtendedTypeOther,          2, 8, 0x05, 0x00), // Renesas USB controller 2
-  TYPE41_RECORD (OnBoardDeviceExtendedTypeVideo,          1, 8, 0x07, 0x00), // ASPEED VGA controller
-  TYPE41_RECORD (OnBoardDeviceExtendedTypeEthernet,       1, 8, 0x08, 0x00), // Intel I210 Ethernet 1
-  TYPE41_RECORD (OnBoardDeviceExtendedTypeEthernet,       2, 8, 0x09, 0x00), // Intel I210 Ethernet 2
+SMBIOS_PLATFORM_DXE_TABLE_DATA (TYPE41_ONBOARD_ENTRY, PlatformOnboardDevicesExtended) = {
+  { TYPE41_REC_FIELD (OnBoardDeviceExtendedTypeSATAController, 1), 8, {0,0,0,0},   4}, // SATA 1
+  { TYPE41_REC_FIELD (OnBoardDeviceExtendedTypeOther,          1), 8, {0,0,2,0},   4}, // USB Controller 1
+  { TYPE41_REC_FIELD (OnBoardDeviceExtendedTypeOther,          2), 8, {0,0,3,0},   4}, // USB Controller 2
+  { TYPE41_REC_FIELD (OnBoardDeviceExtendedTypeVideo,          1), 8, {0,0,4,0,0}, 5}, // Video Adapter
+  { TYPE41_REC_FIELD (OnBoardDeviceExtendedTypeEthernet,       1), 8, {0,0,6,0},   4}, // Ethernet Controller 1
+  { TYPE41_REC_FIELD (OnBoardDeviceExtendedTypeEthernet,       2), 8, {0,0,7,0},   4}, // Ethernet Controller 2
   {
-    {
-      NULL_TERMINATED_TYPE,
-      0,
-      0
-    },
+    { { NULL_TERMINATED_TYPE, 0, 0 }, 0, 0, 0, 0, 0, 0 },
+    0, {0}, 0
   }
 };
 

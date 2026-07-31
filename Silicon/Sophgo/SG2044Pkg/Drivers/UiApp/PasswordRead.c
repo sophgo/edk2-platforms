@@ -457,7 +457,6 @@ CreateSharedPopUp (
   )
 {
   UINTN   Index;
-  UINTN   Count;
   CHAR16  Character;
   UINTN   Start;
   UINTN   End;
@@ -497,8 +496,7 @@ CreateSharedPopUp (
   PrintCharAt ((UINTN)-1, (UINTN)-1, Character);
   Character = BOXDRAW_VERTICAL;
 
-  Count = 0;
-  for (Index = Top; Index + 2 < Bottom; Index++, Count++) {
+  for (Index = Top; Index + 2 < Bottom; Index++) {
     String = VA_ARG (Marker, CHAR16*);
 
     //
@@ -625,7 +623,6 @@ CreateDialog (
   UINTN         LargestString;
   UINTN         LineNum;
   UINTN         Index;
-  UINTN         Count;
   CHAR16        Character;
   UINTN         Start;
   UINTN         End;
@@ -696,9 +693,8 @@ CreateDialog (
   PrintCharAt ((UINTN)-1, (UINTN)-1, Character);
   Character = BOXDRAW_VERTICAL;
 
-  Count = 0;
   VA_START (Marker, Key);
-  for (Index = Top; Index + 2 < Bottom; Index++, Count++) {
+  for (Index = Top; Index + 2 < Bottom; Index++) {
     String = VA_ARG (Marker, CHAR16*);
 
     if (String[0] == CHAR_NULL) {

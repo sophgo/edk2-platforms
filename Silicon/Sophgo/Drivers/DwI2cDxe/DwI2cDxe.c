@@ -565,7 +565,7 @@ GetI2cInfoByPcd (
   // EFI_STATUS Status;
   UINT32    I2cNum;
   UINT64    *I2cBaseAddresses;
-  I2C_INFO  *I2cInfoPointer, *I2cInformation;
+  I2C_INFO  *I2cInformation;
 
   I2cNum = FixedPcdGet32(PcdI2cControllerCount);
   I2cBaseAddresses = (UINT64 *)PcdGetPtr(PcdI2cBaseAddresses);
@@ -578,12 +578,10 @@ GetI2cInfoByPcd (
     return EFI_OUT_OF_RESOURCES;
   }
 
-  I2cInfoPointer = I2cInformation;
   for (UINT32 Index = 0; Index < I2cNum; Index++) {
     CopyMem(&I2cInformation[Index].Base, I2cBaseAddresses + Index, sizeof(UINT64));
     I2cInformation[Index].Freq  = Frequency;
     I2cInformation[Index].Speed = Speed;
-    ++I2cInfoPointer;
   }
   for (UINT32 Index = 0; Index < I2cNum; Index++) {
     DEBUG ((/* DEBUG_VERBOSE */DEBUG_INFO,

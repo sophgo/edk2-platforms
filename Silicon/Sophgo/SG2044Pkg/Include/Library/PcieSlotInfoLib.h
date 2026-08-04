@@ -74,7 +74,8 @@ typedef struct {
                                               PCIE_SLOT_NUMBER_NONE = no physical slot */
   MISC_SLOT_TYPE            SlotType;      /* e.g. SlotTypePCIExpressGen5X8 */
   CONST CHAR8               *Designation;  /* silk-screen label, e.g. "SLOT1" */
-  MISC_SLOT_DATA_BUS_WIDTH  DataBusWidth;  /* electrical width, e.g. SlotDataBusWidth8X */
+  MISC_SLOT_DATA_BUS_WIDTH  SlotDataBusWidth; /* Slot Data Bus Width (0x06, ENUM), e.g. SlotDataBusWidth8X */
+  UINT8                     DataBusWidth;     /* Data Bus Width (0x11, Varies), raw lane count, e.g. 8 for x8 */
   MISC_SLOT_DATA_BUS_WIDTH  PhysicalWidth; /* physical slot width (Type 9 extended) */
   MISC_SLOT_LENGTH          SlotLength;    /* Type 9 SlotLength: Long/Short/Unknown */
   MISC_SLOT_HEIGHT          SlotHeight;    /* Type 9 extended SlotHeight: Full/LowProfile/None */

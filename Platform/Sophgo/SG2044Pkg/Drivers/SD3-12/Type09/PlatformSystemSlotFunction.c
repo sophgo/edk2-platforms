@@ -210,7 +210,7 @@ PlatformSystemSlotOnReadyToBoot (
     CopyMem (SmbiosRecord, InputData, sizeof (SMBIOS_TABLE_TYPE9));
 
     SmbiosRecord->SlotType         = Slot->SlotType;
-    SmbiosRecord->SlotDataBusWidth = Slot->DataBusWidth;
+    SmbiosRecord->SlotDataBusWidth = Slot->SlotDataBusWidth;
     SmbiosRecord->DataBusWidth     = Slot->DataBusWidth;
     SmbiosRecord->CurrentUsage     = CardPresent ? SlotUsageInUse : SlotUsageAvailable;
     SmbiosRecord->SlotID           = Slot->SlotNumber;

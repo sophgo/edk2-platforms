@@ -21,11 +21,11 @@
 #include <Library/PcieSlotInfoLib.h>
 
 STATIC CONST BOARD_SLOT  mSd310Slots[] = {
-  { 0, { 0x00 }, 1, 2, SlotTypePCIExpressGen5X8, "PCIE_SLOT2", SlotDataBusWidth8X, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
-  { 2, { 0x00 }, 1, 1, SlotTypePCIExpressGen5X8, "PCIE_SLOT1", SlotDataBusWidth8X, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
-  { 4, { 0x00 }, 1, 3, SlotTypePCIExpressGen5X8, "PCIE_SLOT3", SlotDataBusWidth8X, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
-  { 6, { 0x00 }, 1, 4, SlotTypePCIExpressGen5X8, "PCIE_SLOT4", SlotDataBusWidth8X, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
-  { 8, { 0x00 }, 1, 5, SlotTypePCIExpressGen5X8, "PCIE_SLOT5", SlotDataBusWidth8X, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
+  { 0, { 0x00 }, 1, 2, SlotTypePCIExpressGen5X8, "PCIE_SLOT2", SlotDataBusWidth8X, 8, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
+  { 2, { 0x00 }, 1, 1, SlotTypePCIExpressGen5X8, "PCIE_SLOT1", SlotDataBusWidth8X, 8, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
+  { 4, { 0x00 }, 1, 3, SlotTypePCIExpressGen5X8, "PCIE_SLOT3", SlotDataBusWidth8X, 8, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
+  { 6, { 0x00 }, 1, 4, SlotTypePCIExpressGen5X8, "PCIE_SLOT4", SlotDataBusWidth8X, 8, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
+  { 8, { 0x00 }, 1, 5, SlotTypePCIExpressGen5X8, "PCIE_SLOT5", SlotDataBusWidth8X, 8, SlotDataBusWidth8X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
 };
 
 CONST BOARD_SLOT *

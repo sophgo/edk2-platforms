@@ -18,37 +18,37 @@
 [Sources]
   Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe.h
   Platform/Sophgo/SG2044Pkg/Drivers/SmbiosPlatformDxe.c
-  SmbiosPlatformDxeDataTable.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/DataTable/SD3-12/SmbiosPlatformDxeDataTable.c
   SmbiosPlatformDxeStrings.uni
-  Type00/PlatformBiosData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type00/PlatformBiosData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type00/PlatformBiosFunction.c
-  Type01/PlatformSystemData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type01/PlatformSystemData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type01/SD3/PlatformSystemFunction.c
-  Type02/PlatformBoardData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type02/PlatformBoardData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type02/SD3/PlatformBoardFunction.c
-  Type03/PlatformChassisData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type03/PlatformChassisData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type03/SD3/PlatformChassisFunction.c
-  Type04/PlatformProcessorData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type04/PlatformProcessorData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type04/PlatformProcessorFunction.c
-  Type07/PlatformCacheData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type07/PlatformCacheData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type07/PlatformCacheFunction.c
-  Type09/PlatformSystemSlotData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type09/PlatformSystemSlotData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type09/PlatformSystemSlotFunction.c
-  Type11/PlatformOemStringData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type11/PlatformOemStringData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type11/PlatformOemStringFunction.c
-  Type13/PlatformLanguageData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type13/PlatformLanguageData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type13/PlatformLanguageFunction.c
-  Type16/PlatformPhysicalMemoryArrayData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type16/PlatformPhysicalMemoryArrayData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type16/PlatformPhysicalMemoryArrayFunction.c
-  Type17/PlatformMemoryDeviceData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type17/PlatformMemoryDeviceData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type17/PlatformMemoryDeviceFunction.c
-  Type19/PlatformMemoryArrayMappedAddressData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type19/PlatformMemoryArrayMappedAddressData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type19/PlatformMemoryArrayMappedAddressFunction.c
-  Type32/PlatformSystemBootData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type32/PlatformSystemBootData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type32/PlatformSystemBootFunction.c
-  Type41/PlatformOnboardDevicesExtendedData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type41/SD3-12/PlatformOnboardDevicesExtendedData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type41/PlatformOnboardDevicesExtendedFunction.c
-  Type44/PlatformProcessorAdditionalData.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type44/PlatformProcessorAdditionalData.c
   Platform/Sophgo/SG2044Pkg/Drivers/Common/Type44/PlatformProcessorAdditionalFunction.c
 
 [Packages]

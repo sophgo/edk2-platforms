@@ -753,7 +753,7 @@
   #
   # SEC Phase modules
   #
-  Silicon/Sophgo/Core/Sec/PeilessSec.inf  {
+  Silicon/Sophgo/Core/Sec/SecMain.inf  {
     <LibraryClasses>
       ExtractGuidedSectionLib|EmbeddedPkg/Library/PrePiExtractGuidedSectionLib/PrePiExtractGuidedSectionLib.inf
       LzmaDecompressLib|MdeModulePkg/Library/LzmaCustomDecompressLib/LzmaCustomDecompressLib.inf

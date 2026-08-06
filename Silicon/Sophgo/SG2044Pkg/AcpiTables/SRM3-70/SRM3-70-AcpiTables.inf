@@ -16,14 +16,14 @@
   VERSION_STRING                 = 1.0
 
 [Sources]
-  Fadt.aslc
-  Spcr.aslc
-  Mcfg.aslc
-  Madt.aslc
-  Rhct.aslc
-  Pptt.aslc
+  ../Common/Fadt_SD3.aslc
+  ../Common/Spcr.aslc
+  ../Common/Mcfg_SD3.aslc
+  ../Common/Madt.aslc
+  ../Common/Rhct.aslc
+  ../Common/Pptt.aslc
   Dsdt/SRM3-70-Dsdt.asl
-  Ssdt.asl
+  ../Common/Ssdt_SD312.asl
 
 [Packages]
   EmbeddedPkg/EmbeddedPkg.dec

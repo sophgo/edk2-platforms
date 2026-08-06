@@ -12,15 +12,15 @@
 
 DefinitionBlock ("DsdtTable.aml", "DSDT", 2, "SOPHGO", "2044    ",
                  EFI_ACPI_RISCV_OEM_REVISION) {
-  include ("Cpu.asl")
-  include ("CommonDevices.asl")
-  include ("Uart.asl")
-  include ("Mmc.asl")
-  include ("Ethernet.asl")
-  include ("Intc.asl")
+  include ("../../Common/Cpu.asl")
+  include ("../../Common/CommonDevices.asl")
+  include ("../../Common/Uart.asl")
+  include ("../../Common/Mmc.asl")
+  include ("../../Common/Ethernet.asl")
+  include ("../../Common/Intc.asl")
   include ("Pci.asl")
-  include ("PowerButton.asl")
-  include ("Video.asl")
+  include ("../../Common/PowerButton_SD3.asl")
+  include ("../../Common/Video.asl")
 
   Scope (\_SB_.I2C1)
   {

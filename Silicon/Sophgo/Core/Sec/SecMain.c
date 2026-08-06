@@ -10,7 +10,7 @@
 
 **/
 
-#include "PeilessSec.h"
+#include "SecMain.h"
 #include <Ppi/TemporaryRamSupport.h>
 #include <Ppi/SecHobData.h>
 #include <Guid/FdtHob.h>

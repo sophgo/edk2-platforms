@@ -11,7 +11,7 @@
 
 [Defines]
   INF_VERSION                    = 1.30
-  BASE_NAME                      = PeilessSec
+  BASE_NAME                      = SecMain
   FILE_GUID                      = 71DE2F3C-1586-4558-97F2-7F0631C6908A
   MODULE_TYPE                    = SEC
   VERSION_STRING                 = 1.0
@@ -24,8 +24,8 @@
 
 [Sources]
   SecEntry.S
-  PeilessSec.c
-  PeilessSec.h
+  SecMain.c
+  SecMain.h
 
 [Packages]
   Silicon/Sophgo/Sophgo.dec

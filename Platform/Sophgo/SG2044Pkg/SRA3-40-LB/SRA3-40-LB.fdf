@@ -302,7 +302,7 @@ READ_LOCK_CAP      = TRUE
 READ_LOCK_STATUS   = TRUE
 FvNameGuid         = 684FAB8B-B6E4-4FFE-8E2D-092C349DAD39
 
-INF Silicon/Sophgo/Core/Sec/PeilessSec.inf
+INF Silicon/Sophgo/Core/Sec/SecMain.inf
 INF MdeModulePkg/Core/Pei/PeiMain.inf
 
 #

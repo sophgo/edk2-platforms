@@ -23,37 +23,37 @@
   SmbiosPlatformDxeDataTable.c
   SmbiosPlatformDxeStrings.uni
   Type00/PlatformBiosData.c
-  Type00/PlatformBiosFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type00/PlatformBiosFunction.c
   Type01/PlatformSystemData.c
-  Type01/PlatformSystemFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type01/SRA/PlatformSystemFunction.c
   Type02/PlatformBoardData.c
-  Type02/PlatformBoardFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type02/SRA/PlatformBoardFunction.c
   Type03/PlatformChassisData.c
-  Type03/PlatformChassisFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type03/SRA/PlatformChassisFunction.c
   Type04/PlatformProcessorData.c
-  Type04/PlatformProcessorFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type04/PlatformProcessorFunction.c
   Type07/PlatformCacheData.c
-  Type07/PlatformCacheFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type07/PlatformCacheFunction.c
   Type09/PlatformSystemSlotData.c
-  Type09/PlatformSystemSlotFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type09/PlatformSystemSlotFunction.c
   Type11/PlatformOemStringData.c
-  Type11/PlatformOemStringFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type11/PlatformOemStringFunction.c
   Type13/PlatformLanguageData.c
-  Type13/PlatformLanguageFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type13/PlatformLanguageFunction.c
   Type16/PlatformPhysicalMemoryArrayData.c
-  Type16/PlatformPhysicalMemoryArrayFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type16/PlatformPhysicalMemoryArrayFunction.c
   Type17/PlatformMemoryDeviceData.c
-  Type17/PlatformMemoryDeviceFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type17/PlatformMemoryDeviceFunction.c
   Type19/PlatformMemoryArrayMappedAddressData.c
-  Type19/PlatformMemoryArrayMappedAddressFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type19/PlatformMemoryArrayMappedAddressFunction.c
   Type32/PlatformSystemBootData.c
-  Type32/PlatformSystemBootFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type32/PlatformSystemBootFunction.c
   Type39/PlatformPowerSupplyData.c
   Type39/PlatformPowerSupplyFunction.c
   Type41/PlatformOnboardDevicesExtendedData.c
-  Type41/PlatformOnboardDevicesExtendedFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type41/PlatformOnboardDevicesExtendedFunction.c
   Type44/PlatformProcessorAdditionalData.c
-  Type44/PlatformProcessorAdditionalFunction.c
+  Platform/Sophgo/SG2044Pkg/Drivers/Common/Type44/PlatformProcessorAdditionalFunction.c
 
 [Packages]
   MdeModulePkg/MdeModulePkg.dec

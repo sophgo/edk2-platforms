@@ -10,7 +10,7 @@
 
 [Defines]
   INF_VERSION                    = 0x0001001A
-  BASE_NAME                      = SRM3-70-AcpiTables
+  BASE_NAME                      = SRM3-C0-AcpiTables
   FILE_GUID                      = 7E374E25-8E01-4FEE-87F2-390C23C606CD
   MODULE_TYPE                    = USER_DEFINED
   VERSION_STRING                 = 1.0
@@ -22,7 +22,7 @@
   ../Common/Madt.aslc
   ../Common/Rhct.aslc
   ../Common/Pptt.aslc
-  Dsdt/SRM3-70-Dsdt.asl
+  Dsdt/SRM3-C0-Dsdt.asl
   ../Common/Ssdt_SD312.asl
 
 [Packages]

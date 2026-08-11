@@ -1,6 +1,6 @@
 ## @file
 #
-#  SRM3-70 PCIe slot table.
+#  SRM3-C0 PCIe slot table.
 #  Provides PcieSlotInfoGetBoardTable() with 8 slot entries.
 #
 #  Copyright (c) 2023-2026, SOPHGO Inc. All rights reserved.<BR>

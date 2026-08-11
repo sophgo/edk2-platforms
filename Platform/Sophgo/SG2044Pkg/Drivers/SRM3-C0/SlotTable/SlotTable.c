@@ -1,8 +1,8 @@
 /** @file
-  SRM3-70 board-level PCIe slot table.
+  SRM3-C0 board-level PCIe slot table.
 
-  This is the SRM3-70 PcieSlotInfoLib instance: it supplies
-  PcieSlotInfoGetBoardTable() with the 8 slot entries.  The SRM3-70
+  This is the SRM3-C0 PcieSlotInfoLib instance: it supplies
+  PcieSlotInfoGetBoardTable() with the 8 slot entries.  The SRM3-C0
   DSC maps LIBRARY_CLASS PcieSlotInfoLib to this INF so it links in
   place of the Null instance.
 

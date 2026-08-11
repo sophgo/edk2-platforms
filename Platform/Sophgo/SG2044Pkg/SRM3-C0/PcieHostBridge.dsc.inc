@@ -1,8 +1,8 @@
-## SRM3-70 PCIe host bridge configuration (PcdPcieHostBridgeTable).
-## Included from SRM3-70.dsc inside [PcdsFixedAtBuild.common].
+## SRM3-C0 PCIe host bridge configuration (PcdPcieHostBridgeTable).
+## Included from SRM3-C0.dsc inside [PcdsFixedAtBuild.common].
 ## Field layout and how-to: skill sg2044-pcie-bar.
 ## Register bases and windows are taken verbatim from the SG2044-PCIe-Memory-Mapping
-## document (SRM3-70 tables). SRM3-70 enables domains 0,1,2,4,5,6,7,8.
+## document (SRM3-C0 tables). SRM3-C0 enables domains 0,1,2,4,5,6,7,8.
 
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable.NumOfControllers|8
 

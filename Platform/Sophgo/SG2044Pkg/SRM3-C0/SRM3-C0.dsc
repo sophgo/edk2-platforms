@@ -1,6 +1,6 @@
-## @file SRM3-70.dsc
+## @file SRM3-C0.dsc
 #
-#  RISC-V EFI on SOPHGO SRM3-70 RISC-V platform
+#  RISC-V EFI on SOPHGO SRM3-C0 RISC-V platform
 #
 #  Copyright (c) 2026, SOPHGO Inc. All rights reserved.
 #
@@ -14,7 +14,7 @@
 #
 ################################################################################
 [Defines]
-  PLATFORM_NAME                  = SRM3-70
+  PLATFORM_NAME                  = SRM3-C0
   PLATFORM_GUID                  = D98574D9-110C-4804-BA4E-0DE396A17A0E
   PLATFORM_VERSION               = 0.1
   DSC_SPECIFICATION              = 0x0001001c
@@ -22,7 +22,7 @@
   SUPPORTED_ARCHITECTURES        = RISCV64
   BUILD_TARGETS                  = DEBUG|RELEASE|NOOPT
   SKUID_IDENTIFIER               = DEFAULT
-  FLASH_DEFINITION               = Platform/Sophgo/SG2044Pkg/SRM3-70/SRM3-70.fdf
+  FLASH_DEFINITION               = Platform/Sophgo/SG2044Pkg/SRM3-C0/SRM3-C0.fdf
 
   #
   # Enable below options may cause build error or may not work on
@@ -83,10 +83,10 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence|FALSE
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform|TRUE
   # [board]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SRM3-70"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SRM3-C0"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion|L"1.1"
   # [product]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName|L"SRM3-70"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName|L"SRM3-C0"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductVersion|L"1.1"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductSN|L"TYUI7890"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductUUID|L"123e4567-e89b-12d3-a456-426614174000"

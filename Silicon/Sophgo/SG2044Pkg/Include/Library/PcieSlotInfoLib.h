@@ -22,7 +22,7 @@
 /*
   SlotNumber sentinel meaning "no physical slot" (e.g. a controller
   whose lanes go nowhere, or an onboard device with no slot identity).
-  0 is a VALID slot number (SD3-12/SRM3-70 use it for PCIE0), so the
+  0 is a VALID slot number (SD3-12/SRM3-C0 use it for PCIE0), so the
   sentinel must not be 0.
 */
 #define PCIE_SLOT_NUMBER_NONE  0xFFFF

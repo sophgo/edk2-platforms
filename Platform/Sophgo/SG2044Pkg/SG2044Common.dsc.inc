@@ -1,7 +1,7 @@
 ## @file SG2044Common.dsc.inc
 #
 #  Shared DSC content for all SG2044 board variants (SD3-10, SD3-10-LB, SD3-12,
-#  SRA3-40, SRA3-40-8, SRA3-40-LB, SRM3-70). Included from each variant DSC
+#  SRA3-40, SRA3-40-8, SRA3-40-LB, SRM3-C0). Included from each variant DSC
 #  after the variant-specific [Defines] block.
 #
 #  Variant DSCs must define (in [Defines]) at least:

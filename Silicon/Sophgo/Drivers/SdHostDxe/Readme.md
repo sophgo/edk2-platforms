@@ -53,6 +53,6 @@ The testing content of this script includes:
 1. Copying `testbin` to `cpbin`.
 2. Verifying file integrity by comparing `testbin` and `cpbin`.
 3. Deleting `cpbin`.
-4. Repeating steps 1–3 until the specified loop count is reached.
+4. Repeating steps 1-3 until the specified loop count is reached.
 
 If the test fails, analyze the logs printed during execution to identify issues in the read/write operations.

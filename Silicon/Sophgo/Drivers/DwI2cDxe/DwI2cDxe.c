@@ -470,7 +470,7 @@ I2cXfer (
 }
 
 /**
-  I2C read operation — write data to the slave then read data bytes back.
+  I2C read operation - write data to the slave then read data bytes back.
 
   @param[in]   This       The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]   I2c        I2c bus number.
@@ -516,7 +516,7 @@ I2cMasterRead (
 }
 
 /**
-  I2C write operation — write data bytes to the I2C slave.
+  I2C write operation - write data bytes to the I2C slave.
 
   @param[in]  This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]  I2c   I2c bus number.

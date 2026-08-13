@@ -24,7 +24,7 @@
 typedef struct _SOPHGO_I2C_MASTER_PROTOCOL SOPHGO_I2C_MASTER_PROTOCOL;
 
 /**
-  I2C read operation — write data to the I2C slave then read data bytes back.
+  I2C read operation - write data to the I2C slave then read data bytes back.
 
   This performs a combined I2C transaction: first writes WriteLen bytes
   (typically a register address), then reads ReadLen bytes from the slave.
@@ -56,7 +56,7 @@ EFI_STATUS
   );
 
 /**
-  I2C write operation — write data bytes to the I2C slave.
+  I2C write operation - write data bytes to the I2C slave.
 
   @param[in]  This  The pointer to SOPHGO_I2C_MASTER_PROTOCOL.
   @param[in]  I2c   I2c bus number.

@@ -36,7 +36,7 @@ The PrePI phase builds some HOBs on Memory, CPU, FV, Stack and processor smbios 
 
 **DXE Phase**
 
-edk2 DXE OpenSBI protocol provides the unified interface for all DXE drivers to invoke SBI services，the DXE stage mainly adds the SG2042 SD card reading driver to read the contents of the SD card.
+edk2 DXE OpenSBI protocol provides the unified interface for all DXE drivers to invoke SBI services, the DXE stage mainly adds the SG2042 SD card reading driver to read the contents of the SD card.
 
 **BDS Phase**
 

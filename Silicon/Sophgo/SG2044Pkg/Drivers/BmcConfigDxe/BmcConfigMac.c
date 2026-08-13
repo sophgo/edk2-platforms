@@ -70,8 +70,8 @@ ConvertChar16ToIpmiMac(
   OUT UINT8   *Mac
   )
 {
-  UINTN   Index = 0;     // 输入字符串索引
-  UINTN   ByteIndex = 0; // 输出数组索引
+  UINTN   Index = 0;     // Input string index
+  UINTN   ByteIndex = 0; // Output array index
   UINT8   High, Low;
 
   if (MacStr == NULL || Mac == NULL) {

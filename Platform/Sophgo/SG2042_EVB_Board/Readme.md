@@ -9,9 +9,9 @@ Sophgo SG2042 UEFI can currently use Opensbi+UEFI firmware+GRUB to successfully 
 
 ### SG2042 EDK2 Initial Environment  ###
 
-**statement**：The operating environment of this project is deployed on the Sophgo original environment.
+**statement**: The operating environment of this project is deployed on the Sophgo original environment.
 
-1. Build Sophgo SG2042 original environment，the specific compilation process is https://github.com/sophgo/sophgo-doc/tree/main/SG2042/HowTo.
+1. Build Sophgo SG2042 original environment, the specific compilation process is https://github.com/sophgo/sophgo-doc/tree/main/SG2042/HowTo.
     Note: The ZSBL mentioned in the original environment is later called FSBL.
 
 2. Install package on ubuntu
@@ -54,7 +54,7 @@ Sophgo SG2042 UEFI can currently use Opensbi+UEFI firmware+GRUB to successfully 
 
    4.2 Using CLANGDWARF toolchain (clang + lld)
 
-   **statement**：Our team tried to compile the port using the CLANGDWARF toolchain (clang version 18.0.0). It was able to build successfully but the compiled binary was not fully work.
+   **statement**: Our team tried to compile the port using the CLANGDWARF toolchain (clang version 18.0.0). It was able to build successfully but the compiled binary was not fully work.
 
    ```
    export CLANGDWARF_BIN=${CLANGDWARF_PATH}/build/bin/

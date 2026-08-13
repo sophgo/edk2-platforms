@@ -1,5 +1,5 @@
 /** @file
-  SMBIOS Type 41 (Onboard Devices Extended) — dynamic SBDF.
+  SMBIOS Type 41 (Onboard Devices Extended) - dynamic SBDF.
 
   Soldered onboard devices are described with a static device-path key
   (Domain + DevPath[]).  At ReadyToBoot, when PCI enumeration is complete,

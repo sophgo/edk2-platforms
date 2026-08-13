@@ -1239,7 +1239,7 @@ StmmacMtlConfiguration (
   // Step 3. Program the following fields to initialize the mode of operation
   //         in the MTL_TxQ0_Operation_Mode register.
   // a. Transmit Store And Forward (TSF) or Transmit Threshold Control (TTC) in case of threshold mode
-  // b. Transmit Queue Enable (TXQEN) to value 2‘b10 to enable Transmit Queue0
+  // b. Transmit Queue Enable (TXQEN) to value 2'b10 to enable Transmit Queue0
   // c. Transmit Queue Size (TQS)
   //
   for (Channel = 0; Channel < TxChannelsCount; Channel++) {

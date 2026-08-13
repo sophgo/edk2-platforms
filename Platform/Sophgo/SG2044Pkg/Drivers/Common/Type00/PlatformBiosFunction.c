@@ -14,7 +14,7 @@
 #include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/HiiLib.h>
 #include <Library/PrintLib.h>
-#include <Library/ConfigUtilsLib.h>
+#include <Library/PcdLib.h>
 
 #include "SmbiosPlatformDxe.h"
 
@@ -23,13 +23,20 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBios) {
   STR_TOKEN_INFO      *InputStrToken;
   SMBIOS_TABLE_TYPE0  *Type0Record;
   SMBIOS_TABLE_TYPE0  *InputData;
-  CHAR16               UnicodeStrVersion[SMBIOS_UNICODE_STRING_MAX_LENGTH];
   CHAR16               UnicodeStrDate[SMBIOS_UNICODE_STRING_MAX_LENGTH];
-  CHAR8                Version[SMBIOS_UNICODE_STRING_MAX_LENGTH];
+  CHAR16              *BiosVersion;
   CONST CHAR8         *ReleaseDate = __DATE__;
 
   InputData     = (SMBIOS_TABLE_TYPE0 *)RecordData;
   InputStrToken = (STR_TOKEN_INFO *)StrToken;
+
+  //
+  // BIOS Version comes from PcdBiosVersionString (set in the DSC), so it is
+  // part of the firmware image itself and stays correct regardless of the
+  // boot medium (SPI flash or SD card). The Setup Information page derives its
+  // value from this SMBIOS Type0 record, so both stay in sync from one source.
+  //
+  BiosVersion = (CHAR16 *)PcdGetPtr (PcdBiosVersionString);
 
   while (InputData->Hdr.Type != NULL_TERMINATED_TYPE) {
     Status = SmbiosPlatformDxeSaveHiiDefaultString (InputStrToken);
@@ -37,13 +44,10 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBios) {
       return Status;
     }
 
-    if (ReadVersionFromFlash(Version, 0x0, 0x100) == 0) {
-      if (AsciiStrLen(Version) == 0) {
-        HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], L"Not set", NULL);
-      } else {
-        AsciiStrToUnicodeStrS (Version, UnicodeStrVersion, SMBIOS_UNICODE_STRING_MAX_LENGTH);
-        HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStrVersion, NULL);
-      }
+    if ((BiosVersion == NULL) || (BiosVersion[0] == L'\0')) {
+      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], L"Not set", NULL);
+    } else {
+      HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], BiosVersion, NULL);
     }
 
     AsciiStrToUnicodeStrS (ReleaseDate, UnicodeStrDate, SMBIOS_UNICODE_STRING_MAX_LENGTH);

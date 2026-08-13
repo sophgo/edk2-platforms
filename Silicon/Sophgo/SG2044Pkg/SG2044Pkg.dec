@@ -110,6 +110,9 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrType|L"LPDDR5x"|VOID*|0x00003001
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrRate|8533000000|UINT64|0x00003002
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrRank|2|UINT64|0x00003003
+  # [BIOS]
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBiosVersionString|L"1.0"|VOID*|0x00003011
+
   # [CPU]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProcessorVersion|L"SG2044"|VOID*|0x00003004
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuFrequencyHz|2600000000|UINT64|0x00003005

@@ -175,6 +175,16 @@
 #define PCIE_WAIT_RETRIES                                100000u
 
 //
+// Separate, tighter bound for PcieWaitLink. Unlike the other waits (which
+// gate on on-chip signals and return almost immediately), the link wait only
+// completes when an external device trains a link, so an empty slot always
+// runs it to the cap. At 20us per iteration, 50000 iters caps an empty slot
+// at ~1s instead of the ~2s that PCIE_WAIT_RETRIES would give -- still ample
+// for a healthy link, which trains in tens of ms.
+//
+#define PCIE_LINK_WAIT_RETRIES                           50000u
+
+//
 // FSBL perst_gpio[10] = {6, 1, 2, 3, 20, 21, 22, 23, 7, 19} (sg2260_pcie.c:1558),
 // the SoC-fixed PERST# pin per (subsys, wrapper, phy), laid out as four pins
 // per C2C slot (w0p0,w0p1,w1p0,w1p1) then two for CXP. EDK2's c2c numbering
@@ -958,7 +968,8 @@ PcieEnableLtssm (
 
 /**
   Port of pcie_wait_link (sg2260_pcie.c line 1056).
-  FSBL has an internal cap of 10000 iters; we cap at PCIE_WAIT_RETRIES (larger).
+  Empty slots always run this to the cap, so it uses its own bound
+  PCIE_LINK_WAIT_RETRIES (1s) rather than the larger PCIE_WAIT_RETRIES.
 **/
 STATIC
 EFI_STATUS
@@ -980,7 +991,7 @@ PcieWaitLink (
     Times++;
     Val = MmioRead32 (BaseAddr + 0xb4);      // LNK_DBG_2
     Val = (Val >> 6) & 0x3u;                 // bit6 SMLH_LINK_UP, bit7 RDLH_LINK_UP
-  } while ((Val != 0x3u) && (Times < PCIE_WAIT_RETRIES));
+  } while ((Val != 0x3u) && (Times < PCIE_LINK_WAIT_RETRIES));
 
   if (Val != 0x3u) {
     //

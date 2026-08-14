@@ -1296,7 +1296,12 @@ PcieInitPhyWrapper (
 }
 
 /**
-  Run the full RC bring-up sequence for one controller.
+  Run the pre-link RC bring-up for one controller, up to and including firing
+  the LTSSM. Everything here either completes quickly or waits only on on-chip
+  signals (WaitCoreClk / CheckRadmStatus are internal and return even for an
+  empty slot), so this runs to completion for every controller before any
+  link-up wait. The link-up wait and post-link config are in
+  PcieFinishControllerPostLink.
 
   Mirrors FSBL sg2044_pcie_init() (line 1958) in call order, minus the
   slave-map calls (DwPcieSetSlaveMap owns those in EDK2). Returns EFI_TIMEOUT
@@ -1305,7 +1310,7 @@ PcieInitPhyWrapper (
 **/
 STATIC
 EFI_STATUS
-PcieInitController (
+PcieInitControllerPreLink (
   IN CONST PCIE_CONTROLLER  *Controller
   )
 {
@@ -1407,6 +1412,44 @@ PcieInitController (
 
   PcieEnableLtssm (C2cId, WrapperId, PhyId);
 
+  //
+  // LTSSM is now running in hardware. The link-up wait and all post-link
+  // configuration are done in PcieFinishControllerPostLink, called in a
+  // second pass after every controller has been fired, so the per-controller
+  // link waits overlap instead of running back to back.
+  //
+  return EFI_SUCCESS;
+}
+
+/**
+  Finish one controller after its LTSSM has been fired: wait for link up, then
+  run the post-link configuration. Split out from the pre-link setup so the
+  entry point can fire every controller's LTSSM first and then wait for all
+  links in a second pass -- empty-slot link waits (which each time out) then
+  overlap in hardware rather than accumulating serially.
+
+  Returns EFI_TIMEOUT if the link never trains (normal for an empty slot); the
+  caller logs and continues.
+**/
+STATIC
+EFI_STATUS
+PcieFinishControllerPostLink (
+  IN CONST PCIE_CONTROLLER  *Controller
+  )
+{
+  EFI_STATUS  Status;
+  UINT32      C2cId;
+  UINT32      WrapperId;
+  UINT32      PhyId;
+
+  if (Controller == NULL) {
+    return EFI_INVALID_PARAMETER;
+  }
+
+  C2cId     = Controller->CtrlInit.C2cId;
+  WrapperId = Controller->CtrlInit.WrapperId;
+  PhyId     = Controller->CtrlInit.PhyId;
+
   Status = PcieWaitLink (C2cId, WrapperId, PhyId);
   if (EFI_ERROR (Status)) {
     return Status;
@@ -1448,6 +1491,7 @@ PcieInitPeiEntryPoint (
   PCIE_HOST_BRIDGE_TABLE  *Table;
   UINT8                   Idx;
   UINT8                   FailedControllers;
+  BOOLEAN                 PreLinkOk[SG2044_PCIE_MAX_ROOT];
 
   //
   // Locate SOPHGO_GPIO_PPI for PERST. Depex guarantees it is available.
@@ -1556,19 +1600,53 @@ PcieInitPeiEntryPoint (
   MicroSecondDelay (20);
 
   //
-  // (d) Iterate Controller[] and run the per-controller RC bring-up sequence.
-  // A controller failure (typically a link-timeout on an empty slot) does NOT
-  // abort the loop -- one dead link must not brick the boot. It is logged at
-  // DEBUG_INFO because an empty slot is a normal state, not a fault.
+  // (d) Bring up the controllers in two passes so the per-controller link
+  // waits overlap instead of running back to back.
+  //
+  // Pass 1 configures every controller and fires its LTSSM. Nothing here waits
+  // on an external link (WaitCoreClk / CheckRadmStatus are on-chip and return
+  // even for an empty slot), so this pass runs to completion quickly.
+  //
+  // Pass 2 waits for link up and does the post-link config. By the time it
+  // runs, every controller's LTSSM has been training in parallel in hardware,
+  // so an empty slot's link timeout overlaps all the others rather than
+  // adding to a serial total. A controller that failed pass 1 is skipped.
+  //
+  // Neither a pass-1 nor a pass-2 failure aborts the loop -- one dead link
+  // must not brick the boot. Logged at DEBUG_INFO because an empty slot is a
+  // normal state, not a fault.
   //
   FailedControllers = 0;
+
   for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
-    Status = PcieInitController (&Table->Controller[Idx]);
+    Status          = PcieInitControllerPreLink (&Table->Controller[Idx]);
+    PreLinkOk[Idx]  = !EFI_ERROR (Status);
     if (EFI_ERROR (Status)) {
       FailedControllers++;
       DEBUG ((
         DEBUG_INFO,
-        "%a: controller[%u] (C2C%u W%u P%u) FAILED: %r -- continuing\n",
+        "%a: controller[%u] (C2C%u W%u P%u) pre-link FAILED: %r -- continuing\n",
+        __func__,
+        Idx,
+        Table->Controller[Idx].CtrlInit.C2cId,
+        Table->Controller[Idx].CtrlInit.WrapperId,
+        Table->Controller[Idx].CtrlInit.PhyId,
+        Status
+        ));
+    }
+  }
+
+  for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
+    if (!PreLinkOk[Idx]) {
+      continue;
+    }
+
+    Status = PcieFinishControllerPostLink (&Table->Controller[Idx]);
+    if (EFI_ERROR (Status)) {
+      FailedControllers++;
+      DEBUG ((
+        DEBUG_INFO,
+        "%a: controller[%u] (C2C%u W%u P%u) link FAILED: %r -- continuing\n",
         __func__,
         Idx,
         Table->Controller[Idx].CtrlInit.C2cId,

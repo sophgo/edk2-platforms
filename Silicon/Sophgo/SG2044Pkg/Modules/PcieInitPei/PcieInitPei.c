@@ -160,9 +160,9 @@
 // PERST# assert-to-deassert hold time. PCIe CEM requires PERST# to stay
 // asserted for at least 100ms (Tperst) after power and REFCLK are stable
 // before it is deasserted. FSBL used only udelay(1000) (1ms) per controller;
-// here every RC controller is asserted together and held once for the full
-// 100ms, so the total cost is 100ms for the whole bring-up rather than 100ms
-// per controller. Deassert stays per-controller inside PcieInitPhy.
+// here every RC controller is asserted together, held once for the full
+// 100ms, then deasserted together, so the total hold is 100ms for the whole
+// bring-up rather than 100ms per controller.
 //
 #define SG_PCIE_PERST_HOLD_US                            (100u * 1000u)
 
@@ -1214,8 +1214,7 @@ PcieInitPhy (
   IN  UINT32  C2cId,
   IN  UINT32  WrapperId,
   IN  UINT32  PhyId,
-  IN  UINT32  SsMode,
-  IN  UINT32  PcieDevType
+  IN  UINT32  SsMode
   )
 {
   EFI_STATUS  Status;
@@ -1230,30 +1229,6 @@ PcieInitPhy (
   // controller on that wrapper (which would re-assert PHY/cold reset after the
   // pre-pass already released them).
   //
-
-  if (PcieDevType == SG_PCIE_DEV_TYPE_RC) {
-    //
-    // PERST# was already asserted for every RC controller and held for the
-    // full Tperst once, collectively, in the entry point before this pre-pass.
-    // Here we only deassert this controller's PERST# and wait udelay(20)
-    // before the SRAM-init wait, matching FSBL pcie_init_phy's RC branch.
-    //
-    Status = PcieSetPerst (C2cId, WrapperId, PhyId, 1);
-    if (EFI_ERROR (Status)) {
-      DEBUG ((
-        DEBUG_ERROR,
-        "%a: deassert_perst C2C%u W%u P%u failed: %r\n",
-        __func__,
-        C2cId,
-        WrapperId,
-        PhyId,
-        Status
-        ));
-      return Status;
-    }
-
-    MicroSecondDelay (20);
-  }
 
   Status = PcieWaitSramInitDone (C2cId, WrapperId, PhyId);
   if (EFI_ERROR (Status)) {
@@ -1399,7 +1374,7 @@ PcieInitController (
       ));
   }
 
-  Status = PcieInitPhy (C2cId, WrapperId, PhyId, SsMode, SG_PCIE_DEV_TYPE_RC);
+  Status = PcieInitPhy (C2cId, WrapperId, PhyId, SsMode);
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -1513,12 +1488,15 @@ PcieInitPeiEntryPoint (
   }
 
   //
-  // (c2) Assert PERST# on every RC controller at once, then hold for the full
-  // Tperst (100ms) a single time. FSBL asserted and held (udelay) per
-  // controller; doing it collectively means the 100ms hold is paid once for
-  // the whole bring-up instead of once per controller. Each controller's
-  // matching deassert still happens per-controller inside PcieInitPhy, after
-  // this shared hold has elapsed.
+  // (c2) Drive the whole PERST# pulse collectively, once, for every RC
+  // controller: assert all -> hold Tperst (100ms) a single time -> deassert
+  // all -> one settle delay. FSBL did assert / hold / deassert per controller.
+  // Doing it collectively means (a) the 100ms hold is paid once for the whole
+  // bring-up rather than once per controller, and (b) every controller sees
+  // the same clean ~100ms low pulse. Keeping the deassert per-controller (in
+  // PcieInitPhy) instead would stretch each later controller's PERST# low time
+  // across all earlier controllers' bring-up, whose empty-slot link waits run
+  // into the seconds -- observed as a multi-second PERST# low on the scope.
   //
   for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
     CONST PCIE_CTRL_INIT  *CtrlInit;
@@ -1545,6 +1523,37 @@ PcieInitPeiEntryPoint (
   }
 
   MicroSecondDelay (SG_PCIE_PERST_HOLD_US);
+
+  for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
+    CONST PCIE_CTRL_INIT  *CtrlInit;
+
+    CtrlInit = &Table->Controller[Idx].CtrlInit;
+    Status   = PcieSetPerst (
+                 CtrlInit->C2cId,
+                 CtrlInit->WrapperId,
+                 CtrlInit->PhyId,
+                 1
+                 );
+    if (EFI_ERROR (Status)) {
+      DEBUG ((
+        DEBUG_ERROR,
+        "%a: deassert_perst controller[%u] (C2C%u W%u P%u) failed: %r\n",
+        __func__,
+        Idx,
+        CtrlInit->C2cId,
+        CtrlInit->WrapperId,
+        CtrlInit->PhyId,
+        Status
+        ));
+    }
+  }
+
+  //
+  // Settle after deassert before the per-controller SRAM-init waits begin,
+  // matching FSBL pcie_init_phy's udelay(20) following each deassert (paid
+  // once here since the deassert is collective).
+  //
+  MicroSecondDelay (20);
 
   //
   // (d) Iterate Controller[] and run the per-controller RC bring-up sequence.

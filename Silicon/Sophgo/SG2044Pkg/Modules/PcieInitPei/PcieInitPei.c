@@ -1175,7 +1175,12 @@ PcieConfigIntxIrqEn (
 
 /**
   Port of pcie_config_axi_route (sg2260_pcie.c line 1375) for server mode only.
-  FSBL's CONFIG_DRIVER_PCIE_FOLLOW_ORDERING_RULES block is dropped (per spec).
+
+  Includes the CONFIG_DRIVER_PCIE_FOLLOW_ORDERING_RULES block, which is enabled
+  (=y) in sg2044_defconfig. It writes TOP+0xcc = 0xf0000 to bypass the PCIe
+  controller's AxID replacement. AxID replacement reorders PCIe write requests
+  for bandwidth, which violates PCIe ordering rules and can cause data
+  corruption on writes (e.g. bad NIC packets); the bypass keeps writes ordered.
 **/
 STATIC
 VOID
@@ -1207,6 +1212,13 @@ PcieConfigAxiRoute (
   MmioWrite32 (TopBase + 0x28, (UINT32)((CfgStartAddr >> 32) & 0xffffffffu));
   MmioWrite32 (TopBase + 0x2c, (UINT32)(CfgEndAddr & 0xffffffffu));
   MmioWrite32 (TopBase + 0x30, (UINT32)((CfgEndAddr >> 32) & 0xffffffffu));
+
+  //
+  // Bypass AxID replacement so PCIe follows ordering rules. FSBL does this
+  // under CONFIG_DRIVER_PCIE_FOLLOW_ORDERING_RULES, which sg2044_defconfig
+  // enables; earlier EDK2 code omitted it, leaving writes reorderable.
+  //
+  MmioWrite32 (TopBase + 0xcc, 0xf0000u);
 }
 
 /**

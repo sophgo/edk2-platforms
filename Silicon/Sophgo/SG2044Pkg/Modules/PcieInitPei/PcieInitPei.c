@@ -1480,7 +1480,6 @@ PcieFinishControllerPostLink (
 
   PcieConfigRespMonitorBypass (C2cId, WrapperId, PhyId);
   PcieConfigIntxIrqEn (C2cId, WrapperId, PhyId);
-  PcieConfigAxiRoute (C2cId, SG_SOC_WORK_MODE_SERVER);
   PcieConfigMps (C2cId, WrapperId, PhyId, 0);
   PcieConfigMrrs (C2cId, WrapperId, PhyId, 0);
 
@@ -1515,6 +1514,8 @@ PcieInitPeiEntryPoint (
   UINT8                   Idx;
   UINT8                   FailedControllers;
   BOOLEAN                 PreLinkOk[SG2044_PCIE_MAX_ROOT];
+  UINT32                  SeenC2c;
+  UINT32                  C2cId;
 
   //
   // Locate SOPHGO_GPIO_PPI for PERST. Depex guarantees it is available.
@@ -1621,6 +1622,25 @@ PcieInitPeiEntryPoint (
   // once here since the deassert is collective).
   //
   MicroSecondDelay (20);
+
+  //
+  // (c3) Program the SoC address-decode routing once per C2C subsystem, before
+  // any controller bring-up. AxiRoute is a C2C-level decode switch, not a
+  // controller/PHY register, and does not depend on link state -- so it belongs
+  // here, once per C2C, rather than being repeated per controller after link up
+  // (which also skipped empty-slot C2Cs entirely).
+  // Controllers that share a C2C are configured by the first one seen.
+  //
+  SeenC2c = 0;
+  for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
+    C2cId = Table->Controller[Idx].CtrlInit.C2cId;
+    if ((SeenC2c & (1u << C2cId)) != 0) {
+      continue;
+    }
+
+    SeenC2c |= (1u << C2cId);
+    PcieConfigAxiRoute (C2cId, SG_SOC_WORK_MODE_SERVER);
+  }
 
   //
   // (d) Bring up the controllers in two passes so the per-controller link

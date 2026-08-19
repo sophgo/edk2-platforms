@@ -967,13 +967,15 @@ PcieEnableLtssm (
 }
 
 /**
-  Port of pcie_wait_link (sg2260_pcie.c line 1056).
-  Empty slots always run this to the cap, so it uses its own bound
-  PCIE_LINK_WAIT_RETRIES (1s) rather than the larger PCIE_WAIT_RETRIES.
+  Non-blocking link-up test (bit6 SMLH_LINK_UP, bit7 RDLH_LINK_UP of LNK_DBG_2).
+  Reads the status once and returns TRUE only when both are set. The polling
+  loop and its timeout live in the entry point, which polls every controller
+  on one shared time base so their link waits overlap instead of each
+  controller blocking for the full timeout in turn.
 **/
 STATIC
-EFI_STATUS
-PcieWaitLink (
+BOOLEAN
+PcieLinkIsUp (
   IN  UINT32  C2cId,
   IN  UINT32  WrapperId,
   IN  UINT32  PhyId
@@ -981,36 +983,13 @@ PcieWaitLink (
 {
   UINTN   BaseAddr;
   UINT32  Val;
-  UINT32  Times;
 
   PcieGetBases (C2cId, WrapperId, PhyId, NULL, &BaseAddr, NULL);
 
-  Times = 0;
-  do {
-    MicroSecondDelay (20);
-    Times++;
-    Val = MmioRead32 (BaseAddr + 0xb4);      // LNK_DBG_2
-    Val = (Val >> 6) & 0x3u;                 // bit6 SMLH_LINK_UP, bit7 RDLH_LINK_UP
-  } while ((Val != 0x3u) && (Times < PCIE_LINK_WAIT_RETRIES));
+  Val = MmioRead32 (BaseAddr + 0xb4);      // LNK_DBG_2
+  Val = (Val >> 6) & 0x3u;                 // bit6 SMLH_LINK_UP, bit7 RDLH_LINK_UP
 
-  if (Val != 0x3u) {
-    //
-    // An empty PCIe slot never trains a link, so this timeout is the normal
-    // case, not a fault. Keep it at DEBUG_INFO so RELEASE builds stay quiet.
-    //
-    DEBUG ((
-      DEBUG_INFO,
-      "%a: timeout C2C%u W%u P%u LINK_UP (val=0x%x)\n",
-      __func__,
-      C2cId,
-      WrapperId,
-      PhyId,
-      Val
-      ));
-    return EFI_TIMEOUT;
-  }
-
-  return EFI_SUCCESS;
+  return (BOOLEAN)(Val == 0x3u);
 }
 
 /**
@@ -1445,38 +1424,29 @@ PcieInitControllerPreLink (
 }
 
 /**
-  Finish one controller after its LTSSM has been fired: wait for link up, then
-  run the post-link configuration. Split out from the pre-link setup so the
-  entry point can fire every controller's LTSSM first and then wait for all
-  links in a second pass -- empty-slot link waits (which each time out) then
-  overlap in hardware rather than accumulating serially.
-
-  Returns EFI_TIMEOUT if the link never trains (normal for an empty slot); the
-  caller logs and continues.
+  Run the post-link configuration for one controller whose link the entry
+  point's shared poll has already confirmed up. Split out from the pre-link
+  setup so the entry point can fire every controller's LTSSM first, then poll
+  all links together on one time base, and only then finish the ones that came
+  up -- so empty-slot link waits overlap rather than accumulating serially.
 **/
 STATIC
-EFI_STATUS
+VOID
 PcieFinishControllerPostLink (
   IN CONST PCIE_CONTROLLER  *Controller
   )
 {
-  EFI_STATUS  Status;
-  UINT32      C2cId;
-  UINT32      WrapperId;
-  UINT32      PhyId;
+  UINT32  C2cId;
+  UINT32  WrapperId;
+  UINT32  PhyId;
 
   if (Controller == NULL) {
-    return EFI_INVALID_PARAMETER;
+    return;
   }
 
   C2cId     = Controller->CtrlInit.C2cId;
   WrapperId = Controller->CtrlInit.WrapperId;
   PhyId     = Controller->CtrlInit.PhyId;
-
-  Status = PcieWaitLink (C2cId, WrapperId, PhyId);
-  if (EFI_ERROR (Status)) {
-    return Status;
-  }
 
   PcieConfigRespMonitorBypass (C2cId, WrapperId, PhyId);
   PcieConfigIntxIrqEn (C2cId, WrapperId, PhyId);
@@ -1488,8 +1458,6 @@ PcieFinishControllerPostLink (
   // map, fed from PcdPcieHostBridgeTable Space32/Space64.
 
   PcieConfigWrapper (C2cId, WrapperId);
-
-  return EFI_SUCCESS;
 }
 
 /**
@@ -1514,8 +1482,11 @@ PcieInitPeiEntryPoint (
   UINT8                   Idx;
   UINT8                   FailedControllers;
   BOOLEAN                 PreLinkOk[SG2044_PCIE_MAX_ROOT];
+  BOOLEAN                 LinkUp[SG2044_PCIE_MAX_ROOT];
   UINT32                  SeenC2c;
   UINT32                  C2cId;
+  UINT32                  Times;
+  UINT32                  Pending;
 
   //
   // Locate SOPHGO_GPIO_PPI for PERST. Depex guarantees it is available.
@@ -1650,20 +1621,22 @@ PcieInitPeiEntryPoint (
   // on an external link (WaitCoreClk / CheckRadmStatus are on-chip and return
   // even for an empty slot), so this pass runs to completion quickly.
   //
-  // Pass 2 waits for link up and does the post-link config. By the time it
-  // runs, every controller's LTSSM has been training in parallel in hardware,
-  // so an empty slot's link timeout overlaps all the others rather than
-  // adding to a serial total. A controller that failed pass 1 is skipped.
+  // Then a single shared poll waits for all links at once: every controller's
+  // LTSSM is already training in parallel in hardware, so polling them together
+  // on one time base bounds the whole wait to a single timeout rather than one
+  // timeout per empty slot. Pass 2 then does the post-link config for the ones
+  // that came up. A controller that failed pass 1 is skipped throughout.
   //
-  // Neither a pass-1 nor a pass-2 failure aborts the loop -- one dead link
-  // must not brick the boot. Logged at DEBUG_INFO because an empty slot is a
-  // normal state, not a fault.
+  // Neither a pass-1 nor a pass-2 failure aborts bring-up -- one dead link must
+  // not brick the boot. Logged at DEBUG_INFO because an empty slot is a normal
+  // state, not a fault.
   //
   FailedControllers = 0;
 
   for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
     Status          = PcieInitControllerPreLink (&Table->Controller[Idx]);
     PreLinkOk[Idx]  = !EFI_ERROR (Status);
+    LinkUp[Idx]     = FALSE;
     if (EFI_ERROR (Status)) {
       FailedControllers++;
       DEBUG ((
@@ -1679,35 +1652,75 @@ PcieInitPeiEntryPoint (
     }
   }
 
+  //
+  // Shared link-up poll. Pending counts controllers still training; each 20us
+  // tick tests every pending controller once, so all links share the single
+  // PCIE_LINK_WAIT_RETRIES (1s) window instead of each burning it in turn.
+  //
+  Pending = 0;
+  for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
+    if (PreLinkOk[Idx]) {
+      Pending++;
+    }
+  }
+
+  for (Times = 0; (Times < PCIE_LINK_WAIT_RETRIES) && (Pending > 0); Times++) {
+    for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
+      if (!PreLinkOk[Idx] || LinkUp[Idx]) {
+        continue;
+      }
+
+      if (PcieLinkIsUp (
+            Table->Controller[Idx].CtrlInit.C2cId,
+            Table->Controller[Idx].CtrlInit.WrapperId,
+            Table->Controller[Idx].CtrlInit.PhyId
+            ))
+      {
+        LinkUp[Idx] = TRUE;
+        Pending--;
+      }
+    }
+
+    if (Pending == 0) {
+      break;
+    }
+
+    MicroSecondDelay (20);
+  }
+
+  //
+  // Pass 2: post-link config for controllers that came up; the rest timed out
+  // (normal for an empty slot).
+  //
   for (Idx = 0; Idx < Table->NumOfControllers; Idx++) {
     if (!PreLinkOk[Idx]) {
       continue;
     }
 
-    Status = PcieFinishControllerPostLink (&Table->Controller[Idx]);
-    if (EFI_ERROR (Status)) {
+    if (!LinkUp[Idx]) {
       FailedControllers++;
       DEBUG ((
         DEBUG_INFO,
-        "%a: controller[%u] (C2C%u W%u P%u) link FAILED: %r -- continuing\n",
-        __func__,
-        Idx,
-        Table->Controller[Idx].CtrlInit.C2cId,
-        Table->Controller[Idx].CtrlInit.WrapperId,
-        Table->Controller[Idx].CtrlInit.PhyId,
-        Status
-        ));
-    } else {
-      DEBUG ((
-        DEBUG_INFO,
-        "%a: controller[%u] (C2C%u W%u P%u) link up\n",
+        "%a: controller[%u] (C2C%u W%u P%u) link timeout -- continuing\n",
         __func__,
         Idx,
         Table->Controller[Idx].CtrlInit.C2cId,
         Table->Controller[Idx].CtrlInit.WrapperId,
         Table->Controller[Idx].CtrlInit.PhyId
         ));
+      continue;
     }
+
+    PcieFinishControllerPostLink (&Table->Controller[Idx]);
+    DEBUG ((
+      DEBUG_INFO,
+      "%a: controller[%u] (C2C%u W%u P%u) link up\n",
+      __func__,
+      Idx,
+      Table->Controller[Idx].CtrlInit.C2cId,
+      Table->Controller[Idx].CtrlInit.WrapperId,
+      Table->Controller[Idx].CtrlInit.PhyId
+      ));
   }
 
   //

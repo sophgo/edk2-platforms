@@ -384,140 +384,6 @@ IsAutoCreateBootOption (
   }
 }
 
-/**
-  Check boot options status and cleanup if needed.
-
-  @param  VOID
-  @retval BOOLEAN   TRUE if cleanup is needed (invalid options found or no valid block device boot option)
-**/
-BOOLEAN
-CheckBootOptionsStatus (
-  VOID
-  )
-{
-  EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
-  UINTN                           BootOptionCount;
-  UINTN                           BootOptionIndex;
-  EFI_HANDLE                      Handle;
-  EFI_STATUS                      Status;
-  EFI_DEVICE_PATH_PROTOCOL        *CopyOptionPath;
-  EFI_DEVICE_PATH_PROTOCOL        *RemainingPath;
-  BOOLEAN                         InvalidFound;
-  BOOLEAN                         HasValidAutoCreatedBlockDevice;
-  BOOLEAN                         BlockDevicePresent;
-  UINTN                           FileSize;
-  EFI_DEVICE_PATH_PROTOCOL        *CurFullPath;
-  VOID                            *FileBuffer;
-
-  InvalidFound = FALSE;
-  HasValidAutoCreatedBlockDevice = FALSE;
-  BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
-
-  for (BootOptionIndex = 0; BootOptionIndex < BootOptionCount; ++BootOptionIndex) {
-    FileBuffer = NULL;
-    CurFullPath = NULL;
-    CopyOptionPath = NULL;
-
-    // Determine whether the underlying block device still physically exists,
-    // independent of whether it carries a bootable EFI file.
-    BlockDevicePresent = FALSE;
-    CopyOptionPath = DuplicateDevicePath (BootOptions[BootOptionIndex].FilePath);
-    if (CopyOptionPath != NULL) {
-      RemainingPath = CopyOptionPath;
-      Status = gBS->LocateDevicePath (&gEfiBlockIoProtocolGuid, &RemainingPath, &Handle);
-      if (!EFI_ERROR (Status)) {
-        BlockDevicePresent = TRUE;
-      }
-      FreePool (CopyOptionPath);
-    }
-
-    FileBuffer = BmGetNextLoadOptionBuffer (BootOptions[BootOptionIndex].OptionType, BootOptions[BootOptionIndex].FilePath, &CurFullPath, &FileSize);
-    if (FileBuffer != NULL) {
-      FreePool (FileBuffer);
-      if (BlockDevicePresent) {
-        // For valid block devices (not LoadFile devices), check if any are auto-created
-        if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex]))
-          HasValidAutoCreatedBlockDevice = TRUE;
-      }
-    } else if (BlockDevicePresent && IsAutoCreateBootOption (&BootOptions[BootOptionIndex])) {
-        // The block device still exists but currently has no bootable EFI file
-        // (e.g. an empty disk without \EFI\BOOT\BOOTRISCV64.EFI). This is NOT an
-        // invalid option: auto enumeration would simply recreate it on the next
-        // boot, causing an endless delete/re-enumerate cycle. Keep it as a valid
-        // auto-created block device instead of deleting it.
-        HasValidAutoCreatedBlockDevice = TRUE;
-        DEBUG ((DEBUG_INFO, "Keeping auto-created boot option %d: block device present but no boot file\n", BootOptions[BootOptionIndex].OptionNumber));
-    } else {
-        // Found invalid boot option (underlying device is gone or unreachable)
-        InvalidFound = TRUE;
-        DEBUG ((DEBUG_INFO, "Removing invalid boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
-        EfiBootManagerDeleteLoadOptionVariable(
-          BootOptions[BootOptionIndex].OptionNumber,
-          LoadOptionTypeBoot
-        );
-    }
-  }
-
-  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
-
-  // Need cleanup if either invalid options found or no valid block device boot option exists
-  return (InvalidFound || !HasValidAutoCreatedBlockDevice);
-}
-
-/**
-  Remove automatically created boot options.
-
-  @param  VOID
-  @retval VOID
-**/
-VOID
-RemoveAutoCreatedBootOptions (
-  VOID
-  )
-{
-  EFI_BOOT_MANAGER_LOAD_OPTION    *BootOptions;
-  UINTN                           BootOptionCount;
-  UINTN                           BootOptionIndex;
-
-  BootOptions = EfiBootManagerGetLoadOptions(&BootOptionCount, LoadOptionTypeBoot);
-
-  for (BootOptionIndex = 0; BootOptionIndex < BootOptionCount; ++BootOptionIndex) {
-    if (IsAutoCreateBootOption(&BootOptions[BootOptionIndex])) {
-      DEBUG ((DEBUG_INFO, "Removing auto-created boot option %d\n", BootOptions[BootOptionIndex].OptionNumber));
-      EfiBootManagerDeleteLoadOptionVariable(
-        BootOptions[BootOptionIndex].OptionNumber,
-        LoadOptionTypeBoot
-        );
-    }
-  }
-
-  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
-}
-
-/**
-  Clean up boot options if needed:
-  1. Remove all boot options if any invalid entry is found
-  2. Remove all boot options if no valid auto created block device boot option exists
-  This ensures system can properly handle boot device changes.
-
-  @param  VOID
-  @retval VOID
-**/
-VOID
-PlatformCleanupBootOptions (
-  VOID
-  )
-{
-  BOOLEAN CleanupNeeded;
-
-  CleanupNeeded = CheckBootOptionsStatus();
-
-  if (CleanupNeeded) {
-    DEBUG ((DEBUG_INFO, "Cleanup needed: removing all auto created boot options\n"));
-    RemoveAutoCreatedBootOptions();
-  }
-}
-
 /** Boot a Fv Boot Option.
 
   This function is useful for booting the UEFI Shell as it is loaded
@@ -645,6 +511,499 @@ ExtractGuidFromDevicePathString (
 }
 
 /**
+  Sorting category for a boot option, used ONLY to order the entries that
+  RefreshAllBootOption() appends at the tail of BootOrder within one boot.
+  Entries already present in flash ("inherited") keep their slots untouched.
+**/
+typedef enum {
+  BootSortCategoryHardDisk,    // fixed disks: NVMe / SATA / SAS
+  BootSortCategoryRemovable,   // USB storage / SD / eMMC
+  BootSortCategoryOptical,     // CD / DVD
+  BootSortCategoryNetwork,     // iPXE application
+  BootSortCategoryUnclassified,// auto-created but not recognizable
+  BootSortCategoryFirmware,    // Shell / UiApp / BootManagerMenuApp
+  BootSortCategoryMax
+} BOOT_SORT_CATEGORY;
+
+//
+// iPXE UEFI application FFS GUID (edk2-non-osi Silicon/Sophgo/SG2044/iPXE).
+//
+STATIC EFI_GUID  mIPxeFileGuid = {
+  0x39492805, 0x4E6C, 0x4015, { 0x91, 0x97, 0x69, 0x05, 0xFB, 0xAA, 0xF2, 0xB8 }
+};
+
+//
+// Sophgo SdHostDxe host controller VenHw GUID: whole-controller boot options
+// end with this node and carry no other bus/media node.
+//
+STATIC EFI_GUID  mSdHostDxeGuid = {
+  0x11322596, 0xDD4F, 0x47FA, { 0x9E, 0x6C, 0xCE, 0x78, 0x7E, 0x11, 0xE4, 0xB1 }
+};
+
+/**
+  Extract the FvFile GUID from a device path, if any.
+
+  @param[in]  DevicePath  The device path to inspect.
+  @param[out] Guid        Receives the FvFile GUID.
+
+  @retval TRUE   An FvFile node was found and Guid was filled.
+  @retval FALSE  No FvFile node in the device path.
+**/
+STATIC
+BOOLEAN
+GetFvFileGuidFromDevicePath (
+  IN  CONST EFI_DEVICE_PATH_PROTOCOL  *DevicePath,
+  OUT EFI_GUID                        *Guid
+  )
+{
+  CONST MEDIA_FW_VOL_FILEPATH_DEVICE_PATH  *FvFile;
+
+  if ((DevicePath == NULL) || (Guid == NULL)) {
+    return FALSE;
+  }
+
+  while (!IsDevicePathEnd (DevicePath)) {
+    if ((DevicePathType (DevicePath) == MEDIA_DEVICE_PATH) &&
+        (DevicePathSubType (DevicePath) == MEDIA_PIWG_FW_FILE_DP))
+    {
+      FvFile = (CONST MEDIA_FW_VOL_FILEPATH_DEVICE_PATH *)DevicePath;
+      CopyGuid (Guid, &FvFile->FvFileName);
+      return TRUE;
+    }
+
+    DevicePath = NextDevicePathNode (DevicePath);
+  }
+
+  return FALSE;
+}
+
+/**
+  Map a boot option to its sorting category (see BOOT_SORT_CATEGORY).
+
+  Firmware-internal entries (Shell / UiApp / BootManagerMenuApp) are detected
+  by FvFile GUID; iPXE is detected by its FvFile GUID; everything else is only
+  categorized when it is an auto-created option (OptionalData carries
+  mBmAutoCreateBootOptionGuid). User / OS entries never reach this function's
+  device-path classification because they are inherited by definition.
+**/
+STATIC
+BOOT_SORT_CATEGORY
+ClassifyBootOptionForSort (
+  IN CONST EFI_BOOT_MANAGER_LOAD_OPTION  *BootOption
+  )
+{
+  EFI_GUID                   Guid;
+  EFI_DEVICE_PATH_PROTOCOL   *DevicePath;
+  EFI_DEVICE_PATH_PROTOCOL   *Node;
+  BOOLEAN                    HasUsb;
+  BOOLEAN                    HasHardDrive;
+  BOOLEAN                    HasCdrom;
+  BOOLEAN                    HasSdMmc;
+  BOOLEAN                    HasNvmeSata;
+
+  if (GetFvFileGuidFromDevicePath (BootOption->FilePath, &Guid)) {
+    if (CompareGuid (&Guid, &gUefiShellFileGuid) ||
+        CompareGuid (&Guid, &mUiApp) ||
+        CompareGuid (&Guid, &mBootMenuFile))
+    {
+      return BootSortCategoryFirmware;
+    }
+
+    if (CompareGuid (&Guid, &mIPxeFileGuid)) {
+      return BootSortCategoryNetwork;
+    }
+  }
+
+  if (!IsAutoCreateBootOption ((EFI_BOOT_MANAGER_LOAD_OPTION *)BootOption)) {
+    //
+    // User / OS entries are inherited (they keep their slot); reaching here
+    // means a brand-new user entry appended this round - keep it first among
+    // the appended entries (before device groups).
+    //
+    return BootSortCategoryHardDisk;
+  }
+
+  HasUsb        = FALSE;
+  HasHardDrive  = FALSE;
+  HasCdrom      = FALSE;
+  HasSdMmc      = FALSE;
+  HasNvmeSata   = FALSE;
+
+  DevicePath = DuplicateDevicePath (BootOption->FilePath);
+  if (DevicePath == NULL) {
+    return BootSortCategoryUnclassified;
+  }
+
+  for (Node = DevicePath; !IsDevicePathEnd (Node); Node = NextDevicePathNode (Node)) {
+    if ((DevicePathType (Node) == MESSAGING_DEVICE_PATH) &&
+        (DevicePathSubType (Node) == MSG_USB_DP))
+    {
+      HasUsb = TRUE;
+    } else if ((DevicePathType (Node) == MESSAGING_DEVICE_PATH) &&
+               ((DevicePathSubType (Node) == MSG_NVME_NAMESPACE_DP) ||
+                (DevicePathSubType (Node) == MSG_SATA_DP) ||
+                (DevicePathSubType (Node) == MSG_ATAPI_DP) ||
+                (DevicePathSubType (Node) == MSG_SCSI_DP)))
+    {
+      //
+      // Whole-disk NVMe / SATA / SAS boot options carry no MEDIA_HARDDRIVE_DP
+      // node (BmEnumerateBootOptions uses the whole-disk device path); the
+      // bus node alone still identifies them as fixed disks.
+      //
+      HasNvmeSata = TRUE;
+    } else if ((DevicePathType (Node) == MEDIA_DEVICE_PATH) &&
+               (DevicePathSubType (Node) == MEDIA_CDROM_DP))
+    {
+      HasCdrom = TRUE;
+    } else if ((DevicePathType (Node) == MEDIA_DEVICE_PATH) &&
+               (DevicePathSubType (Node) == MEDIA_HARDDRIVE_DP))
+    {
+      HasHardDrive = TRUE;
+    } else if ((DevicePathType (Node) == HARDWARE_DEVICE_PATH) &&
+               (DevicePathSubType (Node) == HW_VENDOR_DP) &&
+               CompareGuid (&((VENDOR_DEVICE_PATH *)Node)->Guid, &mSdHostDxeGuid))
+    {
+      //
+      // Whole-controller SD / eMMC option from the Sophgo SdHostDxe stack:
+      // the VenHw node is the only node in the path.
+      //
+      HasSdMmc = TRUE;
+    }
+  }
+
+  FreePool (DevicePath);
+
+  if (HasCdrom) {
+    return BootSortCategoryOptical;
+  }
+
+  if (HasUsb || HasSdMmc) {
+    return BootSortCategoryRemovable;
+  }
+
+  if (HasHardDrive || HasNvmeSata) {
+    return BootSortCategoryHardDisk;
+  }
+
+  return BootSortCategoryUnclassified;
+}
+
+/**
+  Check whether two boot option device paths are "equivalent" for the
+  inherited/new decision.
+
+  For FvFile entries (iPXE / Shell / UiApp / BootManagerMenuApp) the
+  MemoryMapped(Base,End) prefix holds the runtime load address of the DXE FV,
+  which changes across firmware layouts. Ignore the address and compare only
+  the FvFile GUID - same semantics as BmAdjustFvFilePath()'s fall-back match.
+
+  For everything else compare the full device path.
+**/
+STATIC
+BOOLEAN
+IsSameBootOptionPath (
+  IN CONST EFI_DEVICE_PATH_PROTOCOL  *Path1,
+  IN CONST EFI_DEVICE_PATH_PROTOCOL  *Path2
+  )
+{
+  EFI_GUID  Guid1;
+  EFI_GUID  Guid2;
+
+  if ((Path1 == NULL) || (Path2 == NULL)) {
+    return FALSE;
+  }
+
+  if (GetFvFileGuidFromDevicePath (Path1, &Guid1) &&
+      GetFvFileGuidFromDevicePath (Path2, &Guid2))
+  {
+    return (BOOLEAN)CompareGuid (&Guid1, &Guid2);
+  }
+
+  return (BOOLEAN)(CompareMem (Path1, Path2, GetDevicePathSize (Path1)) == 0);
+}
+
+/**
+  Lift the entries appended by RefreshAllBootOption() to the front.
+
+  The core refresh already guarantees everything else the rules need:
+    - stale auto-created options are deleted (not in the enumerated set);
+    - existing options keep their BootOrder slots untouched (full-field
+      match on type/attributes/description/device-path/optional-data);
+    - brand-new options are appended at the TAIL of BootOrder;
+    - user / OS options are never touched.
+
+  So the only remaining rule is placement: the appended entries (freshly
+  inserted disks / USB sticks) must boot AHEAD of the inherited ones, so
+  they never sit behind iPXE / Shell / firmware entries. This function
+  finds the appended entries (an entry whose number was not in the
+  pre-refresh order, or whose number is now backed by a different device -
+  guards against number reuse by re-created options), sorts them stably by
+  category (disk, removable, optical, network, unclassified, firmware) and
+  writes them ahead of the inherited entries.
+
+  Idempotent: a boot with no device change leaves BootOrder untouched.
+**/
+STATIC
+VOID
+SortAppendedBootOptions (
+  IN CONST EFI_BOOT_MANAGER_LOAD_OPTION  *OldOptions,
+  IN UINTN                               OldOptionCount,
+  IN CONST UINT16                        *OldOrder,
+  IN UINTN                               OldOrderCount
+  )
+{
+  EFI_STATUS                            Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION          *NewOptions;
+  UINTN                                 NewOptionCount;
+  UINT16                                *NewOrder;
+  UINTN                                 NewOrderSize;
+  UINTN                                 NewOrderCount;
+  UINTN                                 Index;
+  UINTN                                 Slot;
+  UINTN                                 KeptCount;
+  UINTN                                 AppendedCount;
+  UINT16                                *Kept;
+  UINT16                                *Appended;
+  BOOT_SORT_CATEGORY                    *Category;
+  EFI_BOOT_MANAGER_LOAD_OPTION          *Option;
+
+  //
+  // Post-refresh state.
+  //
+  NewOrder     = NULL;
+  NewOrderSize = 0;
+  Status = GetEfiGlobalVariable2 (
+             L"BootOrder",
+             (VOID **)&NewOrder,
+             &NewOrderSize
+             );
+  if (EFI_ERROR (Status) || (NewOrder == NULL) || (NewOrderSize < sizeof (UINT16))) {
+    if (NewOrder != NULL) {
+      FreePool (NewOrder);
+    }
+
+    return;
+  }
+
+  NewOrderCount = NewOrderSize / sizeof (UINT16);
+
+  NewOptions = EfiBootManagerGetLoadOptions (&NewOptionCount, LoadOptionTypeBoot);
+  if ((NewOptions == NULL) || (NewOptionCount == 0)) {
+    EfiBootManagerFreeLoadOptions (NewOptions, NewOptionCount);
+    FreePool (NewOrder);
+    return;
+  }
+
+  Kept     = AllocatePool (NewOrderCount * sizeof (UINT16));
+  Appended = AllocatePool (NewOrderCount * sizeof (UINT16));
+  Category = AllocatePool (NewOrderCount * sizeof (BOOT_SORT_CATEGORY));
+  if ((Kept == NULL) || (Appended == NULL) || (Category == NULL)) {
+    FreePool (Kept);
+    FreePool (Appended);
+    FreePool (Category);
+    EfiBootManagerFreeLoadOptions (NewOptions, NewOptionCount);
+    FreePool (NewOrder);
+    return;
+  }
+
+  KeptCount     = 0;
+  AppendedCount = 0;
+
+  for (Index = 0; Index < NewOrderCount; Index++) {
+    UINTN   OldOrderPos;
+    BOOLEAN Inherited;
+
+    Option = NULL;
+    for (Slot = 0; Slot < NewOptionCount; Slot++) {
+      if (NewOptions[Slot].OptionNumber == NewOrder[Index]) {
+        Option = &NewOptions[Slot];
+        break;
+      }
+    }
+
+    //
+    // Inherited = the number was in the pre-refresh order AND the option
+    // behind it still has the same identity (guards against a number being
+    // reused for a re-created option, e.g. after an FV address change).
+    //
+    Inherited = FALSE;
+    if (Option != NULL) {
+      OldOrderPos = OldOrderCount;
+      if (OldOrder != NULL) {
+        for (Slot = 0; Slot < OldOrderCount; Slot++) {
+          if (OldOrder[Slot] == NewOrder[Index]) {
+            OldOrderPos = Slot;
+            break;
+          }
+        }
+      }
+
+      if (OldOrderPos != OldOrderCount) {
+        for (Slot = 0; Slot < OldOptionCount; Slot++) {
+          if ((OldOptions != NULL) &&
+              (OldOptions[Slot].OptionNumber == NewOrder[Index]) &&
+              IsSameBootOptionPath (OldOptions[Slot].FilePath, Option->FilePath))
+          {
+            Inherited = TRUE;
+            break;
+          }
+        }
+      }
+    }
+
+    if (Inherited) {
+      Kept[KeptCount++] = NewOrder[Index];
+    } else {
+      Appended[AppendedCount] = NewOrder[Index];
+      Category[AppendedCount] = (Option != NULL) ?
+                                ClassifyBootOptionForSort (Option) :
+                                BootSortCategoryUnclassified;
+      AppendedCount++;
+    }
+  }
+
+  DEBUG ((
+    DEBUG_INFO,
+    "SortAppended: total=%d inherited=%d appended=%d\n",
+    (UINT32)NewOrderCount,
+    (UINT32)KeptCount,
+    (UINT32)AppendedCount
+    ));
+
+  //
+  // Stable selection sort of the appended entries by category.
+  //
+  if (AppendedCount != 0) {
+    BOOLEAN  *Taken;
+    UINT16   *SortedAppended;
+    UINT32   MinRank;
+    UINTN    MinIndex;
+    UINTN    SortIdx;
+
+    Taken          = AllocatePool (AppendedCount * sizeof (BOOLEAN));
+    SortedAppended = AllocatePool (AppendedCount * sizeof (UINT16));
+    if ((Taken != NULL) && (SortedAppended != NULL)) {
+      for (Index = 0; Index < AppendedCount; Index++) {
+        Taken[Index] = FALSE;
+      }
+
+      for (SortIdx = 0; SortIdx < AppendedCount; SortIdx++) {
+        MinRank  = BootSortCategoryMax + 1;
+        MinIndex = AppendedCount;
+        for (Index = 0; Index < AppendedCount; Index++) {
+          if (!Taken[Index] && (Category[Index] < MinRank)) {
+            MinRank  = Category[Index];
+            MinIndex = Index;
+          }
+        }
+
+        Taken[MinIndex]         = TRUE;
+        SortedAppended[SortIdx] = Appended[MinIndex];
+      }
+
+      DEBUG ((DEBUG_INFO, "SortAppended: appended before=["));
+      for (Index = 0; Index < AppendedCount; Index++) {
+        DEBUG ((DEBUG_INFO, "%04x(%d),", Appended[Index], (UINT32)Category[Index]));
+      }
+
+      DEBUG ((DEBUG_INFO, "] after=["));
+      for (Index = 0; Index < AppendedCount; Index++) {
+        DEBUG ((DEBUG_INFO, "%04x,", SortedAppended[Index]));
+      }
+
+      DEBUG ((DEBUG_INFO, "]\n"));
+
+      CopyMem (Appended, SortedAppended, AppendedCount * sizeof (UINT16));
+    }
+
+    if (Taken != NULL) {
+      FreePool (Taken);
+    }
+
+    if (SortedAppended != NULL) {
+      FreePool (SortedAppended);
+    }
+  }
+
+  //
+  // Compose: appended entries FIRST, inherited entries behind them.
+  // Write back only when the composition differs from the current order.
+  //
+  if (AppendedCount != 0) {
+    UINT16  *Final;
+
+    Final = AllocatePool (NewOrderCount * sizeof (UINT16));
+    if (Final != NULL) {
+      CopyMem (Final, Appended, AppendedCount * sizeof (UINT16));
+      CopyMem (&Final[AppendedCount], Kept, KeptCount * sizeof (UINT16));
+
+      if (CompareMem (Final, NewOrder, NewOrderSize) != 0) {
+        Status = gRT->SetVariable (
+                        L"BootOrder",
+                        &gEfiGlobalVariableGuid,
+                        EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
+                        NewOrderSize,
+                        Final
+                        );
+        DEBUG ((DEBUG_INFO, "SortAppended: SetVariable %r\n", Status));
+      }
+
+      FreePool (Final);
+    }
+  }
+
+  FreePool (Kept);
+  FreePool (Appended);
+  FreePool (Category);
+  EfiBootManagerFreeLoadOptions (NewOptions, NewOptionCount);
+  FreePool (NewOrder);
+}
+
+/**
+  Refresh the boot options and enforce the platform placement rule.
+
+  Snapshot the current BootOrder and boot options, run the core
+  EfiBootManagerRefreshAllBootOption(), then re-position the entries the
+  refresh appended: freshly enumerated devices are lifted to the front of
+  BootOrder (sorted by device category) so a newly inserted disk or USB
+  stick boots ahead of the existing entries, which typically end with
+  iPXE / Shell / firmware entries that are never the preferred target.
+  Entries already stored in flash keep their relative order.
+**/
+STATIC
+VOID
+ReconcileBootOptions (
+  VOID
+  )
+{
+  EFI_BOOT_MANAGER_LOAD_OPTION  *OldOptions;
+  UINTN                         OldOptionCount;
+  UINT16                        *OldOrder;
+  UINTN                         OldOrderSize;
+
+  OldOptions   = EfiBootManagerGetLoadOptions (&OldOptionCount, LoadOptionTypeBoot);
+  OldOrder     = NULL;
+  OldOrderSize = 0;
+  GetEfiGlobalVariable2 (L"BootOrder", (VOID **)&OldOrder, &OldOrderSize);
+
+  EfiBootManagerRefreshAllBootOption ();
+
+  SortAppendedBootOptions (
+    OldOptions,
+    OldOptionCount,
+    OldOrder,
+    (OldOrder != NULL) ? (OldOrderSize / sizeof (UINT16)) : 0
+    );
+
+  if (OldOrder != NULL) {
+    FreePool (OldOrder);
+  }
+
+  EfiBootManagerFreeLoadOptions (OldOptions, OldOptionCount);
+}
+
+
+/**
   GetOption
 
   @param[in]  Description
@@ -727,11 +1086,13 @@ PlatformRegisterKeys (
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &F2, NULL);
 
   //
-  // Add UEFI Shell Key "s"
+  // Add UEFI Shell Key F6 (hotkey only; do NOT touch the option attributes:
+  // rewriting them makes the auto-created FV option diverge every refresh and
+  // invalidates the Key#### CRC, breaking all hotkeys - measured on hw).
   //
-  Key.ScanCode    = SCAN_NULL;
-  Key.UnicodeChar = L's';
-  OptionNumber   = GetOption (L"UEFI Shell", gUefiShellFileGuid, Default);
+  Key.ScanCode    = SCAN_F6;
+  Key.UnicodeChar = CHAR_NULL;
+  OptionNumber   = GetOption (L"UEFI Shell", gUefiShellFileGuid, Hide);
   EfiBootManagerAddKeyOptionVariable (NULL, (UINT16)OptionNumber, 0, &Key, NULL);
 }
 
@@ -812,7 +1173,6 @@ PlatformBootManagerBeforeConsole (
   //
   // Add the hardcoded serial console device path to ConIn, ConOut, ErrOut.
   //
-  // ASSERT (FixedPcdGet8 (PcdDefaultTerminalType) == 4);
   CopyGuid (&mSerialConsole.TermType.Guid, &gEfiTtyTermGuid);
 
   EfiBootManagerUpdateConsoleVariable (
@@ -861,15 +1221,7 @@ PlatformBootManagerAfterConsole (
   //
   EfiBootManagerConnectAll ();
 
-  //
-  // Clean up boot options
-  //
-  PlatformCleanupBootOptions();
-
-  //
-  // Enumerate all possible boot options.
-  //
-  EfiBootManagerRefreshAllBootOption ();
+  ReconcileBootOptions ();
 
   PlatformRegisterKeys();
 
@@ -914,7 +1266,7 @@ PlatformBootManagerWaitCallback (
   Status = BootLogoUpdateProgress (
              White.Pixel,
              Black.Pixel,
-             L"Press F2/F7 for boot options",
+             L"F2: Setup   F6: UEFI Shell   F7: Boot Menu",
              White.Pixel,
              (Timeout - TimeoutRemain) * 100 / Timeout,
              0

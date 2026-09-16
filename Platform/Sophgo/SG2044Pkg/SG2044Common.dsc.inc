@@ -853,6 +853,10 @@
   #
   # RISC-V Platform module
   #
+  # Restrict Option ROMs to the devices in the mOpRomAllowList table in
+  # PciOpRomPolicyDxe.c; everything else is left to the built-in drivers.
+  #
+  Silicon/Sophgo/SG2044Pkg/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
 !if $(FLASH_ENABLE) == TRUE
   Silicon/Sophgo/SG2044Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf

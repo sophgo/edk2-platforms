@@ -1,0 +1,41 @@
+## @file
+#  PCI Option ROM allow-list policy driver.
+#
+#  Restricts Option ROM processing to the devices listed in the
+#  mOpRomAllowList table in PciOpRomPolicyDxe.c.
+#
+#  Copyright (c) 2026, SOPHGO Inc. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PciOpRomPolicyDxe
+  FILE_GUID                      = 8F3A2C71-5B44-4E6D-9C0F-2A1D8B7E4C55
+  MODULE_TYPE                    = DXE_DRIVER
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = PciOpRomPolicyDxeEntryPoint
+
+#
+#  VALID_ARCHITECTURES           = AARCH64 RISCV64 LOONGARCH64
+#
+
+[Sources]
+  PciOpRomPolicyDxe.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  MemoryAllocationLib
+  UefiBootServicesTableLib
+  UefiDriverEntryPoint
+
+[Protocols]
+  gEfiIncompatiblePciDeviceSupportProtocolGuid   ## PRODUCES
+
+[Depex]
+  TRUE

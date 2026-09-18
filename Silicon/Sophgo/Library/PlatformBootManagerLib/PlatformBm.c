@@ -960,6 +960,85 @@ SortAppendedBootOptions (
 }
 
 /**
+  Delete firmware-entry boot options whose FvFile device path no longer
+  matches the firmware volume this driver was loaded from.
+
+  The MemoryMapped(Base,End) prefix of an FvFile boot option records the
+  DXE FV load address of the firmware build that created it. When the
+  firmware image size changes (different toolchain or content), the FV
+  moves and those recorded paths go dead: BDS cannot expand them, so a
+  hotkey bound to such an option (e.g. F2 -> UiApp) silently falls
+  through to the next boot device. Options carrying the BDS auto-create
+  optional-data GUID are already recycled by the core refresh; this
+  garbage-collects the remaining firmware entries (created by older
+  platform code without that marker), keeping only the one option per
+  application that points into the current FV.
+**/
+STATIC
+VOID
+RemoveStaleFirmwareBootOptions (
+  VOID
+  )
+{
+  EFI_STATUS                            Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION          *BootOptions;
+  UINTN                                 BootOptionCount;
+  UINTN                                 Index;
+  EFI_GUID                              Guid;
+  EFI_DEVICE_PATH_PROTOCOL              *CurrentPath;
+  UINTN                                 CurrentPathSize;
+
+  BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
+  if (BootOptions == NULL) {
+    return;
+  }
+
+  for (Index = 0; Index < BootOptionCount; Index++) {
+    if (!GetFvFileGuidFromDevicePath (BootOptions[Index].FilePath, &Guid)) {
+      //
+      // Not a firmware-internal entry; user / OS options are none of
+      // our business.
+      //
+      continue;
+    }
+
+    if ((BootOptions[Index].OptionalDataSize == sizeof (EFI_GUID)) &&
+        CompareGuid ((EFI_GUID *)BootOptions[Index].OptionalData, &mAutoCreateBootOptionGuid))
+    {
+      //
+      // Managed by the core refresh; leave it alone.
+      //
+      continue;
+    }
+
+    CurrentPath = FvFilePath (&Guid);
+    if (CurrentPath == NULL) {
+      continue;
+    }
+
+    CurrentPathSize = GetDevicePathSize (CurrentPath);
+    if ((GetDevicePathSize (BootOptions[Index].FilePath) == CurrentPathSize) &&
+        CompareMem (CurrentPath, BootOptions[Index].FilePath, CurrentPathSize) == 0)
+    {
+      FreePool (CurrentPath);
+      continue;
+    }
+
+    FreePool (CurrentPath);
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[Index].OptionNumber, LoadOptionTypeBoot);
+    DEBUG ((
+      DEBUG_INFO,
+      "Removed stale firmware boot option Boot%04x (%a): %r\n",
+      BootOptions[Index].OptionNumber,
+      EFI_ERROR (Status) ? "failed" : "ok",
+      Status
+      ));
+  }
+
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+}
+
+/**
   Refresh the boot options and enforce the platform placement rule.
 
   Snapshot the current BootOrder and boot options, run the core
@@ -988,6 +1067,8 @@ ReconcileBootOptions (
 
   EfiBootManagerRefreshAllBootOption ();
 
+  RemoveStaleFirmwareBootOptions ();
+
   SortAppendedBootOptions (
     OldOptions,
     OldOptionCount,
@@ -1006,6 +1087,12 @@ ReconcileBootOptions (
 /**
   GetOption
 
+  Find the boot option for a firmware-internal application (UiApp / Shell /
+  BootManagerMenuApp / iPXE). Options are matched against the device path of
+  the file in the firmware volume this driver was loaded from, so an option
+  recorded when the DXE FV lived at another address (firmware rebuilt with a
+  different image size) is never selected.
+
   @param[in]  Description
   @param[in]  guid
   @param[in]  Attributes of the boot option
@@ -1022,28 +1109,32 @@ GetOption (
   EFI_BOOT_MANAGER_LOAD_OPTION  *BootOptions;
   UINTN                         Index;
   UINTN                         OptionNumber;
-  EFI_GUID                      GuidFind;
-  EFI_STATUS                    Status;
+  EFI_DEVICE_PATH_PROTOCOL      *CurrentPath;
+
+  CurrentPath = FvFilePath (&Guid);
 
   BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
 
+  OptionNumber = LoadOptionNumberUnassigned;
   for (Index = 0; Index < BootOptionCount; Index++) {
-      Status = ExtractGuidFromDevicePathString(BootOptions[Index].FilePath, &GuidFind);
-      if (EFI_ERROR(Status)) {
-          continue;
-      }
-      if (CompareGuid(&Guid, &GuidFind)) {
+      EFI_DEVICE_PATH_PROTOCOL *OptionPath = BootOptions[Index].FilePath;
+
+      if (CurrentPath != NULL && OptionPath != NULL &&
+          CompareMem (CurrentPath, OptionPath,
+                      MIN (GetDevicePathSize (CurrentPath),
+                           GetDevicePathSize (OptionPath))) == 0)
+      {
         OptionNumber = BootOptions[Index].OptionNumber;
         break;
       }
   }
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 
-  if (Index >= BootOptionCount) {
-    return LoadOptionNumberUnassigned;
-  } else {
-    return OptionNumber;
+  if (CurrentPath != NULL) {
+    FreePool (CurrentPath);
   }
+
+  return OptionNumber;
 }
 
 /**

@@ -578,6 +578,90 @@ GetFvFileGuidFromDevicePath (
 }
 
 /**
+  Extract the FV base address from the leading hardware memory-mapped
+  device path node of a firmware-internal boot option, if any.
+
+  @param[in]  DevicePath  The device path to inspect.
+  @param[out] Base        Receives the FV base address.
+
+  @retval TRUE   A memory-mapped node was found and Base was filled.
+  @retval FALSE  No memory-mapped node at the start of the path.
+**/
+STATIC
+BOOLEAN
+GetFvBaseFromDevicePath (
+  IN  CONST EFI_DEVICE_PATH_PROTOCOL    *DevicePath,
+  OUT UINT64                            *Base
+  )
+{
+  CONST MEMMAP_DEVICE_PATH  *MemMap;
+
+  if ((DevicePath == NULL) || (Base == NULL)) {
+    return FALSE;
+  }
+
+  if ((DevicePathType (DevicePath) == HARDWARE_DEVICE_PATH) &&
+      (DevicePathSubType (DevicePath) == HW_MEMMAP_DP))
+  {
+    MemMap = (CONST MEMMAP_DEVICE_PATH *)DevicePath;
+    *Base  = ReadUnaligned64 (&MemMap->StartingAddress);
+    return TRUE;
+  }
+
+  return FALSE;
+}
+
+/**
+  Check whether a firmware-internal boot option points at the given FvFile
+  inside the firmware volume this driver was loaded from.
+
+  The comparison is deliberately insensitive to trailing file-name nodes
+  (options created by BmEnumerateBootOptions carry a File(name) node that
+  FvFilePath()-built reference paths lack) and to the FV length: only the
+  FV base address and the FvFile GUID must match.
+
+  @param[in] OptionPath  Device path of the boot option under test.
+  @param[in] CurrentPath Device path of the file in the current FV,
+                         built by FvFilePath().
+
+  @retval TRUE   Same FV base and same FvFile GUID.
+**/
+STATIC
+BOOLEAN
+IsCurrentFvBootOptionPath (
+  IN CONST EFI_DEVICE_PATH_PROTOCOL  *OptionPath,
+  IN CONST EFI_DEVICE_PATH_PROTOCOL  *CurrentPath
+  )
+{
+  EFI_GUID  OptionGuid;
+  EFI_GUID  CurrentGuid;
+  UINT64    OptionBase;
+  UINT64    CurrentBase;
+
+  if ((OptionPath == NULL) || (CurrentPath == NULL)) {
+    return FALSE;
+  }
+
+  if (!GetFvFileGuidFromDevicePath (OptionPath, &OptionGuid) ||
+      !GetFvFileGuidFromDevicePath (CurrentPath, &CurrentGuid))
+  {
+    return FALSE;
+  }
+
+  if (!CompareGuid (&OptionGuid, &CurrentGuid)) {
+    return FALSE;
+  }
+
+  if (!GetFvBaseFromDevicePath (OptionPath, &OptionBase) ||
+      !GetFvBaseFromDevicePath (CurrentPath, &CurrentBase))
+  {
+    return FALSE;
+  }
+
+  return (BOOLEAN)(OptionBase == CurrentBase);
+}
+
+/**
   Map a boot option to its sorting category (see BOOT_SORT_CATEGORY).
 
   Firmware-internal entries (Shell / UiApp / BootManagerMenuApp) are detected
@@ -723,7 +807,7 @@ IsSameBootOptionPath (
 }
 
 /**
-  Lift the entries appended by RefreshAllBootOption() to the front.
+  Lift the DEVICE entries appended by RefreshAllBootOption() to the front.
 
   The core refresh already guarantees everything else the rules need:
     - stale auto-created options are deleted (not in the enumerated set);
@@ -732,14 +816,24 @@ IsSameBootOptionPath (
     - brand-new options are appended at the TAIL of BootOrder;
     - user / OS options are never touched.
 
-  So the only remaining rule is placement: the appended entries (freshly
-  inserted disks / USB sticks) must boot AHEAD of the inherited ones, so
-  they never sit behind iPXE / Shell / firmware entries. This function
-  finds the appended entries (an entry whose number was not in the
-  pre-refresh order, or whose number is now backed by a different device -
-  guards against number reuse by re-created options), sorts them stably by
-  category (disk, removable, optical, network, unclassified, firmware) and
-  writes them ahead of the inherited entries.
+  So the only remaining rule is placement: freshly enumerated DEVICES (a
+  newly inserted disk or USB stick) must boot AHEAD of the inherited
+  entries, which typically end with iPXE / Shell / firmware entries that
+  are never the preferred target.
+
+  Entries backed by an FvFile device path get NO such privilege. The only
+  way a firmware-internal entry (iPXE / Shell / UiApp / BootManagerMenuApp)
+  lands in the appended set is that the FV moved (firmware rebuilt with a
+  different image size) and the core refresh deleted and re-created it at
+  a new Boot#### number. Re-creating is not "new hardware": hoisting such
+  an entry ahead of the inherited disks would leave BootOrder as
+  [iPXE, Shell, ..., disks, ...] after the disks are gone too, so a box
+  with a perfectly bootable disk falls into the iPXE menu instead.
+
+  The appended device entries are sorted stably by category (disk,
+  removable, optical, network, unclassified) and placed ahead of
+  everything else; the remaining entries (inherited ones plus re-created
+  firmware entries) keep the relative order the core refresh left them in.
 
   Idempotent: a boot with no device change leaves BootOrder untouched.
 **/
@@ -766,6 +860,7 @@ SortAppendedBootOptions (
   UINT16                                *Appended;
   BOOT_SORT_CATEGORY                    *Category;
   EFI_BOOT_MANAGER_LOAD_OPTION          *Option;
+  EFI_GUID                              FvGuid;
 
   //
   // Post-refresh state.
@@ -812,6 +907,7 @@ SortAppendedBootOptions (
   for (Index = 0; Index < NewOrderCount; Index++) {
     UINTN   OldOrderPos;
     BOOLEAN Inherited;
+    BOOLEAN IsFirmwareEntry;
 
     Option = NULL;
     for (Slot = 0; Slot < NewOptionCount; Slot++) {
@@ -853,6 +949,20 @@ SortAppendedBootOptions (
 
     if (Inherited) {
       Kept[KeptCount++] = NewOrder[Index];
+      continue;
+    }
+
+    //
+    // An appended FvFile entry is a firmware application re-created by the
+    // core refresh after an FV address change, not a new device. It must
+    // not be hoisted ahead of the inherited disks; leave it in "Kept",
+    // which preserves the relative order the refresh left behind.
+    //
+    IsFirmwareEntry = (Option != NULL) &&
+                      GetFvFileGuidFromDevicePath (Option->FilePath, &FvGuid);
+
+    if (IsFirmwareEntry) {
+      Kept[KeptCount++] = NewOrder[Index];
     } else {
       Appended[AppendedCount] = NewOrder[Index];
       Category[AppendedCount] = (Option != NULL) ?
@@ -864,7 +974,7 @@ SortAppendedBootOptions (
 
   DEBUG ((
     DEBUG_INFO,
-    "SortAppended: total=%d inherited=%d appended=%d\n",
+    "SortAppended: total=%d kept=%d appended(devices)=%d\n",
     (UINT32)NewOrderCount,
     (UINT32)KeptCount,
     (UINT32)AppendedCount
@@ -960,6 +1070,81 @@ SortAppendedBootOptions (
 }
 
 /**
+  Delete firmware-entry boot options whose FvFile device path no longer
+  matches the firmware volume this driver was loaded from.
+
+  The MemoryMapped(Base,End) prefix of an FvFile boot option records the
+  DXE FV load address of the firmware build that created it. When the
+  firmware image size changes (different toolchain or content), the FV
+  moves and those recorded paths go dead: BDS cannot expand them, so a
+  hotkey bound to such an option (e.g. F2 -> UiApp) silently falls
+  through to the next boot device. Options carrying the BDS auto-create
+  optional-data GUID are already recycled by the core refresh; this
+  garbage-collects the remaining firmware entries (created by older
+  platform code without that marker), keeping only the one option per
+  application that points into the current FV.
+**/
+STATIC
+VOID
+RemoveStaleFirmwareBootOptions (
+  VOID
+  )
+{
+  EFI_STATUS                            Status;
+  EFI_BOOT_MANAGER_LOAD_OPTION          *BootOptions;
+  UINTN                                 BootOptionCount;
+  UINTN                                 Index;
+  EFI_GUID                              Guid;
+  EFI_DEVICE_PATH_PROTOCOL              *CurrentPath;
+
+  BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
+  if (BootOptions == NULL) {
+    return;
+  }
+
+  for (Index = 0; Index < BootOptionCount; Index++) {
+    if (!GetFvFileGuidFromDevicePath (BootOptions[Index].FilePath, &Guid)) {
+      //
+      // Not a firmware-internal entry; user / OS options are none of
+      // our business.
+      //
+      continue;
+    }
+
+    if ((BootOptions[Index].OptionalDataSize == sizeof (EFI_GUID)) &&
+        CompareGuid ((EFI_GUID *)BootOptions[Index].OptionalData, &mAutoCreateBootOptionGuid))
+    {
+      //
+      // Managed by the core refresh; leave it alone.
+      //
+      continue;
+    }
+
+    CurrentPath = FvFilePath (&Guid);
+    if (CurrentPath == NULL) {
+      continue;
+    }
+
+    if (IsCurrentFvBootOptionPath (BootOptions[Index].FilePath, CurrentPath)) {
+      FreePool (CurrentPath);
+      continue;
+    }
+
+    FreePool (CurrentPath);
+    Status = EfiBootManagerDeleteLoadOptionVariable (BootOptions[Index].OptionNumber, LoadOptionTypeBoot);
+    DEBUG ((
+      DEBUG_INFO,
+      "Removed stale firmware boot option Boot%04x (%a): %r\n",
+      BootOptions[Index].OptionNumber,
+      EFI_ERROR (Status) ? "failed" : "ok",
+      Status
+      ));
+  }
+
+  EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
+}
+
+/**
   Refresh the boot options and enforce the platform placement rule.
 
   Snapshot the current BootOrder and boot options, run the core
@@ -988,6 +1173,8 @@ ReconcileBootOptions (
 
   EfiBootManagerRefreshAllBootOption ();
 
+  RemoveStaleFirmwareBootOptions ();
+
   SortAppendedBootOptions (
     OldOptions,
     OldOptionCount,
@@ -1006,6 +1193,12 @@ ReconcileBootOptions (
 /**
   GetOption
 
+  Find the boot option for a firmware-internal application (UiApp / Shell /
+  BootManagerMenuApp / iPXE). Options are matched against the device path of
+  the file in the firmware volume this driver was loaded from, so an option
+  recorded when the DXE FV lived at another address (firmware rebuilt with a
+  different image size) is never selected.
+
   @param[in]  Description
   @param[in]  guid
   @param[in]  Attributes of the boot option
@@ -1022,28 +1215,26 @@ GetOption (
   EFI_BOOT_MANAGER_LOAD_OPTION  *BootOptions;
   UINTN                         Index;
   UINTN                         OptionNumber;
-  EFI_GUID                      GuidFind;
-  EFI_STATUS                    Status;
+  EFI_DEVICE_PATH_PROTOCOL      *CurrentPath;
+
+  CurrentPath = FvFilePath (&Guid);
 
   BootOptions = EfiBootManagerGetLoadOptions (&BootOptionCount, LoadOptionTypeBoot);
 
+  OptionNumber = LoadOptionNumberUnassigned;
   for (Index = 0; Index < BootOptionCount; Index++) {
-      Status = ExtractGuidFromDevicePathString(BootOptions[Index].FilePath, &GuidFind);
-      if (EFI_ERROR(Status)) {
-          continue;
-      }
-      if (CompareGuid(&Guid, &GuidFind)) {
+      if (IsCurrentFvBootOptionPath (BootOptions[Index].FilePath, CurrentPath)) {
         OptionNumber = BootOptions[Index].OptionNumber;
         break;
       }
   }
   EfiBootManagerFreeLoadOptions (BootOptions, BootOptionCount);
 
-  if (Index >= BootOptionCount) {
-    return LoadOptionNumberUnassigned;
-  } else {
-    return OptionNumber;
+  if (CurrentPath != NULL) {
+    FreePool (CurrentPath);
   }
+
+  return OptionNumber;
 }
 
 /**

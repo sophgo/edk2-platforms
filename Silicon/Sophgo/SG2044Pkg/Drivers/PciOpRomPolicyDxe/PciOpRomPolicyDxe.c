@@ -114,7 +114,7 @@ PciOpRomPolicyCheckDevice (
     {
       //
       // Allow-listed: no special requirement, OpROM is probed and
-      // loaded normally (subject to X64EMU_ENABLE dispatch policy).
+      // loaded normally (subject to the emulator runtime gate).
       //
       *Configuration = NULL;
       return EFI_UNSUPPORTED;

@@ -177,9 +177,7 @@ INF  MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 #
 # Emulator for x64 OpRoms, etc.
 #
-!if $(X64EMU_ENABLE) == TRUE
-  INF  MultiArchUefiPkg/Drivers/Emulator/Emulator.inf
-!endif
+INF  MultiArchUefiPkg/Drivers/Emulator/Emulator.inf
 
 #
 # ASPEED AST2500 GOP driver

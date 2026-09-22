@@ -22,7 +22,6 @@
   DebugConfigDxe.h
   DebugConfigVfr.vfr
   DebugConfigStrings.uni
-  DebugConfigNv.h
 
 [Packages]
   MdePkg/MdePkg.dec

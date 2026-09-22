@@ -25,6 +25,7 @@
 #include <IndustryStandard/Acpi.h>
 #include <Guid/Acpi.h>
 #include <Guid/VendorGlobalVariables.h>
+#include <DebugConfigNv.h>
 #include "SG2044AcpiHeader.h"
 #include <Include/PcieHostPcd.h>
 #include <IndustryStandard/SerialPortConsoleRedirectionTable.h>
@@ -970,18 +971,24 @@ AcpiPlatformDxeEntryPoint (
     // Skip SPCR table if serial port is not enabled via Setup option
     //
     if (TableHeader->Signature == EFI_ACPI_6_5_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_SIGNATURE) {
-      UINTN    VarSize;
-      UINT8    EnableSerialPort;
+      DEBUG_CONFIG_DATA  DebugConfigData;
+      UINTN              VarSize;
 
-      VarSize = sizeof (EnableSerialPort);
-      Status = gRT->GetVariable (
-                      EFI_DEBUG_CONFIG_VARIABLE_NAME,
-                      &gEfiSophgoGlobalVariableGuid,
-                      NULL,
-                      &VarSize,
-                      &EnableSerialPort
-                      );
-      if (!EFI_ERROR (Status) && EnableSerialPort == 0) {
+      ZeroMem (&DebugConfigData, sizeof (DebugConfigData));
+      VarSize = sizeof (DebugConfigData);
+      (VOID)gRT->GetVariable (
+                   EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                   &gEfiSophgoGlobalVariableGuid,
+                   NULL,
+                   &VarSize,
+                   &DebugConfigData
+                   );
+      //
+      // A missing or stale-layout variable keeps the zeroed default:
+      // the serial port switch defaults to disabled, so SPCR is
+      // skipped unless the setup option explicitly enables it.
+      //
+      if (DebugConfigData.EnableSerialPort == 0) {
         DEBUG ((DEBUG_INFO, "SPCR table skipped: serial port not enabled\n"));
         gBS->FreePool (CurrentTable);
         Instance++;

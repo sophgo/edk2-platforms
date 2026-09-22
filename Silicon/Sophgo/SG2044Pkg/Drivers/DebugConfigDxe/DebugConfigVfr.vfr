@@ -5,7 +5,7 @@
 //
 //SPDX-License-Identifier: BSD-2-Clause-Patent
 //**/
-#include "DebugConfigNv.h"
+#include <DebugConfigNv.h>
 
 formset
   guid      = DEBUG_CONFIG_FORMSET_GUID,
@@ -22,12 +22,23 @@ formset
     title   = STRING_TOKEN (STR_DEBUG_CONFIG_TITLE);
 
     oneof varid = DEBUG_CONFIG_DATA.EnableSerialPort,
+        questionid = ENABLE_SERIAL_PORT_QUESTION_ID,
         prompt = STRING_TOKEN (STR_ENABLE_SERIAL_PORT_PROMPT),
         help   = STRING_TOKEN (STR_ENABLE_SERIAL_PORT_HELP),
         flags  = INTERACTIVE,
         option text = STRING_TOKEN(STR_DISABLE), value = 0, flags = 0;
         option text = STRING_TOKEN(STR_ENABLE), value = 1, flags = 0;
         default value = 0,
+    endoneof;
+
+    oneof varid = DEBUG_CONFIG_DATA.EnableEmulation,
+        questionid = ENABLE_EMULATION_QUESTION_ID,
+        prompt = STRING_TOKEN (STR_ENABLE_EMULATION_PROMPT),
+        help   = STRING_TOKEN (STR_ENABLE_EMULATION_HELP),
+        flags  = INTERACTIVE,
+        option text = STRING_TOKEN(STR_DISABLE), value = 0, flags = 0;
+        option text = STRING_TOKEN(STR_ENABLE), value = 1, flags = 0;
+        default value = 1,
     endoneof;
 
   endform;

@@ -37,7 +37,7 @@
 #include <Library/RestoreDefaults.h>
 #include <Library/PrintLib.h>
 
-#include "DebugConfigNv.h"
+#include <DebugConfigNv.h>
 
 typedef struct {
   VENDOR_DEVICE_PATH             VendorDevicePath;

@@ -52,24 +52,28 @@ DEBUG_CONFIG_CALLBACK_DATA gDebugConfigPrivate = {
   }
 };
 
+#define  DEBUG_CONFIG_VAR_ATTRIBUTES  \
+  EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE
+
 EFI_STATUS
 EFIAPI
 RestoreDebugConfigDefaults (
   VOID
   )
 {
-  DEBUG_CONFIG_DATA            DebugConfigData;
-  EFI_STATUS                   Status;
+  DEBUG_CONFIG_DATA  DebugConfigData;
+  EFI_STATUS         Status;
 
-  DebugConfigData.EnableSerialPort = 0;
+  ZeroMem (&DebugConfigData, sizeof (DebugConfigData));
+  DebugConfigData.EnableEmulation = 1;
 
   Status = gRT->SetVariable (
-          EFI_DEBUG_CONFIG_VARIABLE_NAME,
-          &gEfiSophgoGlobalVariableGuid,
-          EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-          sizeof (DEBUG_CONFIG_DATA),
-          &DebugConfigData
-          );
+                   EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                   &gEfiSophgoGlobalVariableGuid,
+                   DEBUG_CONFIG_VAR_ATTRIBUTES,
+                   sizeof (DEBUG_CONFIG_DATA),
+                   &DebugConfigData
+                   );
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
@@ -84,37 +88,6 @@ RestoreDebugConfigDefaults (
 }
 
 EFI_STATUS
-UpdateDebugConfigConfig (
-  IN DEBUG_CONFIG_CALLBACK_DATA           *PrivateData
-  )
-{
-  EFI_STATUS            Status;
-  DEBUG_CONFIG_DATA     DebugConfigData;
-  UINTN                 VarSize;
-
-  VarSize = sizeof (DEBUG_CONFIG_DATA);
-  Status = gRT->GetVariable (
-          EFI_DEBUG_CONFIG_VARIABLE_NAME,
-          &gEfiSophgoGlobalVariableGuid,
-                  NULL,
-                  &VarSize,
-          &DebugConfigData
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a: Get variable failed!\n",
-      __func__
-      ));
-    return Status;
-  }
-
-  CopyMem (&PrivateData->DebugConfigData, &DebugConfigData, VarSize);
-
-  return EFI_SUCCESS;
-}
-
-EFI_STATUS
 DebugConfigSetupConfig (
   IN CONST EFI_HII_CONFIG_ACCESS_PROTOCOL   *This,
   IN DEBUG_CONFIG_CALLBACK_DATA             *PrivateData
@@ -124,10 +97,11 @@ DebugConfigSetupConfig (
   DEBUG_CONFIG_DATA    DebugConfigData;
 
   if (!HiiGetBrowserData (
-    &gEfiSophgoGlobalVariableGuid,
-        EFI_DEBUG_CONFIG_VARIABLE_NAME,
-    sizeof (DEBUG_CONFIG_DATA),
-    (UINT8 *) &DebugConfigData))
+         &gEfiSophgoGlobalVariableGuid,
+         EFI_DEBUG_CONFIG_VARIABLE_NAME,
+         sizeof (DEBUG_CONFIG_DATA),
+         (UINT8 *)&DebugConfigData
+         ))
   {
     DEBUG ((
       DEBUG_ERROR,
@@ -137,15 +111,14 @@ DebugConfigSetupConfig (
     return EFI_NOT_FOUND;
   }
 
-  CopyMem (&PrivateData->DebugConfigData, &DebugConfigData,
-          sizeof (DEBUG_CONFIG_DATA));
+  CopyMem (&PrivateData->DebugConfigData, &DebugConfigData, sizeof (DEBUG_CONFIG_DATA));
   Status = gRT->SetVariable (
-          EFI_DEBUG_CONFIG_VARIABLE_NAME,
-          &gEfiSophgoGlobalVariableGuid,
-          EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-          sizeof (DEBUG_CONFIG_DATA),
-          &DebugConfigData
-          );
+                   EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                   &gEfiSophgoGlobalVariableGuid,
+                   DEBUG_CONFIG_VAR_ATTRIBUTES,
+                   sizeof (DEBUG_CONFIG_DATA),
+                   &DebugConfigData
+                   );
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
@@ -174,6 +147,7 @@ DebugConfigExtractConfig (
   BOOLEAN                        AllocatedRequest;
   UINTN                          Size;
   UINTN                          BufferSize;
+  UINTN                          VarSize;
 
   Status = EFI_SUCCESS;
 
@@ -189,8 +163,20 @@ DebugConfigExtractConfig (
 
   Private = DEBUG_CONFIG_CALLBACK_DATA_FROM_THIS (This);
 
-  Status = UpdateDebugConfigConfig (Private);
+  VarSize = sizeof (DEBUG_CONFIG_DATA);
+  Status  = gRT->GetVariable (
+                   EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                   &gEfiSophgoGlobalVariableGuid,
+                   NULL,
+                   &VarSize,
+                   &Private->DebugConfigData
+                   );
   if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Get variable failed!\n",
+      __func__
+      ));
     return Status;
   }
 
@@ -204,34 +190,35 @@ DebugConfigExtractConfig (
     return EFI_NOT_FOUND;
   }
 
-  ConfigRequestHdr = NULL;
-  ConfigRequest  = NULL;
-  AllocatedRequest = FALSE;
+  ConfigRequestHdr  = NULL;
+  ConfigRequest     = NULL;
+  AllocatedRequest  = FALSE;
 
   ConfigRequest = Request;
   if ((Request == NULL) || (StrStr (Request, L"OFFSET") == NULL)) {
     ConfigRequestHdr = HiiConstructConfigHdr (
-            &gEfiSophgoGlobalVariableGuid,
-            EFI_DEBUG_CONFIG_VARIABLE_NAME,
-            Private->DriverHandle
-            );
-    Size = (StrLen (ConfigRequestHdr) + 32 + 1) * sizeof (CHAR16);
+                          &gEfiSophgoGlobalVariableGuid,
+                          EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                          Private->DriverHandle
+                          );
+    Size          = (StrLen (ConfigRequestHdr) + 32 + 1) * sizeof (CHAR16);
     ConfigRequest = AllocateZeroPool (Size);
     ASSERT (ConfigRequest != NULL);
     AllocatedRequest = TRUE;
-    UnicodeSPrint (ConfigRequest,
-            Size,
-            L"%s&OFFSET=0&WIDTH=%016LX",
-            ConfigRequestHdr,
-            (UINT64)BufferSize
-            );
+    UnicodeSPrint (
+      ConfigRequest,
+      Size,
+      L"%s&OFFSET=0&WIDTH=%016LX",
+      ConfigRequestHdr,
+      (UINT64)BufferSize
+      );
     FreePool (ConfigRequestHdr);
   }
 
   Status = gHiiConfigRouting->BlockToConfig (
                                 gHiiConfigRouting,
                                 ConfigRequest,
-                                (UINT8 *) &Private->DebugConfigData,
+                                (UINT8 *)&Private->DebugConfigData,
                                 sizeof (DEBUG_CONFIG_DATA),
                                 Results,
                                 Progress
@@ -276,10 +263,10 @@ DebugConfigRouteConfig (
   *Progress = Configuration;
 
   if (!HiiIsConfigHdrMatch (
-          Configuration,
-      &gEfiSophgoGlobalVariableGuid,
-      EFI_DEBUG_CONFIG_VARIABLE_NAME
-      ))
+         Configuration,
+         &gEfiSophgoGlobalVariableGuid,
+         EFI_DEBUG_CONFIG_VARIABLE_NAME
+         ))
   {
     DEBUG ((
       DEBUG_ERROR,
@@ -295,12 +282,12 @@ DebugConfigRouteConfig (
 
   BufferSize = sizeof (DEBUG_CONFIG_DATA);
   Status = Private->HiiConfigRouting->ConfigToBlock (
-          Private->HiiConfigRouting,
-          Configuration,
-          (UINT8 *)&Private->DebugConfigData,
-          &BufferSize,
-          Progress
-          );
+                                       Private->HiiConfigRouting,
+                                       Configuration,
+                                       (UINT8 *)&Private->DebugConfigData,
+                                       &BufferSize,
+                                       Progress
+                                       );
   if (EFI_ERROR (Status)) {
     DEBUG ((
       DEBUG_ERROR,
@@ -325,60 +312,17 @@ DebugConfigCallback (
   OUT EFI_BROWSER_ACTION_REQUEST             *ActionRequest
   )
 {
-  EFI_STATUS                     Status;
-  UINTN                          VarSize;
-  DEBUG_CONFIG_DATA              DebugConfigData;
-
-  Status = EFI_SUCCESS;
-  VarSize = sizeof (DEBUG_CONFIG_DATA);
-
-  Status = gRT->GetVariable (
-          EFI_DEBUG_CONFIG_VARIABLE_NAME,
-          &gEfiSophgoGlobalVariableGuid,
-                  NULL,
-                  &VarSize,
-                  &DebugConfigData
-                  );
-  if (EFI_ERROR (Status)) {
-    DEBUG ((
-      DEBUG_ERROR,
-      "%a: GetVariable error: %r\n",
-      __func__,
-      Status
-      ));
-    return Status;
-  }
-
-  if (QuestionId == ENABLE_SERIAL_PORT_QUESTION_ID &&
-          Action == EFI_BROWSER_ACTION_CHANGING) {
-    DebugConfigData.EnableSerialPort = Value->u8;
-
-    Status = gRT->SetVariable (
-            EFI_DEBUG_CONFIG_VARIABLE_NAME,
-            &gEfiSophgoGlobalVariableGuid,
-            EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-            VarSize,
-            &DebugConfigData
-            );
-
-    if (EFI_ERROR (Status)) {
-      return Status;
-    }
-
-    HiiSetBrowserData (
-          &mDebugConfigGuid,
-          EFI_DEBUG_CONFIG_VARIABLE_NAME,
-          VarSize,
-          (UINT8*)&DebugConfigData,
-          NULL
-          );
-  }
-  else if (QuestionId == ENABLE_SERIAL_PORT_QUESTION_ID &&
-    Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD) {
+  if ((QuestionId == ENABLE_SERIAL_PORT_QUESTION_ID) &&
+      (Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD))
+  {
     Value->u8 = 0;
+  } else if ((QuestionId == ENABLE_EMULATION_QUESTION_ID) &&
+             (Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD))
+  {
+    Value->u8 = 1;
   }
 
-  return Status;
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -391,22 +335,32 @@ DebugConfigConfigInit (
   UINTN                 VarSize;
 
   VarSize = sizeof (DEBUG_CONFIG_DATA);
-  Status = gRT->GetVariable (
-          EFI_DEBUG_CONFIG_VARIABLE_NAME,
-          &gEfiSophgoGlobalVariableGuid,
-                  NULL,
-                  &VarSize,
-                  &DebugConfigData
-                  );
-  if (Status == EFI_NOT_FOUND) {
-    DebugConfigData.EnableSerialPort = 0;
+  Status  = gRT->GetVariable (
+                   EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                   &gEfiSophgoGlobalVariableGuid,
+                   NULL,
+                   &VarSize,
+                   &DebugConfigData
+                   );
+  if (EFI_ERROR (Status) || (VarSize != sizeof (DEBUG_CONFIG_DATA))) {
+    //
+    // Missing variable (first boot, cleared NVRAM) or a stale layout from
+    // an older build (a shorter one even reads back successfully with the
+    // surplus left uninitialized, so the returned size must be checked
+    // explicitly): fall back to defaults and rewrite. Never propagate the
+    // error - the driver must stay loaded with a consistent variable, or
+    // the HII handles it published are torn down uncleanly and trip the
+    // DXE core later.
+    //
+    ZeroMem (&DebugConfigData, sizeof (DebugConfigData));
+    DebugConfigData.EnableEmulation = 1;
     Status = gRT->SetVariable (
-            EFI_DEBUG_CONFIG_VARIABLE_NAME,
-            &gEfiSophgoGlobalVariableGuid,
-            EFI_VARIABLE_BOOTSERVICE_ACCESS | EFI_VARIABLE_RUNTIME_ACCESS | EFI_VARIABLE_NON_VOLATILE,
-                    VarSize,
-                    &DebugConfigData
-            );
+                     EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                     &gEfiSophgoGlobalVariableGuid,
+                     DEBUG_CONFIG_VAR_ATTRIBUTES,
+                     sizeof (DebugConfigData),
+                     &DebugConfigData
+                     );
     if (EFI_ERROR (Status)) {
       DEBUG ((
         DEBUG_ERROR,
@@ -414,10 +368,11 @@ DebugConfigConfigInit (
         __func__,
         Status
         ));
+      return Status;
     }
   }
 
-  return Status;
+  return EFI_SUCCESS;
 }
 
 EFI_STATUS
@@ -436,40 +391,40 @@ DebugConfigDriverEntryPoint (
   }
 
   Status = gBS->LocateProtocol (
-          &gEfiHiiConfigRoutingProtocolGuid,
-          NULL,
-          (VOID **) &PrivateData->HiiConfigRouting
-          );
+                   &gEfiHiiConfigRoutingProtocolGuid,
+                   NULL,
+                   (VOID **)&PrivateData->HiiConfigRouting
+                   );
   if (EFI_ERROR (Status)) {
     return Status;
   }
 
   PrivateData->DriverHandle = NULL;
-  Status = gBS->InstallMultipleProtocolInterfaces(
-                  &PrivateData->DriverHandle,
-                  &gEfiDevicePathProtocolGuid,
-                  &mDebugConfigHiiVendorDevicePath,
-                  &gEfiHiiConfigAccessProtocolGuid,
-                  &PrivateData->ConfigAccess,
-                  NULL
-                  );
+  Status = gBS->InstallMultipleProtocolInterfaces (
+                   &PrivateData->DriverHandle,
+                   &gEfiDevicePathProtocolGuid,
+                   &mDebugConfigHiiVendorDevicePath,
+                   &gEfiHiiConfigAccessProtocolGuid,
+                   &PrivateData->ConfigAccess,
+                   NULL
+                   );
   ASSERT_EFI_ERROR (Status);
 
   Status = gBS->InstallProtocolInterface (
-                  &PrivateData->DriverHandle,
-                  &gDebugConfigRestoreProtocolGuid,
-                  EFI_NATIVE_INTERFACE,
-                  (VOID *)&gDebugConfigRestoreProtocol
-                  );
+                   &PrivateData->DriverHandle,
+                   &gDebugConfigRestoreProtocolGuid,
+                   EFI_NATIVE_INTERFACE,
+                   (VOID *)&gDebugConfigRestoreProtocol
+                   );
   ASSERT_EFI_ERROR (Status);
 
   PrivateData->HiiHandle = HiiAddPackages (
-                   &mDebugConfigGuid,
-                   PrivateData->DriverHandle,
-                   DebugConfigVfrBin,
-                   DebugConfigDxeStrings,
-                   NULL
-                   );
+                              &mDebugConfigGuid,
+                              PrivateData->DriverHandle,
+                              DebugConfigVfrBin,
+                              DebugConfigDxeStrings,
+                              NULL
+                              );
   if (PrivateData->HiiHandle == NULL) {
     return EFI_OUT_OF_RESOURCES;
   }
@@ -494,10 +449,10 @@ DebugConfigDriverUnload (
   DEBUG_CONFIG_CALLBACK_DATA       *PrivateData;
 
   Status = gBS->HandleProtocol (
-          ImageHandle,
-                  &gEfiCallerIdGuid,
-                  (VOID **) &PrivateData
-                  );
+                   ImageHandle,
+                   &gEfiCallerIdGuid,
+                   (VOID **)&PrivateData
+                   );
   if (EFI_ERROR (Status)) {
     return Status;
   }
@@ -505,23 +460,23 @@ DebugConfigDriverUnload (
   ASSERT (PrivateData->Signature == DEBUG_CONFIG_CALLBACK_DATA_SIGNATURE);
 
   Status = gBS->UninstallMultipleProtocolInterfaces (
-          &ImageHandle,
-          &gEfiCallerIdGuid,
-          PrivateData,
-          NULL
-          );
+                   &ImageHandle,
+                   &gEfiCallerIdGuid,
+                   PrivateData,
+                   NULL
+                   );
   if (EFI_ERROR (Status)) {
     return Status;
   }
 
   Status = gBS->UninstallMultipleProtocolInterfaces (
-          PrivateData->DriverHandle,
-                  &gEfiDevicePathProtocolGuid,
-                  &mDebugConfigHiiVendorDevicePath,
-                  &gEfiHiiConfigAccessProtocolGuid,
-                  &PrivateData->ConfigAccess,
-                  NULL
-                  );
+                   PrivateData->DriverHandle,
+                   &gEfiDevicePathProtocolGuid,
+                   &mDebugConfigHiiVendorDevicePath,
+                   &gEfiHiiConfigAccessProtocolGuid,
+                   &PrivateData->ConfigAccess,
+                   NULL
+                   );
 
   ASSERT_EFI_ERROR (Status);
 

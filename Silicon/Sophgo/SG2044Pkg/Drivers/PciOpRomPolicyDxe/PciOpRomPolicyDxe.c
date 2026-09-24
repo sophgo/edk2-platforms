@@ -37,6 +37,9 @@ STATIC CONST OP_ROM_ALLOW_ENTRY  mOpRomAllowList[] = {
   { 0x1000, 0x005D },   // LSI/AVAGO MegaRAID SAS 9361-8i (3108)
   { 0x1002, 0x6779 },   // AMD Radeon R5 230
   { 0x1002, 0x67DF },   // AMD Radeon RX 580
+  { 0x1002, 0x73DF },   // AMD Radeon RX 6700
+  { 0x10DE, 0x2882 },   // NVIDIA GeForce RTX 4060
+  { 0x10DE, 0x1287 },   // NVIDIA GeForce GT 730
 };
 
 //

@@ -53,7 +53,12 @@ SMBIOS_PLATFORM_DXE_TABLE_FUNCTION (PlatformBoard) {
       return Status;
     }
 
-    UnicodeStrFromPcd = FixedPcdGetPtr(PcdProductName);
+    //
+    // Base Board Product Name comes from PcdBoardName, not PcdProductName:
+    // several products can share one board, so the baseboard field describes
+    // the board while Type1 (System Information) describes the product.
+    //
+    UnicodeStrFromPcd = FixedPcdGetPtr(PcdBoardName);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[1], UnicodeStrFromPcd, NULL);
     UnicodeStrFromPcd = FixedPcdGetPtr(PcdBoardVersion);
     HiiSetString (mSmbiosPlatformDxeHiiHandle, InputStrToken->TokenArray[2], UnicodeStrFromPcd, NULL);

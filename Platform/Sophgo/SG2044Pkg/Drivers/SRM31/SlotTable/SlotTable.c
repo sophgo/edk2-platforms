@@ -20,7 +20,7 @@
 #include <IndustryStandard/SmBios.h>
 #include <Library/PcieSlotInfoLib.h>
 
-STATIC CONST BOARD_SLOT  mSrm370Slots[] = {
+STATIC CONST BOARD_SLOT  mSlotTable[] = {
   /* Domain, DevPath, PathLen, SlotNumber, SlotType, Designation, SlotDataBusWidth, DataBusWidth, PhysicalWidth */
   { 0, { 0x00 }, 1, 3, SlotTypePCIExpressGen5X4, "PCIE3A", SlotDataBusWidth4X, 4, SlotDataBusWidth4X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
   { 1, { 0x00 }, 1, 6, SlotTypePCIExpressGen5X4, "PCIE3B", SlotDataBusWidth4X, 4, SlotDataBusWidth4X, SlotLengthLong, SlotHeightFullHeight, 5, 0x04, 0x04, 0 },
@@ -39,8 +39,8 @@ PcieSlotInfoGetBoardTable (
   )
 {
   if (Count != NULL) {
-    *Count = ARRAY_SIZE (mSrm370Slots);
+    *Count = ARRAY_SIZE (mSlotTable);
   }
 
-  return mSrm370Slots;
+  return mSlotTable;
 }

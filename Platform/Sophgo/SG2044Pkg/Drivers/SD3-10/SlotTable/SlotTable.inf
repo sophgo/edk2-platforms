@@ -11,7 +11,7 @@
 
 [Defines]
   INF_VERSION                    = 0x0001001B
-  BASE_NAME                      = PcieSlotInfoLibSD310
+  BASE_NAME                      = PcieSlotInfoLibSlotTable
   FILE_GUID                      = D8F1E3A4-5B7C-4E96-AD02-9F3C8A1E07B2
   MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0

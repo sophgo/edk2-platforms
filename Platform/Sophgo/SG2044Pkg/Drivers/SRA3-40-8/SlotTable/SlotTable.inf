@@ -11,7 +11,7 @@
 
 [Defines]
   INF_VERSION                    = 0x0001001B
-  BASE_NAME                      = PcieSlotInfoLibSRA3408
+  BASE_NAME                      = PcieSlotInfoLibSlotTable
   FILE_GUID                      = CAE05708-959D-43AB-904A-7232CC8E2048
   MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0

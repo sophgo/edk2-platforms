@@ -83,7 +83,7 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence|FALSE
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform|TRUE
   # [board]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SD3"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SD3-12"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion|L"1.1"
   # [product]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName|L"SD3-12"

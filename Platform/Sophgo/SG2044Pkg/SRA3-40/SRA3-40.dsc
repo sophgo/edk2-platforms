@@ -89,8 +89,8 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence|FALSE
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform|TRUE
   # [board]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SRA3"
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion|L"1.0"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SRA3-40"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion|L"1.1"
   # [product]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName|L"SRA3-40"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductVersion|L"1.0"

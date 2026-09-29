@@ -88,7 +88,7 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence|TRUE
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform|FALSE
   # [board]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SG2044_EVB"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SD3-10"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion|L"1.1"
   # [product]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdProductName|L"SD3-10-LB"

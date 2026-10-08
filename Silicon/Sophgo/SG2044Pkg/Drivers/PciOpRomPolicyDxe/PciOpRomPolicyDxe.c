@@ -40,6 +40,7 @@ STATIC CONST OP_ROM_ALLOW_ENTRY  mOpRomAllowList[] = {
   { 0x1002, 0x73DF },   // AMD Radeon RX 6700
   { 0x10DE, 0x2882 },   // NVIDIA GeForce RTX 4060
   { 0x10DE, 0x1287 },   // NVIDIA GeForce GT 730
+  { 0x10DE, 0x128B },   // NVIDIA GeForce GT 710
 };
 
 //

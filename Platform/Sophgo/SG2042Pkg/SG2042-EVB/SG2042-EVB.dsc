@@ -42,6 +42,74 @@
   DEFINE NETWORK_HTTP_BOOT_ENABLE = FALSE
   DEFINE NETWORK_ISCSI_ENABLE     = FALSE
 
+  #
+  # x64 Emulator tuning (in [Defines] so MAU_* fields land in the right section).
+  #
+  # Use a dedicated native stack for handling emulation.
+  #
+  MAU_ON_PRIVATE_STACK           = NO
+
+  #
+  # Attempt some operation on UEFI implementations without
+  # an enabled MMU, by relying on the illegal instruction
+  # handler. It won't work well and is only supported on RISC-V.
+  # Implies MAU_WRAPPED_ENTRY_POINTS=YES.
+  #
+  # On by default in RISC-V builds (via INF file).
+  #
+  MAU_TRY_WITHOUT_MMU            = NO
+
+  #
+  # Use an emulated entry point, instead of relying on
+  # exception-driven thunking of native to emulated code.
+  #
+  # On by default in RISC-V builds (via INF file).
+  #
+  MAU_WRAPPED_ENTRY_POINTS       = NO
+
+  #
+  # Handle unexpected/non-linear control flow by native code,
+  # that can result in a resource leak inside the emulator.
+  # On by default in DEBUG builds (via INF file).
+  #
+  MAU_CHECK_ORPHAN_CONTEXTS      = NO
+
+  #
+  # For maximum performance, don't periodically bail out
+  # of emulation. This is only useful for situations where
+  # you know the executed code won't do tight loops polling
+  # on some memory location updated by an event.
+  #
+  MAU_EMU_TIMEOUT_NONE           = NO
+
+  #
+  # If you want to support x64 UEFI boot service drivers
+  # and applications, say YES. Saying NO doesn't make sense
+  # for the AARCH64 build.
+  #
+  MAU_SUPPORTS_X64_BINS          = YES
+
+  #
+  # If you want to support AArch64 UEFI boot service drivers
+  # and applications, say YES. Not available for the AARCH64
+  # build.
+  #
+  MAU_SUPPORTS_AARCH64_BINS      = NO
+
+  #
+  # Say YES if you want to ignore all port I/O writes (reads
+  # returning zero), instead of forwarding to EFI_CPU_IO2_PROTOCOL.
+  #
+  # Useful for testing on UEFI DEBUG builds that use the
+  # BaseIoLibIntrinsic (IoLibNoIo.c) implementation.
+  #
+  MAU_EMU_X64_RAZ_WI_PIO         = NO
+
+  #
+  # Seems to work well even when building on small machines.
+  #
+  UC_LTO_JOBS                    = auto
+
 [BuildOptions]
   GCC:RELEASE_*_*_CC_FLAGS       = -DMDEPKG_NDEBUG
 !ifdef $(SOURCE_DEBUG_ENABLE)
@@ -481,6 +549,14 @@
   gUefiOvmfPkgTokenSpaceGuid.PcdForceNoAcpi|L"ForceNoAcpi"|gOvmfVariableGuid|0x0|TRUE|NV,BS
 !endif
 
+  #
+  # Runtime switch for the MultiArch emulator, bound to byte 1 of the
+  # platform "DebugConfigData" setup variable (to be maintained by
+  # DebugConfigDxe and exposed in Setup -> Debug; until that lands the
+  # variable is absent and the token reads its default TRUE).
+  #
+  gMauPkgTokenSpaceGuid.PcdMauEmulationEnabled|L"DebugConfigData"|gEfiSophgoGlobalVariableGuid|0x1|TRUE
+
 ################################################################################
 #
 # Components Section - list of all EDK II Modules needed by this Platform.
@@ -650,11 +726,11 @@
   MdeModulePkg/Bus/Usb/UsbMassStorageDxe/UsbMassStorageDxe.inf
 
   #
-  # Emulator for x64 OpRoms, etc.
+  # Emulator for x64 OpRoms, etc. Always built in; runtime on/off is
+  # PcdMauEmulationEnabled (bound above to the DebugConfigData setup
+  # variable).
   #
-  !if $(X64EMU_ENABLE) == TRUE
-    Emulator/MultiArchUefiPkg/EmulatorDxe.inf
-  !endif
+  !include MultiArchUefiPkg/MultiArchUefiPkg.dsc.inc
 
   #
   # ASPEED AST2600 GOP driver

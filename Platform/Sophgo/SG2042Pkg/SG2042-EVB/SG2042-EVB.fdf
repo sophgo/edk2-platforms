@@ -191,9 +191,7 @@ INF  MdeModulePkg/Logo/LogoDxe.inf
 #
 # Emulator for x64 OpRoms, etc.
 #
-!if $(X64EMU_ENABLE) == TRUE
-  INF  Emulator/MultiArchUefiPkg/EmulatorDxe.inf
-!endif
+INF  MultiArchUefiPkg/Drivers/Emulator/Emulator.inf
 
 #
 # ASPEED AST2600 GOP driver

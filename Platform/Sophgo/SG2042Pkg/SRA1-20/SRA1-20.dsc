@@ -844,6 +844,7 @@
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
+  Silicon/Sophgo/SG2042Pkg/Drivers/DebugConfigDxe/DebugConfigDxe.inf
 
   #
   # ACPI Support

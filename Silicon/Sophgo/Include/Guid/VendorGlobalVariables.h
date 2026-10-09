@@ -41,6 +41,15 @@ extern EFI_GUID  gEfiSophgoGlobalVariableGuid;
 #define EFI_TIME_VARIABLE_NAME                L"DynamicTimeData"
 
 //
+// Variable name for storing the debug configuration data.
+// This NVRAM variable holds a DEBUG_CONFIG_DATA structure (see
+// Silicon/Sophgo/SG2042Pkg/Include/DebugConfigNv.h) that records the
+// serial-port (SPCR) and OpROM emulation setup switches maintained by
+// DebugConfigDxe (Setup -> Debug).
+//
+#define EFI_DEBUG_CONFIG_VARIABLE_NAME        L"DebugConfigData"
+
+//
 // Variable name for storing the password configuration data.
 // This NVRAM variable holds a PASSWORD_CONFIG_DATA structure that includes flags indicating
 // whether the user and administrator passwords are enabled, the user privilege level,

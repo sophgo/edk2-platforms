@@ -29,6 +29,7 @@
   EmbeddedPkg/EmbeddedPkg.dec
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
+  Silicon/Sophgo/Sophgo.dec
   Silicon/Sophgo/SG2042Pkg/SG2042Pkg.dec
 
 [LibraryClasses]
@@ -37,11 +38,15 @@
   PcdLib
   DebugLib
   UefiBootServicesTableLib
+  UefiRuntimeServicesTableLib
   UefiDriverEntryPoint
 
 [Protocols]
   gEfiAcpiTableProtocolGuid                     ## CONSUMES
   gFdtClientProtocolGuid                        ## CONSUMES
+
+[Guids]
+  gEfiSophgoGlobalVariableGuid                  ## CONSUMES ## GUID
 
 [Pcd]
   gEfiMdeModulePkgTokenSpaceGuid.PcdAcpiTableStorageFile    ## CONSUMES

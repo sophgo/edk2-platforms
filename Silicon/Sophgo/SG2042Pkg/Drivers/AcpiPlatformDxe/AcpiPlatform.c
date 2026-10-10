@@ -12,11 +12,16 @@
 #include <Protocol/FirmwareVolume2.h>
 
 #include <Library/BaseLib.h>
+#include <Library/BaseMemoryLib.h>
+#include <Library/MemoryAllocationLib.h>
 #include <Library/UefiBootServicesTableLib.h>
+#include <Library/UefiRuntimeServicesTableLib.h>
 #include <Library/DebugLib.h>
 #include <Library/PcdLib.h>
 
 #include <IndustryStandard/Acpi.h>
+#include <Guid/VendorGlobalVariables.h>
+#include <DebugConfigNv.h>
 #include "UpdateAcpiTable.h"
 
 /**
@@ -149,6 +154,46 @@ AcpiPlatformChecksum (
 
 
 /**
+
+  Check whether the SPCR table should be installed.
+
+  The serial-port switch lives in byte 0 of the "DebugConfigData" setup
+  variable maintained by DebugConfigDxe (Setup -> Debug). Only a variable
+  that reads back whole and explicitly says "disabled" suppresses SPCR;
+  a missing or stale-layout variable keeps the long-standing default of
+  installing the table (SG2042 has always published SPCR), so first boots
+  and dispatch-order races change nothing.
+
+  @retval TRUE   Install the SPCR table.
+  @retval FALSE  Skip the SPCR table.
+
+**/
+STATIC
+BOOLEAN
+SpcrShouldInstall (
+  VOID
+  )
+{
+  DEBUG_CONFIG_DATA  DebugConfigData;
+  UINTN              VarSize;
+  EFI_STATUS         Status;
+
+  VarSize = sizeof (DebugConfigData);
+  Status  = gRT->GetVariable (
+                   EFI_DEBUG_CONFIG_VARIABLE_NAME,
+                   &gEfiSophgoGlobalVariableGuid,
+                   NULL,
+                   &VarSize,
+                   &DebugConfigData
+                   );
+  if (EFI_ERROR (Status) || (VarSize != sizeof (DebugConfigData))) {
+    return TRUE;
+  }
+
+  return DebugConfigData.EnableSerialPort != 0;
+}
+
+/**
   Entrypoint of Acpi Platform driver.
 
   @param  ImageHandle
@@ -216,6 +261,20 @@ AcpiPlatformEntryPoint (
       // Add the table
       //
       TableHeader = (EFI_ACPI_DESCRIPTION_HEADER*) (CurrentTable);
+      //
+      // The SPCR table follows the serial-port setup switch: skip it
+      // when the user disabled "Enable Serial Port" in Setup -> Debug.
+      //
+      if ((TableHeader->Signature == EFI_ACPI_6_1_SERIAL_PORT_CONSOLE_REDIRECTION_TABLE_SIGNATURE) &&
+          !SpcrShouldInstall ())
+      {
+        DEBUG ((DEBUG_INFO, "%a: SPCR table skipped: serial port disabled\n", __func__));
+        Instance++;
+        gBS->FreePool (CurrentTable);
+        CurrentTable = NULL;
+        continue;
+      }
+
       // Update specfic Acpi Table
       // If the Table is updated failed, doesn't install it,
       // go to find next section.

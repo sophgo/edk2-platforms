@@ -4,9 +4,9 @@
   through a custom HII-based interface.
 
   Maintains the "DebugConfigData" setup variable (two switches:
-  Enable Serial Port and Enable OpROM Emulation, both default on)
-  and publishes the Debug formset that the stock UiApp lists on the
-  front page via its third-party driver enumeration.
+  Enable Serial Port, default off, and Enable OpROM Emulation,
+  default on) and publishes the Debug formset that the stock UiApp
+  lists on the front page via its third-party driver enumeration.
 
   Copyright (c) 2026, SOPHGO Technology Inc. All rights reserved.
 
@@ -290,7 +290,7 @@ DebugConfigCallback (
   if ((QuestionId == ENABLE_SERIAL_PORT_QUESTION_ID) &&
       (Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD))
   {
-    Value->u8 = 1;
+    Value->u8 = 0;
   } else if ((QuestionId == ENABLE_EMULATION_QUESTION_ID) &&
              (Action == EFI_BROWSER_ACTION_DEFAULT_STANDARD))
   {
@@ -328,7 +328,7 @@ DebugConfigConfigInit (
     // DXE core later.
     //
     ZeroMem (&DebugConfigData, sizeof (DebugConfigData));
-    DebugConfigData.EnableSerialPort = 1;
+    DebugConfigData.EnableSerialPort = 0;
     DebugConfigData.EnableEmulation   = 1;
     Status = gRT->SetVariable (
                      EFI_DEBUG_CONFIG_VARIABLE_NAME,

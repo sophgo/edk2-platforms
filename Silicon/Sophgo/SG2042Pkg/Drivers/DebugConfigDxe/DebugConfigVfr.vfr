@@ -28,7 +28,7 @@ formset
         flags  = INTERACTIVE,
         option text = STRING_TOKEN(STR_DISABLE), value = 0, flags = 0;
         option text = STRING_TOKEN(STR_ENABLE), value = 1, flags = 0;
-        default value = 1,
+        default value = 0,
     endoneof;
 
     oneof varid = DEBUG_CONFIG_DATA.EnableEmulation,

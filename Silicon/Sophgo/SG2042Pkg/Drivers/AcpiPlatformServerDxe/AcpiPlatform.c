@@ -157,11 +157,11 @@ AcpiPlatformChecksum (
   Check whether the SPCR table should be installed.
 
   The serial-port switch lives in byte 0 of the "DebugConfigData" setup
-  variable maintained by DebugConfigDxe (Setup -> Debug). Only a variable
-  that reads back whole and explicitly says "disabled" suppresses SPCR;
-  a missing or stale-layout variable keeps the long-standing default of
-  installing the table (SG2042 has always published SPCR), so first boots
-  and dispatch-order races change nothing.
+  variable maintained by DebugConfigDxe (Setup -> Debug), whose factory
+  default is DISABLED. SPCR is installed only when the variable reads
+  back whole and EnableSerialPort is set, so a missing variable (first
+  boot, cleared NVRAM, or DebugConfigDxe dispatching later than this
+  driver) yields the same disabled outcome as the default.
 
   @retval TRUE   Install the SPCR table.
   @retval FALSE  Skip the SPCR table.
@@ -186,7 +186,7 @@ SpcrShouldInstall (
                    &DebugConfigData
                    );
   if (EFI_ERROR (Status) || (VarSize != sizeof (DebugConfigData))) {
-    return TRUE;
+    return FALSE;
   }
 
   return DebugConfigData.EnableSerialPort != 0;

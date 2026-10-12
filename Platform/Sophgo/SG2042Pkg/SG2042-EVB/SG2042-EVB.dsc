@@ -372,7 +372,7 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdRemovableMediaImageVerificationPolicy|0x04
 !endif
 
-  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"1.4.3"
+  gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString|L"1.5.0"
 
   #
   # F2 for UI APP

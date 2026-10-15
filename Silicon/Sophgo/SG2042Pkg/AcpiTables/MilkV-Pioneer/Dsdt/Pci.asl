@@ -170,9 +170,9 @@ Scope(_SB)
         ReadWrite,
         0x0,
         0x0,          // MIN
-        0x1effffffff, // MAX
+        0xFFFFFFFFFF, // MAX
         0x0,          // TRA
-        0x1f00000000, // LEN
+        0x10000000000, // LEN
         ,
         ,
         )
@@ -288,9 +288,9 @@ Scope(_SB)
         Cacheable, ReadWrite,
         0x0,
         0x0,               // MIN
-        0x1effffffff,      // MAX
+        0xFFFFFFFFFF,      // MAX
         0x0,               // TRA
-        0x1f00000000,      // LEN
+        0x10000000000,      // LEN
         , ,)
     })
 
@@ -404,9 +404,9 @@ Scope(_SB)
         Cacheable, ReadWrite,
         0x0,
         0x0,               // MIN
-        0x1effffffff,      // MAX
+        0xFFFFFFFFFF,      // MAX
         0x0000000000,      // TRA
-        0x1f00000000,      // LEN
+        0x10000000000,      // LEN
         , ,)
     })
 

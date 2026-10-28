@@ -79,6 +79,8 @@
   gSophgoTokenSpaceGuid.PcdPeiPermanentMemBase|0x0|UINT64|0x00001022
   gSophgoTokenSpaceGuid.PcdPeiPermanentMemSize|0x0|UINT64|0x00001023
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdRiscVPeiFvBase|0x0|UINT32|0x00001024
+  gSophgoTokenSpaceGuid.PcdI2cControllerCount|0|UINT32|0x00001025
+  gSophgoTokenSpaceGuid.PcdI2cBaseAddresses|{0}|UINT64[]|0x00001026
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

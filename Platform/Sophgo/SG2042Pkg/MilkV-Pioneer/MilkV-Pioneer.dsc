@@ -481,6 +481,8 @@
 
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSdBaseAddress|0x704002B000
+  gSophgoTokenSpaceGuid.PcdI2cControllerCount|4
+  gSophgoTokenSpaceGuid.PcdI2cBaseAddresses|{0x00,0x50,0x00,0x30,0x70,0x00,0x00,0x00, 0x00,0x60,0x00,0x30,0x70,0x00,0x00,0x00, 0x00,0x70,0x00,0x30,0x70,0x00,0x00,0x00, 0x00,0x80,0x00,0x30,0x70,0x00,0x00,0x00}
 
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoSocket0Pci0Link0CfgBase|0x7060000000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoSocket0Pci0Link1CfgBase|0x7060800000
@@ -694,7 +696,7 @@
   Silicon/Sophgo/SG2044Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/DwI2cDxe/DwI2cDxe.inf
+  Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 

@@ -22,7 +22,6 @@
   MdePkg/MdePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   Silicon/Sophgo/Sophgo.dec
-  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -44,8 +43,8 @@
   gSophgoI2cMasterProtocolGuid    ## PRODUCES
 
 [Pcd]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdI2cControllerCount
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdI2cBaseAddresses
+  gSophgoTokenSpaceGuid.PcdI2cControllerCount
+  gSophgoTokenSpaceGuid.PcdI2cBaseAddresses
 
 [Depex]
   TRUE

@@ -137,6 +137,7 @@ INF  Silicon/Sophgo/SG2042Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 #
 # PCIe Support
 #
+INF  Silicon/Sophgo/SG2044Pkg/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
 INF  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
 INF  MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf
 

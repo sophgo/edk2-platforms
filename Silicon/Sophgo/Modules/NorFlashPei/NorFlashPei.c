@@ -49,6 +49,19 @@ SpiNorGetFlashId (
     return Status;
   }
 
+  Status = NorFlashGetInfo (Id, &Nor->Info, UseInRuntime);
+  if (EFI_ERROR (Status)) {
+    DEBUG ((
+      DEBUG_ERROR,
+      "%a: Unrecognized JEDEC Id bytes: 0x%02x%02x%02x\n",
+      __func__,
+      Id[0],
+      Id[1],
+      Id[2]
+      ));
+    return Status;
+  }
+
   return EFI_SUCCESS;
 }
 

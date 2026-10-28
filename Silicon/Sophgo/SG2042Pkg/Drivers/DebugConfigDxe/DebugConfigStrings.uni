@@ -1,0 +1,34 @@
+///** @file
+//
+//  Debug Config formset.
+//
+//  Copyright (c) 2026, SOPHGO Technology Inc. All rights reserved.
+//
+//  SPDX-License-Identifier: BSD-2-Clause-Patent
+//
+//**/
+
+/=#
+
+#langdef   en-US "English"
+#langdef   fr-FR "Français"
+
+#string STR_DEBUG_CONFIG_TITLE         #language en-US  "Debug"
+                                       #language fr-FR  "Debug"
+#string STR_DEBUG_CONFIG_HELP          #language en-US  "Debug configuration"
+                                       #language fr-FR  "Configuration de débogage"
+
+#string STR_ENABLE_SERIAL_PORT_PROMPT  #language en-US  "Enable Serial Port"
+                                       #language fr-FR  "Activer le port série"
+#string STR_ENABLE_SERIAL_PORT_HELP    #language en-US  "Enable or disable serial port console redirection (SPCR) table. When enabled, BIOS will pass the SPCR ACPI table to the OS."
+                                       #language fr-FR  "Activer ou désactiver la redirection du port série (SPCR). Si activé, le BIOS transmettra la table ACPI SPCR à l'OS."
+
+#string STR_ENABLE_EMULATION_PROMPT    #language en-US  "Enable OpROM Emulation"
+                                       #language fr-FR  "Activer l'émulation OpROM"
+#string STR_ENABLE_EMULATION_HELP      #language en-US  "Run foreign-architecture PCI Option ROMs (discrete GPUs, RAID controllers; currently x64) through the built-in emulator as a whole. Enabled by default; devices with such ROMs lose their ROM functionality (e.g. card Setup menus) while disabled. Takes effect after reboot."
+                                       #language fr-FR  "Exécuter les ROM optionnelles PCI x64 (GPU discrets, contrôleurs RAID) via l'émulateur intégré. Activé par défaut ; les périphériques à ROM x64 uniquement perdent leur fonctionnalité ROM tant qu'il est désactivé. Prend effet après redémarrage."
+
+#string STR_DISABLE                    #language en-US  "Disable"
+                                       #language fr-FR  "Désactiver"
+#string STR_ENABLE                     #language en-US  "Enable"
+                                       #language fr-FR  "Activer"

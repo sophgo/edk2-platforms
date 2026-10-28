@@ -1,0 +1,53 @@
+## @file
+#  SG2042 PEI memory discovery from the firmware device tree.
+#
+#  Copyright (c) 2026, SOPHGO Technologies Inc. All rights reserved.
+#
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = Sg2042MemoryInitPei
+  FILE_GUID                      = 0990C4BA-12C9-4B4A-8F98-499517D7C9AB
+  MODULE_TYPE                    = PEIM
+  VERSION_STRING                 = 1.0
+  ENTRY_POINT                    = PeiMemoryInitialization
+
+[Sources]
+  MemoryInitPei.c
+
+[Packages]
+  EmbeddedPkg/EmbeddedPkg.dec
+  MdeModulePkg/MdeModulePkg.dec
+  MdePkg/MdePkg.dec
+  Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
+
+[Guids]
+  gEfiMemoryTypeInformationGuid
+  gFdtHobGuid
+
+[LibraryClasses]
+  BaseMemoryLib
+  DebugLib
+  FdtLib
+  HobLib
+  PeimEntryPoint
+  PeiServicesLib
+
+[Pcd]
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiACPIReclaimMemory
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiACPIMemoryNVS
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiReservedMemoryType
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesData
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiRuntimeServicesCode
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiBootServicesCode
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiBootServicesData
+  gEmbeddedTokenSpaceGuid.PcdMemoryTypeEfiLoaderCode
+
+[Ppis]
+  gEfiPeiMasterBootModePpiGuid
+
+[Depex]
+  TRUE

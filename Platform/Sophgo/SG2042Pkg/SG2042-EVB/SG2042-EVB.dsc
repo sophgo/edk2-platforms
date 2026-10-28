@@ -183,6 +183,9 @@
   BootLogoLib|MdeModulePkg/Library/BootLogoLib/BootLogoLib.inf
   PlatformBmPrintScLib|OvmfPkg/Library/PlatformBmPrintScLib/PlatformBmPrintScLib.inf
   FdtLib|MdePkg/Library/BaseFdtLib/BaseFdtLib.inf
+  SmbiosInformationLib|Silicon/Sophgo/SG2044Pkg/Library/SmbiosInformation/SmbiosInformationLib.inf
+  HashPasswordLib|Silicon/Sophgo/Library/HashPasswordLib/HashPasswordLib.inf
+  FileExplorerLib|MdeModulePkg/Library/FileExplorerLib/FileExplorerLib.inf
   VariableFlashInfoLib|MdeModulePkg/Library/BaseVariableFlashInfoLib/BaseVariableFlashInfoLib.inf
   VariablePolicyHelperLib|MdeModulePkg/Library/VariablePolicyHelperLib/VariablePolicyHelperLib.inf
 !ifdef $(SOURCE_DEBUG_ENABLE)
@@ -238,6 +241,9 @@
 
   # Flattened Device Tree (FDT) access library
   FdtLib|MdePkg/Library/BaseFdtLib/BaseFdtLib.inf
+  SmbiosInformationLib|Silicon/Sophgo/SG2044Pkg/Library/SmbiosInformation/SmbiosInformationLib.inf
+  HashPasswordLib|Silicon/Sophgo/Library/HashPasswordLib/HashPasswordLib.inf
+  FileExplorerLib|MdeModulePkg/Library/FileExplorerLib/FileExplorerLib.inf
   DtPlatformDtbLoaderLib|EmbeddedPkg/Library/DxeDtPlatformDtbLoaderLibDefault/DxeDtPlatformDtbLoaderLibDefault.inf
 
   # PCIe dependencies
@@ -341,7 +347,7 @@
 !ifdef $(SOURCE_DEBUG_ENABLE)
   DebugAgentLib|SourceLevelDebugPkg/Library/DebugAgent/DxeDebugAgentLib.inf
 !endif
-  PlatformBootManagerLib|Silicon/Sophgo/SG2042Pkg/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
+  PlatformBootManagerLib|Silicon/Sophgo/Library/PlatformBootManagerLib/PlatformBootManagerLib.inf
   PlatformMemoryTestLib|Platform/RISC-V/PlatformPkg/Library/PlatformMemoryTestLibNull/PlatformMemoryTestLibNull.inf
   PlatformUpdateProgressLib|Platform/RISC-V/PlatformPkg/Library/PlatformUpdateProgressLibNull/PlatformUpdateProgressLibNull.inf
 
@@ -478,6 +484,9 @@
   gUefiCpuPkgTokenSpaceGuid.PcdCpuCoreCrystalClockFrequency|50000000
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum0|0
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum1|1
+  gSophgoTokenSpaceGuid.PcdServerNamePrefix|L"SR"
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform|FALSE
+  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence|FALSE
 
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSdBaseAddress|0x704002B000
@@ -683,7 +692,7 @@
   MdeModulePkg/Universal/Metronome/Metronome.inf
   MdeModulePkg/Universal/ResetSystemRuntimeDxe/ResetSystemRuntimeDxe.inf {
     <LibraryClasses>
-      ResetSystemLib|MdeModulePkg/Library/BaseResetSystemLibNull/BaseResetSystemLibNull.inf
+      ResetSystemLib|OvmfPkg/RiscVVirt/Library/ResetSystemLib/BaseResetSystemLib.inf
   }
   EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf {
     <LibraryClasses>
@@ -869,14 +878,17 @@
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   MdeModulePkg/Logo/LogoDxe.inf
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
-  MdeModulePkg/Application/UiApp/UiApp.inf {
+  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
-  Silicon/Sophgo/SG2042Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/DebugConfigDxe/DebugConfigDxe.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/InformationDxe/InformationDxe.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/DebugConfigDxe/DebugConfigDxe.inf
 
   #
   # ACPI Support

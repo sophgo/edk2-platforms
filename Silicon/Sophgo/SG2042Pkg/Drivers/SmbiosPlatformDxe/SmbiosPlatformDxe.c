@@ -800,6 +800,14 @@ SmbiosPlatformDriverEntryPoint (
   }
 
   Status = SmbiosInstallAllStructures (Smbios);
+  if (EFI_ERROR (Status)) {
+    return Status;
+  }
 
-  return Status;
+  return gBS->InstallProtocolInterface (
+                &ImageHandle,
+                &gSophgoSmbiosPlatformReadyProtocolGuid,
+                EFI_NATIVE_INTERFACE,
+                NULL
+                );
 }

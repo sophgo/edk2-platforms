@@ -22,6 +22,7 @@
 [Packages]
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
+  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -34,6 +35,7 @@
 
 [Protocols]
   gEfiSmbiosProtocolGuid                      # PROTOCOL ALWAYS_CONSUMED
+  gSophgoSmbiosPlatformReadyProtocolGuid      ## PRODUCES
 
 [Depex]
   gEfiSmbiosProtocolGuid

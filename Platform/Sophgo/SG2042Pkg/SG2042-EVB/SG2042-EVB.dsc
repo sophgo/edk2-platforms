@@ -479,7 +479,7 @@
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum1|1
 
 [PcdsFixedAtBuild.common]
-  gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdSDIOBase|0x704002B000
+  gSophgoTokenSpaceGuid.PcdSdBaseAddress|0x704002B000
 
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoSocket0Pci0Link0CfgBase|0x7060000000
   gSophgoSG2042PlatformPkgTokenSpaceGuid.PcdMangoSocket0Pci0Link1CfgBase|0x7060800000
@@ -695,7 +695,7 @@
   Silicon/Sophgo/SG2042Pkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   Silicon/Sophgo/SG2042Pkg/Drivers/DwI2cDxe/DwI2cDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/SdHostDxe/SdHostDxe.inf
+  Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf
 
   #
   # RISC-V Core module

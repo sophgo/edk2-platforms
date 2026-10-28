@@ -596,7 +596,7 @@
 
 # sophgo,sg2044-dwcmshc set
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdControllerCount|1
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdBaseAddress|0x703000b000
+  gSophgoTokenSpaceGuid.PcdSdBaseAddress|0x703000b000
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdRegSize|0x2000
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdBusWidth|4
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdClockFrequency|50000000

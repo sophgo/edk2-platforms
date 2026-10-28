@@ -590,7 +590,7 @@ SpifmcEntryPoint (
     return EFI_DEVICE_ERROR;
   }
 
-  mSpiControllerNum = 2;
+  mSpiControllerNum = FixedPcdGet8 (PcdSpifmcControllerCount);
   mNorFlashInstance = AllocateRuntimeZeroPool (mSpiControllerNum * sizeof(SPI_NOR));
   if (mNorFlashInstance == NULL) {
     DEBUG ((DEBUG_ERROR, "%a: Cannot allocate memory\n", __func__));

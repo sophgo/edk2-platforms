@@ -38,6 +38,7 @@
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base                            ## CONSUMES
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base                            ## CONSUMES
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable                       ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdSpifmcControllerCount                  ## CONSUMES
 
 [Depex]
   gEfiPeiMemoryDiscoveredPpiGuid

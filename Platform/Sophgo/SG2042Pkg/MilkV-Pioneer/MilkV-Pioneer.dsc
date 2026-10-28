@@ -469,6 +469,7 @@
   gSophgoTokenSpaceGuid.PcdSPIFMC0Base|0x7002180000
   gSophgoTokenSpaceGuid.PcdSPIFMC1Base|0x7002180000
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|FALSE
+  gSophgoTokenSpaceGuid.PcdSpifmcControllerCount|1
 
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageVariableSize|0x00010000
   gEfiMdeModulePkgTokenSpaceGuid.PcdFlashNvStorageFtwWorkingSize|0x00010000
@@ -690,9 +691,9 @@
   #
   # RISC-V Platform module
   #
-  Silicon/Sophgo/SG2042Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
+  Silicon/Sophgo/SG2044Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/FlashFvbDxe/FlashFvbDxe.inf
+  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   Silicon/Sophgo/SG2042Pkg/Drivers/DwI2cDxe/DwI2cDxe.inf
   Silicon/Sophgo/Drivers/MmcDxe/MmcDxe.inf
   Silicon/Sophgo/Drivers/SdHostDxe/SdHostDxe.inf

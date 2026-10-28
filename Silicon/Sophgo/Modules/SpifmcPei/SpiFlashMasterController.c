@@ -542,7 +542,7 @@ SpifmcEntryPoint (
   INT32                Index, Loop;
   SPI_NOR              *Nor;;
 
-  mSpiControllerNum = 2;
+  mSpiControllerNum = FixedPcdGet8 (PcdSpifmcControllerCount);
   mNorFlashInstance = AllocateZeroPool (mSpiControllerNum * sizeof(SPI_NOR));
   if (mNorFlashInstance == NULL) {
     DEBUG ((DEBUG_ERROR, "%a: Cannot allocate memory\n", __func__));

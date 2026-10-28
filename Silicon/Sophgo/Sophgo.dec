@@ -53,6 +53,7 @@
   gSophgoTokenSpaceGuid.PcdMisa|0x0|UINT32|0x00001008
   gSophgoTokenSpaceGuid.PcdTrngBase|0x0|UINT64|0x00001009
   gSophgoTokenSpaceGuid.PcdSpifmcDmmrEnable|FALSE|BOOLEAN|0x0000100A
+  gSophgoTokenSpaceGuid.PcdSpifmcControllerCount|2|UINT8|0x00001007
   gSophgoTokenSpaceGuid.PcdFlashPartitionTableAddress|0x0|UINT64|0x0000100B
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum0|0x0|UINT32|0x0000100C
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum1|0x0|UINT32|0x0000100D

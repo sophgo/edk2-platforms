@@ -184,6 +184,13 @@
 //
 #define PCIE_LINK_WAIT_RETRIES                           50000u
 
+#define ECRC_GEN_CAP                                    (1U << 5)
+#define ECRC_GEN_EN                                     (1U << 6)
+#define ECRC_CHECK_CAP                                  (1U << 7)
+#define ECRC_CHECK_EN                                   (1U << 8)
+#define MULTIPLE_HEADER_CAP                             (1U << 9)
+#define MULTIPLE_HEADER_EN                              (1U << 10)
+
 //
 // FSBL perst_gpio[10] = {6, 1, 2, 3, 20, 21, 22, 23, 7, 19} (sg2260_pcie.c:1558),
 // the SoC-fixed PERST# pin per (subsys, wrapper, phy), laid out as four pins
@@ -882,8 +889,19 @@ PcieConfigCtrl (
   Val  = (Val & 0xfffffff0u) | PcieGenSlt;
   MmioWrite32 (DbiRegBase + 0xa0, Val);
 
-  // ecrc generation enable (DBI 0x118).
-  Val = 0x3e0u;
+  // (DBI 0x118)
+  // Declare root port can generate and check ECRC. But don't enable ECRC
+  // generation and checking by default. Let OS select the strategy.
+  // On Linux kernel, customers can pass pcie_ecrc=xxx to decide if ECRC is
+  // enabled. There are 3 valid values for xxx.
+  // bios: The default value, never change ECRC_CHECK_EN and ECRC_GEN_EN. Remain
+  // BIOS setup.
+  // off: Always set ECRC_CHECK_EN and ECRC_GEN_EN to 0 (Disable).
+  // on: Check if a function's ECRC_CHECK_EN and ECRC_GEN_EN, if it supports,
+  // enable it. Be careful, Linux doesn't check if all devices in a tree
+  // support ECRC, so if a cranky device that losses TLP with ECRC, it won't
+  // work.
+  Val = ECRC_GEN_CAP | ECRC_CHECK_CAP | MULTIPLE_HEADER_CAP;
   MmioWrite32 (DbiRegBase + 0x118, Val);
 }
 

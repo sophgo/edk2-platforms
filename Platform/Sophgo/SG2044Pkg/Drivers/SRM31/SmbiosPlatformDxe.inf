@@ -79,7 +79,7 @@
   gEfiDevicePathProtocolGuid                      ## CONSUMED
 
 [Pcd]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBiosVersionString
+  gSophgoTokenSpaceGuid.PcdBiosVersionString
   gSophgoTokenSpaceGuid.PcdMisa
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdPcieHostBridgeTable
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuCount

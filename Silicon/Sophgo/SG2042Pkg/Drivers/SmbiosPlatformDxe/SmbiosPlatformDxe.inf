@@ -22,13 +22,14 @@
 [Packages]
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
-  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
+  Silicon/Sophgo/Sophgo.dec
 
 [LibraryClasses]
   BaseLib
   BaseMemoryLib
   DebugLib
   HobLib
+  MemoryAllocationLib
   PcdLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
@@ -36,6 +37,9 @@
 [Protocols]
   gEfiSmbiosProtocolGuid                      # PROTOCOL ALWAYS_CONSUMED
   gSophgoSmbiosPlatformReadyProtocolGuid      ## PRODUCES
+
+[Pcd]
+  gSophgoTokenSpaceGuid.PcdBiosVersionString
 
 [Depex]
   gEfiSmbiosProtocolGuid

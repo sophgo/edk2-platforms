@@ -98,9 +98,9 @@ STATIC SMBIOS_TABLE_TYPE0 mSG2042EVBType0 = {
   0xFF,                               // UINT8                     EmbeddedControllerFirmwareMinorRelease
 };
 
-STATIC CHAR8 CONST *mSG2042EVBType0Strings[] = {
+STATIC CHAR8 *mSG2042EVBType0Strings[] = {
   "SOPHGO\0",     /* Vendor */
-  "1.5.1\0",      /* BiosVersion */
+  "1.5.1\0",      /* BiosVersion (placeholder, patched at runtime from PcdBiosVersionString) */
   __DATE__"\0",   /* BiosReleaseDate */
   NULL
 };
@@ -505,7 +505,7 @@ STATIC CHAR8 CONST *mSG2042EVBType32Strings[] = {
   NULL
 };
 
-STATIC CONST VOID *DefaultCommonTables[][2] =
+STATIC VOID *DefaultCommonTables[][2] =
 {
   { &mSG2042EVBType0,         mSG2042EVBType0Strings  },
   { &mSG2042EVBType1,         mSG2042EVBType1Strings  },
@@ -665,7 +665,7 @@ SmbiosInstallMemoryStructure (
 EFI_STATUS
 SmbiosInstallStructures (
    IN EFI_SMBIOS_PROTOCOL   *Smbios,
-   IN CONST VOID            *DefaultTables[][2]
+   IN VOID                  *DefaultTables[][2]
    )
 {
     EFI_STATUS                Status;
@@ -788,6 +788,23 @@ SmbiosPlatformDriverEntryPoint (
 {
   EFI_STATUS                Status;
   EFI_SMBIOS_PROTOCOL       *Smbios;
+  CHAR16                    *BiosVersion;
+  CHAR8                     *AsciiVersion;
+  UINTN                     VersionLen;
+
+  //
+  // Patch SMBIOS Type0 BIOS version from PCD at runtime, so the version
+  // is controlled by the DSC without recompiling this driver.
+  //
+  BiosVersion = (CHAR16 *)PcdGetPtr (PcdBiosVersionString);
+  if ((BiosVersion != NULL) && (BiosVersion[0] != L'\0')) {
+    VersionLen  = StrLen (BiosVersion);
+    AsciiVersion = AllocatePool (VersionLen + 1);
+    if (AsciiVersion != NULL) {
+      UnicodeStrToAsciiStrS (BiosVersion, AsciiVersion, VersionLen + 1);
+      mSG2042EVBType0Strings[1] = AsciiVersion;
+    }
+  }
 
   //
   // Find the SMBIOS protocol

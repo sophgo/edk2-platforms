@@ -30,10 +30,3 @@
 
 !include Platform/Sophgo/SG2042Pkg/SG2042Common.dsc.inc
 
-[Components]
-!if $(ACPI_ENABLE) == TRUE
-  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
-  Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformServerDxe/AcpiPlatformServerDxe.inf
-  MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
-  Silicon/Sophgo/SG2042Pkg/AcpiTables/SRA1-20/SRA1-20-AcpiTables.inf
-!endif

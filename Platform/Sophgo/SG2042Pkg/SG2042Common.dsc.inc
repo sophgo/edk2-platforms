@@ -929,4 +929,16 @@
   Silicon/Sophgo/Drivers/DebugConfigDxe/DebugConfigDxe.inf
 
   #
-[Components]
+  # ACPI Support
+  #
+!if $(ACPI_ENABLE) == TRUE
+  MdeModulePkg/Universal/Acpi/AcpiTableDxe/AcpiTableDxe.inf
+!if $(IS_SERVER_PLATFORM) == TRUE
+  Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformServerDxe/AcpiPlatformServerDxe.inf
+  Silicon/Sophgo/SG2042Pkg/AcpiTables/SRA1-20/SRA1-20-AcpiTables.inf
+!else
+  Silicon/Sophgo/SG2042Pkg/Drivers/AcpiPlatformDxe/AcpiPlatformDxe.inf
+  Silicon/Sophgo/SG2042Pkg/AcpiTables/SG2042-EVB/SG2042-EVB-AcpiTables.inf
+!endif
+  MdeModulePkg/Universal/Acpi/BootGraphicsResourceTableDxe/BootGraphicsResourceTableDxe.inf
+!endif

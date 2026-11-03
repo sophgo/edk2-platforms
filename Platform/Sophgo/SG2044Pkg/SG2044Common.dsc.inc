@@ -646,7 +646,7 @@
   # [BIOS]
   # BIOS Version shown in SMBIOS Type0 and the Setup Information page.
   # Bump this manually on release (keep in sync with the pack -o 0x0 version).
-  gSophgoTokenSpaceGuid.PcdBiosVersionString|L"2.1.1"
+  gSophgoTokenSpaceGuid.PcdBiosVersionString|L"3.0.0"
   # [DDR]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrType|L"LPDDR5x"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDdrRate|8533000000

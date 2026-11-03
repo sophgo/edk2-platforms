@@ -387,7 +387,7 @@
   gEfiSecurityPkgTokenSpaceGuid.PcdRemovableMediaImageVerificationPolicy|0x04
 !endif
 
-  gSophgoTokenSpaceGuid.PcdBiosVersionString|L"1.5.1"
+  gSophgoTokenSpaceGuid.PcdBiosVersionString|L"3.0.0"
 
   #
   # F2 for UI APP

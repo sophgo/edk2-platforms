@@ -597,7 +597,7 @@
 # sophgo,sg2044-dwcmshc set
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdControllerCount|1
   gSophgoTokenSpaceGuid.PcdSdBaseAddress|0x703000b000
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdRegSize|0x2000
+  gSophgoTokenSpaceGuid.PcdSdRegSize|0x2000
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdBusWidth|4
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdClockFrequency|50000000
 
@@ -608,33 +608,27 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdDefaultI2cSpeed|100000
 
 # snps,dw-apb-gpio set
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdGpioControllerCount|3
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdGpioBaseAddresses|{0x00,0x90,0x00,0x40,0x70,0x00,0x00,0x00, 0x00,0xA0,0x00,0x40,0x70,0x00,0x00,0x00, 0x00,0xB0,0x00,0x40,0x70,0x00,0x00,0x00}
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdGpioPinsPerController|32
+  gSophgoTokenSpaceGuid.PcdGpioControllerCount|3
+  gSophgoTokenSpaceGuid.PcdGpioBaseAddresses|{0x00,0x90,0x00,0x40,0x70,0x00,0x00,0x00, 0x00,0xA0,0x00,0x40,0x70,0x00,0x00,0x00, 0x00,0xB0,0x00,0x40,0x70,0x00,0x00,0x00}
+  gSophgoTokenSpaceGuid.PcdGpioPinsPerController|32
 
 # snps,dw-apb-ssi set
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiControllerCount|1
-  # gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiBaseAddresses|0x7030004000
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiBaseAddresses|{0x00,0x40,0x00,0x30,0x70,0x00,0x00,0x00}
-  # gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiClockFrequencies[0]|250000000
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiClockFrequencies|{0x80,0xB2,0xE6,0x0E}
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiRxSampleDelays|{0x00,0x00,0x00,0x00}
+  gSophgoTokenSpaceGuid.PcdSpiControllerCount|1
+  gSophgoTokenSpaceGuid.PcdSpiBaseAddresses|{0x00,0x40,0x00,0x30,0x70,0x00,0x00,0x00}
+  gSophgoTokenSpaceGuid.PcdSpiClockFrequencies|{0x80,0xB2,0xE6,0x0E}
+  gSophgoTokenSpaceGuid.PcdSpiRxSampleDelays|{0x00,0x00,0x00,0x00}
 
 # sg,efuse set
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseControllerNum|2
-  # gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseBase[0]|0x7040000000
-  # gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseBase[1]|0x7040001000
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseBase|{0x00,0x00,0x00,0x40,0x70,0x00,0x00,0x00, 0x00,0x10,0x00,0x40,0x70,0x00,0x00,0x00}
-  # gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumAddrBits|8
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumAddrBits|{0x08,0x00,0x00,0x00, 0x08,0x00,0x00,0x00}
-  # gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumCells|128
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumCells|{0xC0,0x1F,0x00,0x00, 0xC0,0x1F,0x00,0x00}
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseCellWidth|{0x04,0x00,0x00,0x00, 0x04,0x00,0x00,0x00}
+  gSophgoTokenSpaceGuid.PcdEfuseControllerNum|2
+  gSophgoTokenSpaceGuid.PcdEfuseBase|{0x00,0x00,0x00,0x40,0x70,0x00,0x00,0x00, 0x00,0x10,0x00,0x40,0x70,0x00,0x00,0x00}
+  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits|{0x08,0x00,0x00,0x00, 0x08,0x00,0x00,0x00}
+  gSophgoTokenSpaceGuid.PcdEfuseNumCells|{0xC0,0x1F,0x00,0x00, 0xC0,0x1F,0x00,0x00}
+  gSophgoTokenSpaceGuid.PcdEfuseCellWidth|{0x04,0x00,0x00,0x00, 0x04,0x00,0x00,0x00}
 
 # memory
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMemoryBaseAddress|0x80000000
+  gSophgoTokenSpaceGuid.PcdMemoryBaseAddress|0x80000000
   # 128G
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMemorySize|0x2000000000
+  gSophgoTokenSpaceGuid.PcdMemorySize|0x2000000000
 
 # Cpu
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuCount|64

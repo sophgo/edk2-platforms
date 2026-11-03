@@ -63,9 +63,9 @@
   gSophgoTokenSpaceGuid.PcdEfuseControllerNum|0x0|UINT32|0x00001011
   gSophgoTokenSpaceGuid.PcdEfuse0Base|0x0|UINT64|0x00001012
   gSophgoTokenSpaceGuid.PcdEfuse1Base|0x0|UINT64|0x00001013
-  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits|0x0|UINT32|0x00001014
-  gSophgoTokenSpaceGuid.PcdEfuseNumCells|0x0|UINT32|0x00001015
-  gSophgoTokenSpaceGuid.PcdEfuseCellWidth|0x0|UINT32|0x00001016
+  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits|{0}|UINT32[]|0x00001014
+  gSophgoTokenSpaceGuid.PcdEfuseNumCells|{0}|UINT32[]|0x00001015
+  gSophgoTokenSpaceGuid.PcdEfuseCellWidth|{0}|UINT32[]|0x00001016
   gSophgoTokenSpaceGuid.PcdEfuseWriteEnableGpio|FALSE|BOOLEAN|0x00001017
   gSophgoTokenSpaceGuid.PcdEfuseWriteEnableGpioPin|0x0|UINT8|0x00001018
   gSophgoTokenSpaceGuid.PcdEfuseIsGpioHighToEnableWrite|FALSE|BOOLEAN|0x00001019
@@ -83,6 +83,17 @@
   gSophgoTokenSpaceGuid.PcdI2cControllerCount|0|UINT32|0x00001025
   gSophgoTokenSpaceGuid.PcdI2cBaseAddresses|{0}|UINT64[]|0x00001026
   gSophgoTokenSpaceGuid.PcdBiosVersionString|L"1.0"|VOID*|0x00001027
+  gSophgoTokenSpaceGuid.PcdEfuseBase|{0}|UINT64[]|0x00001028
+  gSophgoTokenSpaceGuid.PcdGpioBaseAddresses|{0}|UINT64[]|0x00001029
+  gSophgoTokenSpaceGuid.PcdGpioControllerCount|0|UINT32|0x0000102A
+  gSophgoTokenSpaceGuid.PcdGpioPinsPerController|0|UINT32|0x0000102B
+  gSophgoTokenSpaceGuid.PcdSpiBaseAddresses|{0}|UINT64[]|0x0000102C
+  gSophgoTokenSpaceGuid.PcdSpiControllerCount|0|UINT32|0x0000102D
+  gSophgoTokenSpaceGuid.PcdSdRegSize|0|UINT64|0x0000102E
+  gSophgoTokenSpaceGuid.PcdMemoryBaseAddress|0|UINT64|0x0000102F
+  gSophgoTokenSpaceGuid.PcdMemorySize|0|UINT64|0x00001030
+  gSophgoTokenSpaceGuid.PcdSpiClockFrequencies|{0}|UINT32[]|0x00001031
+  gSophgoTokenSpaceGuid.PcdSpiRxSampleDelays|{0}|UINT32[]|0x00001032
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

@@ -33,7 +33,6 @@
   MdeModulePkg/MdeModulePkg.dec
   MdePkg/MdePkg.dec
   Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
-  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [Guids]
   gEfiMemoryTypeInformationGuid
@@ -57,16 +56,16 @@
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamBase
   gUefiRiscVPlatformPkgTokenSpaceGuid.PcdTemporaryRamSize
 
-  # gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMemoryBaseAddress
-  # gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMemorySize
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseControllerNum
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseBase
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumAddrBits
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumCells
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseCellWidth
+  # gSophgoTokenSpaceGuid.PcdMemoryBaseAddress
+  # gSophgoTokenSpaceGuid.PcdMemorySize
+  gSophgoTokenSpaceGuid.PcdEfuseControllerNum
+  gSophgoTokenSpaceGuid.PcdEfuseBase
+  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits
+  gSophgoTokenSpaceGuid.PcdEfuseNumCells
+  gSophgoTokenSpaceGuid.PcdEfuseCellWidth
 
   gSophgoTokenSpaceGuid.PcdEfiMemoryBottom
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMemoryBaseAddress
+  gSophgoTokenSpaceGuid.PcdMemoryBaseAddress
 
 
 [Ppis]

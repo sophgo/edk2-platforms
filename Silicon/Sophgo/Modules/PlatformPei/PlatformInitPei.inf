@@ -24,7 +24,6 @@
   EmbeddedPkg/EmbeddedPkg.dec
   Platform/RISC-V/PlatformPkg/RiscVPlatformPkg.dec
   Silicon/Sophgo/Sophgo.dec
-  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 
 [LibraryClasses]
@@ -36,8 +35,8 @@
   PeiResourcePublicationLib
 
 [FixedPcd]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdBaseAddress                       ## CONSUMES
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSdRegSize                           ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdSdBaseAddress                       ## CONSUMES
+  gSophgoTokenSpaceGuid.PcdSdRegSize                           ## CONSUMES
   gSophgoTokenSpaceGuid.PcdPeiPermanentMemBase
   gSophgoTokenSpaceGuid.PcdPeiPermanentMemSize
 

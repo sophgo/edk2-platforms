@@ -22,7 +22,6 @@
   MdePkg/MdePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   Silicon/Sophgo/Sophgo.dec
-  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [LibraryClasses]
   UefiDriverEntryPoint
@@ -42,10 +41,10 @@
   gSophgoSpiProtocolGuid          ## PRODUCES
 
 [Pcd]
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiControllerCount
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiBaseAddresses
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiClockFrequencies
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdSpiRxSampleDelays
+  gSophgoTokenSpaceGuid.PcdSpiControllerCount
+  gSophgoTokenSpaceGuid.PcdSpiBaseAddresses
+  gSophgoTokenSpaceGuid.PcdSpiClockFrequencies
+  gSophgoTokenSpaceGuid.PcdSpiRxSampleDelays
 
 
 [Depex]

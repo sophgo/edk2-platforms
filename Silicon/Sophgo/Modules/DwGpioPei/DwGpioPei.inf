@@ -25,7 +25,6 @@
 [Packages]
   MdePkg/MdePkg.dec
   Silicon/Sophgo/Sophgo.dec
-  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [LibraryClasses]
   PeimEntryPoint

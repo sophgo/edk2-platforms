@@ -23,7 +23,6 @@
   MdePkg/MdePkg.dec
   EmbeddedPkg/EmbeddedPkg.dec
   Silicon/Sophgo/Sophgo.dec
-  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
 
 [LibraryClasses]
   BaseLib
@@ -43,11 +42,11 @@
   # gSophgoTokenSpaceGuid.PcdEfuseNumCells         ## CONSUMES
   # gSophgoTokenSpaceGuid.PcdEfuseCellWidth        ## CONSUMES
 
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseControllerNum
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseBase
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumAddrBits
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseNumCells
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdEfuseCellWidth
+  gSophgoTokenSpaceGuid.PcdEfuseControllerNum
+  gSophgoTokenSpaceGuid.PcdEfuseBase
+  gSophgoTokenSpaceGuid.PcdEfuseNumAddrBits
+  gSophgoTokenSpaceGuid.PcdEfuseNumCells
+  gSophgoTokenSpaceGuid.PcdEfuseCellWidth
 
 [Protocols]
 

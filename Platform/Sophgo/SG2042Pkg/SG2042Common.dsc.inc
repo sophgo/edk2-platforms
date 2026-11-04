@@ -428,7 +428,7 @@
   # 10 - 57bit mode.
   #
   gUefiCpuPkgTokenSpaceGuid.PcdCpuRiscVMmuMaxSatpMode|0
-  gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize|39
+  gEmbeddedTokenSpaceGuid.PcdPrePiCpuMemorySize|40
   gEmbeddedTokenSpaceGuid.PcdPrePiCpuIoSize|36
 
   #

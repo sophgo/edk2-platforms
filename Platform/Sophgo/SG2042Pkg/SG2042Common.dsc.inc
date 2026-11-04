@@ -761,6 +761,10 @@
   MdeModulePkg/Universal/CapsuleRuntimeDxe/CapsuleRuntimeDxe.inf
   MdeModulePkg/Universal/HiiDatabaseDxe/HiiDatabaseDxe.inf
 
+  #
+  # iPXE Application
+  #
+  Silicon/Sophgo/iPXE/iPXE.inf
   MdeModulePkg/Universal/LoadFileOnFv2/LoadFileOnFv2.inf
 
   #

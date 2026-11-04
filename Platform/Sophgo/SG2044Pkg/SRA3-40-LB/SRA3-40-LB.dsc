@@ -54,7 +54,7 @@
 
   #
   # Prebuilt Intel UNDI drivers (native RISCV64 PE32): Gigabit, 10G (ixgbe/X540),
-  # ICE (E8xx), and I40e/700-series. Paths under Silicon/Sophgo/SG2044/iPXE/.
+  # ICE (E8xx), and I40e/700-series. Paths under Silicon/Sophgo/iPXE/.
   # Enable with: -D INTEL_GIG_UNDI_ENABLE=TRUE or define TRUE below.
   #
   DEFINE INTEL_GIG_UNDI_ENABLE    = TRUE

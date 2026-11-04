@@ -526,7 +526,7 @@ typedef enum {
 } BOOT_SORT_CATEGORY;
 
 //
-// iPXE UEFI application FFS GUID (edk2-non-osi Silicon/Sophgo/SG2044/iPXE).
+// iPXE UEFI application FFS GUID (edk2-non-osi Silicon/Sophgo/iPXE).
 //
 STATIC EFI_GUID  mIPxeFileGuid = {
   0x39492805, 0x4E6C, 0x4015, { 0x91, 0x97, 0x69, 0x05, 0xFB, 0xAA, 0xF2, 0xB8 }

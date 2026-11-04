@@ -192,7 +192,7 @@ INF  Drivers/Sietium/SietiumGopDxe.inf
 #
 # iPXE Application
 #
-INF  Silicon/Sophgo/SG2044/iPXE/iPXE.inf
+INF  Silicon/Sophgo/iPXE/iPXE.inf
 INF  MdeModulePkg/Universal/LoadFileOnFv2/LoadFileOnFv2.inf
 
 #

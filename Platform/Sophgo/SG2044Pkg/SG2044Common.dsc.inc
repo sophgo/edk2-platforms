@@ -934,10 +934,10 @@
   #
   # Prebuilt Intel UNDI drivers (native RISCV64 PE32)
   #
-  Silicon/Sophgo/SG2044/iPXE/IntelGigUndiRv64/GigUndiDxe.inf
-  Silicon/Sophgo/SG2044/iPXE/IntelXGigUndiRv64/XGigUndiDxe.inf
-  Silicon/Sophgo/SG2044/iPXE/IntelIceUndiRv64/IceUndiDxe.inf
-  Silicon/Sophgo/SG2044/iPXE/IntelI40eUndiRv64/I40eUndiDxe.inf
+  Silicon/Sophgo/iPXE/IntelGigUndiRv64/GigUndiDxe.inf
+  Silicon/Sophgo/iPXE/IntelXGigUndiRv64/XGigUndiDxe.inf
+  Silicon/Sophgo/iPXE/IntelIceUndiRv64/IceUndiDxe.inf
+  Silicon/Sophgo/iPXE/IntelI40eUndiRv64/I40eUndiDxe.inf
 !endif
 
   #
@@ -1003,7 +1003,7 @@
   #
   # iPXE Application
   #
-  Silicon/Sophgo/SG2044/iPXE/iPXE.inf
+  Silicon/Sophgo/iPXE/iPXE.inf
   MdeModulePkg/Universal/LoadFileOnFv2/LoadFileOnFv2.inf
 
   #

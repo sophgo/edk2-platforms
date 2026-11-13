@@ -29,4 +29,11 @@
 
 
 !include Platform/Sophgo/SG2042Pkg/SG2042Common.dsc.inc
+################################################################################
+#
+# PCDs that differ per board.
+#
+################################################################################
+[PcdsFixedAtBuild]
+  gSophgoTokenSpaceGuid.PcdSmbiosBoardType|2
 

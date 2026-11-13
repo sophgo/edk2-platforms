@@ -94,6 +94,8 @@
   gSophgoTokenSpaceGuid.PcdMemorySize|0|UINT64|0x00001030
   gSophgoTokenSpaceGuid.PcdSpiClockFrequencies|{0}|UINT32[]|0x00001031
   gSophgoTokenSpaceGuid.PcdSpiRxSampleDelays|{0}|UINT32[]|0x00001032
+  gSophgoTokenSpaceGuid.PcdSmbiosBoardType|0|UINT32|0x00001033
+  gSophgoTokenSpaceGuid.PcdSmbiosHartCount|64|UINT32|0x00001034
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

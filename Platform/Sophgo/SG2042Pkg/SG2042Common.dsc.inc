@@ -388,6 +388,8 @@
 !endif
 
   gSophgoTokenSpaceGuid.PcdBiosVersionString|L"3.0.0"
+  gSophgoTokenSpaceGuid.PcdSmbiosBoardType|0
+  gSophgoTokenSpaceGuid.PcdSmbiosHartCount|64
 
   #
   # F2 for UI APP
@@ -587,8 +589,9 @@
 [PcdsDynamicDefault]
   gEfiMdeModulePkgTokenSpaceGuid.PcdPciDisableBusEnumeration|FALSE
 
-  gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0208
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosVersion|0x0303
   gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosDocRev|0x0
+  gEfiMdeModulePkgTokenSpaceGuid.PcdSmbiosEntryPointProvideMethod|0x3
 
   gEfiMdePkgTokenSpaceGuid.PcdPlatformBootTimeOut|10
 

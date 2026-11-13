@@ -18,6 +18,10 @@
 
 [Sources]
   SmbiosPlatformDxe.c
+  SmbiosPlatformDxe.h
+  SmbiosDataSG2042EVB.c
+  SmbiosDataMilkVPioneer.c
+  SmbiosDataSRA120.c
 
 [Packages]
   MdeModulePkg/MdeModulePkg.dec
@@ -31,6 +35,8 @@
   HobLib
   MemoryAllocationLib
   PcdLib
+  PrintLib
+  RiscVSbiLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
 
@@ -40,6 +46,8 @@
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdBiosVersionString
+  gSophgoTokenSpaceGuid.PcdSmbiosBoardType
+  gSophgoTokenSpaceGuid.PcdSmbiosHartCount
 
 [Depex]
   gEfiSmbiosProtocolGuid

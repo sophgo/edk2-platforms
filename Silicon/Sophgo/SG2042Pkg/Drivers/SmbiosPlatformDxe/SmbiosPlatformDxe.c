@@ -70,16 +70,36 @@ enum SMBIOS_REFERENCE_HANDLES {
   SMBIOS_HANDLE_L3,
   SMBIOS_HANDLE_MOTHERBOARD,
   SMBIOS_HANDLE_CHASSIS,
-  SMBIOS_HANDLE_PROCESSOR,
-  SMBIOS_HANDLE_MEMORY,
-  SMBIOS_HANDLE_DIMM
+  SMBIOS_HANDLE_PROCESSOR,      // 0x1006, socket 0
+  SMBIOS_HANDLE_MEMORY,         // 0x1007
+  SMBIOS_HANDLE_DIMM,           // 0x1008
+  SMBIOS_HANDLE_PROCESSOR_1     // 0x1009, socket 1
 };
+
+//
+// SG2042 is a 64-core SoC; a board may carry two of them.
+//
+#define SMBIOS_CORES_PER_SOCKET   64U
+#define SMBIOS_MAX_SOCKETS        2U
+
+/**
+  SMBIOS handle of the processor structure for the given socket.
+**/
+STATIC
+UINT16
+SmbiosProcessorHandle (
+  IN UINT32  Socket
+  )
+{
+  return (Socket == 0) ? (UINT16)SMBIOS_HANDLE_PROCESSOR : (UINT16)SMBIOS_HANDLE_PROCESSOR_1;
+}
 
 STATIC SMBIOS_BOARD_DATA CONST  *mBoardData;
 STATIC CHAR8 CONST               *mSystemStrings[5];
 STATIC CHAR8 CONST               *mBoardStrings[4];
 STATIC CHAR8 CONST               *mChassisStrings[3];
-STATIC CHAR8 CONST               *mProcessorStrings[4];
+STATIC CHAR8 CONST               *mProcessorStrings[5];
+STATIC UINT32                    mSocketCount;
 STATIC CHAR8                     mOemBiosString[48];
 STATIC UINT8                     mProcessorId[8];
 STATIC UINT64                    mMachineVendorId;
@@ -194,12 +214,12 @@ STATIC SMBIOS_TABLE_TYPE3  mSmbiosType3 = {
 // Processor
 STATIC SMBIOS_TABLE_TYPE4  mSmbiosType4 = {
   { EFI_SMBIOS_TYPE_PROCESSOR_INFORMATION, sizeof (SMBIOS_TABLE_TYPE4), SMBIOS_HANDLE_PROCESSOR },
-  1,                                   // Socket Designation
+  1,                                   // Socket Designation ("SOCKET 0"/"SOCKET 1")
   3,                                   // Processor Type: Central Processor
   ProcessorFamilyIndicatorFamily2,     // Family, see Family 2 below
-  2,                                   // Manufacturer
+  3,                                   // Manufacturer ("SOPHGO")
   {{ 0 }, { 0 }},                      // Processor ID (patched: BRS JEP-106 vendor code)
-  3,                                   // Version
+  4,                                   // Version ("SG2042")
   { 0, 1, 0, 1, 0, 1 },                // Voltage: 0x8A = 1.0 V
   25,                                  // External Clock: 25 MHz
   2000,                                // Max Speed
@@ -546,6 +566,65 @@ SmbiosMemoryInstall (
 }
 
 /**
+  Publish the baseboard record, listing every populated socket as a contained object.
+**/
+STATIC
+EFI_STATUS
+SmbiosInstallBaseboard (
+  IN EFI_SMBIOS_PROTOCOL  *Smbios
+  )
+{
+  SMBIOS_TABLE_TYPE2  *Record;
+  EFI_STATUS          Status;
+  UINTN               Length;
+  UINT32              Index;
+
+  Length = sizeof (SMBIOS_TABLE_TYPE2) + (mSocketCount - 1) * sizeof (UINT16);
+  Record = AllocateZeroPool (Length + 2);
+  if (Record == NULL) {
+    return EFI_OUT_OF_RESOURCES;
+  }
+
+  CopyMem (Record, &mSmbiosType2, sizeof (SMBIOS_TABLE_TYPE2));
+  Record->Hdr.Length                     = (UINT8)Length;
+  Record->NumberOfContainedObjectHandles = (UINT8)mSocketCount;
+  for (Index = 0; Index < mSocketCount; Index++) {
+    Record->ContainedObjectHandles[Index] = SmbiosProcessorHandle (Index);
+  }
+
+  Status = LogSmbiosData (Smbios, (EFI_SMBIOS_TABLE_HEADER *)Record, mBoardStrings);
+  FreePool (Record);
+  return Status;
+}
+
+/**
+  Publish one processor record per populated socket.
+**/
+STATIC
+EFI_STATUS
+SmbiosInstallProcessors (
+  IN EFI_SMBIOS_PROTOCOL  *Smbios
+  )
+{
+  SMBIOS_TABLE_TYPE4  Record;
+  EFI_STATUS          Status;
+  UINT32              Index;
+
+  for (Index = 0; Index < mSocketCount; Index++) {
+    CopyMem (&Record, &mSmbiosType4, sizeof (Record));
+    Record.Hdr.Handle = SmbiosProcessorHandle (Index);
+    Record.Socket     = (UINT8)((Index == 0) ? 1 : 2);   // "SOCKET 0" / "SOCKET 1"
+
+    Status = LogSmbiosData (Smbios, (EFI_SMBIOS_TABLE_HEADER *)&Record, mProcessorStrings);
+    if (EFI_ERROR (Status)) {
+      return Status;
+    }
+  }
+
+  return EFI_SUCCESS;
+}
+
+/**
   Publish the SMBIOS structures that are shared by all boards.
 **/
 STATIC
@@ -562,13 +641,13 @@ SmbiosInstallStructures (
   Status = LogSmbiosData (Smbios, (EFI_SMBIOS_TABLE_HEADER *)&mSmbiosType1, mSystemStrings);
   ASSERT_EFI_ERROR (Status);
 
-  Status = LogSmbiosData (Smbios, (EFI_SMBIOS_TABLE_HEADER *)&mSmbiosType2, mBoardStrings);
+  Status = SmbiosInstallBaseboard (Smbios);
   ASSERT_EFI_ERROR (Status);
 
   Status = LogSmbiosData (Smbios, (EFI_SMBIOS_TABLE_HEADER *)&mSmbiosType3, mChassisStrings);
   ASSERT_EFI_ERROR (Status);
 
-  Status = LogSmbiosData (Smbios, (EFI_SMBIOS_TABLE_HEADER *)&mSmbiosType4, mProcessorStrings);
+  Status = SmbiosInstallProcessors (Smbios);
   ASSERT_EFI_ERROR (Status);
 
   Status = LogSmbiosData (Smbios, (EFI_SMBIOS_TABLE_HEADER *)&mSmbiosType7L1I, mSmbiosType7Strings);
@@ -628,7 +707,7 @@ SmbiosInstallProcessorAdditionalInformation (
     Record->Hdr.Type                  = EFI_SMBIOS_TYPE_PROCESSOR_ADDITIONAL_INFORMATION;
     Record->Hdr.Length                = (UINT8)SMBIOS_TYPE44_LENGTH;
     Record->Hdr.Handle                = SMBIOS_HANDLE_PI_RESERVED;
-    Record->RefHandle                 = SMBIOS_HANDLE_PROCESSOR;
+    Record->RefHandle                 = SmbiosProcessorHandle (Index / SMBIOS_CORES_PER_SOCKET);
     Record->ProcessorSpecificBlock.Length            = sizeof (SMBIOS_RISCV_PSD);
     Record->ProcessorSpecificBlock.ProcessorArchType = SMBIOS_RISCV_PSD_ARCH_RV64;
 
@@ -754,9 +833,16 @@ SmbiosPlatformDriverEntryPoint (
   mChassisStrings[2] = NULL;
 
   mProcessorStrings[0] = "SOCKET 0";
-  mProcessorStrings[1] = "SOPHGO";
-  mProcessorStrings[2] = "SG2042";
-  mProcessorStrings[3] = NULL;
+  mProcessorStrings[1] = "SOCKET 1";
+  mProcessorStrings[2] = "SOPHGO";
+  mProcessorStrings[3] = "SG2042";
+  mProcessorStrings[4] = NULL;
+
+  mSocketCount = PcdGet32 (PcdSmbiosSocketCount);
+  if ((mSocketCount == 0) || (mSocketCount > SMBIOS_MAX_SOCKETS)) {
+    DEBUG ((DEBUG_ERROR, "SmbiosPlatformDxe: invalid PcdSmbiosSocketCount %u\n", mSocketCount));
+    return EFI_INVALID_PARAMETER;
+  }
 
   mSmbiosType3.Type = mBoardData->ChassisType;
   mSmbiosType16.MaximumCapacity = mBoardData->MaxMemoryCapacityKb;

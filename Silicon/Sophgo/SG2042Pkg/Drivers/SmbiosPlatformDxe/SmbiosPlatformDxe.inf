@@ -48,6 +48,7 @@
   gSophgoTokenSpaceGuid.PcdBiosVersionString
   gSophgoTokenSpaceGuid.PcdSmbiosBoardType
   gSophgoTokenSpaceGuid.PcdSmbiosHartCount
+  gSophgoTokenSpaceGuid.PcdSmbiosSocketCount
 
 [Depex]
   gEfiSmbiosProtocolGuid

@@ -36,4 +36,6 @@
 ################################################################################
 [PcdsFixedAtBuild]
   gSophgoTokenSpaceGuid.PcdSmbiosBoardType|2
+  gSophgoTokenSpaceGuid.PcdSmbiosSocketCount|2
+  gSophgoTokenSpaceGuid.PcdSmbiosHartCount|128
 

@@ -96,6 +96,7 @@
   gSophgoTokenSpaceGuid.PcdSpiRxSampleDelays|{0}|UINT32[]|0x00001032
   gSophgoTokenSpaceGuid.PcdSmbiosBoardType|0|UINT32|0x00001033
   gSophgoTokenSpaceGuid.PcdSmbiosHartCount|64|UINT32|0x00001034
+  gSophgoTokenSpaceGuid.PcdSmbiosSocketCount|1|UINT32|0x00001035
 
 [PcdsDynamic]
   gSophgoTokenSpaceGuid.PcdFlashVariableOffset|0x0|UINT64|0x00001003

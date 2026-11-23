@@ -138,7 +138,7 @@
   #
   # RISC-V Platform module
   #
-  Silicon/Sophgo/SG2044Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
+  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
@@ -198,7 +198,7 @@
   #
   # PCIe Support
   #
-  Silicon/Sophgo/SG2044Pkg/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
+  Silicon/Sophgo/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
   MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf {
     <LibraryClasses>
       PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
@@ -315,16 +315,16 @@
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   MdeModulePkg/Logo/LogoDxe.inf
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf {
+  Silicon/Sophgo/Drivers/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
-  Silicon/Sophgo/SG2044Pkg/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/InformationDxe/InformationDxe.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
+  Silicon/Sophgo/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
+  Silicon/Sophgo/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
+  Silicon/Sophgo/Drivers/InformationDxe/InformationDxe.inf
+  Silicon/Sophgo/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
   Silicon/Sophgo/Drivers/DebugConfigDxe/DebugConfigDxe.inf
 
   #

@@ -73,6 +73,8 @@
   gSophgoTokenSpaceGuid.PcdServerNamePrefix|L"SR"|VOID*|0x0000101B
   gSophgoTokenSpaceGuid.PcdFdOffset|0x0|UINT64|0x0000101C
   gSophgoTokenSpaceGuid.PcdMCUI2cBus|0x0|UINT32|0x0000101D
+  gSophgoTokenSpaceGuid.PcdMcuExistence|FALSE|BOOLEAN|0x00001036
+  gSophgoTokenSpaceGuid.PcdIsServerPlatform|FALSE|BOOLEAN|0x00001037
   gSophgoTokenSpaceGuid.PcdEfiMemoryBottom|0x0|UINT64|0x0000101E
   gSophgoTokenSpaceGuid.PcdTpm2GpioBaseAddress|0x0|UINT64|0x0000101F
   gSophgoTokenSpaceGuid.PcdTpm2SpiBaseAddress|0x0|UINT64|0x00001020
@@ -110,3 +112,4 @@
   TrngLib|Silicon/Sophgo/Include/Library/TrngLib.h
   IpmiFruInfoLib|Silicon/Sophgo/Include/Library/IpmiFruInfoLib.h
   DwGpioLib|Silicon/Sophgo/Include/Library/DwGpioLib.h
+  PciOpRomAllowListLib|Silicon/Sophgo/Include/Library/PciOpRomAllowListLib.h

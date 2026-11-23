@@ -183,7 +183,7 @@
   VariableFlashInfoLib|MdeModulePkg/Library/BaseVariableFlashInfoLib/BaseVariableFlashInfoLib.inf
   VariablePolicyHelperLib|MdeModulePkg/Library/VariablePolicyHelperLib/VariablePolicyHelperLib.inf
   ConfigUtilsLib|Silicon/Sophgo/Library/ConfigUtilsLib/ConfigUtilsLib.inf
-  SmbiosInformationLib|Silicon/Sophgo/SG2044Pkg/Library/SmbiosInformation/SmbiosInformationLib.inf
+  SmbiosInformationLib|Silicon/Sophgo/Library/SmbiosInformation/SmbiosInformationLib.inf
   PcieSlotInfoLib|Platform/Sophgo/SG2044Pkg/Drivers/$(PLATFORM_NAME)/SlotTable/SlotTable.inf
 !ifdef $(SOURCE_DEBUG_ENABLE)
   PeCoffExtraActionLib|SourceLevelDebugPkg/Library/PeCoffExtraActionLibDebug/PeCoffExtraActionLibDebug.inf
@@ -274,6 +274,7 @@
   # Flattened Device Tree (FDT) access library
   FdtLib|MdePkg/Library/BaseFdtLib/BaseFdtLib.inf
   DtPlatformDtbLoaderLib|EmbeddedPkg/Library/DxeDtPlatformDtbLoaderLibDefault/DxeDtPlatformDtbLoaderLibDefault.inf
+  PciOpRomAllowListLib|Silicon/Sophgo/SG2044Pkg/Library/PciOpRomAllowListLib/PciOpRomAllowListLib.inf
 
   # PCIe dependencies
   PciHostBridgeLib|Silicon/Sophgo/SG2044Pkg/Library/PciHostBridgeLib/PciHostBridgeLib.inf
@@ -856,9 +857,9 @@
   # Restrict Option ROMs to the devices in the mOpRomAllowList table in
   # PciOpRomPolicyDxe.c; everything else is left to the built-in drivers.
   #
-  Silicon/Sophgo/SG2044Pkg/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
+  Silicon/Sophgo/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
 !if $(FLASH_ENABLE) == TRUE
-  Silicon/Sophgo/SG2044Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
+  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 !endif
@@ -1119,19 +1120,19 @@
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   Silicon/Sophgo/Drivers/LogoDxe/LogoDxe.inf
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf {
+  Silicon/Sophgo/Drivers/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
-  Silicon/Sophgo/SG2044Pkg/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
+  Silicon/Sophgo/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
 
 !if $(FLASH_ENABLE) == TRUE
-  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
+  Silicon/Sophgo/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
 !endif
-  Silicon/Sophgo/SG2044Pkg/Drivers/InformationDxe/InformationDxe.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
+  Silicon/Sophgo/Drivers/InformationDxe/InformationDxe.inf
+  Silicon/Sophgo/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
   Silicon/Sophgo/SG2044Pkg/Drivers/ReserveMemoryDxe/ReserveMemoryDxe.inf
   Silicon/Sophgo/Drivers/DebugConfigDxe/DebugConfigDxe.inf
 

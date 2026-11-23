@@ -159,7 +159,7 @@
   BootLogoLib|MdeModulePkg/Library/BootLogoLib/BootLogoLib.inf
   PlatformBmPrintScLib|OvmfPkg/Library/PlatformBmPrintScLib/PlatformBmPrintScLib.inf
   FdtLib|MdePkg/Library/BaseFdtLib/BaseFdtLib.inf
-  SmbiosInformationLib|Silicon/Sophgo/SG2044Pkg/Library/SmbiosInformation/SmbiosInformationLib.inf
+  SmbiosInformationLib|Silicon/Sophgo/Library/SmbiosInformation/SmbiosInformationLib.inf
   HashPasswordLib|Silicon/Sophgo/Library/HashPasswordLib/HashPasswordLib.inf
   FileExplorerLib|MdeModulePkg/Library/FileExplorerLib/FileExplorerLib.inf
   VariableFlashInfoLib|MdeModulePkg/Library/BaseVariableFlashInfoLib/BaseVariableFlashInfoLib.inf
@@ -217,10 +217,11 @@
 
   # Flattened Device Tree (FDT) access library
   FdtLib|MdePkg/Library/BaseFdtLib/BaseFdtLib.inf
-  SmbiosInformationLib|Silicon/Sophgo/SG2044Pkg/Library/SmbiosInformation/SmbiosInformationLib.inf
+  SmbiosInformationLib|Silicon/Sophgo/Library/SmbiosInformation/SmbiosInformationLib.inf
   HashPasswordLib|Silicon/Sophgo/Library/HashPasswordLib/HashPasswordLib.inf
   FileExplorerLib|MdeModulePkg/Library/FileExplorerLib/FileExplorerLib.inf
   DtPlatformDtbLoaderLib|EmbeddedPkg/Library/DxeDtPlatformDtbLoaderLibDefault/DxeDtPlatformDtbLoaderLibDefault.inf
+  PciOpRomAllowListLib|Silicon/Sophgo/SG2042Pkg/Library/PciOpRomAllowListLib/PciOpRomAllowListLib.inf
 
   # PCIe dependencies
   PlatformPciLib|Silicon/Sophgo/SG2042Pkg/Library/PlatformPciLib/PlatformPciLib.inf
@@ -467,8 +468,8 @@
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum0|0
   gSophgoTokenSpaceGuid.PcdRtcI2cBusNum1|1
   gSophgoTokenSpaceGuid.PcdServerNamePrefix|L"SR"
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform|$(IS_SERVER_PLATFORM)
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence|FALSE
+  gSophgoTokenSpaceGuid.PcdIsServerPlatform|$(IS_SERVER_PLATFORM)
+  gSophgoTokenSpaceGuid.PcdMcuExistence|FALSE
 
 [PcdsFixedAtBuild.common]
   gSophgoTokenSpaceGuid.PcdSdBaseAddress|0x704002B000
@@ -740,7 +741,7 @@
   #
   # RISC-V Platform module
   #
-  Silicon/Sophgo/SG2044Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
+  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
   Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
@@ -804,7 +805,7 @@
   #
   # PCIe Support
   #
-  Silicon/Sophgo/SG2044Pkg/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
+  Silicon/Sophgo/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
   MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf {
     <LibraryClasses>
       PcdLib|MdePkg/Library/DxePcdLib/DxePcdLib.inf
@@ -921,18 +922,18 @@
   MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
   MdeModulePkg/Logo/LogoDxe.inf
   MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf {
+  Silicon/Sophgo/Drivers/UiApp/UiApp.inf {
     <LibraryClasses>
       NULL|MdeModulePkg/Library/BootManagerUiLib/BootManagerUiLib.inf
       NULL|MdeModulePkg/Library/DeviceManagerUiLib/DeviceManagerUiLib.inf
       NULL|MdeModulePkg/Library/BootMaintenanceManagerUiLib/BootMaintenanceManagerUiLib.inf
   }
-  Silicon/Sophgo/SG2044Pkg/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
+  Silicon/Sophgo/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
 !if $(FIRMWARE_MANAGER_ENABLE) == TRUE
-  Silicon/Sophgo/SG2044Pkg/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
+  Silicon/Sophgo/Drivers/FirmwareManagerUiDxe/FirmwareManagerUiDxe.inf
 !endif
-  Silicon/Sophgo/SG2044Pkg/Drivers/InformationDxe/InformationDxe.inf
-  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
+  Silicon/Sophgo/Drivers/InformationDxe/InformationDxe.inf
+  Silicon/Sophgo/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
   Silicon/Sophgo/Drivers/DebugConfigDxe/DebugConfigDxe.inf
 
   #

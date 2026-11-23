@@ -85,9 +85,7 @@
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdCpuReg|{0}|UINT32[]|0x00000022
 
 # Mcu
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence|FALSE|BOOLEAN|0x00000023
 
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform|FALSE|BOOLEAN|0x00000024
 
 
 # pcie

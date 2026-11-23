@@ -81,8 +81,8 @@
   #
   # MCU existence / platform class / board+product identity
   #
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdMcuExistence|TRUE
-  gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdIsServerPlatform|FALSE
+  gSophgoTokenSpaceGuid.PcdMcuExistence|TRUE
+  gSophgoTokenSpaceGuid.PcdIsServerPlatform|FALSE
   # [board]
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardName|L"SD3-10"
   gSophgoSG2044PlatformPkgTokenSpaceGuid.PcdBoardVersion|L"1.1"

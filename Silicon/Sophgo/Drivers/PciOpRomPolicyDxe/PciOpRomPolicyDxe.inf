@@ -1,8 +1,8 @@
 ## @file
 #  PCI Option ROM allow-list policy driver.
 #
-#  Restricts Option ROM processing to the devices listed in the
-#  mOpRomAllowList table in PciOpRomPolicyDxe.c.
+#  Restricts Option ROM processing to the devices reported by the
+#  platform's PciOpRomAllowListLib instance.
 #
 #  Copyright (c) 2026, SOPHGO Inc. All rights reserved.<BR>
 #  SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -26,6 +26,7 @@
 
 [Packages]
   MdePkg/MdePkg.dec
+  Silicon/Sophgo/Sophgo.dec
 
 [LibraryClasses]
   BaseMemoryLib
@@ -33,6 +34,7 @@
   MemoryAllocationLib
   UefiBootServicesTableLib
   UefiDriverEntryPoint
+  PciOpRomAllowListLib
 
 [Protocols]
   gEfiIncompatiblePciDeviceSupportProtocolGuid   ## PRODUCES

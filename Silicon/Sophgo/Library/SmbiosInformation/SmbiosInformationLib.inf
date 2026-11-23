@@ -7,9 +7,9 @@
 ##
 
 [Defines]
-  INF_VERSION                    = 1.29
+  INF_VERSION                    = 0x0001000A
   BASE_NAME                      = SmbiosInformationLib
-  FILE_GUID                      = 8cc98d6f-825f-40c4-9360-2e76e02d52c3
+  FILE_GUID                      = E3371385-436E-2310-CB61-CF8B5B093DBA
   MODULE_TYPE                    = BASE
   VERSION_STRING                 = 1.0
   LIBRARY_CLASS                  = SmbiosInformationLib
@@ -36,6 +36,7 @@
 
 [Pcd]
   gSophgoTokenSpaceGuid.PcdServerNamePrefix
+  gSophgoTokenSpaceGuid.PcdIsServerPlatform
 
 [Depex]
   TRUE

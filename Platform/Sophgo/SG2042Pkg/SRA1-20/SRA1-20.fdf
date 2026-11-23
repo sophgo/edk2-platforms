@@ -52,7 +52,7 @@ APRIORI DXE {
   INF  MdeModulePkg/Universal/DevicePathDxe/DevicePathDxe.inf
   INF  MdeModulePkg/Universal/PCD/Dxe/Pcd.inf
   INF  UefiCpuPkg/CpuDxeRiscV64/CpuDxeRiscV64.inf
-  INF  Silicon/Sophgo/SG2044Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
+  INF  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
   INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
   INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 }
@@ -75,7 +75,7 @@ INF  MdeModulePkg/Universal/Metronome/Metronome.inf
 INF  EmbeddedPkg/RealTimeClockRuntimeDxe/RealTimeClockRuntimeDxe.inf
 
 # RISC-V Platform Drivers
-INF  Silicon/Sophgo/SG2044Pkg/Drivers/SpifmcDxe/SpiFlashMasterController.inf
+INF  Silicon/Sophgo/Drivers/SpifmcDxe/SpiFlashMasterController.inf
 INF  Silicon/Sophgo/Drivers/NorFlashDxe/NorFlashDxe.inf
 INF  Silicon/Sophgo/Drivers/FlashFvbDxe/FlashFvbDxe.inf
 INF  Silicon/Sophgo/Drivers/DwI2cDxe/DwI2cDxe.inf
@@ -137,7 +137,7 @@ INF  Silicon/Sophgo/SG2042Pkg/Drivers/SmbiosPlatformDxe/SmbiosPlatformDxe.inf
 #
 # PCIe Support
 #
-INF  Silicon/Sophgo/SG2044Pkg/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
+INF  Silicon/Sophgo/Drivers/PciOpRomPolicyDxe/PciOpRomPolicyDxe.inf
 INF  MdeModulePkg/Bus/Pci/PciBusDxe/PciBusDxe.inf
 INF  MdeModulePkg/Bus/Pci/PciHostBridgeDxe/PciHostBridgeDxe.inf
 
@@ -226,11 +226,11 @@ INF  MdeModulePkg/Universal/DisplayEngineDxe/DisplayEngineDxe.inf
 INF  MdeModulePkg/Universal/SetupBrowserDxe/SetupBrowserDxe.inf
 INF  MdeModulePkg/Universal/DriverHealthManagerDxe/DriverHealthManagerDxe.inf
 INF  MdeModulePkg/Universal/BdsDxe/BdsDxe.inf
-INF  Silicon/Sophgo/SG2044Pkg/Drivers/UiApp/UiApp.inf
+INF  Silicon/Sophgo/Drivers/UiApp/UiApp.inf
 INF  MdeModulePkg/Application/BootManagerMenuApp/BootManagerMenuApp.inf
-INF  Silicon/Sophgo/SG2044Pkg/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
-INF  Silicon/Sophgo/SG2044Pkg/Drivers/InformationDxe/InformationDxe.inf
-INF  Silicon/Sophgo/SG2044Pkg/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
+INF  Silicon/Sophgo/Drivers/SetDateAndTimeDxe/SetDateAndTimeDxe.inf
+INF  Silicon/Sophgo/Drivers/InformationDxe/InformationDxe.inf
+INF  Silicon/Sophgo/Drivers/PasswordConfigDxe/PasswordConfigUiDxe.inf
 INF  Silicon/Sophgo/Drivers/DebugConfigDxe/DebugConfigDxe.inf
 
 ################################################################################

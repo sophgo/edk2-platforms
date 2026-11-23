@@ -1,0 +1,22 @@
+## @file
+#  PCI Option ROM allow-list for SG2042.
+#
+#  Copyright (c) 2026, SOPHGO Inc. All rights reserved.<BR>
+#  SPDX-License-Identifier: BSD-2-Clause-Patent
+#
+##
+
+[Defines]
+  INF_VERSION                    = 0x00010005
+  BASE_NAME                      = PciOpRomAllowListLib
+  FILE_GUID                      = 7C2E5A41-9D3B-4F80-B6E1-3A5C8D0F1A22
+  MODULE_TYPE                    = BASE
+  VERSION_STRING                 = 1.0
+  LIBRARY_CLASS                  = PciOpRomAllowListLib
+
+[Sources]
+  PciOpRomAllowListLib.c
+
+[Packages]
+  MdePkg/MdePkg.dec
+  Silicon/Sophgo/Sophgo.dec

@@ -2,15 +2,15 @@
   PCI Option ROM allow-list policy driver.
 
   Installs EFI_INCOMPATIBLE_PCI_DEVICE_SUPPORT_PROTOCOL to restrict
-  Option ROM processing to the curated list of VID/DID pairs below.
-  Devices on the list proceed with normal OpROM loading (e.g. to run
-  under the MultiArchUefiPkg x64 emulator); every other PCI device gets
-  a ROM-skip resource descriptor, so PciBusDxe never probes its Option
-  ROM BAR and the built-in firmware drivers (when present) own the
-  device.
+  Option ROM processing to the devices reported by the platform's
+  PciOpRomAllowListLib instance.  Devices on that list proceed with
+  normal OpROM loading (e.g. to run under the MultiArchUefiPkg x64
+  emulator); every other PCI device gets a ROM-skip resource descriptor,
+  so PciBusDxe never probes its Option ROM BAR and the built-in firmware
+  drivers (when present) own the device.
 
-  To allow another card's OpROM, add its {VID, DID} pair to
-  mOpRomAllowList below and rebuild.
+  The allow-list itself is platform policy and lives in the
+  PciOpRomAllowListLib instance selected by the platform DSC.
 
   Copyright (c) 2026, SOPHGO Inc. All rights reserved.<BR>
   SPDX-License-Identifier: BSD-2-Clause-Patent
@@ -22,26 +22,9 @@
 #include <Library/BaseMemoryLib.h>
 #include <Library/DebugLib.h>
 #include <Library/MemoryAllocationLib.h>
+#include <Library/PciOpRomAllowListLib.h>
 #include <Library/UefiBootServicesTableLib.h>
 #include <Protocol/IncompatiblePciDeviceSupport.h>
-
-typedef struct {
-  UINT16    VendorId;
-  UINT16    DeviceId;
-} OP_ROM_ALLOW_ENTRY;
-
-//
-// The only devices whose Option ROMs are probed and loaded.
-//
-STATIC CONST OP_ROM_ALLOW_ENTRY  mOpRomAllowList[] = {
-  { 0x1000, 0x005D },   // LSI/AVAGO MegaRAID SAS 9361-8i (3108)
-  { 0x1002, 0x6779 },   // AMD Radeon R5 230
-  { 0x1002, 0x67DF },   // AMD Radeon RX 580
-  { 0x1002, 0x73DF },   // AMD Radeon RX 6700
-  { 0x10DE, 0x2882 },   // NVIDIA GeForce RTX 4060
-  { 0x10DE, 0x1287 },   // NVIDIA GeForce GT 730
-  { 0x10DE, 0x128B },   // NVIDIA GeForce GT 710
-};
 
 //
 // QWORD Address Space Descriptor usage per PI spec Table 20: with
@@ -104,25 +87,18 @@ PciOpRomPolicyCheckDevice (
       0                                                // Checksum
     }
   };
-  CONST OP_ROM_ALLOW_ENTRY  *Entry;
-  UINTN                     Index;
 
   if (Configuration == NULL) {
     return EFI_INVALID_PARAMETER;
   }
 
-  for (Index = 0; Index < ARRAY_SIZE (mOpRomAllowList); Index++) {
-    Entry = &mOpRomAllowList[Index];
-    if ((Entry->VendorId == (UINT16)VendorId) &&
-        (Entry->DeviceId == (UINT16)DeviceId))
-    {
-      //
-      // Allow-listed: no special requirement, OpROM is probed and
-      // loaded normally (subject to the emulator runtime gate).
-      //
-      *Configuration = NULL;
-      return EFI_UNSUPPORTED;
-    }
+  if (PciOpRomIsAllowListed ((UINT16)VendorId, (UINT16)DeviceId)) {
+    //
+    // Allow-listed: no special requirement, OpROM is probed and
+    // loaded normally (subject to the emulator runtime gate).
+    //
+    *Configuration = NULL;
+    return EFI_UNSUPPORTED;
   }
 
   //

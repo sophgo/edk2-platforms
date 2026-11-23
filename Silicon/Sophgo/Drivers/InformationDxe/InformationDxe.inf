@@ -6,33 +6,24 @@
 
 [Defines]
   INF_VERSION                    = 0x00010005
-  BASE_NAME                      = UiApp
-  MODULE_UNI_FILE                = UiApp.uni
-  FILE_GUID                      = 462CAA21-7614-4503-836E-8AB6F4662331
-  MODULE_TYPE                    = UEFI_APPLICATION
+  BASE_NAME                      = Information
+  MODULE_UNI_FILE                = InformationStrings.uni
+  FILE_GUID                      = 405f9bfd-f602-494e-bd46-c009fa963f9d
+  MODULE_TYPE                    = DXE_DRIVER
   VERSION_STRING                 = 1.0
-  ENTRY_POINT                    = InitializeUserInterface
+  ENTRY_POINT                    = InformationInit
 
 [Sources]
-  FrontPage.h
-  String.h
-  Ui.h
-  FrontPageVfr.Vfr
-  FrontPageStrings.uni
-  FrontPage.c
-  String.c
-  FrontPageCustomizedUi.c
-  FrontPageCustomizedUiSupport.c
-  FrontPageCustomizedUi.h
-  FrontPageCustomizedUiSupport.h
-  PasswordRead.c
+  InformationVfr.Vfr
+  InformationStrings.uni
+  InformationDxe.c
+  InformationDxe.h
+  InformationNVDataStruc.h
 
 [Packages]
   MdePkg/MdePkg.dec
   MdeModulePkg/MdeModulePkg.dec
-  Silicon/Sophgo/SG2044Pkg/SG2044Pkg.dec
   Silicon/Sophgo/Sophgo.dec
-  EmbeddedPkg/EmbeddedPkg.dec
 
 [LibraryClasses]
   DevicePathLib
@@ -46,13 +37,12 @@
   DebugLib
   PrintLib
   HiiLib
-  UefiApplicationEntryPoint
+  #UefiApplicationEntryPoint
+  UefiDriverEntryPoint
   PcdLib
   UefiHiiServicesLib
   UefiBootManagerLib
   SmbiosInformationLib
-  ResetSystemLib
-  HashPasswordLib
 
 [Guids]
   gEfiIfrTianoGuid                              ## CONSUMES ## GUID (Extended IFR Guid Opcode)
@@ -62,11 +52,7 @@
 [Protocols]
   gEfiSmbiosProtocolGuid                        ## CONSUMES
   gEfiHiiConfigAccessProtocolGuid               ## CONSUMES
-  gSetDateAndTimeRestoreProtocolGuid            ## CONSUMES
-  gPasswordRestoreProtocolGuid                  ## CONSUMES
-  gPassWordToggleRestoreProtocolGuid            ## CONSUMES ## PRODUCES
-  gReserveMemoryRestoreProtocolGuid             ## CONSUMES
-  gDebugConfigRestoreProtocolGuid               ## CONSUMES
+  gSophgoSmbiosPlatformReadyProtocolGuid        ## CONSUMES
 
 [FeaturePcd]
 
@@ -82,7 +68,8 @@
   gEfiMdeModulePkgTokenSpaceGuid.PcdSetupVideoVerticalResolution    ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdFirmwareVersionString           ## CONSUMES
   gEfiMdeModulePkgTokenSpaceGuid.PcdTestKeyUsed                     ## CONSUMES
-  gSophgoTokenSpaceGuid.PcdServerNamePrefix                         ## CONSUMES
 
-[UserExtensions.TianoCore."ExtraFiles"]
-  UiAppExtra.uni
+[Depex]
+  gEfiHiiConfigRoutingProtocolGuid  AND
+  gEfiHiiDatabaseProtocolGuid       AND
+  gSophgoSmbiosPlatformReadyProtocolGuid
